@@ -96,7 +96,7 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('de' | 'fr') | ('de' | 'fr')[];
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('de' | 'fr' | 'en') | ('de' | 'fr' | 'en')[];
   globals: {
     homepage: Homepage;
     'site-settings': SiteSetting;
@@ -109,7 +109,7 @@ export interface Config {
     legal: LegalSelect<false> | LegalSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
   };
-  locale: 'de' | 'fr';
+  locale: 'de' | 'fr' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -350,6 +350,14 @@ export interface Order {
   id: number;
   orderNumber: string;
   status: 'pending' | 'paid' | 'shipped' | 'cancelled';
+  /**
+   * Vor dem Umstellen auf „Versendet" eintragen — sie wird in der Versand-Mail an den Kunden mitgeschickt.
+   */
+  trackingNumber?: string | null;
+  /**
+   * z.B. der DHL-/Speditions-Link zur Sendungsverfolgung
+   */
+  trackingUrl?: string | null;
   items: {
     product?: (number | null) | Product;
     titleSnapshot: string;
@@ -380,8 +388,11 @@ export interface Order {
     city?: string | null;
     country?: string | null;
   };
+  paymentProvider?: ('stripe' | 'paypal') | null;
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  paypalOrderId?: string | null;
+  paypalCaptureId?: string | null;
   customerNote?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -599,6 +610,8 @@ export interface PromotionsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
   status?: T;
+  trackingNumber?: T;
+  trackingUrl?: T;
   items?:
     | T
     | {
@@ -632,8 +645,11 @@ export interface OrdersSelect<T extends boolean = true> {
         city?: T;
         country?: T;
       };
+  paymentProvider?: T;
   stripeSessionId?: T;
   stripePaymentIntentId?: T;
+  paypalOrderId?: T;
+  paypalCaptureId?: T;
   customerNote?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -910,6 +926,17 @@ export interface Integration {
      */
     webhookSecret?: string | null;
   };
+  paypal?: {
+    /**
+     * Aus dem PayPal-Developer-Dashboard (REST-App)
+     */
+    clientId?: string | null;
+    clientSecret?: string | null;
+    /**
+     * Aktivieren, solange mit Sandbox-Zugangsdaten getestet wird
+     */
+    sandbox?: boolean | null;
+  };
   facebook?: {
     pageId?: string | null;
     /**
@@ -1020,6 +1047,13 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         secretKey?: T;
         webhookSecret?: T;
+      };
+  paypal?:
+    | T
+    | {
+        clientId?: T;
+        clientSecret?: T;
+        sandbox?: T;
       };
   facebook?:
     | T

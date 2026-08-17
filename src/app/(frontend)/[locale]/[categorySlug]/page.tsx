@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
@@ -12,8 +13,31 @@ import {
   mediaUrl,
 } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
+import { absoluteUrl, alternatesFor } from '../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; categorySlug: string }>
+}): Promise<Metadata> {
+  const { locale, categorySlug } = await params
+  if (!isLocale(locale)) return {}
+  const category = await getCategoryBySlug(categorySlug, locale)
+  if (!category) return {}
+  const image = absoluteUrl(mediaUrl(category.image, 'large'))
+  return {
+    title: category.name,
+    description: category.description || undefined,
+    alternates: alternatesFor(locale, `/${categorySlug}`),
+    openGraph: {
+      title: category.name,
+      description: category.description || undefined,
+      images: image ? [{ url: image }] : undefined,
+    },
+  }
+}
 
 export default async function CategoryPage({
   params,

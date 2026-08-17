@@ -36,6 +36,16 @@ services:
     networks:
       - edge
       - internal
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "node -e \"fetch('http://localhost:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     labels:
       - traefik.enable=true
       - traefik.docker.network=edge
@@ -60,6 +70,37 @@ services:
       timeout: 5s
       retries: 10
 
+  # Tägliches Datenbank-Backup (pg_dump), behält die letzten 14 Dumps
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-vh}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      PGDATABASE: ${POSTGRES_DB:-vh}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          ts=$$(date +%Y-%m-%d_%H%M)
+          if pg_dump -Fc -f "/backups/vh_$$ts.dump"; then
+            echo "Backup OK: vh_$$ts.dump"
+          else
+            echo "Backup FEHLGESCHLAGEN: $$ts" >&2
+          fi
+          ls -1t /backups/vh_*.dump 2>/dev/null | tail -n +15 | xargs -r rm -f
+          sleep 86400
+        done
+    volumes:
+      - backups:/backups
+    networks:
+      - internal
+
 networks:
   edge:
     external: true
@@ -68,3 +109,4 @@ networks:
 volumes:
   media:
   dbdata:
+  backups:

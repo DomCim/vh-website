@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
 
-import type { Locale } from '../../lib/i18n'
+import { locales, type Locale } from '../../lib/i18n'
 import { CartLink } from '../shop/CartLink'
 
 type Category = {
@@ -35,9 +35,9 @@ export function Header({
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]
 
-  // Sprachumschalter: gleicher Pfad in der anderen Sprache
-  const otherLocale: Locale = locale === 'de' ? 'fr' : 'de'
-  const switchedPath = pathname?.replace(`/${locale}`, `/${otherLocale}`) || `/${otherLocale}`
+  // Sprachumschalter: gleicher Pfad in der jeweils anderen Sprache
+  const pathFor = (target: Locale) =>
+    pathname?.replace(new RegExp(`^/${locale}(?=/|$)`), `/${target}`) || `/${target}`
 
   const isActive = (href: string) =>
     pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
@@ -69,19 +69,17 @@ export function Header({
 
         <div className="flex items-center gap-4">
           <div className="tracking-nav text-ink-soft flex items-center gap-2 text-xs uppercase">
-            <Link
-              href={`/${locale === 'de' ? pathname || `/${locale}` : switchedPath}`}
-              className={locale === 'de' ? 'text-ink font-semibold' : 'hover:text-ink'}
-            >
-              DE
-            </Link>
-            <span className="text-line">|</span>
-            <Link
-              href={`${locale === 'fr' ? pathname || `/${locale}` : switchedPath}`}
-              className={locale === 'fr' ? 'text-ink font-semibold' : 'hover:text-ink'}
-            >
-              FR
-            </Link>
+            {locales.map((code, i) => (
+              <React.Fragment key={code}>
+                {i > 0 && <span className="text-line">|</span>}
+                <Link
+                  href={pathFor(code)}
+                  className={code === locale ? 'text-ink font-semibold' : 'hover:text-ink'}
+                >
+                  {code.toUpperCase()}
+                </Link>
+              </React.Fragment>
+            ))}
           </div>
 
           <CartLink locale={locale} label={dict.nav.cart} />

@@ -3,14 +3,51 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { Reveal } from '../../../../../components/motion/Reveal'
+import { payloadClient } from '../../../../../lib/data'
 import { isLocale, t } from '../../../../../lib/i18n'
+import { markOrderPaid } from '../../../../../lib/orderHooks'
+import { capturePayPalOrder, paypalConfig } from '../../../../../lib/paypal'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ThankYouPage({ params }: { params: Promise<{ locale: string }> }) {
+/** Rückkehr von PayPal: Zahlung server-seitig einziehen und Bestellung abschließen */
+async function capturePayPalIfPresent(paypalToken?: string) {
+  if (!paypalToken) return
+  try {
+    const payload = await payloadClient()
+    const cfg = await paypalConfig(payload)
+    if (!cfg) return
+    const { docs } = await payload.find({
+      collection: 'orders',
+      where: { paypalOrderId: { equals: paypalToken } },
+      overrideAccess: true,
+      limit: 1,
+      depth: 0,
+    })
+    const order = docs[0]
+    if (!order || order.status !== 'pending') return
+    const result = await capturePayPalOrder(cfg, paypalToken)
+    if (result.status === 'COMPLETED') {
+      await markOrderPaid(payload, order.id, { paypalCaptureId: result.captureId })
+    }
+  } catch (err) {
+    console.error('PayPal-Capture fehlgeschlagen:', err)
+  }
+}
+
+export default async function ThankYouPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ token?: string }>
+}) {
   const { locale } = await params
+  const { token } = await searchParams
   if (!isLocale(locale)) notFound()
   const dict = t(locale)
+
+  await capturePayPalIfPresent(token)
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">

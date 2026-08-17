@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
+import { notifyOnShipped } from '../lib/orderHooks'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
@@ -12,6 +13,9 @@ export const Orders: CollectionConfig = {
     useAsTitle: 'orderNumber',
     defaultColumns: ['orderNumber', 'status', 'total', 'createdAt'],
     group: 'Shop',
+  },
+  hooks: {
+    afterChange: [notifyOnShipped],
   },
   access: {
     // Bestellungen sind nur im Backend sichtbar; angelegt werden sie server-seitig (Local API)
@@ -46,6 +50,25 @@ export const Orders: CollectionConfig = {
       ],
       admin: {
         position: 'sidebar',
+      },
+    },
+    {
+      name: 'trackingNumber',
+      label: 'Trackingnummer',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Vor dem Umstellen auf „Versendet" eintragen — sie wird in der Versand-Mail an den Kunden mitgeschickt.',
+      },
+    },
+    {
+      name: 'trackingUrl',
+      label: 'Tracking-Link (optional)',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description: 'z.B. der DHL-/Speditions-Link zur Sendungsverfolgung',
       },
     },
     {
@@ -210,6 +233,20 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
+      name: 'paymentProvider',
+      label: 'Zahlungsanbieter',
+      type: 'select',
+      defaultValue: 'stripe',
+      options: [
+        { label: 'Stripe', value: 'stripe' },
+        { label: 'PayPal', value: 'paypal' },
+      ],
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
       name: 'stripeSessionId',
       label: 'Stripe Session-ID',
       type: 'text',
@@ -222,6 +259,25 @@ export const Orders: CollectionConfig = {
     {
       name: 'stripePaymentIntentId',
       label: 'Stripe PaymentIntent-ID',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'paypalOrderId',
+      label: 'PayPal Order-ID',
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'paypalCaptureId',
+      label: 'PayPal Capture-ID',
       type: 'text',
       admin: {
         position: 'sidebar',

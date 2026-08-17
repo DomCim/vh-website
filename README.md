@@ -2,17 +2,19 @@
 
 Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moderne, selbst verwaltbare Website mit Online-Shop — ohne TYPO3.
 
-**Stack:** Next.js 15 · Payload CMS 3 (Admin-Backend unter `/admin`) · PostgreSQL · Tailwind CSS 4 · Motion (Scroll-Animationen) · Stripe Checkout · Docker/Traefik
+**Stack:** Next.js 15 · Payload CMS 3 (Admin-Backend unter `/admin`) · PostgreSQL · Tailwind CSS 4 · Motion (Scroll-Animationen) · Stripe Checkout · PayPal · Docker/Traefik
 
 ## Funktionen
 
 - **1:1-Design** angelehnt an die bestehende Website (Logo, Navigation, Hero-Slider, dunkler Footer), veredelt mit dezenten Scroll-Animationen
-- **Zweisprachig** Deutsch/Französisch — alle Inhalte im Backend übersetzbar
-- **Shop** mit Varianten (Größen), Farboptionen (RAL), Warenkorb und Stripe-Checkout (Karte, Apple/Google Pay, Klarna); Produkte optional „nur auf Anfrage"
-- **Bestellverwaltung** im Admin (offen → bezahlt → versendet), Bestätigungs-Mail an Kunden + Benachrichtigung an euch
+- **Dreisprachig** Deutsch/Französisch/Englisch — alle Inhalte im Backend übersetzbar (Fallback: Deutsch)
+- **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout via **Stripe** (Karte, Apple/Google Pay, Klarna) oder **PayPal**; Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
+- **Bestellverwaltung** im Admin (offen → bezahlt → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet", Bestätigungs-Mail an Kunden + Benachrichtigung an euch
 - **News** mit optionalem **Facebook-Autopost** beim Veröffentlichen
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
+- **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
+- **Betrieb**: `/api/healthz` für Monitoring, tägliche DB-Backups (pg_dump-Sidecar, letzte 14 Dumps im Volume `backups`)
 
 ## Lokale Entwicklung
 
@@ -53,6 +55,12 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 3. Testbestellung mit Karte `4242 4242 4242 4242` durchführen — die Bestellung muss im Admin auf „Bezahlt" springen.
 
 Ohne Stripe-Keys funktioniert die Website vollständig, nur der Checkout meldet dann einen Fehler.
+
+## PayPal einrichten (optional)
+
+1. [PayPal Developer](https://developer.paypal.com) → REST-App erstellen (Business-Konto nötig) → Client-ID + Secret.
+2. Im Admin unter **Verwaltung → Integrationen → PayPal** eintragen; zum Testen Sandbox-Zugangsdaten + Haken „Sandbox-Modus".
+3. Sobald Zugangsdaten hinterlegt sind, erscheint PayPal automatisch als Zahlungsart in der Kasse. Die Zahlung wird beim Rücksprung auf die Danke-Seite server-seitig eingezogen (Capture).
 
 ## Facebook-Autopost einrichten (optional)
 

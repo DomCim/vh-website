@@ -11,6 +11,9 @@ type CheckoutDict = {
   optionShipping: string
   optionPickup: string
   pickupNote: string
+  paymentMethod: string
+  optionCard: string
+  optionPaypal: string
   shipping: string
   contactData: string
   name: string
@@ -41,16 +44,19 @@ export function CheckoutForm({
   dict,
   cartDict,
   initialCode,
+  paypalAvailable = false,
 }: {
   locale: Locale
   dict: CheckoutDict
   cartDict: CartDict
   initialCode?: string
+  paypalAvailable?: boolean
 }) {
   const { items, subtotal, clear } = useCart()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(false)
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe')
 
   const shipping =
     deliveryMethod === 'pickup'
@@ -85,6 +91,7 @@ export function CheckoutForm({
           locale,
           promoCode: initialCode,
           deliveryMethod,
+          paymentMethod,
           items: items.map((i) => ({
             productId: i.productId,
             variantTitle: i.variantTitle,
@@ -156,6 +163,38 @@ export function CheckoutForm({
             )}
           </div>
         </div>
+
+        {paypalAvailable && (
+          <div>
+            <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
+              {dict.paymentMethod}
+            </h2>
+            <div className="space-y-2">
+              <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="stripe"
+                  checked={paymentMethod === 'stripe'}
+                  onChange={() => setPaymentMethod('stripe')}
+                  className="accent-ink"
+                />
+                {dict.optionCard}
+              </label>
+              <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="paypal"
+                  checked={paymentMethod === 'paypal'}
+                  onChange={() => setPaymentMethod('paypal')}
+                  className="accent-ink"
+                />
+                {dict.optionPaypal}
+              </label>
+            </div>
+          </div>
+        )}
 
         <div>
           <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
