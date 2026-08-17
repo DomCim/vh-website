@@ -61,6 +61,18 @@ Ohne Stripe-Keys funktioniert die Website vollständig, nur der Checkout meldet 
 3. `FB_PAGE_ID` und `FB_PAGE_ACCESS_TOKEN` im Stack setzen.
 4. Bei einem News-Beitrag die Checkbox „Beim Veröffentlichen auf Facebook posten" aktivieren — nach dem Veröffentlichen erscheint die Post-ID (oder eine Fehlermeldung) in der Seitenleiste des Beitrags.
 
+## MCP-Server (Verwaltung per KI-Assistent, optional)
+
+Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte anlegen/ändern, News verfassen (inkl. Facebook-Post), Aktionen starten, Bestellungen einsehen und Status setzen, Shop-Statistik abrufen.
+
+1. Im Portainer-Stack `MCP_API_KEY` setzen (z.B. `openssl rand -hex 24`). Ohne Schlüssel ist der Endpunkt deaktiviert (503).
+2. Endpunkt: `https://vh.dominikdill.com/api/mcp` (Streamable HTTP).
+3. Verbinden:
+   - **claude.ai / Cowork** (Custom Connector, ohne Header-Support): URL mit Schlüssel als Query-Parameter angeben — `https://vh.dominikdill.com/api/mcp?key=<MCP_API_KEY>`
+   - **Claude Code**: `claude mcp add --transport http vh-website https://vh.dominikdill.com/api/mcp --header "Authorization: Bearer <MCP_API_KEY>"`
+
+Der Schlüssel gewährt vollen Verwaltungszugriff — wie ein Admin-Passwort behandeln.
+
 ## Inhalte pflegen (Kurzanleitung Redaktion)
 
 Alles unter `https://vh.dominikdill.com/admin`:

@@ -168,6 +168,10 @@ export interface Product {
    */
   price?: number | null;
   /**
+   * z.B. 150 für Speditionslieferung. Leer oder 0 = versandkostenfrei. Bei Abholung entfallen die Versandkosten automatisch.
+   */
+  shippingCost?: number | null;
+  /**
    * z.B. Größen oder Ausführungen mit eigenem Preis
    */
   variants?:
@@ -357,19 +361,24 @@ export interface Order {
   }[];
   subtotal: number;
   discount?: number | null;
+  shippingTotal?: number | null;
   total: number;
+  deliveryMethod: 'shipping' | 'pickup';
   promotionTitle?: string | null;
   customer: {
     name: string;
     email: string;
     phone?: string | null;
   };
-  shippingAddress: {
-    line1: string;
+  /**
+   * Bei Abholung leer
+   */
+  shippingAddress?: {
+    line1?: string | null;
     line2?: string | null;
-    postalCode: string;
-    city: string;
-    country: string;
+    postalCode?: string | null;
+    city?: string | null;
+    country?: string | null;
   };
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
@@ -509,6 +518,7 @@ export interface ProductsSelect<T extends boolean = true> {
   shortDescription?: T;
   description?: T;
   price?: T;
+  shippingCost?: T;
   variants?:
     | T
     | {
@@ -602,7 +612,9 @@ export interface OrdersSelect<T extends boolean = true> {
       };
   subtotal?: T;
   discount?: T;
+  shippingTotal?: T;
   total?: T;
+  deliveryMethod?: T;
   promotionTitle?: T;
   customer?:
     | T

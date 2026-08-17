@@ -7,6 +7,11 @@ import { formatPrice, type Locale } from '../../lib/i18n'
 import { useCart } from './CartProvider'
 
 type CheckoutDict = {
+  deliveryMethod: string
+  optionShipping: string
+  optionPickup: string
+  pickupNote: string
+  shipping: string
   contactData: string
   name: string
   email: string
@@ -45,6 +50,12 @@ export function CheckoutForm({
   const { items, subtotal, clear } = useCart()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(false)
+  const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
+
+  const shipping =
+    deliveryMethod === 'pickup'
+      ? 0
+      : items.reduce((s, i) => s + (i.shippingCost ?? 0) * i.quantity, 0)
 
   if (items.length === 0) {
     return (
@@ -73,6 +84,7 @@ export function CheckoutForm({
         body: JSON.stringify({
           locale,
           promoCode: initialCode,
+          deliveryMethod,
           items: items.map((i) => ({
             productId: i.productId,
             variantTitle: i.variantTitle,
@@ -114,6 +126,39 @@ export function CheckoutForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
+            {dict.deliveryMethod}
+          </h2>
+          <div className="space-y-2">
+            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+              <input
+                type="radio"
+                name="deliveryMethod"
+                value="shipping"
+                checked={deliveryMethod === 'shipping'}
+                onChange={() => setDeliveryMethod('shipping')}
+                className="accent-ink"
+              />
+              {dict.optionShipping}
+            </label>
+            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+              <input
+                type="radio"
+                name="deliveryMethod"
+                value="pickup"
+                checked={deliveryMethod === 'pickup'}
+                onChange={() => setDeliveryMethod('pickup')}
+                className="accent-ink"
+              />
+              {dict.optionPickup}
+            </label>
+            {deliveryMethod === 'pickup' && (
+              <p className="text-ink-soft text-xs">{dict.pickupNote}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
             {dict.contactData}
           </h2>
           <div className="space-y-3">
@@ -123,26 +168,28 @@ export function CheckoutForm({
           </div>
         </div>
 
-        <div>
-          <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
-            {dict.shippingAddress}
-          </h2>
-          <div className="space-y-3">
-            <input name="line1" required placeholder={dict.line1} className={inputClass} />
-            <input name="line2" placeholder={dict.line2} className={inputClass} />
-            <div className="grid grid-cols-[120px_1fr] gap-3">
-              <input name="postalCode" required placeholder={dict.postalCode} className={inputClass} />
-              <input name="city" required placeholder={dict.city} className={inputClass} />
+        {deliveryMethod === 'shipping' && (
+          <div>
+            <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
+              {dict.shippingAddress}
+            </h2>
+            <div className="space-y-3">
+              <input name="line1" required placeholder={dict.line1} className={inputClass} />
+              <input name="line2" placeholder={dict.line2} className={inputClass} />
+              <div className="grid grid-cols-[120px_1fr] gap-3">
+                <input name="postalCode" required placeholder={dict.postalCode} className={inputClass} />
+                <input name="city" required placeholder={dict.city} className={inputClass} />
+              </div>
+              <input
+                name="country"
+                required
+                placeholder={dict.country}
+                defaultValue={locale === 'fr' ? 'France' : 'Deutschland'}
+                className={inputClass}
+              />
             </div>
-            <input
-              name="country"
-              required
-              placeholder={dict.country}
-              defaultValue={locale === 'fr' ? 'France' : 'Deutschland'}
-              className={inputClass}
-            />
           </div>
-        </div>
+        )}
 
         <textarea name="note" rows={3} placeholder={dict.note} className={inputClass} />
 
@@ -177,9 +224,21 @@ export function CheckoutForm({
             </li>
           ))}
         </ul>
-        <div className="border-line text-ink mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
-          <span>{cartDict.subtotal}</span>
-          <span>{formatPrice(subtotal, locale)}</span>
+        <div className="border-line mt-4 space-y-1 border-t pt-3 text-sm">
+          <div className="text-ink-soft flex justify-between">
+            <span>{cartDict.subtotal}</span>
+            <span>{formatPrice(subtotal, locale)}</span>
+          </div>
+          {shipping > 0 && (
+            <div className="text-ink-soft flex justify-between">
+              <span>{dict.shipping}</span>
+              <span>{formatPrice(shipping, locale)}</span>
+            </div>
+          )}
+          <div className="text-ink flex justify-between font-semibold">
+            <span>{cartDict.total}</span>
+            <span>{formatPrice(subtotal + shipping, locale)}</span>
+          </div>
         </div>
       </aside>
     </div>

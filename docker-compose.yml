@@ -26,6 +26,8 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       FB_PAGE_ID: ${FB_PAGE_ID:-}
       FB_PAGE_ACCESS_TOKEN: ${FB_PAGE_ACCESS_TOKEN:-}
+      # Schlüssel für den MCP-Endpunkt (leer = deaktiviert)
+      MCP_API_KEY: ${MCP_API_KEY:-}
       # Beim allerersten Start auf "true" setzen, um Startdaten einzuspielen
       SEED: ${SEED:-false}
     volumes:

@@ -3,6 +3,8 @@ type OrderLike = {
   total: number
   subtotal: number
   discount?: number | null
+  shippingTotal?: number | null
+  deliveryMethod?: string | null
   promotionTitle?: string | null
   items?:
     | {
@@ -43,16 +45,25 @@ function orderTable(order: OrderLike): string {
       ? `<tr><td></td><td style="padding:6px 12px 6px 0">Rabatt${order.promotionTitle ? ` (${order.promotionTitle})` : ''}</td><td style="text-align:right">−${euro(order.discount)}</td></tr>`
       : ''
 
+  const shippingRow =
+    order.shippingTotal && order.shippingTotal > 0
+      ? `<tr><td></td><td style="padding:2px 12px 2px 0">Versand</td><td style="text-align:right">${euro(order.shippingTotal)}</td></tr>`
+      : ''
+
   return `<table style="border-collapse:collapse;font-size:14px">
     ${rows}
     <tr><td colspan="3" style="border-top:1px solid #ddd;padding-top:8px"></td></tr>
     <tr><td></td><td style="padding:2px 12px 2px 0">Zwischensumme</td><td style="text-align:right">${euro(order.subtotal)}</td></tr>
     ${discountRow}
+    ${shippingRow}
     <tr><td></td><td style="padding:6px 12px 2px 0;font-weight:bold">Gesamt</td><td style="text-align:right;font-weight:bold">${euro(order.total)}</td></tr>
   </table>`
 }
 
 function addressBlock(order: OrderLike): string {
+  if (order.deliveryMethod === 'pickup') {
+    return 'Abholung — Adresse und Termin werden nach der Bestellung abgestimmt.'
+  }
   const a = order.shippingAddress
   if (!a) return ''
   return [order.customer?.name, a.line1, a.line2, `${a.postalCode ?? ''} ${a.city ?? ''}`, a.country]
@@ -71,7 +82,7 @@ export function orderConfirmationEmail(order: OrderLike) {
         <p>vielen Dank für Ihre Bestellung <strong>${order.orderNumber}</strong>.
         Ihre Zahlung ist bei uns eingegangen. Wir melden uns in Kürze mit den Details zur Lieferung.</p>
         ${orderTable(order)}
-        <p style="margin-top:20px"><strong>Lieferadresse</strong><br>${addressBlock(order)}</p>
+        <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
         <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
       </div>`,
   }
@@ -86,7 +97,7 @@ export function orderNotificationEmail(order: OrderLike, to: string) {
         <h2>Neue bezahlte Bestellung ${order.orderNumber}</h2>
         <p>Kunde: ${order.customer?.name ?? ''} (${order.customer?.email ?? ''})</p>
         ${orderTable(order)}
-        <p style="margin-top:20px"><strong>Lieferadresse</strong><br>${addressBlock(order)}</p>
+        <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
         <p>Details im Admin-Panel unter „Bestellungen".</p>
       </div>`,
   }

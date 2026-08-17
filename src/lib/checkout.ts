@@ -9,6 +9,8 @@ export type CheckoutItemInput = {
   quantity: number
 }
 
+export type DeliveryMethod = 'shipping' | 'pickup'
+
 export type PricedLine = {
   productId: number | string
   titleSnapshot: string
@@ -16,14 +18,18 @@ export type PricedLine = {
   color?: string
   quantity: number
   unitPrice: number
+  /** Versandkosten pro Stück (0 bei versandkostenfrei oder Abholung) */
+  shippingCost: number
 }
 
 export type PricedCart = {
   lines: PricedLine[]
   subtotal: number
   discount: number
+  shippingTotal: number
   total: number
   promotionTitle?: string
+  deliveryMethod: DeliveryMethod
 }
 
 /**
@@ -34,6 +40,7 @@ export async function priceCart(
   payload: Payload,
   items: CheckoutItemInput[],
   promoCode?: string,
+  deliveryMethod: DeliveryMethod = 'shipping',
 ): Promise<PricedCart> {
   if (items.length === 0) throw new Error('Warenkorb ist leer')
 
@@ -75,6 +82,7 @@ export async function priceCart(
       color,
       quantity,
       unitPrice,
+      shippingCost: deliveryMethod === 'pickup' ? 0 : (product.shippingCost ?? 0),
     })
     pricedItems.push({
       productId: product.id,
@@ -86,14 +94,18 @@ export async function priceCart(
   const subtotal = Math.round(lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0) * 100) / 100
   const best = await findBestPromotion(payload, pricedItems, promoCode)
   const discount = best?.discount ?? 0
-  const total = Math.round(Math.max(0, subtotal - discount) * 100) / 100
+  const shippingTotal =
+    Math.round(lines.reduce((s, l) => s + l.shippingCost * l.quantity, 0) * 100) / 100
+  const total = Math.round(Math.max(0, subtotal - discount + shippingTotal) * 100) / 100
 
   return {
     lines,
     subtotal,
     discount,
+    shippingTotal,
     total,
     promotionTitle: best?.promotion.title,
+    deliveryMethod,
   }
 }
 

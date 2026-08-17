@@ -54,6 +54,7 @@ export default async function ProductPage({
             slug: product.slug,
             title: product.title,
             price: product.price ?? undefined,
+            shippingCost: product.shippingCost ?? undefined,
             onRequestOnly: Boolean(product.onRequestOnly),
             available: product.available !== false,
             variants: (product.variants ?? []).map((v) => ({
@@ -75,6 +76,9 @@ export default async function ProductPage({
             variant: dict.product.variant,
             color: dict.product.color,
             priceNote: dict.product.priceNote,
+            shippingPerItem: dict.product.shippingPerItem,
+            freeShipping: dict.product.freeShipping,
+            pickupAvailable: dict.product.pickupAvailable,
             unavailable: dict.product.unavailable,
           }}
           shortDescription={product.shortDescription ?? undefined}

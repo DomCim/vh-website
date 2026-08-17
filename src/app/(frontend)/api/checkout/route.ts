@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 
-import { priceCart, nextOrderNumber, type CheckoutItemInput } from '../../../../lib/checkout'
+import {
+  priceCart,
+  nextOrderNumber,
+  type CheckoutItemInput,
+  type DeliveryMethod,
+} from '../../../../lib/checkout'
 import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
 import { stripeClient } from '../../../../lib/stripe'
@@ -11,17 +16,18 @@ type CheckoutBody = {
   items: CheckoutItemInput[]
   promoCode?: string
   locale?: string
+  deliveryMethod?: DeliveryMethod
   customer: {
     name: string
     email: string
     phone?: string
   }
-  shippingAddress: {
-    line1: string
+  shippingAddress?: {
+    line1?: string
     line2?: string
-    postalCode: string
-    city: string
-    country: string
+    postalCode?: string
+    city?: string
+    country?: string
   }
   note?: string
 }
@@ -31,15 +37,24 @@ export async function POST(req: Request) {
     const body = (await req.json()) as CheckoutBody
     const locale: Locale = body.locale && isLocale(body.locale) ? body.locale : 'de'
 
+    const deliveryMethod: DeliveryMethod = body.deliveryMethod === 'pickup' ? 'pickup' : 'shipping'
+
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return NextResponse.json({ error: 'empty-cart' }, { status: 400 })
     }
-    if (!body.customer?.name || !body.customer?.email || !body.shippingAddress?.line1) {
+    if (!body.customer?.name || !body.customer?.email) {
       return NextResponse.json({ error: 'missing-fields' }, { status: 400 })
+    }
+    // Lieferadresse nur bei Lieferung Pflicht — bei Abholung reicht der Kontakt
+    if (
+      deliveryMethod === 'shipping' &&
+      (!body.shippingAddress?.line1 || !body.shippingAddress?.postalCode || !body.shippingAddress?.city)
+    ) {
+      return NextResponse.json({ error: 'missing-address' }, { status: 400 })
     }
 
     const payload = await payloadClient()
-    const cart = await priceCart(payload, body.items, body.promoCode)
+    const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod)
     const orderNumber = await nextOrderNumber(payload)
 
     // Bestellung als "offen" anlegen — bezahlt wird sie erst per Webhook
@@ -59,20 +74,25 @@ export async function POST(req: Request) {
         })),
         subtotal: cart.subtotal,
         discount: cart.discount,
+        shippingTotal: cart.shippingTotal,
         total: cart.total,
         promotionTitle: cart.promotionTitle,
+        deliveryMethod,
         customer: {
           name: body.customer.name,
           email: body.customer.email,
           phone: body.customer.phone,
         },
-        shippingAddress: {
-          line1: body.shippingAddress.line1,
-          line2: body.shippingAddress.line2,
-          postalCode: body.shippingAddress.postalCode,
-          city: body.shippingAddress.city,
-          country: body.shippingAddress.country,
-        },
+        shippingAddress:
+          deliveryMethod === 'shipping'
+            ? {
+                line1: body.shippingAddress?.line1,
+                line2: body.shippingAddress?.line2,
+                postalCode: body.shippingAddress?.postalCode,
+                city: body.shippingAddress?.city,
+                country: body.shippingAddress?.country,
+              }
+            : undefined,
         customerNote: body.note,
       },
     })
@@ -92,20 +112,51 @@ export async function POST(req: Request) {
       discounts = [{ coupon: coupon.id }]
     }
 
+    const shippingLabel = locale === 'fr' ? 'Livraison' : 'Lieferung'
+    const pickupLabel = locale === 'fr' ? 'Retrait sur place' : 'Abholung'
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       locale: locale === 'fr' ? 'fr' : 'de',
       customer_email: body.customer.email,
-      line_items: cart.lines.map((l) => ({
-        quantity: l.quantity,
-        price_data: {
-          currency: 'eur',
-          unit_amount: Math.round(l.unitPrice * 100),
-          product_data: {
-            name: [l.titleSnapshot, l.variantTitle, l.color].filter(Boolean).join(' – '),
+      line_items: [
+        ...cart.lines.map((l) => ({
+          quantity: l.quantity,
+          price_data: {
+            currency: 'eur',
+            unit_amount: Math.round(l.unitPrice * 100),
+            product_data: {
+              name: [l.titleSnapshot, l.variantTitle, l.color].filter(Boolean).join(' – '),
+            },
           },
-        },
-      })),
+        })),
+        // Versandkosten als eigene Positionen je Artikel
+        ...cart.lines
+          .filter((l) => l.shippingCost > 0)
+          .map((l) => ({
+            quantity: l.quantity,
+            price_data: {
+              currency: 'eur',
+              unit_amount: Math.round(l.shippingCost * 100),
+              product_data: {
+                name: `${shippingLabel}: ${l.titleSnapshot}`,
+              },
+            },
+          })),
+        // Abholung als 0-€-Position, damit sie auf der Stripe-Seite sichtbar ist
+        ...(deliveryMethod === 'pickup'
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: 'eur',
+                  unit_amount: 0,
+                  product_data: { name: pickupLabel },
+                },
+              },
+            ]
+          : []),
+      ],
       discounts,
       metadata: {
         orderId: String(order.id),

@@ -112,12 +112,32 @@ export const Orders: CollectionConfig = {
           defaultValue: 0,
         },
         {
+          name: 'shippingTotal',
+          label: 'Versand (EUR)',
+          type: 'number',
+          defaultValue: 0,
+        },
+        {
           name: 'total',
           label: 'Gesamt (EUR)',
           type: 'number',
           required: true,
         },
       ],
+    },
+    {
+      name: 'deliveryMethod',
+      label: 'Versandart',
+      type: 'select',
+      required: true,
+      defaultValue: 'shipping',
+      options: [
+        { label: 'Lieferung', value: 'shipping' },
+        { label: 'Abholung', value: 'pickup' },
+      ],
+      admin: {
+        position: 'sidebar',
+      },
     },
     {
       name: 'promotionTitle',
@@ -152,12 +172,14 @@ export const Orders: CollectionConfig = {
       name: 'shippingAddress',
       label: 'Lieferadresse',
       type: 'group',
+      admin: {
+        description: 'Bei Abholung leer',
+      },
       fields: [
         {
           name: 'line1',
           label: 'Straße & Hausnummer',
           type: 'text',
-          required: true,
         },
         {
           name: 'line2',
@@ -171,13 +193,11 @@ export const Orders: CollectionConfig = {
               name: 'postalCode',
               label: 'PLZ',
               type: 'text',
-              required: true,
             },
             {
               name: 'city',
               label: 'Ort',
               type: 'text',
-              required: true,
             },
           ],
         },
@@ -185,7 +205,6 @@ export const Orders: CollectionConfig = {
           name: 'country',
           label: 'Land',
           type: 'text',
-          required: true,
           defaultValue: 'Deutschland',
         },
       ],
