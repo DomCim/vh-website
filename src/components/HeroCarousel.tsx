@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import Link from 'next/link'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -11,6 +11,7 @@ export type HeroSlide = {
   title?: string | null
   subtitle?: string | null
   link?: string | null
+  tint?: { color: string; dark: boolean } | null
 }
 
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
@@ -23,6 +24,27 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '18%'])
   const fade = useTransform(scrollYProgress, [0, 0.85], [1, 0])
+
+  // Solange der Hero im Bild ist, übernimmt der Header den Farbton des
+  // aktiven Slides (CSS-Variable + data-Attribut, siehe globals.css)
+  const [heroInView, setHeroInView] = useState(true)
+  useMotionValueEvent(scrollYProgress, 'change', (v) => setHeroInView(v < 0.5))
+
+  useEffect(() => {
+    const root = document.documentElement
+    const tint = heroInView ? slides[index]?.tint : null
+    if (tint) {
+      root.style.setProperty('--hero-tint', tint.color)
+      root.dataset.heroTint = tint.dark ? 'dark' : 'light'
+    } else {
+      root.style.removeProperty('--hero-tint')
+      delete root.dataset.heroTint
+    }
+    return () => {
+      root.style.removeProperty('--hero-tint')
+      delete root.dataset.heroTint
+    }
+  }, [index, heroInView, slides])
 
   const next = useCallback(() => setIndex((i) => (i + 1) % count), [count])
   const prev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count])
