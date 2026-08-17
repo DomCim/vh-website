@@ -15,27 +15,40 @@ export type HeroTints = {
   bottom: HeroTint
 }
 
-// Dominante Farben pro Bild nur einmal berechnen (Key: Datei + Änderungsdatum)
+// Kantenfarben pro Bild nur einmal berechnen (Key: Datei + Änderungsdatum)
 const cache = new Map<string, HeroTints | null>()
 
-async function stripTint(file: string, top: number): Promise<HeroTint> {
-  // stats() rechnet immer auf dem Original, daher den Streifen erst
-  // in einen Buffer rendern
+const EDGE_ROWS = 10
+
+/**
+ * Durchschnittsfarbe der obersten bzw. untersten ~10 Pixelzeilen des
+ * Originalbilds — die echte Kantenfarbe, an die Header bzw. Ausstrahlung
+ * nahtlos anschließen sollen.
+ */
+async function edgeTint(file: string, edge: 'top' | 'bottom'): Promise<HeroTint> {
+  const { width, height } = await sharp(file).metadata()
+  const w = width ?? 0
+  const h = height ?? 0
+  const rows = Math.max(1, Math.min(EDGE_ROWS, h))
   const strip = await sharp(file)
-    .resize(64, 64, { fit: 'fill' })
-    .extract({ left: 0, top, width: 64, height: 16 })
+    .extract({ left: 0, top: edge === 'top' ? 0 : h - rows, width: w, height: rows })
     .toBuffer()
-  const { dominant } = await sharp(strip).stats()
-  const { r, g, b } = dominant
+  const { channels } = await sharp(strip).stats()
+  // Unten liegt im Hero ein schwarzer Verlauf (60 %) über dem Bild —
+  // sichtbar ist also Kantenfarbe × 0,4. Die Ausstrahlung soll an das
+  // anschließen, was man tatsächlich sieht.
+  const factor = edge === 'bottom' ? 0.4 : 1
+  const [r, g, b] = channels.map((c) => Math.round(c.mean * factor))
   // Relative Luminanz entscheidet, ob weiße oder dunkle Schrift lesbar ist
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-  return { color: `rgba(${r}, ${g}, ${b}, 0.93)`, dark: luminance < 0.6 }
+  return { color: `rgba(${r}, ${g}, ${b}, 0.95)`, dark: luminance < 0.6 }
 }
 
 /**
- * Ermittelt die dominanten Randfarben eines Medien-Dokuments (für die
- * Header-Überblendung und die Ausstrahlung unter dem Hero). Nutzt das
- * kleine Thumbnail, damit die Analyse schnell bleibt.
+ * Ermittelt die Randfarben eines Medien-Dokuments (für die
+ * Header-Überblendung und die Ausstrahlung unter dem Hero).
+ * Bewusst das Original statt eines Thumbnails: verkleinerte Größen
+ * können beschnitten sein und hätten andere Kanten.
  */
 export async function heroTintFor(media: unknown): Promise<HeroTints | null> {
   if (!media || typeof media !== 'object') return null
@@ -43,10 +56,9 @@ export async function heroTintFor(media: unknown): Promise<HeroTints | null> {
     filename?: string | null
     updatedAt?: string | null
     mimeType?: string | null
-    sizes?: Record<string, { filename?: string | null } | undefined>
   }
   if (m.mimeType && !m.mimeType.startsWith('image/')) return null
-  const filename = m.sizes?.thumbnail?.filename || m.filename
+  const filename = m.filename
   if (!filename) return null
 
   const key = `${filename}:${m.updatedAt ?? ''}`
@@ -57,7 +69,7 @@ export async function heroTintFor(media: unknown): Promise<HeroTints | null> {
   try {
     const file = path.resolve(process.cwd(), 'media', filename)
     if (fs.existsSync(file)) {
-      const [top, bottom] = await Promise.all([stripTint(file, 0), stripTint(file, 48)])
+      const [top, bottom] = await Promise.all([edgeTint(file, 'top'), edgeTint(file, 'bottom')])
       tints = { top, bottom }
     }
   } catch {
