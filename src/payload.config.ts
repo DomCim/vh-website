@@ -15,8 +15,11 @@ import { Media } from './collections/Media'
 import { News } from './collections/News'
 import { Orders } from './collections/Orders'
 import { Products } from './collections/Products'
+import { Projects } from './collections/Projects'
 import { Promotions } from './collections/Promotions'
+import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
+import { About } from './globals/About'
 import { Homepage } from './globals/Homepage'
 import { Integrations } from './globals/Integrations'
 import { Legal } from './globals/Legal'
@@ -36,8 +39,8 @@ export default buildConfig({
       titleSuffix: '– Vincent Hellmann',
     },
   },
-  collections: [Products, Categories, News, Promotions, Orders, Media, Users],
-  globals: [Homepage, SiteSettings, Legal, Integrations],
+  collections: [Products, Categories, News, Projects, Testimonials, Promotions, Orders, Media, Users],
+  globals: [Homepage, About, SiteSettings, Legal, Integrations],
   editor: lexicalEditor(),
   localization: {
     locales: [

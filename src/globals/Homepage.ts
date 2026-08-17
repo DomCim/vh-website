@@ -31,6 +31,16 @@ export const Homepage: GlobalConfig = {
           required: true,
         },
         {
+          name: 'video',
+          label: 'Video (optional, MP4/WebM)',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            description:
+              'Läuft stumm in Schleife statt des Bilds; das Bild bleibt Poster/Fallback. Kurze Clips (10–20 s, ohne Ton) verwenden.',
+          },
+        },
+        {
           name: 'title',
           label: 'Titel',
           type: 'text',

@@ -25,7 +25,7 @@ function entries(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const payload = await payloadClient()
 
-  const [categories, products, news] = await Promise.all([
+  const [categories, products, news, projects] = await Promise.all([
     payload.find({ collection: 'categories', limit: 200, depth: 0 }),
     payload.find({
       collection: 'products',
@@ -39,14 +39,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       limit: 500,
       depth: 0,
     }),
+    payload.find({ collection: 'projects', limit: 500, depth: 0 }),
   ])
 
   const result: MetadataRoute.Sitemap = [
     ...entries('', undefined, 1),
     ...entries('/news', undefined, 0.8),
+    ...entries('/projekte', undefined, 0.7),
+    ...entries('/ueber-uns', undefined, 0.6),
     ...entries('/aktionen', undefined, 0.6),
     ...entries('/kontakt', undefined, 0.5),
   ]
+
+  for (const p of projects.docs) {
+    result.push(...entries(`/projekte/${p.slug}`, p.updatedAt, 0.6))
+  }
 
   for (const c of categories.docs) {
     result.push(...entries(`/${c.slug}`, c.updatedAt, 0.8))

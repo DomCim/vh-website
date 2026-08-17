@@ -75,6 +75,15 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'pinterestVerification',
+      label: 'Pinterest-Verifizierungscode',
+      type: 'text',
+      admin: {
+        description:
+          'Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.',
+      },
+    },
+    {
       name: 'seo',
       label: 'SEO-Standardwerte',
       type: 'group',

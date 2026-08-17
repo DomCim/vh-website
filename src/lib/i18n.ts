@@ -12,6 +12,8 @@ const de = {
     contact: 'Kontakt',
     cart: 'Warenkorb',
     promotions: 'Aktionen',
+    projects: 'Referenzen',
+    about: 'Über uns',
     menu: 'Menü',
   },
   home: {
@@ -22,6 +24,7 @@ const de = {
     highlightsTitle: 'Ihr Stück. Ihre Entscheidung.',
     galleryTitle: 'Einblicke in die Werkstatt',
     discover: 'Entdecken',
+    marquee: ['Stahl', 'Handwerk', 'Design', 'Unikate', 'Maßanfertigung'],
   },
   product: {
     addToCart: 'In den Warenkorb',
@@ -91,6 +94,25 @@ const de = {
     title: 'News',
     readMore: 'Weiterlesen',
     empty: 'Derzeit keine Beiträge.',
+    tabAll: 'Alle',
+    tabNews: 'News',
+    tabGuides: 'Ratgeber',
+    guideBadge: 'Ratgeber',
+  },
+  projects: {
+    title: 'Referenzen',
+    intro: 'Ausgewählte Projekte für Kommunen, Unternehmen und private Auftraggeber.',
+    empty: 'Referenzen folgen in Kürze.',
+    all: 'Alle',
+    sectors: { kommunal: 'Kommunen', gewerbe: 'Gewerbe', privat: 'Privat' } as Record<string, string>,
+    homeTitle: 'Referenzen',
+    viewAll: 'Alle Referenzen',
+  },
+  about: {
+    title: 'Über uns',
+  },
+  testimonials: {
+    title: 'Das sagen unsere Kunden',
   },
   promotions: {
     title: 'Aktuelle Aktionen',
@@ -133,6 +155,8 @@ const fr: Dictionary = {
     contact: 'Contact',
     cart: 'Panier',
     promotions: 'Offres',
+    projects: 'Références',
+    about: 'À propos',
     menu: 'Menu',
   },
   home: {
@@ -143,6 +167,7 @@ const fr: Dictionary = {
     highlightsTitle: 'Votre pièce. Votre choix.',
     galleryTitle: "Aperçu de l'atelier",
     discover: 'Découvrir',
+    marquee: ['Acier', 'Artisanat', 'Design', 'Pièces uniques', 'Sur mesure'],
   },
   product: {
     addToCart: 'Ajouter au panier',
@@ -212,6 +237,25 @@ const fr: Dictionary = {
     title: 'Actualités',
     readMore: 'Lire la suite',
     empty: 'Aucun article pour le moment.',
+    tabAll: 'Tous',
+    tabNews: 'Actualités',
+    tabGuides: 'Conseils',
+    guideBadge: 'Conseils',
+  },
+  projects: {
+    title: 'Références',
+    intro: 'Une sélection de projets pour collectivités, entreprises et particuliers.',
+    empty: 'Références à venir prochainement.',
+    all: 'Toutes',
+    sectors: { kommunal: 'Collectivités', gewerbe: 'Entreprises', privat: 'Particuliers' },
+    homeTitle: 'Références',
+    viewAll: 'Toutes les références',
+  },
+  about: {
+    title: 'À propos',
+  },
+  testimonials: {
+    title: 'Ce que disent nos clients',
   },
   promotions: {
     title: 'Offres en cours',
@@ -252,6 +296,8 @@ const en: Dictionary = {
     contact: 'Contact',
     cart: 'Cart',
     promotions: 'Offers',
+    projects: 'References',
+    about: 'About us',
     menu: 'Menu',
   },
   home: {
@@ -262,6 +308,7 @@ const en: Dictionary = {
     highlightsTitle: 'Your piece. Your choice.',
     galleryTitle: 'Inside the workshop',
     discover: 'Discover',
+    marquee: ['Steel', 'Craftsmanship', 'Design', 'One-of-a-kind', 'Made to measure'],
   },
   product: {
     addToCart: 'Add to cart',
@@ -331,6 +378,25 @@ const en: Dictionary = {
     title: 'News',
     readMore: 'Read more',
     empty: 'No articles yet.',
+    tabAll: 'All',
+    tabNews: 'News',
+    tabGuides: 'Guides',
+    guideBadge: 'Guide',
+  },
+  projects: {
+    title: 'References',
+    intro: 'Selected projects for municipalities, businesses and private clients.',
+    empty: 'References coming soon.',
+    all: 'All',
+    sectors: { kommunal: 'Municipalities', gewerbe: 'Businesses', privat: 'Private' },
+    homeTitle: 'References',
+    viewAll: 'All references',
+  },
+  about: {
+    title: 'About us',
+  },
+  testimonials: {
+    title: 'What our customers say',
   },
   promotions: {
     title: 'Current offers',

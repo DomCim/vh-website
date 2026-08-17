@@ -1,5 +1,6 @@
 'use client'
 
+import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
@@ -14,7 +15,15 @@ type Category = {
 }
 
 type Dict = {
-  nav: { news: string; contact: string; cart: string; promotions: string; menu: string }
+  nav: {
+    news: string
+    contact: string
+    cart: string
+    promotions: string
+    projects: string
+    about: string
+    menu: string
+  }
 }
 
 export function Header({
@@ -27,11 +36,26 @@ export function Header({
   dict: Dict
 }) {
   const [open, setOpen] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const pathname = usePathname()
+  const reduceMotion = useReducedMotion()
+  const { scrollY } = useScroll()
+
+  // Header taucht beim Hochscrollen sofort wieder auf, verschwindet beim Runterscrollen
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const previous = scrollY.getPrevious() ?? 0
+    if (open) {
+      setHidden(false)
+      return
+    }
+    setHidden(latest > previous && latest > 140)
+  })
 
   const items: { href: string; label: string }[] = [
     { href: `/${locale}/news`, label: dict.nav.news },
     ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
+    { href: `/${locale}/projekte`, label: dict.nav.projects },
+    { href: `/${locale}/ueber-uns`, label: dict.nav.about },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]
 
@@ -43,7 +67,11 @@ export function Header({
     pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
 
   return (
-    <header className="border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur">
+    <motion.header
+      className="border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur"
+      animate={reduceMotion ? undefined : { y: hidden ? '-100%' : '0%' }}
+      transition={{ duration: 0.35, ease: [0.22, 0.65, 0.28, 1] }}
+    >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
         <Link href={`/${locale}`} className="shrink-0" onClick={() => setOpen(false)}>
           <img
@@ -117,6 +145,6 @@ export function Header({
           </div>
         </nav>
       )}
-    </header>
+    </motion.header>
   )
 }

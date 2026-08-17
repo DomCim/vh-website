@@ -202,11 +202,12 @@ const handler = createMcpHandler(
           teaser: z.string().describe('Kurztext für Übersicht und Facebook'),
           inhalt: z.string().describe('Fließtext; Absätze durch Leerzeilen'),
           bildId: z.number().describe('Media-ID des Titelbilds (siehe medien_liste)'),
+          rubrik: z.enum(['news', 'ratgeber']).optional().describe('Standard: news'),
           aufFacebookPosten: z.boolean().optional(),
           veroeffentlichen: z.boolean().optional(),
         },
       },
-      async ({ titel, slug, teaser, inhalt, bildId, aufFacebookPosten, veroeffentlichen }) => {
+      async ({ titel, slug, teaser, inhalt, bildId, rubrik, aufFacebookPosten, veroeffentlichen }) => {
         const payload = await db()
         const finalSlug =
           slug ||
@@ -228,6 +229,7 @@ const handler = createMcpHandler(
             slug: finalSlug,
             excerpt: teaser,
             content: richText(inhalt),
+            type: rubrik ?? 'news',
             coverImage: bildId,
             publishedDate: new Date().toISOString(),
             postToFacebook: aufFacebookPosten ?? false,

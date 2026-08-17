@@ -22,6 +22,7 @@ export type ResolvedIntegrations = {
   facebook: {
     pageId?: string
     accessToken?: string
+    instagramAccountId?: string
   }
 }
 
@@ -67,6 +68,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     facebook: {
       pageId: val(doc?.facebook?.pageId, process.env.FB_PAGE_ID),
       accessToken: val(doc?.facebook?.accessToken, process.env.FB_PAGE_ACCESS_TOKEN),
+      instagramAccountId: val(doc?.facebook?.instagramAccountId, process.env.IG_ACCOUNT_ID),
     },
   }
 }
