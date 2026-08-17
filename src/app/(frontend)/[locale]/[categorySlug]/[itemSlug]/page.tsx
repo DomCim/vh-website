@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
@@ -12,14 +13,31 @@ import {
   mediaUrl,
 } from '../../../../../lib/data'
 import { isLocale, t } from '../../../../../lib/i18n'
+import { absoluteUrl, alternatesFor, BASE_URL, jsonLd } from '../../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ locale: string; categorySlug: string; itemSlug: string }>
-}) {
+type PageParams = Promise<{ locale: string; categorySlug: string; itemSlug: string }>
+
+export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
+  const { locale, categorySlug, itemSlug } = await params
+  if (!isLocale(locale)) return {}
+  const product = await getProductBySlug(itemSlug, locale)
+  if (!product) return {}
+  const image = absoluteUrl(mediaUrl(product.images?.[0], 'large'))
+  return {
+    title: product.title,
+    description: product.shortDescription || undefined,
+    alternates: alternatesFor(locale, `/${categorySlug}/${itemSlug}`),
+    openGraph: {
+      title: product.title,
+      description: product.shortDescription || undefined,
+      images: image ? [{ url: image }] : undefined,
+    },
+  }
+}
+
+export default async function ProductPage({ params }: { params: PageParams }) {
   const { locale, categorySlug, itemSlug } = await params
   if (!isLocale(locale)) notFound()
   const dict = t(locale)
@@ -35,8 +53,37 @@ export default async function ProductPage({
     alt: mediaAlt(img, product.title),
   }))
 
+  // schema.org-Produktdaten für Google Rich Results
+  const prices = [
+    ...(product.variants?.map((v) => v.price) ?? []),
+    ...(typeof product.price === 'number' ? [product.price] : []),
+  ]
+  const minPrice = prices.length ? Math.min(...prices) : undefined
+  const productJsonLd = jsonLd({
+    '@type': 'Product',
+    name: product.title,
+    description: product.shortDescription || undefined,
+    image: images.map((i) => absoluteUrl(i.url)).filter(Boolean),
+    url: `${BASE_URL}/${locale}/${categorySlug}/${itemSlug}`,
+    brand: { '@type': 'Brand', name: 'Vincent Hellmann' },
+    ...(minPrice !== undefined &&
+      !product.onRequestOnly && {
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'EUR',
+          price: minPrice,
+          availability:
+            product.available !== false
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          url: `${BASE_URL}/${locale}/${categorySlug}/${itemSlug}`,
+        },
+      }),
+  })
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: productJsonLd }} />
       <Reveal>
         <Link
           href={`/${locale}/${categorySlug}`}
@@ -80,6 +127,15 @@ export default async function ProductPage({
             freeShipping: dict.product.freeShipping,
             pickupAvailable: dict.product.pickupAvailable,
             unavailable: dict.product.unavailable,
+            inquiry: {
+              name: dict.contact.name,
+              email: dict.contact.email,
+              phone: dict.contact.phone,
+              message: dict.contact.message,
+              send: dict.contact.send,
+              success: dict.contact.success,
+              error: dict.contact.error,
+            },
           }}
           shortDescription={product.shortDescription ?? undefined}
         />

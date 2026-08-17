@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 
 import { payloadClient } from '../../../../lib/data'
-import { orderConfirmationEmail, orderNotificationEmail } from '../../../../lib/mail'
-import { sendMail } from '../../../../lib/sendMail'
-import { getIntegrations } from '../../../../lib/settings'
+import { markOrderPaid } from '../../../../lib/orderHooks'
 import { stripeClient, stripeWebhookSecret } from '../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -44,30 +42,13 @@ export async function POST(req: Request) {
     })
     const order = docs[0]
 
-    if (order && order.status === 'pending') {
-      await payload.update({
-        collection: 'orders',
-        id: order.id,
-        overrideAccess: true,
-        data: {
-          status: 'paid',
-          stripePaymentIntentId:
-            typeof session.payment_intent === 'string'
-              ? session.payment_intent
-              : session.payment_intent?.id,
-        },
+    if (order) {
+      await markOrderPaid(payload, order.id, {
+        stripePaymentIntentId:
+          typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : session.payment_intent?.id,
       })
-
-      // Bestätigung an Kunde + interne Benachrichtigung (Fehler blockieren den Webhook nicht)
-      try {
-        await sendMail(payload, orderConfirmationEmail(order))
-        const { email } = await getIntegrations(payload)
-        if (email.notificationEmail) {
-          await sendMail(payload, orderNotificationEmail(order, email.notificationEmail))
-        }
-      } catch (err) {
-        payload.logger.error({ err }, 'Bestell-E-Mails konnten nicht gesendet werden')
-      }
     }
   }
 

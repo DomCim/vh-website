@@ -5,6 +5,8 @@ type OrderLike = {
   discount?: number | null
   shippingTotal?: number | null
   deliveryMethod?: string | null
+  trackingNumber?: string | null
+  trackingUrl?: string | null
   promotionTitle?: string | null
   items?:
     | {
@@ -103,17 +105,55 @@ export function orderNotificationEmail(order: OrderLike, to: string) {
   }
 }
 
+export function orderShippedEmail(order: OrderLike) {
+  const tracking = order.trackingNumber
+    ? `<p><strong>Sendungsverfolgung:</strong> ${
+        order.trackingUrl
+          ? `<a href="${order.trackingUrl}">${order.trackingNumber}</a>`
+          : order.trackingNumber
+      }</p>`
+    : ''
+  return {
+    to: order.customer?.email ?? '',
+    subject: `Ihre Bestellung ${order.orderNumber} ist unterwegs – Vincent Hellmann`,
+    html: `
+      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
+        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
+        <p>Guten Tag ${order.customer?.name ?? ''},</p>
+        <p>gute Nachrichten: Ihre Bestellung <strong>${order.orderNumber}</strong> wurde soeben versendet.</p>
+        ${tracking}
+        <p style="margin-top:20px"><strong>Lieferadresse</strong><br>${addressBlock(order)}</p>
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
+      </div>`,
+  }
+}
+
 export function contactEmail(
-  data: { name: string; email: string; phone?: string; message: string },
+  data: {
+    name: string
+    email: string
+    phone?: string
+    message: string
+    productTitle?: string
+    productUrl?: string
+  },
   to: string,
 ) {
+  const isProductInquiry = Boolean(data.productTitle)
   return {
     to,
     replyTo: data.email,
-    subject: `Kontaktanfrage von ${data.name}`,
+    subject: isProductInquiry
+      ? `Produktanfrage: ${data.productTitle} (von ${data.name})`
+      : `Kontaktanfrage von ${data.name}`,
     html: `
       <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h2>Neue Kontaktanfrage über die Website</h2>
+        <h2>${isProductInquiry ? 'Neue Produktanfrage über die Website' : 'Neue Kontaktanfrage über die Website'}</h2>
+        ${
+          isProductInquiry
+            ? `<p><strong>Produkt:</strong> ${data.productTitle}${data.productUrl ? ` — <a href="${data.productUrl}">${data.productUrl}</a>` : ''}</p>`
+            : ''
+        }
         <p><strong>Name:</strong> ${data.name}<br>
         <strong>E-Mail:</strong> ${data.email}<br>
         ${data.phone ? `<strong>Telefon:</strong> ${data.phone}<br>` : ''}</p>

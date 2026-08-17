@@ -14,6 +14,8 @@ export async function POST(req: Request) {
       email?: string
       phone?: string
       message?: string
+      productTitle?: string
+      productUrl?: string
     }
 
     const name = body.name?.trim()
@@ -32,7 +34,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'not-configured' }, { status: 500 })
     }
 
-    await sendMail(payload, contactEmail({ name, email, phone: body.phone?.trim(), message }, to))
+    await sendMail(
+      payload,
+      contactEmail(
+        {
+          name,
+          email,
+          phone: body.phone?.trim(),
+          message,
+          productTitle: body.productTitle?.trim().slice(0, 200),
+          productUrl: body.productUrl?.trim().slice(0, 500),
+        },
+        to,
+      ),
+    )
 
     return NextResponse.json({ ok: true })
   } catch (err) {

@@ -14,6 +14,11 @@ export type ResolvedIntegrations = {
     secretKey?: string
     webhookSecret?: string
   }
+  paypal: {
+    clientId?: string
+    clientSecret?: string
+    sandbox: boolean
+  }
   facebook: {
     pageId?: string
     accessToken?: string
@@ -53,6 +58,11 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     stripe: {
       secretKey: val(doc?.stripe?.secretKey, process.env.STRIPE_SECRET_KEY),
       webhookSecret: val(doc?.stripe?.webhookSecret, process.env.STRIPE_WEBHOOK_SECRET),
+    },
+    paypal: {
+      clientId: val(doc?.paypal?.clientId, process.env.PAYPAL_CLIENT_ID),
+      clientSecret: val(doc?.paypal?.clientSecret, process.env.PAYPAL_CLIENT_SECRET),
+      sandbox: Boolean(doc?.paypal?.sandbox ?? process.env.PAYPAL_SANDBOX === 'true'),
     },
     facebook: {
       pageId: val(doc?.facebook?.pageId, process.env.FB_PAGE_ID),

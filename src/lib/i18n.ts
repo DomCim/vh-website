@@ -1,4 +1,4 @@
-export const locales = ['de', 'fr'] as const
+export const locales = ['de', 'fr', 'en'] as const
 export type Locale = (typeof locales)[number]
 export const defaultLocale: Locale = 'de'
 
@@ -62,6 +62,9 @@ const de = {
     optionShipping: 'Lieferung',
     optionPickup: 'Abholung (versandkostenfrei)',
     pickupNote: 'Die Abholadresse und den Termin stimmen wir nach der Bestellung mit Ihnen ab.',
+    paymentMethod: 'Zahlungsart',
+    optionCard: 'Karte, Apple Pay, Klarna & mehr',
+    optionPaypal: 'PayPal',
     shipping: 'Versand',
     contactData: 'Ihre Kontaktdaten',
     name: 'Vor- und Nachname',
@@ -180,6 +183,9 @@ const fr: Dictionary = {
     optionShipping: 'Livraison',
     optionPickup: 'Retrait sur place (sans frais de livraison)',
     pickupNote: "Nous conviendrons de l'adresse et de la date de retrait avec vous après la commande.",
+    paymentMethod: 'Moyen de paiement',
+    optionCard: 'Carte, Apple Pay, Klarna & plus',
+    optionPaypal: 'PayPal',
     shipping: 'Livraison',
     contactData: 'Vos coordonnées',
     name: 'Nom et prénom',
@@ -240,21 +246,142 @@ const fr: Dictionary = {
   },
 }
 
-const dictionaries: Record<Locale, Dictionary> = { de, fr }
+const en: Dictionary = {
+  nav: {
+    news: 'News',
+    contact: 'Contact',
+    cart: 'Cart',
+    promotions: 'Offers',
+    menu: 'Menu',
+  },
+  home: {
+    categoriesTitle: 'Our product worlds',
+    newsTitle: 'Latest news',
+    allNews: 'All news',
+    valuesTitle: 'What we stand for',
+    highlightsTitle: 'Your piece. Your choice.',
+    galleryTitle: 'Inside the workshop',
+    discover: 'Discover',
+  },
+  product: {
+    addToCart: 'Add to cart',
+    added: 'Added ✓',
+    onRequest: 'On request',
+    requestNow: 'Enquire now',
+    variant: 'Version',
+    color: 'Colour',
+    from: 'from',
+    priceNote: 'incl. VAT',
+    shippingPerItem: 'delivery per item',
+    freeShipping: 'Free delivery',
+    pickupAvailable: 'Pickup available',
+    unavailable: 'Currently unavailable',
+    backToCategory: 'Back to overview',
+  },
+  cart: {
+    title: 'Cart',
+    empty: 'Your cart is empty.',
+    continueShopping: 'Continue browsing',
+    subtotal: 'Subtotal',
+    discount: 'Discount',
+    shipping: 'Delivery',
+    total: 'Total',
+    checkout: 'Checkout',
+    remove: 'Remove',
+    quantity: 'Quantity',
+    promoCode: 'Promo code',
+    applyCode: 'Apply',
+    promoApplied: 'Offer applied',
+    promoInvalid: 'This code is not valid.',
+    shippingLabel: 'Delivery',
+    priceNote: 'Prices incl. VAT. Delivery costs are waived for pickup.',
+  },
+  checkout: {
+    title: 'Checkout',
+    deliveryMethod: 'Delivery method',
+    optionShipping: 'Delivery',
+    optionPickup: 'Pickup (free of delivery costs)',
+    pickupNote: 'We will arrange the pickup address and date with you after your order.',
+    paymentMethod: 'Payment method',
+    optionCard: 'Card, Apple Pay, Klarna & more',
+    optionPaypal: 'PayPal',
+    shipping: 'Delivery',
+    contactData: 'Your contact details',
+    name: 'First and last name',
+    email: 'Email address',
+    phone: 'Phone (optional)',
+    shippingAddress: 'Delivery address',
+    line1: 'Street and number',
+    line2: 'Address line 2 (optional)',
+    postalCode: 'Postal code',
+    city: 'City',
+    country: 'Country',
+    note: 'Order note (optional)',
+    payNow: 'Place binding order',
+    redirectNote: 'You will be securely redirected to our payment provider.',
+    backToCart: 'Back to cart',
+    error: 'The order could not be started. Please try again.',
+  },
+  thanks: {
+    title: 'Thank you for your order!',
+    text: 'We have received your order and will contact you shortly with all delivery details.',
+    backHome: 'Back to home',
+  },
+  news: {
+    title: 'News',
+    readMore: 'Read more',
+    empty: 'No articles yet.',
+  },
+  promotions: {
+    title: 'Current offers',
+    validUntil: 'Valid until',
+    empty: 'No offers running at the moment.',
+    code: 'Code',
+  },
+  contact: {
+    title: 'Contact',
+    intro: 'Questions about our products or interested in a custom piece? Write to us.',
+    name: 'Name',
+    email: 'Email address',
+    phone: 'Phone (optional)',
+    message: 'Your message',
+    send: 'Send message',
+    success: 'Thank you for your message! We will get back to you as soon as possible.',
+    error: 'The message could not be sent. Please try again later.',
+    phoneLabel: 'Phone',
+    emailLabel: 'Email',
+  },
+  footer: {
+    impressum: 'Legal notice',
+    datenschutz: 'Privacy policy',
+    agb: 'Terms & conditions',
+    followUs: 'Follow us',
+    contact: 'Contact',
+  },
+  common: {
+    loading: 'Loading …',
+    error: 'Something went wrong.',
+    backHome: 'Back to home',
+  },
+}
+
+const dictionaries: Record<Locale, Dictionary> = { de, fr, en }
 
 export function t(locale: Locale): Dictionary {
   return dictionaries[locale] ?? dictionaries[defaultLocale]
 }
 
+const intlLocales: Record<Locale, string> = { de: 'de-DE', fr: 'fr-FR', en: 'en-GB' }
+
 export function formatPrice(value: number, locale: Locale): string {
-  return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'de-DE', {
+  return new Intl.NumberFormat(intlLocales[locale] ?? 'de-DE', {
     style: 'currency',
     currency: 'EUR',
   }).format(value)
 }
 
 export function formatDate(value: string | Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'de-DE', {
+  return new Intl.DateTimeFormat(intlLocales[locale] ?? 'de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

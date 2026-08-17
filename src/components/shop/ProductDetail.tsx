@@ -1,11 +1,11 @@
 'use client'
 
 import { motion } from 'motion/react'
-import Link from 'next/link'
 import React, { useMemo, useState } from 'react'
 
 import { formatPrice, type Locale } from '../../lib/i18n'
 import { useCart } from './CartProvider'
+import { ProductInquiryForm } from './ProductInquiryForm'
 
 type ProductProps = {
   id: number | string
@@ -33,6 +33,15 @@ type Dict = {
   freeShipping: string
   pickupAvailable: string
   unavailable: string
+  inquiry: {
+    name: string
+    email: string
+    phone: string
+    message: string
+    send: string
+    success: string
+    error: string
+  }
 }
 
 export function ProductDetail({
@@ -174,12 +183,14 @@ export function ProductDetail({
           ) : product.onRequestOnly || typeof unitPrice !== 'number' ? (
             <>
               <p className="text-ink text-xl font-semibold">{dict.onRequest}</p>
-              <Link
-                href={`/${locale}/kontakt`}
-                className="bg-ink tracking-nav hover:bg-dark-soft mt-4 inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
-              >
-                {dict.requestNow}
-              </Link>
+              <ProductInquiryForm
+                productTitle={product.title}
+                productUrl={`/${locale}/${product.categorySlug}/${product.slug}`}
+                labels={{
+                  requestNow: dict.requestNow,
+                  ...dict.inquiry,
+                }}
+              />
             </>
           ) : (
             <>

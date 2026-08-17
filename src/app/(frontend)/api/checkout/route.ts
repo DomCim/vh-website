@@ -8,6 +8,7 @@ import {
 } from '../../../../lib/checkout'
 import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
+import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
 import { stripeClient } from '../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,7 @@ type CheckoutBody = {
   promoCode?: string
   locale?: string
   deliveryMethod?: DeliveryMethod
+  paymentMethod?: 'stripe' | 'paypal'
   customer: {
     name: string
     email: string
@@ -56,6 +58,7 @@ export async function POST(req: Request) {
     const payload = await payloadClient()
     const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod)
     const orderNumber = await nextOrderNumber(payload)
+    const paymentMethod = body.paymentMethod === 'paypal' ? 'paypal' : 'stripe'
 
     // Bestellung als "offen" anlegen — bezahlt wird sie erst per Webhook
     const order = await payload.create({
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
       data: {
         orderNumber,
         status: 'pending',
+        paymentProvider: paymentMethod,
         items: cart.lines.map((l) => ({
           product: typeof l.productId === 'string' ? Number(l.productId) : l.productId,
           titleSnapshot: l.titleSnapshot,
@@ -97,8 +101,32 @@ export async function POST(req: Request) {
       },
     })
 
-    const stripe = await stripeClient(payload)
     const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+    // ── PayPal ────────────────────────────────────────────────────────────
+    if (paymentMethod === 'paypal') {
+      const cfg = await paypalConfig(payload)
+      if (!cfg) {
+        return NextResponse.json({ error: 'paypal-not-configured' }, { status: 500 })
+      }
+      // PayPal hängt ?token=<order-id> selbst an die Return-URL an
+      const paypalOrder = await createPayPalOrder(cfg, {
+        amountEUR: cart.total,
+        orderNumber,
+        returnUrl: `${serverURL}/${locale}/bestellung/danke`,
+        cancelUrl: `${serverURL}/${locale}/kasse?cancelled=1`,
+      })
+      await payload.update({
+        collection: 'orders',
+        id: order.id,
+        overrideAccess: true,
+        data: { paypalOrderId: paypalOrder.id },
+      })
+      return NextResponse.json({ url: paypalOrder.approveUrl })
+    }
+
+    // ── Stripe ────────────────────────────────────────────────────────────
+    const stripe = await stripeClient(payload)
 
     // Rabatt als einmaliger Stripe-Coupon
     let discounts: { coupon: string }[] | undefined
@@ -112,12 +140,14 @@ export async function POST(req: Request) {
       discounts = [{ coupon: coupon.id }]
     }
 
-    const shippingLabel = locale === 'fr' ? 'Livraison' : 'Lieferung'
-    const pickupLabel = locale === 'fr' ? 'Retrait sur place' : 'Abholung'
+    const shippingLabel =
+      locale === 'fr' ? 'Livraison' : locale === 'en' ? 'Delivery' : 'Lieferung'
+    const pickupLabel =
+      locale === 'fr' ? 'Retrait sur place' : locale === 'en' ? 'Pickup' : 'Abholung'
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      locale: locale === 'fr' ? 'fr' : 'de',
+      locale: locale === 'fr' ? 'fr' : locale === 'en' ? 'en' : 'de',
       customer_email: body.customer.email,
       line_items: [
         ...cart.lines.map((l) => ({

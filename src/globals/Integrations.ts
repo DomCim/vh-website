@@ -108,6 +108,35 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      name: 'paypal',
+      label: 'PayPal (Zahlungen)',
+      type: 'group',
+      fields: [
+        {
+          name: 'clientId',
+          label: 'Client-ID',
+          type: 'text',
+          admin: {
+            description: 'Aus dem PayPal-Developer-Dashboard (REST-App)',
+          },
+        },
+        {
+          name: 'clientSecret',
+          label: 'Client Secret',
+          type: 'text',
+        },
+        {
+          name: 'sandbox',
+          label: 'Sandbox-Modus (Testumgebung)',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description: 'Aktivieren, solange mit Sandbox-Zugangsdaten getestet wird',
+          },
+        },
+      ],
+    },
+    {
       name: 'facebook',
       label: 'Facebook (News-Autopost)',
       type: 'group',
