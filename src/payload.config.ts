@@ -37,6 +37,11 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: '– Vincent Hellmann',
+      // Eigenes Icon (auch für "Zum Home-Bildschirm" auf dem iPhone)
+      icons: [
+        { rel: 'icon', type: 'image/png', url: '/admin-icon-192.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', url: '/admin-icon-180.png' },
+      ],
     },
     components: {
       // Änderungsprotokoll für den Betreiber: /admin/changelog + Link in der Seitenleiste
