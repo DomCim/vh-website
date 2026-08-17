@@ -55,7 +55,7 @@ export function ContactForm({ locale, labels }: { locale: Locale; labels: Labels
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="bg-ink tracking-nav hover:bg-dark-soft cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+        className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
       >
         {labels.send}
       </button>

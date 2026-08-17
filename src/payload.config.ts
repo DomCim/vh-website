@@ -38,6 +38,16 @@ export default buildConfig({
     meta: {
       titleSuffix: '– Vincent Hellmann',
     },
+    components: {
+      // Änderungsprotokoll für den Betreiber: /admin/changelog + Link in der Seitenleiste
+      afterNavLinks: ['/components/admin/ChangelogLink'],
+      views: {
+        changelog: {
+          Component: '/components/admin/ChangelogView',
+          path: '/changelog',
+        },
+      },
+    },
   },
   collections: [Products, Categories, News, Projects, Testimonials, Promotions, Orders, Media, Users],
   globals: [Homepage, About, SiteSettings, Legal, Integrations],

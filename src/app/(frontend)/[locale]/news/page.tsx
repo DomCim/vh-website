@@ -87,7 +87,7 @@ export default async function NewsPage({
                     loading="lazy"
                   />
                   {n.type === 'ratgeber' && (
-                    <span className="bg-accent tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-white uppercase">
+                    <span className="bg-bronze tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-white uppercase">
                       {dict.news.guideBadge}
                     </span>
                   )}

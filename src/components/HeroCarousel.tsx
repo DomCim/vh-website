@@ -17,8 +17,16 @@ export type HeroSlide = {
   } | null
 }
 
+// Anzeigedauer pro Slide und Dauer der Kamerablende — Fortschrittsbalken,
+// Autoplay und Header-Farbwechsel (globals.css) sind darauf abgestimmt
+const DISPLAY_MS = 6000
+const FADE_S = 1.4
+const EASE = [0.4, 0, 0.2, 1] as const
+
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0)
+  // Zählt manuelle Eingriffe mit — setzt Autoplay und Fortschrittsbalken neu auf
+  const [resetKey, setResetKey] = useState(0)
   const count = slides.length
   const reduceMotion = useReducedMotion()
 
@@ -56,15 +64,33 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   }, [index, heroInView, slides])
 
   const next = useCallback(() => setIndex((i) => (i + 1) % count), [count])
-  const prev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count])
+
+  // Manuelle Navigation setzt den Autoplay-Takt neu auf, damit nicht direkt
+  // nach einem Klick schon der nächste automatische Wechsel folgt
+  const goTo = useCallback((i: number) => {
+    setIndex(i)
+    setResetKey((k) => k + 1)
+  }, [])
+  const manualNext = useCallback(() => {
+    setIndex((i) => (i + 1) % count)
+    setResetKey((k) => k + 1)
+  }, [count])
+  const manualPrev = useCallback(() => {
+    setIndex((i) => (i - 1 + count) % count)
+    setResetKey((k) => k + 1)
+  }, [count])
 
   useEffect(() => {
     if (count < 2) return
-    const timer = window.setInterval(next, 6000)
+    const timer = window.setInterval(next, DISPLAY_MS)
     return () => window.clearInterval(timer)
-  }, [count, next])
+  }, [count, next, resetKey])
 
   if (count === 0) return null
+
+  const fadeTransition = reduceMotion
+    ? { duration: 0.4 }
+    : { duration: FADE_S, ease: EASE }
 
   return (
     <section
@@ -76,11 +102,16 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         style={reduceMotion ? undefined : { y: bgY, opacity: fade }}
       >
       {slides.map((slide, i) => (
-        <div
+        <motion.div
           key={i}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            i === index ? 'opacity-100' : 'pointer-events-none opacity-0'
-          }`}
+          className={`absolute inset-0 ${i === index ? '' : 'pointer-events-none'}`}
+          initial={false}
+          // Kamerablende: das einlaufende Bild startet minimal größer und setzt sanft auf
+          animate={{
+            opacity: i === index ? 1 : 0,
+            scale: reduceMotion ? 1 : i === index ? 1 : 1.06,
+          }}
+          transition={fadeTransition}
         >
           {slide.video ? (
             // Video-Slide: läuft stumm in Schleife, Bild dient als Poster
@@ -107,26 +138,53 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           {(slide.title || slide.subtitle) && (
             <div className="absolute inset-x-0 bottom-0 p-6 pb-14 text-white sm:p-10 sm:pb-16">
-              <motion.div
-                className="mx-auto max-w-7xl"
-                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-                animate={
-                  reduceMotion ? undefined : { opacity: i === index ? 1 : 0, y: i === index ? 0 : 24 }
-                }
-                transition={{ duration: 0.7, delay: 0.15 }}
-              >
+              <div className="mx-auto max-w-7xl">
                 {slide.title && (
-                  <h2 className="tracking-nav text-2xl font-semibold uppercase drop-shadow sm:text-4xl">
-                    {slide.link ? <Link href={slide.link}>{slide.title}</Link> : slide.title}
-                  </h2>
+                  // Titel läuft aus einer Maske nach oben ein
+                  <div className="overflow-hidden">
+                    <motion.h2
+                      className="tracking-nav text-2xl font-semibold uppercase drop-shadow sm:text-4xl"
+                      initial={false}
+                      animate={
+                        reduceMotion
+                          ? { opacity: i === index ? 1 : 0, y: '0%' }
+                          : { y: i === index ? '0%' : '110%', opacity: i === index ? 1 : 0 }
+                      }
+                      transition={
+                        reduceMotion
+                          ? { duration: 0.4 }
+                          : {
+                              duration: 0.9,
+                              ease: EASE,
+                              delay: i === index ? 0.35 : 0,
+                            }
+                      }
+                    >
+                      {slide.link ? <Link href={slide.link}>{slide.title}</Link> : slide.title}
+                    </motion.h2>
+                  </div>
                 )}
                 {slide.subtitle && (
-                  <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">{slide.subtitle}</p>
+                  <motion.p
+                    className="mt-2 max-w-xl text-sm text-white/85 sm:text-base"
+                    initial={false}
+                    animate={{
+                      opacity: i === index ? 1 : 0,
+                      y: reduceMotion ? 0 : i === index ? 0 : 16,
+                    }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0.4 }
+                        : { duration: 0.9, ease: EASE, delay: i === index ? 0.5 : 0 }
+                    }
+                  >
+                    {slide.subtitle}
+                  </motion.p>
                 )}
-              </motion.div>
+              </div>
             </div>
           )}
-        </div>
+        </motion.div>
       ))}
       </motion.div>
 
@@ -134,31 +192,50 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         <>
           <button
             type="button"
-            onClick={prev}
+            onClick={manualPrev}
             aria-label="Vorheriges Bild"
-            className="absolute top-1/2 left-3 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white transition-colors hover:bg-black/50"
+            className="absolute top-1/2 left-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center text-white opacity-60 transition-all duration-300 hover:scale-110 hover:opacity-100"
           >
-            ‹
+            <svg viewBox="0 0 24 24" className="h-7 w-7 drop-shadow" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M15 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
           <button
             type="button"
-            onClick={next}
+            onClick={manualNext}
             aria-label="Nächstes Bild"
-            className="absolute top-1/2 right-3 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white transition-colors hover:bg-black/50"
+            className="absolute top-1/2 right-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center text-white opacity-60 transition-all duration-300 hover:scale-110 hover:opacity-100"
           >
-            ›
+            <svg viewBox="0 0 24 24" className="h-7 w-7 drop-shadow" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
+          <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2.5">
             {slides.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 aria-label={`Bild ${i + 1}`}
-                onClick={() => setIndex(i)}
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  i === index ? 'bg-white' : 'bg-white/40 hover:bg-white/70'
-                }`}
-              />
+                onClick={() => goTo(i)}
+                className="group flex h-6 items-center"
+              >
+                {/* Schmaler Balken; der aktive füllt sich über die Anzeigedauer */}
+                <span className="relative block h-0.5 w-7 overflow-hidden rounded-full bg-white/40 transition-colors group-hover:bg-white/70">
+                  {i === index && (
+                    <motion.span
+                      key={`${index}-${resetKey}`}
+                      className="absolute inset-y-0 left-0 bg-white"
+                      initial={{ width: reduceMotion ? '100%' : '0%' }}
+                      animate={{ width: '100%' }}
+                      transition={
+                        reduceMotion
+                          ? { duration: 0 }
+                          : { duration: DISPLAY_MS / 1000, ease: 'linear' }
+                      }
+                    />
+                  )}
+                </span>
+              </button>
             ))}
           </div>
         </>

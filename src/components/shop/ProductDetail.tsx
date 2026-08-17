@@ -209,7 +209,7 @@ export function ProductDetail({
                 onClick={handleAdd}
                 whileTap={{ scale: 0.96 }}
                 className={`tracking-nav mt-5 cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors ${
-                  justAdded ? 'bg-green-700' : 'bg-ink hover:bg-dark-soft'
+                  justAdded ? 'bg-green-700' : 'bg-ink hover:bg-bronze'
                 }`}
               >
                 {justAdded ? dict.added : dict.addToCart}

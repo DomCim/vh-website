@@ -83,7 +83,7 @@ export function CheckoutForm({
         <p className="text-ink-soft mb-6">{cartDict.empty}</p>
         <Link
           href={`/${locale}`}
-          className="bg-ink tracking-nav hover:bg-dark-soft inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
         >
           {cartDict.continueShopping}
         </Link>
@@ -267,7 +267,7 @@ export function CheckoutForm({
           <button
             type="submit"
             disabled={submitting}
-            className="bg-ink tracking-nav hover:bg-dark-soft cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+            className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
           >
             {paymentMethod === 'paypal' ? dict.payNowPaypal : dict.payNowStripe}
           </button>
