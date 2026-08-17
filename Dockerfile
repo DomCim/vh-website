@@ -2,6 +2,9 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Corepack darf pnpm ohne Rückfrage herunterladen (nicht-interaktiver Build)
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+    CI=true
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
