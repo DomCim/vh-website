@@ -3,6 +3,7 @@ import * as migration_20260817_133657_integrations from './20260817_133657_integ
 import * as migration_20260817_145639_shipping from './20260817_145639_shipping';
 import * as migration_20260817_152621_ausbau from './20260817_152621_ausbau';
 import * as migration_20260817_172510_reichweite from './20260817_172510_reichweite';
+import * as migration_20260817_181145_checkout_tva from './20260817_181145_checkout_tva';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20260817_172510_reichweite.up,
     down: migration_20260817_172510_reichweite.down,
-    name: '20260817_172510_reichweite'
+    name: '20260817_172510_reichweite',
+  },
+  {
+    up: migration_20260817_181145_checkout_tva.up,
+    down: migration_20260817_181145_checkout_tva.down,
+    name: '20260817_181145_checkout_tva'
   },
 ];

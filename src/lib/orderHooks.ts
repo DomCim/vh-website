@@ -31,10 +31,17 @@ export async function markOrderPaid(
   })
 
   try {
-    await sendMail(payload, orderConfirmationEmail(order))
+    const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
+    const company = {
+      name: settings?.siteName,
+      siret: settings?.company?.siret,
+      vatId: settings?.company?.vatId,
+      vatRate: settings?.company?.vatRate,
+    }
+    await sendMail(payload, orderConfirmationEmail(order, company))
     const { email } = await getIntegrations(payload)
     if (email.notificationEmail) {
-      await sendMail(payload, orderNotificationEmail(order, email.notificationEmail))
+      await sendMail(payload, orderNotificationEmail(order, email.notificationEmail, company))
     }
   } catch (err) {
     payload.logger.error({ err }, 'Bestell-E-Mails konnten nicht gesendet werden')

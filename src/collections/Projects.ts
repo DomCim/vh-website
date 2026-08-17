@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
+import { autoSlug } from '../lib/slug'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -19,6 +20,9 @@ export const Projects: CollectionConfig = {
     update: admins,
     delete: admins,
   },
+  hooks: {
+    beforeValidate: [autoSlug()],
+  },
   fields: [
     {
       name: 'title',
@@ -31,9 +35,11 @@ export const Projects: CollectionConfig = {
       name: 'slug',
       label: 'URL-Pfad (Slug)',
       type: 'text',
-      required: true,
       unique: true,
       index: true,
+      admin: {
+        description: 'Leer lassen = wird automatisch aus dem Titel erzeugt',
+      },
     },
     {
       name: 'sector',

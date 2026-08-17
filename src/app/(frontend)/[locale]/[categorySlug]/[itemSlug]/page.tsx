@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           locale={locale}
           product={{
             id: product.id,
-            slug: product.slug,
+            slug: product.slug ?? '',
             title: product.title,
             price: product.price ?? undefined,
             shippingCost: product.shippingCost ?? undefined,

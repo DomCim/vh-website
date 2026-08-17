@@ -5,7 +5,7 @@ import { mediaAlt, mediaUrl } from '../lib/data'
 import { formatPrice, type Locale } from '../lib/i18n'
 
 type Product = {
-  slug: string
+  slug?: string | null
   title: string
   shortDescription?: string | null
   price?: number | null

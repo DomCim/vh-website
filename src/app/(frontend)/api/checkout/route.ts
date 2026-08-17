@@ -47,11 +47,13 @@ export async function POST(req: Request) {
     if (!body.customer?.name || !body.customer?.email) {
       return NextResponse.json({ error: 'missing-fields' }, { status: 400 })
     }
-    // Lieferadresse nur bei Lieferung Pflicht — bei Abholung reicht der Kontakt
-    if (
-      deliveryMethod === 'shipping' &&
-      (!body.shippingAddress?.line1 || !body.shippingAddress?.postalCode || !body.shippingAddress?.city)
-    ) {
+    const paymentMethodEarly = body.paymentMethod === 'paypal' ? 'paypal' : 'stripe'
+    const hasProvidedAddress = Boolean(
+      body.shippingAddress?.line1 && body.shippingAddress?.postalCode && body.shippingAddress?.city,
+    )
+    // Lieferadresse ist Pflicht bei Lieferung — außer bei PayPal,
+    // dort kommt sie aus dem PayPal-Konto (sofern keine abweichende angegeben ist)
+    if (deliveryMethod === 'shipping' && paymentMethodEarly !== 'paypal' && !hasProvidedAddress) {
       return NextResponse.json({ error: 'missing-address' }, { status: 400 })
     }
 
@@ -88,7 +90,7 @@ export async function POST(req: Request) {
           phone: body.customer.phone,
         },
         shippingAddress:
-          deliveryMethod === 'shipping'
+          deliveryMethod === 'shipping' && hasProvidedAddress
             ? {
                 line1: body.shippingAddress?.line1,
                 line2: body.shippingAddress?.line2,
@@ -110,11 +112,30 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'paypal-not-configured' }, { status: 500 })
       }
       // PayPal hängt ?token=<order-id> selbst an die Return-URL an
+      const countryToCode: Record<string, string> = {
+        deutschland: 'DE', germany: 'DE', allemagne: 'DE',
+        frankreich: 'FR', france: 'FR',
+        österreich: 'AT', austria: 'AT', autriche: 'AT',
+        schweiz: 'CH', switzerland: 'CH', suisse: 'CH',
+      }
       const paypalOrder = await createPayPalOrder(cfg, {
         amountEUR: cart.total,
         orderNumber,
         returnUrl: `${serverURL}/${locale}/bestellung/danke`,
         cancelUrl: `${serverURL}/${locale}/kasse?cancelled=1`,
+        shippingMode:
+          deliveryMethod === 'pickup' ? 'none' : hasProvidedAddress ? 'provided' : 'paypal',
+        providedAddress: hasProvidedAddress
+          ? {
+              name: body.customer.name,
+              line1: body.shippingAddress?.line1,
+              line2: body.shippingAddress?.line2,
+              postalCode: body.shippingAddress?.postalCode,
+              city: body.shippingAddress?.city,
+              countryCode:
+                countryToCode[(body.shippingAddress?.country || '').trim().toLowerCase()] || 'DE',
+            }
+          : undefined,
       })
       await payload.update({
         collection: 'orders',

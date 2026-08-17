@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { CheckoutForm } from '../../../../components/shop/CheckoutForm'
-import { payloadClient } from '../../../../lib/data'
+import { getSiteSettings, payloadClient } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { paypalConfigured } from '../../../../lib/paypal'
 
@@ -21,7 +21,11 @@ export default async function CheckoutPage({
   const dict = t(locale)
 
   const payload = await payloadClient()
-  const paypalAvailable = await paypalConfigured(payload)
+  const [paypalAvailable, settings] = await Promise.all([
+    paypalConfigured(payload),
+    getSiteSettings(locale),
+  ])
+  const vatRate = settings?.company?.vatRate ?? 20
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
@@ -34,6 +38,7 @@ export default async function CheckoutPage({
         cartDict={dict.cart}
         initialCode={code}
         paypalAvailable={paypalAvailable}
+        vatRate={vatRate}
       />
     </div>
   )

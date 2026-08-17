@@ -28,6 +28,24 @@ async function capturePayPalIfPresent(paypalToken?: string) {
     if (!order || order.status !== 'pending') return
     const result = await capturePayPalOrder(cfg, paypalToken)
     if (result.status === 'COMPLETED') {
+      // Lieferadresse aus PayPal übernehmen, falls noch keine an der Bestellung steht
+      if (result.shipping?.line1 && !order.shippingAddress?.line1) {
+        await payload.update({
+          collection: 'orders',
+          id: order.id,
+          overrideAccess: true,
+          context: { skipShippedMail: true },
+          data: {
+            shippingAddress: {
+              line1: result.shipping.line1,
+              line2: result.shipping.line2,
+              postalCode: result.shipping.postalCode,
+              city: result.shipping.city,
+              country: result.shipping.countryCode,
+            },
+          },
+        })
+      }
       await markOrderPaid(payload, order.id, { paypalCaptureId: result.captureId })
     }
   } catch (err) {

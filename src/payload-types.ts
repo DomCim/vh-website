@@ -150,7 +150,10 @@ export interface UserAuthOperations {
 export interface Product {
   id: number;
   title: string;
-  slug: string;
+  /**
+   * Leer lassen = wird automatisch aus dem Titel erzeugt
+   */
+  slug?: string | null;
   category: number | Category;
   images: (number | Media)[];
   shortDescription?: string | null;
@@ -289,7 +292,10 @@ export interface Media {
 export interface News {
   id: number;
   title: string;
-  slug: string;
+  /**
+   * Leer lassen = wird automatisch aus dem Titel erzeugt
+   */
+  slug?: string | null;
   /**
    * Ratgeber-Artikel bringen dauerhaft Google-Traffic (z.B. Material- und Pflegetipps)
    */
@@ -341,7 +347,10 @@ export interface News {
 export interface Project {
   id: number;
   title: string;
-  slug: string;
+  /**
+   * Leer lassen = wird automatisch aus dem Titel erzeugt
+   */
+  slug?: string | null;
   sector: 'kommunal' | 'gewerbe' | 'privat';
   images: (number | Media)[];
   summary?: string | null;
@@ -970,6 +979,20 @@ export interface SiteSetting {
     youtube?: string | null;
   };
   /**
+   * Pflichtangaben für Bestellbestätigungen (französische SAS): SIRET und TVA-Nummer erscheinen in der Fußzeile der Bestell-Mails.
+   */
+  company?: {
+    siret?: string | null;
+    /**
+     * z.B. FR12345678901
+     */
+    vatId?: string | null;
+    /**
+     * Wird für den Steuerausweis aus den Bruttopreisen herausgerechnet (Frankreich: 20). Hinweis: Ab 10.000 € EU-Fernverkauf/Jahr greift das OSS-Verfahren — mit dem Steuerberater klären.
+     */
+    vatRate?: number | null;
+  };
+  /**
    * Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.
    */
   pinterestVerification?: string | null;
@@ -1180,6 +1203,13 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         facebook?: T;
         instagram?: T;
         youtube?: T;
+      };
+  company?:
+    | T
+    | {
+        siret?: T;
+        vatId?: T;
+        vatRate?: T;
       };
   pinterestVerification?: T;
   seo?:
