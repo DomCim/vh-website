@@ -80,7 +80,7 @@ export default async function CategoryPage({
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         {!headerImage && (
           <Reveal>
-            <h1 className="tracking-nav text-ink mb-4 text-2xl font-semibold uppercase">
+            <h1 className="tracking-nav text-ink rule-bronze mb-4 text-2xl font-semibold uppercase">
               {category.name}
             </h1>
           </Reveal>

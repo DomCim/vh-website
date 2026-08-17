@@ -18,7 +18,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <Reveal>
-        <h1 className="tracking-nav text-ink mb-4 text-2xl font-semibold uppercase">
+        <h1 className="tracking-nav text-ink rule-bronze mb-4 text-2xl font-semibold uppercase">
           {dict.contact.title}
         </h1>
         <p className="text-ink-soft max-w-2xl">{dict.contact.intro}</p>

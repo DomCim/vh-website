@@ -17,7 +17,7 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <Reveal>
-        <h1 className="tracking-nav text-ink mb-10 text-2xl font-semibold uppercase">
+        <h1 className="tracking-nav text-ink rule-bronze mb-10 text-2xl font-semibold uppercase">
           {dict.promotions.title}
         </h1>
       </Reveal>

@@ -118,3 +118,39 @@ body {
     transparent min(560px, 88%)
   );
 }
+
+/* Corten-Striche unter Überschriften: laufen nach rechts weich aus;
+   je größer die Überschrift, desto länger der Strich */
+.rule-bronze::after,
+.rule-bronze-sm::after {
+  content: '';
+  display: block;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-bronze) 0%,
+    var(--color-bronze) 30%,
+    transparent 100%
+  );
+}
+.rule-bronze::after {
+  width: 7rem;
+  height: 3px;
+  margin-top: 0.75rem;
+}
+.rule-bronze-sm::after {
+  width: 2.5rem;
+  height: 2px;
+  margin-top: 0.45rem;
+}
+/* Für zentrierte Überschriften: läuft zu beiden Seiten aus */
+.rule-bronze-center::after {
+  margin-inline: auto;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-bronze) 35%,
+    var(--color-bronze) 65%,
+    transparent
+  );
+}
