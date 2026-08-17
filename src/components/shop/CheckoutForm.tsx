@@ -14,6 +14,12 @@ type CheckoutDict = {
   paymentMethod: string
   optionCard: string
   optionPaypal: string
+  payNowStripe: string
+  payNowPaypal: string
+  redirectNotePaypal: string
+  paypalAddressNote: string
+  differentAddress: string
+  vatIncluded: string
   shipping: string
   contactData: string
   name: string
@@ -45,18 +51,26 @@ export function CheckoutForm({
   cartDict,
   initialCode,
   paypalAvailable = false,
+  vatRate = 20,
 }: {
   locale: Locale
   dict: CheckoutDict
   cartDict: CartDict
   initialCode?: string
   paypalAvailable?: boolean
+  vatRate?: number
 }) {
   const { items, subtotal, clear } = useCart()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(false)
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe')
+  const [differentAddress, setDifferentAddress] = useState(false)
+
+  // Bei PayPal + Lieferung kommt die Adresse aus dem PayPal-Konto,
+  // außer der Kunde will explizit eine abweichende angeben
+  const showAddressForm =
+    deliveryMethod === 'shipping' && (paymentMethod !== 'paypal' || differentAddress)
 
   const shipping =
     deliveryMethod === 'pickup'
@@ -164,23 +178,23 @@ export function CheckoutForm({
           </div>
         </div>
 
-        {paypalAvailable && (
-          <div>
-            <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
-              {dict.paymentMethod}
-            </h2>
-            <div className="space-y-2">
-              <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="stripe"
-                  checked={paymentMethod === 'stripe'}
-                  onChange={() => setPaymentMethod('stripe')}
-                  className="accent-ink"
-                />
-                {dict.optionCard}
-              </label>
+        <div>
+          <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
+            {dict.paymentMethod}
+          </h2>
+          <div className="space-y-2">
+            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="stripe"
+                checked={paymentMethod === 'stripe'}
+                onChange={() => setPaymentMethod('stripe')}
+                className="accent-ink"
+              />
+              {dict.optionCard}
+            </label>
+            {paypalAvailable && (
               <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
                 <input
                   type="radio"
@@ -192,9 +206,9 @@ export function CheckoutForm({
                 />
                 {dict.optionPaypal}
               </label>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div>
           <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
@@ -207,7 +221,22 @@ export function CheckoutForm({
           </div>
         </div>
 
-        {deliveryMethod === 'shipping' && (
+        {deliveryMethod === 'shipping' && paymentMethod === 'paypal' && (
+          <div className="border-line bg-paper-soft border p-4 text-sm">
+            <p className="text-ink-soft">{dict.paypalAddressNote}</p>
+            <label className="text-ink mt-2 flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={differentAddress}
+                onChange={(e) => setDifferentAddress(e.target.checked)}
+                className="accent-ink"
+              />
+              {dict.differentAddress}
+            </label>
+          </div>
+        )}
+
+        {showAddressForm && (
           <div>
             <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
               {dict.shippingAddress}
@@ -240,13 +269,15 @@ export function CheckoutForm({
             disabled={submitting}
             className="bg-ink tracking-nav hover:bg-dark-soft cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
           >
-            {dict.payNow}
+            {paymentMethod === 'paypal' ? dict.payNowPaypal : dict.payNowStripe}
           </button>
           <Link href={`/${locale}/warenkorb`} className="text-ink-soft hover:text-ink text-sm underline">
             {dict.backToCart}
           </Link>
         </div>
-        <p className="text-ink-soft text-xs">{dict.redirectNote}</p>
+        <p className="text-ink-soft text-xs">
+          {paymentMethod === 'paypal' ? dict.redirectNotePaypal : dict.redirectNote}
+        </p>
       </form>
 
       <aside className="bg-paper-soft h-fit p-6">
@@ -278,6 +309,9 @@ export function CheckoutForm({
             <span>{cartDict.total}</span>
             <span>{formatPrice(subtotal + shipping, locale)}</span>
           </div>
+          <p className="text-ink-soft pt-1 text-xs">
+            {dict.vatIncluded.replace('{rate}', String(vatRate))}
+          </p>
         </div>
       </aside>
     </div>

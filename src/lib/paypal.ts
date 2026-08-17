@@ -41,6 +41,14 @@ async function accessToken(cfg: PayPalConfig): Promise<string> {
   return data.access_token
 }
 
+export type PayPalShippingAddress = {
+  line1?: string
+  line2?: string
+  postalCode?: string
+  city?: string
+  countryCode?: string
+}
+
 /** Legt eine PayPal-Order an und liefert Order-ID + Approval-URL zurück */
 export async function createPayPalOrder(
   cfg: PayPalConfig,
@@ -49,9 +57,19 @@ export async function createPayPalOrder(
     orderNumber: string
     returnUrl: string
     cancelUrl: string
+    /** 'paypal' = Adresse aus dem PayPal-Konto, 'provided' = mitgegebene Adresse, 'none' = Abholung */
+    shippingMode: 'paypal' | 'provided' | 'none'
+    providedAddress?: { name: string } & PayPalShippingAddress
   },
 ): Promise<{ id: string; approveUrl: string }> {
   const token = await accessToken(cfg)
+  const shippingPreference =
+    opts.shippingMode === 'none'
+      ? 'NO_SHIPPING'
+      : opts.shippingMode === 'provided'
+        ? 'SET_PROVIDED_ADDRESS'
+        : 'GET_FROM_FILE'
+
   const res = await fetch(`${cfg.baseUrl}/v2/checkout/orders`, {
     method: 'POST',
     headers: {
@@ -68,12 +86,26 @@ export async function createPayPalOrder(
             currency_code: 'EUR',
             value: opts.amountEUR.toFixed(2),
           },
+          ...(opts.shippingMode === 'provided' && opts.providedAddress
+            ? {
+                shipping: {
+                  name: { full_name: opts.providedAddress.name },
+                  address: {
+                    address_line_1: opts.providedAddress.line1,
+                    address_line_2: opts.providedAddress.line2,
+                    postal_code: opts.providedAddress.postalCode,
+                    admin_area_2: opts.providedAddress.city,
+                    country_code: opts.providedAddress.countryCode || 'DE',
+                  },
+                },
+              }
+            : {}),
         },
       ],
       payment_source: {
         paypal: {
           experience_context: {
-            shipping_preference: 'NO_SHIPPING',
+            shipping_preference: shippingPreference,
             user_action: 'PAY_NOW',
             return_url: opts.returnUrl,
             cancel_url: opts.cancelUrl,
@@ -95,11 +127,15 @@ export async function createPayPalOrder(
   return { id: data.id, approveUrl }
 }
 
-/** Captured eine genehmigte PayPal-Order; liefert die Capture-ID bei Erfolg */
+/** Captured eine genehmigte PayPal-Order; liefert Capture-ID + Lieferadresse aus PayPal */
 export async function capturePayPalOrder(
   cfg: PayPalConfig,
   paypalOrderId: string,
-): Promise<{ captureId?: string; status: string }> {
+): Promise<{
+  captureId?: string
+  status: string
+  shipping?: { name?: string } & PayPalShippingAddress
+}> {
   const token = await accessToken(cfg)
   const res = await fetch(`${cfg.baseUrl}/v2/checkout/orders/${paypalOrderId}/capture`, {
     method: 'POST',
@@ -110,14 +146,37 @@ export async function capturePayPalOrder(
   })
   const data = (await res.json()) as {
     status?: string
-    purchase_units?: { payments?: { captures?: { id: string; status: string }[] } }[]
+    purchase_units?: {
+      payments?: { captures?: { id: string; status: string }[] }
+      shipping?: {
+        name?: { full_name?: string }
+        address?: {
+          address_line_1?: string
+          address_line_2?: string
+          postal_code?: string
+          admin_area_2?: string
+          country_code?: string
+        }
+      }
+    }[]
     message?: string
   }
   if (!res.ok) {
     throw new Error(`PayPal-Capture fehlgeschlagen: ${data.message || `HTTP ${res.status}`}`)
   }
+  const shipping = data.purchase_units?.[0]?.shipping
   return {
     status: data.status || 'UNKNOWN',
     captureId: data.purchase_units?.[0]?.payments?.captures?.[0]?.id,
+    shipping: shipping
+      ? {
+          name: shipping.name?.full_name,
+          line1: shipping.address?.address_line_1,
+          line2: shipping.address?.address_line_2,
+          postalCode: shipping.address?.postal_code,
+          city: shipping.address?.admin_area_2,
+          countryCode: shipping.address?.country_code,
+        }
+      : undefined,
   }
 }

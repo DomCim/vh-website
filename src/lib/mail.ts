@@ -27,10 +27,37 @@ type OrderLike = {
   } | null
 }
 
+export type CompanyInfo = {
+  name?: string | null
+  siret?: string | null
+  vatId?: string | null
+  vatRate?: number | null
+}
+
 const euro = (v: number) =>
   new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v)
 
-function orderTable(order: OrderLike): string {
+/** Enthaltene MwSt./TVA aus dem Bruttobetrag herausrechnen */
+function vatRow(order: OrderLike, company?: CompanyInfo): string {
+  const rate = company?.vatRate ?? 20
+  if (!rate) return ''
+  const vat = Math.round((order.total - order.total / (1 + rate / 100)) * 100) / 100
+  return `<tr><td></td><td style="padding:2px 12px 2px 0;color:#666;font-size:12px">enthaltene MwSt./TVA (${rate} %)</td><td style="text-align:right;color:#666;font-size:12px">${euro(vat)}</td></tr>`
+}
+
+/** Pflichtangaben-Fußzeile (SIRET, TVA-Nr.) für Bestell-Mails */
+function companyFooter(company?: CompanyInfo): string {
+  if (!company) return ''
+  const parts = [
+    company.name,
+    company.siret ? `SIRET: ${company.siret}` : null,
+    company.vatId ? `TVA: ${company.vatId}` : null,
+  ].filter(Boolean)
+  if (parts.length === 0) return ''
+  return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`
+}
+
+function orderTable(order: OrderLike, company?: CompanyInfo): string {
   const rows = (order.items ?? [])
     .map((item) => {
       const label = [item.titleSnapshot, item.variantTitle, item.color].filter(Boolean).join(' – ')
@@ -59,6 +86,7 @@ function orderTable(order: OrderLike): string {
     ${discountRow}
     ${shippingRow}
     <tr><td></td><td style="padding:6px 12px 2px 0;font-weight:bold">Gesamt</td><td style="text-align:right;font-weight:bold">${euro(order.total)}</td></tr>
+    ${vatRow(order, company)}
   </table>`
 }
 
@@ -73,7 +101,7 @@ function addressBlock(order: OrderLike): string {
     .join('<br>')
 }
 
-export function orderConfirmationEmail(order: OrderLike) {
+export function orderConfirmationEmail(order: OrderLike, company?: CompanyInfo) {
   return {
     to: order.customer?.email ?? '',
     subject: `Bestellbestätigung ${order.orderNumber} – Vincent Hellmann`,
@@ -83,14 +111,15 @@ export function orderConfirmationEmail(order: OrderLike) {
         <p>Guten Tag ${order.customer?.name ?? ''},</p>
         <p>vielen Dank für Ihre Bestellung <strong>${order.orderNumber}</strong>.
         Ihre Zahlung ist bei uns eingegangen. Wir melden uns in Kürze mit den Details zur Lieferung.</p>
-        ${orderTable(order)}
+        ${orderTable(order, company)}
         <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
         <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
+        ${companyFooter(company)}
       </div>`,
   }
 }
 
-export function orderNotificationEmail(order: OrderLike, to: string) {
+export function orderNotificationEmail(order: OrderLike, to: string, company?: CompanyInfo) {
   return {
     to,
     subject: `Neue Bestellung ${order.orderNumber} (${euro(order.total)})`,
@@ -98,7 +127,7 @@ export function orderNotificationEmail(order: OrderLike, to: string) {
       <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
         <h2>Neue bezahlte Bestellung ${order.orderNumber}</h2>
         <p>Kunde: ${order.customer?.name ?? ''} (${order.customer?.email ?? ''})</p>
-        ${orderTable(order)}
+        ${orderTable(order, company)}
         <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
         <p>Details im Admin-Panel unter „Bestellungen".</p>
       </div>`,

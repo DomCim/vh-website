@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
 import { postNewsToFacebook } from '../lib/facebook'
+import { autoSlug } from '../lib/slug'
 
 export const News: CollectionConfig = {
   slug: 'news',
@@ -24,6 +25,7 @@ export const News: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    beforeValidate: [autoSlug()],
     afterChange: [postNewsToFacebook],
   },
   fields: [
@@ -38,9 +40,11 @@ export const News: CollectionConfig = {
       name: 'slug',
       label: 'URL-Pfad (Slug)',
       type: 'text',
-      required: true,
       unique: true,
       index: true,
+      admin: {
+        description: 'Leer lassen = wird automatisch aus dem Titel erzeugt',
+      },
     },
     {
       name: 'type',

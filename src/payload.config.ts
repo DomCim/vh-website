@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url'
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { FixedToolbarFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { de } from '@payloadcms/translations/languages/de'
 import { en } from '@payloadcms/translations/languages/en'
 import { fr } from '@payloadcms/translations/languages/fr'
@@ -41,7 +41,10 @@ export default buildConfig({
   },
   collections: [Products, Categories, News, Projects, Testimonials, Promotions, Orders, Media, Users],
   globals: [Homepage, About, SiteSettings, Legal, Integrations],
-  editor: lexicalEditor(),
+  // Feste Toolbar: alle Formatierungen immer sichtbar — deutlich besser am Handy
+  editor: lexicalEditor({
+    features: ({ defaultFeatures }) => [...defaultFeatures, FixedToolbarFeature()],
+  }),
   localization: {
     locales: [
       { label: 'Deutsch', code: 'de' },

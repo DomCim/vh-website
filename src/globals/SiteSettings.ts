@@ -75,6 +75,42 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'company',
+      label: 'Firmen-/Steuerangaben',
+      type: 'group',
+      admin: {
+        description:
+          'Pflichtangaben für Bestellbestätigungen (französische SAS): SIRET und TVA-Nummer erscheinen in der Fußzeile der Bestell-Mails.',
+      },
+      fields: [
+        {
+          name: 'siret',
+          label: 'SIRET-Nummer',
+          type: 'text',
+        },
+        {
+          name: 'vatId',
+          label: 'TVA-Nummer (intracommunautaire)',
+          type: 'text',
+          admin: {
+            description: 'z.B. FR12345678901',
+          },
+        },
+        {
+          name: 'vatRate',
+          label: 'MwSt.-/TVA-Satz (%)',
+          type: 'number',
+          defaultValue: 20,
+          min: 0,
+          max: 30,
+          admin: {
+            description:
+              'Wird für den Steuerausweis aus den Bruttopreisen herausgerechnet (Frankreich: 20). Hinweis: Ab 10.000 € EU-Fernverkauf/Jahr greift das OSS-Verfahren — mit dem Steuerberater klären.',
+          },
+        },
+      ],
+    },
+    {
       name: 'pinterestVerification',
       label: 'Pinterest-Verifizierungscode',
       type: 'text',

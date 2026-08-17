@@ -70,6 +70,12 @@ Ohne Stripe-Keys funktioniert die Website vollständig, nur der Checkout meldet 
 3. Im Admin unter **Verwaltung → Integrationen** eintragen: Facebook-Seiten-ID, Token und — für Instagram — die ID des mit der Seite verknüpften **Instagram-Business-Kontos**.
 4. Bei einem News-Beitrag die Checkboxen „auf Facebook posten" / „auf Instagram posten" aktivieren — nach dem Veröffentlichen erscheinen die Post-IDs (oder Fehlermeldungen) in der Seitenleiste des Beitrags. Instagram benötigt zwingend ein Titelbild.
 
+## Steuern (TVA)
+
+Die Preise im Shop sind Bruttopreise. Auf Bestellbestätigungen wird die enthaltene MwSt./TVA ausgewiesen und die Fußzeile trägt die Pflichtangaben — dafür im Admin unter **Website-Einstellungen → Firmen-/Steuerangaben** pflegen: SIRET-Nummer, TVA-Nummer und Steuersatz (Frankreich: 20 %).
+
+**Wichtig (mit dem Steuerberater/Expert-Comptable klären, keine Steuerberatung):** Beim Verkauf an Privatkunden in anderen EU-Ländern gilt ab 10.000 € Fernverkaufsumsatz pro Jahr EU-weit das **OSS-Verfahren** — dann ist z.B. für deutsche Kunden deutsche USt. abzuführen. Bis dahin gilt die französische TVA.
+
 ## Pinterest einrichten (optional)
 
 Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Produktseiten liefern bereits alle Daten für Rich Pins.
@@ -105,6 +111,8 @@ Alles unter `https://vh.dominikdill.com/admin`:
 | **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte. |
 | **Rechtliches** | Impressum, Datenschutzerklärung, AGB. |
 | **Integrationen** | SMTP-Zugangsdaten, Stripe-Keys und Facebook-Token — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
+
+Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News, Produkte, Referenzen …) sind vollwertige Rich-Text-Editoren mit fester Toolbar: Überschriften, Fett/Kursiv, Listen, Links und Bilder mitten im Text (Upload-Button in der Toolbar). URL-Slugs können leer gelassen werden — sie entstehen automatisch aus dem Titel.
 
 ## Nach dem ersten Deployment zu erledigen
 
