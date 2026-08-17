@@ -12,6 +12,7 @@ type CartDict = {
   continueShopping: string
   subtotal: string
   discount: string
+  shipping: string
   total: string
   checkout: string
   remove: string
@@ -20,6 +21,7 @@ type CartDict = {
   applyCode: string
   promoApplied: string
   promoInvalid: string
+  shippingLabel: string
   priceNote: string
 }
 
@@ -89,7 +91,8 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
   }
 
   const discount = promo?.valid ? (promo.discount ?? 0) : 0
-  const total = Math.max(0, subtotal - discount)
+  const shipping = items.reduce((s, i) => s + (i.shippingCost ?? 0) * i.quantity, 0)
+  const total = Math.max(0, subtotal - discount) + shipping
 
   return (
     <div>
@@ -125,6 +128,11 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
                     {(item.variantTitle || item.color) && (
                       <p className="text-ink-soft mt-1 text-xs">
                         {[item.variantTitle, item.color].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                    {(item.shippingCost ?? 0) > 0 && (
+                      <p className="text-ink-soft mt-1 text-xs">
+                        + {formatPrice(item.shippingCost!, locale)} {dict.shippingLabel} / Stk.
                       </p>
                     )}
                     <button
@@ -196,6 +204,12 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
           )}
           {code && !checking && promo && !promo.valid && (
             <p className="text-accent text-xs">{dict.promoInvalid}</p>
+          )}
+          {shipping > 0 && (
+            <div className="text-ink-soft flex justify-between sm:justify-end sm:gap-8">
+              <span>{dict.shipping}</span>
+              <span>{formatPrice(shipping, locale)}</span>
+            </div>
           )}
           <div className="text-ink border-line flex justify-between border-t pt-2 text-base font-semibold sm:justify-end sm:gap-8">
             <span>{dict.total}</span>

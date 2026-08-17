@@ -73,6 +73,17 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      name: 'shippingCost',
+      label: 'Versandkosten (EUR, pro Stück)',
+      type: 'number',
+      min: 0,
+      admin: {
+        description:
+          'z.B. 150 für Speditionslieferung. Leer oder 0 = versandkostenfrei. Bei Abholung entfallen die Versandkosten automatisch.',
+        condition: (data) => !data?.onRequestOnly,
+      },
+    },
+    {
       name: 'variants',
       label: 'Varianten',
       type: 'array',

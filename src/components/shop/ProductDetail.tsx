@@ -12,6 +12,7 @@ type ProductProps = {
   slug: string
   title: string
   price?: number
+  shippingCost?: number
   onRequestOnly: boolean
   available: boolean
   variants: { title: string; price: number }[]
@@ -28,6 +29,9 @@ type Dict = {
   variant: string
   color: string
   priceNote: string
+  shippingPerItem: string
+  freeShipping: string
+  pickupAvailable: string
   unavailable: string
 }
 
@@ -65,6 +69,7 @@ export function ProductDetail({
       variantTitle: hasVariants ? product.variants[variantIndex]?.title : undefined,
       color: product.colorOptions[colorIndex]?.name,
       unitPrice,
+      shippingCost: product.shippingCost ?? 0,
       quantity: 1,
       image: product.images[0]?.url,
       categorySlug: product.categorySlug,
@@ -179,7 +184,15 @@ export function ProductDetail({
           ) : (
             <>
               <p className="text-ink text-2xl font-semibold">{formatPrice(unitPrice, locale)}</p>
-              <p className="text-ink-soft mt-1 text-xs">{dict.priceNote}</p>
+              <p className="text-ink-soft mt-1 text-xs">
+                {dict.priceNote}
+                {' · '}
+                {product.shippingCost && product.shippingCost > 0
+                  ? `+ ${formatPrice(product.shippingCost, locale)} ${dict.shippingPerItem}`
+                  : dict.freeShipping}
+                {' · '}
+                {dict.pickupAvailable}
+              </p>
               <motion.button
                 type="button"
                 onClick={handleAdd}

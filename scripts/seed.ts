@@ -14,6 +14,8 @@
 import config from '@payload-config'
 import { getPayload, type Payload } from 'payload'
 
+import { richText } from '../src/lib/richtext'
+
 const ORIGIN = 'https://www.vincent-hellmann.com'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@vincent-hellmann.com'
@@ -104,27 +106,6 @@ async function run() {
     office: await uploadImage(payload, '/fileadmin/_processed_/b/a/csm_Vincent-Hellmann_Office_2025-04_L1000859_fd5ef85f1f.jpg', 'Büro und Werkstatt'),
   }
 
-  const richText = (text: string) => ({
-    root: {
-      type: 'root',
-      format: '' as const,
-      indent: 0,
-      version: 1,
-      direction: 'ltr' as const,
-      children: [
-        {
-          type: 'paragraph',
-          format: '' as const,
-          indent: 0,
-          version: 1,
-          direction: 'ltr' as const,
-          textFormat: 0,
-          children: [{ type: 'text', text, format: 0, detail: 0, mode: 'normal', style: '', version: 1 }],
-        },
-      ],
-    },
-  })
-
   // ── Kategorien ────────────────────────────────────────────────────────────
   console.log('Lege Kategorien an …')
   const cat = async (
@@ -189,6 +170,7 @@ async function run() {
     category: number
     images: (number | undefined)[]
     price?: number
+    shippingCost?: number
     variants?: { de: string; fr: string; price: number }[]
     colors?: { de: string; fr: string; hex: string }[]
     onRequestOnly?: boolean
@@ -208,6 +190,7 @@ async function run() {
         category: opts.category,
         images,
         price: opts.price,
+        shippingCost: opts.shippingCost,
         variants: opts.variants?.map((v) => ({ title: v.de, price: v.price })),
         colorOptions: opts.colors?.map((c) => ({ name: c.de, hex: c.hex })),
         onRequestOnly: opts.onRequestOnly ?? false,
@@ -261,6 +244,7 @@ async function run() {
     },
     slug: 'outdoor-sofa-os',
     category: outdoorId,
+    shippingCost: 150,
     images: [img.sofaGruen, img.sofaRot, img.sofaSeite, img.sofagruppe],
     variants: [
       { de: '2-Sitzer', fr: '2 places', price: 1990 },
@@ -286,6 +270,7 @@ async function run() {
     },
     slug: 'outdoor-sessel-os',
     category: outdoorId,
+    shippingCost: 90,
     images: [img.sessel],
     price: 1290,
     colors: ralColors,
@@ -308,6 +293,7 @@ async function run() {
     },
     slug: 'outdoor-tisch-ot',
     category: outdoorId,
+    shippingCost: 90,
     images: [img.tisch],
     variants: [
       { de: 'Beistelltisch', fr: "Table d'appoint", price: 690 },
@@ -332,6 +318,7 @@ async function run() {
     },
     slug: 'outdoor-liege-vague',
     category: outdoorId,
+    shippingCost: 150,
     images: [img.liege, img.liegeDetail],
     price: 1790,
     colors: ralColors,
@@ -374,6 +361,7 @@ async function run() {
     },
     slug: 'herz-objekt',
     category: objekteId,
+    shippingCost: 60,
     images: [img.herzGross, img.herzKlein, img.herz3x],
     variants: [
       { de: 'Klein (60 cm)', fr: 'Petit (60 cm)', price: 490 },
@@ -420,6 +408,7 @@ async function run() {
     },
     slug: 'pflanzkuebel-stahl',
     category: pflanzId,
+    shippingCost: 40,
     images: [img.office],
     variants: [
       { de: '60 × 60 cm', fr: '60 × 60 cm', price: 349 },

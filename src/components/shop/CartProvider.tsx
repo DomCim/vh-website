@@ -10,6 +10,8 @@ export type CartItem = {
   color?: string
   /** Preis-Momentaufnahme für die Anzeige — verbindlich berechnet der Server beim Checkout */
   unitPrice: number
+  /** Versandkosten pro Stück (Anzeige; entfällt bei Abholung) */
+  shippingCost?: number
   quantity: number
   image?: string
   categorySlug?: string
