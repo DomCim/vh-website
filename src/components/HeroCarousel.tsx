@@ -11,7 +11,10 @@ export type HeroSlide = {
   title?: string | null
   subtitle?: string | null
   link?: string | null
-  tint?: { color: string; dark: boolean } | null
+  tint?: {
+    top: { color: string; dark: boolean }
+    bottom: { color: string; dark: boolean }
+  } | null
 }
 
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
@@ -32,7 +35,8 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   useEffect(() => {
     const root = document.documentElement
-    const tint = heroInView ? slides[index]?.tint : null
+    // Header: Farbe des oberen Bildrands — nur solange der Hero im Bild ist
+    const tint = heroInView ? slides[index]?.tint?.top : null
     if (tint) {
       root.style.setProperty('--hero-tint', tint.color)
       root.dataset.heroTint = tint.dark ? 'dark' : 'light'
@@ -40,9 +44,9 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       root.style.removeProperty('--hero-tint')
       delete root.dataset.heroTint
     }
-    // Ausstrahlung unter dem Hero (.hero-fade): folgt dem aktiven Slide,
-    // bleibt aber beim Scrollen stehen — sie gehört zum Seitenhintergrund
-    const pageTint = slides[index]?.tint
+    // Ausstrahlung unter dem Hero (.hero-fade): Farbe des unteren Bildrands,
+    // bleibt beim Scrollen stehen — sie gehört zum Seitenhintergrund
+    const pageTint = slides[index]?.tint?.bottom
     root.style.setProperty('--hero-tint-page', pageTint ? pageTint.color : 'transparent')
     return () => {
       root.style.removeProperty('--hero-tint')

@@ -8,15 +8,36 @@ export type HeroTint = {
   dark: boolean
 }
 
-// Dominante Farbe pro Bild nur einmal berechnen (Key: Datei + Änderungsdatum)
-const cache = new Map<string, HeroTint | null>()
+export type HeroTints = {
+  /** Farbe des oberen Bildrands — dort stößt das Bild an den Header */
+  top: HeroTint
+  /** Farbe des unteren Bildrands — dort strahlt das Bild auf die Seite ab */
+  bottom: HeroTint
+}
+
+// Dominante Farben pro Bild nur einmal berechnen (Key: Datei + Änderungsdatum)
+const cache = new Map<string, HeroTints | null>()
+
+async function stripTint(file: string, top: number): Promise<HeroTint> {
+  // stats() rechnet immer auf dem Original, daher den Streifen erst
+  // in einen Buffer rendern
+  const strip = await sharp(file)
+    .resize(64, 64, { fit: 'fill' })
+    .extract({ left: 0, top, width: 64, height: 16 })
+    .toBuffer()
+  const { dominant } = await sharp(strip).stats()
+  const { r, g, b } = dominant
+  // Relative Luminanz entscheidet, ob weiße oder dunkle Schrift lesbar ist
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  return { color: `rgba(${r}, ${g}, ${b}, 0.93)`, dark: luminance < 0.6 }
+}
 
 /**
- * Ermittelt die dominante Farbe eines Medien-Dokuments (für die
- * Header-Überblendung im Hero). Nutzt das kleine Thumbnail, damit die
- * Analyse schnell bleibt.
+ * Ermittelt die dominanten Randfarben eines Medien-Dokuments (für die
+ * Header-Überblendung und die Ausstrahlung unter dem Hero). Nutzt das
+ * kleine Thumbnail, damit die Analyse schnell bleibt.
  */
-export async function heroTintFor(media: unknown): Promise<HeroTint | null> {
+export async function heroTintFor(media: unknown): Promise<HeroTints | null> {
   if (!media || typeof media !== 'object') return null
   const m = media as {
     filename?: string | null
@@ -32,27 +53,16 @@ export async function heroTintFor(media: unknown): Promise<HeroTint | null> {
   const cached = cache.get(key)
   if (cached !== undefined) return cached
 
-  let tint: HeroTint | null = null
+  let tints: HeroTints | null = null
   try {
     const file = path.resolve(process.cwd(), 'media', filename)
     if (fs.existsSync(file)) {
-      // Nur der obere Bildstreifen zählt — dort stößt das Bild an den
-      // Header, so wirkt die Überblendung wie eine Fortsetzung des Bildes.
-      // stats() rechnet immer auf dem Original, daher den Streifen erst
-      // in einen Buffer rendern.
-      const strip = await sharp(file)
-        .resize(64, 64, { fit: 'fill' })
-        .extract({ left: 0, top: 0, width: 64, height: 16 })
-        .toBuffer()
-      const { dominant } = await sharp(strip).stats()
-      const { r, g, b } = dominant
-      // Relative Luminanz entscheidet, ob weiße oder dunkle Schrift lesbar ist
-      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-      tint = { color: `rgba(${r}, ${g}, ${b}, 0.93)`, dark: luminance < 0.6 }
+      const [top, bottom] = await Promise.all([stripTint(file, 0), stripTint(file, 48)])
+      tints = { top, bottom }
     }
   } catch {
-    tint = null
+    tints = null
   }
-  cache.set(key, tint)
-  return tint
+  cache.set(key, tints)
+  return tints
 }
