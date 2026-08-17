@@ -58,6 +58,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <HeroCarousel slides={slides} />
 
+      {/* Der Farbton des aktiven Hero-Bildes strahlt hier weich ins Weiß aus */}
+      <div className="hero-fade">
       {promotions.length > 0 && <PromoBanner promotions={promotions} locale={locale} />}
 
       {(homepage?.missionTitle || homepage?.missionText) && (
@@ -78,6 +80,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           )}
         </section>
       )}
+      </div>
 
       <Marquee words={[...dict.home.marquee]} />
 
