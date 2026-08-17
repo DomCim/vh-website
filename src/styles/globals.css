@@ -102,12 +102,12 @@ body {
   transition: --hero-tint-page 0.7s ease;
 }
 .hero-fade {
-  /* Weiches Abstrahlen statt Farbblock: oben kräftig, auf Höhe der
-     Überschrift schon weitgehend ausgelaufen */
+  /* Echte Fortsetzung der unteren Bildkante: startet in voller Stärke,
+     ist auf Höhe der Überschrift weitgehend und danach ganz ausgelaufen */
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--hero-tint-page, transparent) 60%, transparent),
-    color-mix(in srgb, var(--hero-tint-page, transparent) 18%, transparent) 240px,
-    transparent 500px
+    var(--hero-tint-page, transparent),
+    color-mix(in srgb, var(--hero-tint-page, transparent) 30%, transparent) 280px,
+    transparent 560px
   );
 }
