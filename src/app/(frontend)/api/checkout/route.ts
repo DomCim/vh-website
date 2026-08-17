@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       },
     })
 
-    const stripe = stripeClient()
+    const stripe = await stripeClient(payload)
     const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
     // Rabatt als einmaliger Stripe-Coupon

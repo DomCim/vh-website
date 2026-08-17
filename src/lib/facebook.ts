@@ -1,12 +1,13 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
+import { getIntegrations } from './settings'
+
 /**
  * Postet einen veröffentlichten News-Beitrag automatisch auf die Facebook-Seite.
  *
- * Voraussetzungen (env):
- *  - FB_PAGE_ID: ID der Facebook-Seite
- *  - FB_PAGE_ACCESS_TOKEN: langlebiger Page Access Token einer Meta-App
- *    mit der Berechtigung `pages_manage_posts`
+ * Konfiguration: Admin → Integrationen → Facebook (Seiten-ID + Page Access
+ * Token einer Meta-App mit `pages_manage_posts`); Fallback sind die
+ * Umgebungsvariablen FB_PAGE_ID / FB_PAGE_ACCESS_TOKEN.
  *
  * Gepostet wird nur, wenn:
  *  - der Beitrag den Status "veröffentlicht" hat,
@@ -21,8 +22,9 @@ export const postNewsToFacebook: CollectionAfterChangeHook = async ({
   // Endlosschleife verhindern: der Hook aktualisiert das Dokument selbst
   if (context?.skipFacebookPost) return doc
 
-  const pageId = process.env.FB_PAGE_ID
-  const token = process.env.FB_PAGE_ACCESS_TOKEN
+  const { facebook } = await getIntegrations(req.payload)
+  const pageId = facebook.pageId
+  const token = facebook.accessToken
 
   if (!pageId || !token) return doc
   if (doc._status !== 'published') return doc

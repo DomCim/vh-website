@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../lib/data'
 import { contactEmail } from '../../../../lib/mail'
+import { sendMail } from '../../../../lib/sendMail'
+import { getIntegrations } from '../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,14 +24,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'invalid' }, { status: 400 })
     }
 
-    const to = process.env.NOTIFICATION_EMAIL || process.env.EMAIL_FROM
-    if (!to) {
-      console.error('Kontaktformular: NOTIFICATION_EMAIL ist nicht konfiguriert')
+    const payload = await payloadClient()
+    const integrations = await getIntegrations(payload)
+    const to = integrations.email.notificationEmail || integrations.email.fromAddress
+    if (!to || to === 'noreply@localhost') {
+      console.error('Kontaktformular: keine Empfänger-Adresse konfiguriert (Admin → Integrationen)')
       return NextResponse.json({ error: 'not-configured' }, { status: 500 })
     }
 
-    const payload = await payloadClient()
-    await payload.sendEmail(contactEmail({ name, email, phone: body.phone?.trim(), message }, to))
+    await sendMail(payload, contactEmail({ name, email, phone: body.phone?.trim(), message }, to))
 
     return NextResponse.json({ ok: true })
   } catch (err) {

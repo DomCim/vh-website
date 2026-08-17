@@ -75,12 +75,13 @@ Alles unter `https://vh.dominikdill.com/admin`:
 | **Startseite** | Hero-Slider, Mission, Galerie, Highlights, Werte. |
 | **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte. |
 | **Rechtliches** | Impressum, Datenschutzerklärung, AGB. |
+| **Integrationen** | SMTP-Zugangsdaten, Stripe-Keys und Facebook-Token — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
 
 ## Nach dem ersten Deployment zu erledigen
 
 - [ ] Admin-Passwort ändern
 - [ ] **Demo-Preise** der Produkte durch echte Preise ersetzen (Seed enthält Platzhalterwerte!)
 - [ ] Impressum, Datenschutzerklärung und AGB einpflegen (aktuell Platzhalter)
-- [ ] SMTP-Zugangsdaten setzen, damit Bestell- und Kontakt-Mails rausgehen
-- [ ] Stripe-Live-Keys + Webhook einrichten
-- [ ] Optional: Facebook-Token einrichten
+- [ ] SMTP-Zugangsdaten eintragen (Admin → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
+- [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
+- [ ] Optional: Facebook-Token eintragen (Admin → Integrationen)

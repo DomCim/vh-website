@@ -1,14 +1,21 @@
+import type { Payload } from 'payload'
 import Stripe from 'stripe'
 
-let client: Stripe | null = null
+import { getIntegrations } from './settings'
 
-export function stripeClient(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY
-  if (!key) throw new Error('STRIPE_SECRET_KEY ist nicht gesetzt')
-  if (!client) client = new Stripe(key)
-  return client
+/**
+ * Stripe-Client mit dem im Admin hinterlegten Secret Key
+ * (Fallback: STRIPE_SECRET_KEY aus der Umgebung).
+ */
+export async function stripeClient(payload: Payload): Promise<Stripe> {
+  const { stripe } = await getIntegrations(payload)
+  if (!stripe.secretKey) {
+    throw new Error('Stripe ist nicht konfiguriert (Admin → Integrationen → Stripe)')
+  }
+  return new Stripe(stripe.secretKey)
 }
 
-export function stripeConfigured(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY)
+export async function stripeWebhookSecret(payload: Payload): Promise<string | undefined> {
+  const { stripe } = await getIntegrations(payload)
+  return stripe.webhookSecret
 }

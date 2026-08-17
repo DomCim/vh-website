@@ -101,11 +101,13 @@ export interface Config {
     homepage: Homepage;
     'site-settings': SiteSetting;
     legal: Legal;
+    integrations: Integration;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     legal: LegalSelect<false> | LegalSelect<true>;
+    integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
   };
   locale: 'de' | 'fr';
   widgets: {
@@ -855,6 +857,58 @@ export interface Legal {
   createdAt?: string | null;
 }
 /**
+ * Zugangsdaten für E-Mail-Versand, Stripe und Facebook. Leere Felder nutzen die im Server hinterlegten Umgebungsvariablen.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations".
+ */
+export interface Integration {
+  id: number;
+  email?: {
+    /**
+     * z.B. smtp.strato.de
+     */
+    smtpHost?: string | null;
+    /**
+     * 587 (STARTTLS) oder 465 (SSL)
+     */
+    smtpPort?: number | null;
+    smtpUser?: string | null;
+    smtpPass?: string | null;
+    /**
+     * z.B. info@vincent-hellmann.com
+     */
+    fromAddress?: string | null;
+    /**
+     * z.B. Vincent Hellmann
+     */
+    fromName?: string | null;
+    /**
+     * Empfängt Kontaktanfragen und Bestell-Benachrichtigungen
+     */
+    notificationEmail?: string | null;
+  };
+  stripe?: {
+    /**
+     * sk_test_… oder sk_live_… (Stripe-Dashboard → API-Keys)
+     */
+    secretKey?: string | null;
+    /**
+     * whsec_… des Webhook-Endpunkts /api/stripe-webhook
+     */
+    webhookSecret?: string | null;
+  };
+  facebook?: {
+    pageId?: string | null;
+    /**
+     * Langlebiger Token einer Meta-App mit pages_manage_posts
+     */
+    accessToken?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage_select".
  */
@@ -929,6 +983,38 @@ export interface LegalSelect<T extends boolean = true> {
   impressum?: T;
   datenschutz?: T;
   agb?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations_select".
+ */
+export interface IntegrationsSelect<T extends boolean = true> {
+  email?:
+    | T
+    | {
+        smtpHost?: T;
+        smtpPort?: T;
+        smtpUser?: T;
+        smtpPass?: T;
+        fromAddress?: T;
+        fromName?: T;
+        notificationEmail?: T;
+      };
+  stripe?:
+    | T
+    | {
+        secretKey?: T;
+        webhookSecret?: T;
+      };
+  facebook?:
+    | T
+    | {
+        pageId?: T;
+        accessToken?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

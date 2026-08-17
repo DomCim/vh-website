@@ -18,6 +18,7 @@ import { Products } from './collections/Products'
 import { Promotions } from './collections/Promotions'
 import { Users } from './collections/Users'
 import { Homepage } from './globals/Homepage'
+import { Integrations } from './globals/Integrations'
 import { Legal } from './globals/Legal'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -36,7 +37,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Categories, News, Promotions, Orders, Media, Users],
-  globals: [Homepage, SiteSettings, Legal],
+  globals: [Homepage, SiteSettings, Legal, Integrations],
   editor: lexicalEditor(),
   localization: {
     locales: [
