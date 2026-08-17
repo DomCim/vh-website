@@ -26,10 +26,17 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       FB_PAGE_ID: ${FB_PAGE_ID:-}
       FB_PAGE_ACCESS_TOKEN: ${FB_PAGE_ACCESS_TOKEN:-}
+      IG_ACCOUNT_ID: ${IG_ACCOUNT_ID:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_SANDBOX: ${PAYPAL_SANDBOX:-false}
       # Schlüssel für den MCP-Endpunkt (leer = deaktiviert)
       MCP_API_KEY: ${MCP_API_KEY:-}
       # Beim allerersten Start auf "true" setzen, um Startdaten einzuspielen
       SEED: ${SEED:-false}
+      # Einmalig auf "true" setzen, um die englischen Übersetzungen
+      # der Seed-Inhalte einzuspielen — danach wieder auf "false"
+      TRANSLATE_EN: ${TRANSLATE_EN:-false}
     volumes:
       # Persistente Uploads (Bilder aus dem Admin-Panel)
       - media:/app/media
