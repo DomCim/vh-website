@@ -79,7 +79,7 @@ export default async function ThankYouPage({
         <p className="text-ink-soft mt-4 leading-relaxed">{dict.thanks.text}</p>
         <Link
           href={`/${locale}`}
-          className="bg-ink tracking-nav hover:bg-dark-soft mt-8 inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze mt-8 inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
         >
           {dict.thanks.backHome}
         </Link>

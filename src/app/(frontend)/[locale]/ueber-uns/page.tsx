@@ -66,9 +66,9 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           <ol className="border-line mt-14 space-y-12 border-l pl-8">
             {timeline.map((station, i) => (
               <li key={i} className="relative">
-                <span className="bg-accent absolute top-2 -left-[37px] h-2.5 w-2.5 rounded-full" />
+                <span className="bg-bronze absolute top-2 -left-[37px] h-2.5 w-2.5 rounded-full" />
                 <Reveal delay={0.05}>
-                  <p className="text-accent text-sm font-semibold tracking-widest uppercase">
+                  <p className="text-bronze text-sm font-semibold tracking-widest uppercase">
                     {station.year}
                   </p>
                   <h2 className="tracking-nav text-ink mt-1 text-lg font-semibold uppercase">

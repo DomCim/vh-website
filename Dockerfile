@@ -35,6 +35,7 @@ COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=node:node /app/src ./src
 COPY --from=builder --chown=node:node /app/scripts ./scripts
 COPY --from=builder --chown=node:node /app/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY --from=builder --chown=node:node /app/CHANGELOG.md ./CHANGELOG.md
 
 # Persistentes Upload-Verzeichnis (als Volume mounten!)
 RUN mkdir -p /app/media && chown node:node /app/media && chmod +x /app/docker-entrypoint.sh

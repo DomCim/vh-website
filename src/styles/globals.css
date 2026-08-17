@@ -10,6 +10,8 @@
   --color-dark: #191919;
   --color-dark-soft: #232323;
   --color-accent: #b32428;
+  /* Corten-/Bronzeton: dezente Akzentfarbe, greift das Material der Arbeiten auf */
+  --color-bronze: #a5622d;
 
   --font-sans: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif;
 
@@ -54,7 +56,7 @@ body {
   @apply mb-4 list-decimal pl-6;
 }
 .prose-vh a {
-  @apply text-ink underline underline-offset-2 hover:text-accent;
+  @apply text-ink underline underline-offset-2 hover:text-bronze;
 }
 .prose-vh strong {
   @apply text-ink font-semibold;
@@ -65,16 +67,17 @@ body {
    auf <html>). Tailwind-Utilities lesen die --color-*-Variablen, daher
    reicht es, sie im Header-Balken zu überschreiben. */
 .site-header {
+  /* 1,4 s — synchron zur Kamerablende des Hero-Sliders */
   transition:
-    background-color 0.7s ease,
-    border-color 0.7s ease;
+    background-color 1.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 :root[data-hero-tint] .site-header {
   background-color: var(--hero-tint);
   border-color: transparent;
 }
 .site-header .site-logo {
-  transition: filter 0.7s ease;
+  transition: filter 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 :root[data-hero-tint='dark'] .site-header .site-logo {
   filter: invert(1);
@@ -84,8 +87,10 @@ body {
   --color-ink-soft: rgba(255, 255, 255, 0.78);
   --color-line: rgba(255, 255, 255, 0.35);
   --color-accent: #ffffff;
+  --color-bronze: #ffffff;
 }
-:root[data-hero-tint='dark'] .site-header-bar .bg-accent {
+:root[data-hero-tint='dark'] .site-header-bar .bg-accent,
+:root[data-hero-tint='dark'] .site-header-bar .bg-bronze {
   background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -99,7 +104,7 @@ body {
   initial-value: transparent;
 }
 :root {
-  transition: --hero-tint-page 0.7s ease;
+  transition: --hero-tint-page 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .hero-fade {
   /* Echte Fortsetzung der unteren Bildkante: startet in voller Stärke,

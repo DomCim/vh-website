@@ -14,7 +14,7 @@ export function Marquee({ words, speed = 40 }: { words: string[]; speed?: number
       {words.map((word, i) => (
         <span key={i} className="mx-8 inline-flex items-center gap-16">
           <span>{word}</span>
-          <span className="text-accent text-2xl leading-none">•</span>
+          <span className="text-bronze text-2xl leading-none">•</span>
         </span>
       ))}
     </>

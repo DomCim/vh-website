@@ -56,7 +56,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                   <span className="text-ink-soft">{dict.contact.phoneLabel}: </span>
                   <a
                     href={`tel:${settings.contact.phone.replace(/\s/g, '')}`}
-                    className="text-ink hover:text-accent"
+                    className="text-ink hover:text-bronze"
                   >
                     {settings.contact.phone}
                   </a>
@@ -65,7 +65,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               {settings?.contact?.email && (
                 <p>
                   <span className="text-ink-soft">{dict.contact.emailLabel}: </span>
-                  <a href={`mailto:${settings.contact.email}`} className="text-ink hover:text-accent">
+                  <a href={`mailto:${settings.contact.email}`} className="text-ink hover:text-bronze">
                     {settings.contact.email}
                   </a>
                 </p>
