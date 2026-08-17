@@ -88,3 +88,26 @@ body {
 :root[data-hero-tint='dark'] .site-header-bar .bg-accent {
   background-color: rgba(0, 0, 0, 0.45);
 }
+
+/* Ausstrahlung des Hero-Farbtons auf die Seite: Verlauf unterhalb des Heros,
+   der über den Aktions-Banner hinweg weich ins Weiß ausläuft. Als
+   registrierte Property, damit der Farbwechsel beim Folienwechsel
+   animiert (Browser ohne @property wechseln hart — akzeptabel). */
+@property --hero-tint-page {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+:root {
+  transition: --hero-tint-page 0.7s ease;
+}
+.hero-fade {
+  /* Weiches Abstrahlen statt Farbblock: oben kräftig, auf Höhe der
+     Überschrift schon weitgehend ausgelaufen */
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-tint-page, transparent) 60%, transparent),
+    color-mix(in srgb, var(--hero-tint-page, transparent) 18%, transparent) 240px,
+    transparent 500px
+  );
+}

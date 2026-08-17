@@ -40,9 +40,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       root.style.removeProperty('--hero-tint')
       delete root.dataset.heroTint
     }
+    // Ausstrahlung unter dem Hero (.hero-fade): folgt dem aktiven Slide,
+    // bleibt aber beim Scrollen stehen — sie gehört zum Seitenhintergrund
+    const pageTint = slides[index]?.tint
+    root.style.setProperty('--hero-tint-page', pageTint ? pageTint.color : 'transparent')
     return () => {
       root.style.removeProperty('--hero-tint')
       delete root.dataset.heroTint
+      root.style.removeProperty('--hero-tint-page')
     }
   }, [index, heroInView, slides])
 
