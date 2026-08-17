@@ -1,4 +1,6 @@
-/* Payload-Admin — Standard-Scaffold, nicht anpassen */
+/* Payload-Admin — Standard-Scaffold; ergänzt nur um PWA-Metadata */
+import type { Metadata, Viewport } from 'next'
+
 import config from '@payload-config'
 import '@payloadcms/next/css'
 import type { ServerFunctionClient } from 'payload'
@@ -19,6 +21,24 @@ const serverFunction: ServerFunctionClient = async function (args) {
     config,
     importMap,
   })
+}
+
+// Macht den Admin als App installierbar ("Zum Home-Bildschirm")
+export const metadata: Metadata = {
+  applicationName: 'VH Verwaltung',
+  manifest: '/admin-manifest.webmanifest',
+  icons: {
+    apple: '/admin-icon-180.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black',
+    title: 'VH Verwaltung',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#191919',
 }
 
 const Layout = ({ children }: Args) => (
