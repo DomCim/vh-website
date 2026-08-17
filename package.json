@@ -1,0 +1,48 @@
+{
+  "name": "vh-website",
+  "version": "1.0.0",
+  "description": "Vincent Hellmann — Website & Shop (Next.js + Payload CMS)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "payload": "payload",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "seed": "payload run scripts/seed.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3.49.0",
+    "@payloadcms/email-nodemailer": "^3.49.0",
+    "@payloadcms/next": "^3.49.0",
+    "@payloadcms/richtext-lexical": "^3.49.0",
+    "@payloadcms/translations": "^3.88.0",
+    "motion": "^13.1.0",
+    "next": "^15.4.0",
+    "nodemailer": "^6.9.16",
+    "payload": "^3.49.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sharp": "^0.34.0",
+    "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0"
+  }
+}

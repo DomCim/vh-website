@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Farbwelt eng am Original: viel Weiß, Anthrazit-Text, dunkler Footer */
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #4b4b4d;
+  --color-paper: #ffffff;
+  --color-paper-soft: #f5f5f4;
+  --color-line: #e4e4e2;
+  --color-dark: #191919;
+  --color-dark-soft: #232323;
+  --color-accent: #b32428;
+
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif;
+
+  --tracking-brand: 0.22em;
+  --tracking-nav: 0.14em;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+/* Fließtext aus dem CMS (Lexical-RichText) */
+.prose-vh {
+  @apply text-ink-soft leading-relaxed;
+}
+.prose-vh h1,
+.prose-vh h2,
+.prose-vh h3,
+.prose-vh h4 {
+  @apply text-ink mb-3 mt-8 font-semibold uppercase tracking-wide first:mt-0;
+}
+.prose-vh h1 {
+  @apply text-2xl;
+}
+.prose-vh h2 {
+  @apply text-xl;
+}
+.prose-vh h3 {
+  @apply text-lg;
+}
+.prose-vh p {
+  @apply mb-4;
+}
+.prose-vh ul {
+  @apply mb-4 list-disc pl-6;
+}
+.prose-vh ol {
+  @apply mb-4 list-decimal pl-6;
+}
+.prose-vh a {
+  @apply text-ink underline underline-offset-2 hover:text-accent;
+}
+.prose-vh strong {
+  @apply text-ink font-semibold;
+}
