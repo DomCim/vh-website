@@ -54,7 +54,7 @@ export default async function ProjectsPage({
       <SplitTextReveal
         as="h1"
         text={dict.projects.title}
-        className="tracking-nav text-ink mb-4 text-2xl font-semibold uppercase"
+        className="tracking-nav text-ink rule-bronze mb-4 text-2xl font-semibold uppercase"
       />
       <Reveal>
         <p className="text-ink-soft mb-8 max-w-2xl">{dict.projects.intro}</p>

@@ -48,7 +48,7 @@ export default async function NewsPage({
       <SplitTextReveal
         as="h1"
         text={dict.news.title}
-        className="tracking-nav text-ink mb-6 text-2xl font-semibold uppercase"
+        className="tracking-nav text-ink rule-bronze mb-6 text-2xl font-semibold uppercase"
       />
 
       <Reveal>

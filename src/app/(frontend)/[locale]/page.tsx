@@ -68,7 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <SplitTextReveal
               as="h1"
               text={homepage.missionTitle}
-              className="tracking-nav text-ink text-2xl font-semibold uppercase sm:text-3xl"
+              className="tracking-nav text-ink rule-bronze rule-bronze-center text-2xl font-semibold uppercase sm:text-3xl"
             />
           )}
           {homepage.missionText && (
@@ -88,7 +88,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <SplitTextReveal
             text={dict.home.categoriesTitle}
-            className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+            className="tracking-nav text-ink rule-bronze mb-8 text-xl font-semibold uppercase"
           />
           <RevealStagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((c) => (
@@ -110,12 +110,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
             <SplitTextReveal
               text={dict.home.highlightsTitle}
-              className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+              className="tracking-nav text-ink rule-bronze mb-8 text-xl font-semibold uppercase"
             />
             <RevealStagger className="grid gap-8 sm:grid-cols-3">
               {homepage!.highlights!.map((h, i) => (
                 <RevealItem key={i}>
-                  <h3 className="tracking-nav text-ink text-sm font-semibold uppercase">{h.title}</h3>
+                  <h3 className="tracking-nav text-ink rule-bronze-sm text-sm font-semibold uppercase">{h.title}</h3>
                   {h.text && <p className="text-ink-soft mt-2 text-sm leading-relaxed">{h.text}</p>}
                 </RevealItem>
               ))}
@@ -128,7 +128,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <SplitTextReveal
             text={dict.home.galleryTitle}
-            className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+            className="tracking-nav text-ink rule-bronze mb-8 text-xl font-semibold uppercase"
           />
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {gallery.map((img, i) => (
@@ -152,12 +152,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
             <SplitTextReveal
               text={dict.home.valuesTitle}
-              className="tracking-nav mb-8 text-xl font-semibold uppercase"
+              className="tracking-nav rule-bronze mb-8 text-xl font-semibold uppercase"
             />
             <RevealStagger className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
               {homepage!.values!.map((v, i) => (
                 <RevealItem key={i}>
-                  <h3 className="tracking-nav text-sm font-semibold uppercase">{v.title}</h3>
+                  <h3 className="tracking-nav rule-bronze-sm text-sm font-semibold uppercase">{v.title}</h3>
                   {v.text && <p className="mt-2 text-sm leading-relaxed text-white/75">{v.text}</p>}
                 </RevealItem>
               ))}
@@ -171,7 +171,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
             <Reveal>
               <div className="mb-8 flex items-baseline justify-between">
-                <h2 className="tracking-nav text-ink text-xl font-semibold uppercase">
+                <h2 className="tracking-nav text-ink rule-bronze text-xl font-semibold uppercase">
                   {dict.projects.homeTitle}
                 </h2>
                 <Link
@@ -218,7 +218,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <SplitTextReveal
             text={dict.testimonials.title}
-            className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+            className="tracking-nav text-ink rule-bronze mb-8 text-xl font-semibold uppercase"
           />
           <RevealStagger className="grid gap-6 sm:grid-cols-3">
             {testimonials.map((tst) => (
@@ -244,7 +244,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <Reveal>
             <div className="mb-8 flex items-baseline justify-between">
-              <h2 className="tracking-nav text-ink text-xl font-semibold uppercase">
+              <h2 className="tracking-nav text-ink rule-bronze text-xl font-semibold uppercase">
                 {dict.home.newsTitle}
               </h2>
               <Link

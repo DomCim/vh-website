@@ -54,7 +54,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         <SplitTextReveal
           as="h1"
           text={about?.title || dict.about.title}
-          className="tracking-nav text-ink mb-6 text-2xl font-semibold uppercase sm:text-3xl"
+          className="tracking-nav text-ink rule-bronze mb-6 text-2xl font-semibold uppercase sm:text-3xl"
         />
         {about?.intro && (
           <Reveal>
