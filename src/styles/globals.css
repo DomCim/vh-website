@@ -103,11 +103,13 @@ body {
 }
 .hero-fade {
   /* Echte Fortsetzung der unteren Bildkante: startet in voller Stärke,
-     ist auf Höhe der Überschrift weitgehend und danach ganz ausgelaufen */
+     ist auf Höhe der Überschrift weitgehend ausgelaufen. Die Stopps sind
+     gedeckelt, damit der Verlauf sicher VOR dem Ende der Zone (Laufband)
+     in Weiß endet und nicht abrupt abgeschnitten wird. */
   background-image: linear-gradient(
     to bottom,
     var(--hero-tint-page, transparent),
-    color-mix(in srgb, var(--hero-tint-page, transparent) 30%, transparent) 280px,
-    transparent 560px
+    color-mix(in srgb, var(--hero-tint-page, transparent) 30%, transparent) min(280px, 45%),
+    transparent min(560px, 88%)
   );
 }
