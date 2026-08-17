@@ -4,8 +4,11 @@ import React from 'react'
 
 import { CategoryTile } from '../../../components/CategoryTile'
 import { HeroCarousel, type HeroSlide } from '../../../components/HeroCarousel'
+import { ImageReveal } from '../../../components/motion/ImageReveal'
+import { Marquee } from '../../../components/motion/Marquee'
 import { Parallax } from '../../../components/motion/Parallax'
 import { Reveal, RevealItem, RevealStagger } from '../../../components/motion/Reveal'
+import { SplitTextReveal } from '../../../components/motion/SplitTextReveal'
 import { PromoBanner } from '../../../components/PromoBanner'
 import {
   getActivePromotions,
@@ -49,28 +52,31 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {(homepage?.missionTitle || homepage?.missionText) && (
         <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          <Reveal>
-            {homepage.missionTitle && (
-              <h1 className="tracking-nav text-ink text-2xl font-semibold uppercase sm:text-3xl">
-                {homepage.missionTitle}
-              </h1>
-            )}
-            {homepage.missionText && (
+          {homepage.missionTitle && (
+            <SplitTextReveal
+              as="h1"
+              text={homepage.missionTitle}
+              className="tracking-nav text-ink text-2xl font-semibold uppercase sm:text-3xl"
+            />
+          )}
+          {homepage.missionText && (
+            <Reveal delay={0.25}>
               <p className="text-ink-soft mt-5 text-base leading-relaxed sm:text-lg">
                 {homepage.missionText}
               </p>
-            )}
-          </Reveal>
+            </Reveal>
+          )}
         </section>
       )}
 
+      <Marquee words={[...dict.home.marquee]} />
+
       {categories.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-          <Reveal>
-            <h2 className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase">
-              {dict.home.categoriesTitle}
-            </h2>
-          </Reveal>
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <SplitTextReveal
+            text={dict.home.categoriesTitle}
+            className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+          />
           <RevealStagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((c) => (
               <RevealItem key={c.id}>
@@ -89,11 +95,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {(homepage?.highlights?.length ?? 0) > 0 && (
         <section className="bg-paper-soft">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-            <Reveal>
-              <h2 className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase">
-                {dict.home.highlightsTitle}
-              </h2>
-            </Reveal>
+            <SplitTextReveal
+              text={dict.home.highlightsTitle}
+              className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+            />
             <RevealStagger className="grid gap-8 sm:grid-cols-3">
               {homepage!.highlights!.map((h, i) => (
                 <RevealItem key={i}>
@@ -108,15 +113,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {gallery.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-          <Reveal>
-            <h2 className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase">
-              {dict.home.galleryTitle}
-            </h2>
-          </Reveal>
-          <RevealStagger className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <SplitTextReveal
+            text={dict.home.galleryTitle}
+            className="tracking-nav text-ink mb-8 text-xl font-semibold uppercase"
+          />
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {gallery.map((img, i) => (
-              <RevealItem key={i}>
-                <Parallax amount={16} className="bg-paper-soft aspect-square">
+              <ImageReveal key={i} delay={i * 0.08} className="bg-paper-soft aspect-square">
+                <Parallax amount={16} className="h-full w-full">
                   <img
                     src={mediaUrl(img, 'card')}
                     alt={mediaAlt(img)}
@@ -124,20 +128,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     loading="lazy"
                   />
                 </Parallax>
-              </RevealItem>
+              </ImageReveal>
             ))}
-          </RevealStagger>
+          </div>
         </section>
       )}
 
       {(homepage?.values?.length ?? 0) > 0 && (
         <section className="bg-dark text-white">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-            <Reveal>
-              <h2 className="tracking-nav mb-8 text-xl font-semibold uppercase">
-                {dict.home.valuesTitle}
-              </h2>
-            </Reveal>
+            <SplitTextReveal
+              text={dict.home.valuesTitle}
+              className="tracking-nav mb-8 text-xl font-semibold uppercase"
+            />
             <RevealStagger className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
               {homepage!.values!.map((v, i) => (
                 <RevealItem key={i}>

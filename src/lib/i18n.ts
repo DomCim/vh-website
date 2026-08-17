@@ -22,6 +22,7 @@ const de = {
     highlightsTitle: 'Ihr Stück. Ihre Entscheidung.',
     galleryTitle: 'Einblicke in die Werkstatt',
     discover: 'Entdecken',
+    marquee: ['Stahl', 'Handwerk', 'Design', 'Unikate', 'Maßanfertigung'],
   },
   product: {
     addToCart: 'In den Warenkorb',
@@ -143,6 +144,7 @@ const fr: Dictionary = {
     highlightsTitle: 'Votre pièce. Votre choix.',
     galleryTitle: "Aperçu de l'atelier",
     discover: 'Découvrir',
+    marquee: ['Acier', 'Artisanat', 'Design', 'Pièces uniques', 'Sur mesure'],
   },
   product: {
     addToCart: 'Ajouter au panier',
@@ -262,6 +264,7 @@ const en: Dictionary = {
     highlightsTitle: 'Your piece. Your choice.',
     galleryTitle: 'Inside the workshop',
     discover: 'Discover',
+    marquee: ['Steel', 'Craftsmanship', 'Design', 'One-of-a-kind', 'Made to measure'],
   },
   product: {
     addToCart: 'Add to cart',

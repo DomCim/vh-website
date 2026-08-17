@@ -4,6 +4,7 @@ import React from 'react'
 
 import { Footer } from '../../../components/layout/Footer'
 import { Header } from '../../../components/layout/Header'
+import { SmoothScroll } from '../../../components/motion/SmoothScroll'
 import { CartProvider } from '../../../components/shop/CartProvider'
 import { getMainCategories, getSiteSettings } from '../../../lib/data'
 import { isLocale, t } from '../../../lib/i18n'
@@ -70,6 +71,7 @@ export default async function LocaleLayout({ children, params }: Args) {
           dangerouslySetInnerHTML={{ __html: orgJsonLd }}
         />
         <CartProvider>
+          <SmoothScroll />
           <Header locale={locale} categories={categories} dict={dict} />
           <main className="min-h-screen pt-20">{children}</main>
           <Footer locale={locale} settings={settings} dict={dict} />

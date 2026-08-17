@@ -1,8 +1,8 @@
 'use client'
 
-import { motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import Link from 'next/link'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 export type HeroSlide = {
   image?: string
@@ -17,6 +17,12 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const count = slides.length
   const reduceMotion = useReducedMotion()
 
+  // Scroll-Parallax: Der Hero bleibt beim Scrollen leicht zurück und blendet sanft aus
+  const ref = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '18%'])
+  const fade = useTransform(scrollYProgress, [0, 0.85], [1, 0])
+
   const next = useCallback(() => setIndex((i) => (i + 1) % count), [count])
   const prev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count])
 
@@ -29,7 +35,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   if (count === 0) return null
 
   return (
-    <section className="bg-dark relative h-[60vh] min-h-[420px] w-full overflow-hidden md:h-[75vh]">
+    <section
+      ref={ref}
+      className="bg-dark relative h-[60vh] min-h-[420px] w-full overflow-hidden md:h-[75vh]"
+    >
+      <motion.div
+        className="absolute inset-0 will-change-transform"
+        style={reduceMotion ? undefined : { y: bgY, opacity: fade }}
+      >
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -72,6 +85,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           )}
         </div>
       ))}
+      </motion.div>
 
       {count > 1 && (
         <>
