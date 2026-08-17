@@ -78,7 +78,8 @@ async function run() {
     limit: 1,
   })
   if (seeded.totalDocs > 0) {
-    console.log('Daten bereits vorhanden — Seed wird übersprungen.')
+    console.log('Basis-Daten bereits vorhanden — nur neue Inhalte werden ergänzt.')
+    await seedExtras(payload)
     return
   }
 
@@ -432,11 +433,13 @@ async function run() {
     const doc = await payload.create({
       collection: 'news',
       locale: 'de',
+      draft: false,
       data: {
         title: opts.de.title,
         excerpt: opts.de.excerpt,
         content: richText(opts.de.content),
         slug: opts.slug,
+        type: 'news',
         coverImage: opts.image,
         publishedDate: opts.date,
         _status: 'published',
@@ -647,9 +650,272 @@ async function run() {
     },
   })
 
+  await seedExtras(payload)
+
   console.log('✓ Seed abgeschlossen.')
   console.log(`  Admin-Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`)
   console.log('  WICHTIG: Passwort ändern, Demo-Preise prüfen, Rechtstexte einfügen!')
+}
+
+/**
+ * Neuere Inhalte (Referenzen, Über uns, Ratgeber) mit eigenen Existenz-Checks —
+ * werden per SEED=true auch in einer bereits geseedeten Datenbank nachgetragen.
+ */
+async function seedExtras(payload: Payload) {
+  // ── Referenz-Projekte (Platzhalter — durch echte Projekte ersetzen!) ──────
+  const { totalDocs: projectCount } = await payload.count({ collection: 'projects' })
+  if (projectCount === 0) {
+    console.log('Lege Beispiel-Referenzen an …')
+    const imgOffice = await uploadImage(payload, '/fileadmin/_processed_/b/a/csm_Vincent-Hellmann_Office_2025-04_L1000859_fd5ef85f1f.jpg', 'Büro und Werkstatt')
+    const imgMaschine = await uploadImage(payload, '/fileadmin/_processed_/8/3/csm_Vincent_Hellmann_next_concept_maschine_IMG_1952_ret_b3e8a8bc81.jpg', 'Maschinenbau bei Next Concept')
+
+    const project = async (opts: {
+      de: { title: string; summary: string; description: string }
+      fr: { title: string; summary: string; description: string }
+      slug: string
+      sector: 'kommunal' | 'gewerbe' | 'privat'
+      images: (number | undefined)[]
+      year?: number
+    }) => {
+      const images = opts.images.filter((i): i is number => typeof i === 'number')
+      if (images.length === 0) return
+      const doc = await payload.create({
+        collection: 'projects',
+        locale: 'de',
+        data: {
+          title: opts.de.title,
+          summary: opts.de.summary,
+          description: richText(opts.de.description),
+          slug: opts.slug,
+          sector: opts.sector,
+          images,
+          year: opts.year,
+          featured: true,
+        },
+      })
+      await payload.update({
+        collection: 'projects',
+        id: doc.id,
+        locale: 'fr',
+        data: {
+          title: opts.fr.title,
+          summary: opts.fr.summary,
+          description: richText(opts.fr.description),
+        },
+      })
+      console.log(`  ✓ Referenz: ${opts.slug}`)
+    }
+
+    await project({
+      de: {
+        title: 'Pflanzkübel für die Stadtgestaltung (Beispiel)',
+        summary:
+          'Platzhalter-Referenz: robuste Stahl-Pflanzkübel für einen kommunalen Auftraggeber — bitte durch ein echtes Projekt ersetzen.',
+        description:
+          'Dies ist ein Beispiel-Eintrag, der zeigt, wie eine Referenz aufgebaut sein kann: Ausgangslage, Umsetzung und Ergebnis in wenigen Sätzen, dazu drei bis fünf aussagekräftige Fotos. Ersetzen Sie diesen Text im Admin unter „Referenzen" durch ein echtes Projekt.',
+      },
+      fr: {
+        title: "Bacs à plantes pour l'aménagement urbain (exemple)",
+        summary:
+          "Référence fictive : bacs à plantes en acier robustes pour une collectivité — à remplacer par un vrai projet.",
+        description:
+          "Ceci est un exemple montrant la structure d'une référence : contexte, réalisation et résultat en quelques phrases, accompagnés de trois à cinq photos parlantes. Remplacez ce texte dans l'admin sous « Références » par un vrai projet.",
+      },
+      slug: 'pflanzkuebel-stadtgestaltung-beispiel',
+      sector: 'kommunal',
+      images: [imgOffice],
+      year: 2026,
+    })
+
+    await project({
+      de: {
+        title: 'Sondermaschine für die Serienfertigung (Beispiel)',
+        summary:
+          'Platzhalter-Referenz: Konstruktion und Bau einer Sondermaschine — bitte durch ein echtes Projekt ersetzen.',
+        description:
+          'Beispiel-Eintrag für den Bereich Maschinenbau: Beschreiben Sie hier Aufgabenstellung, Konstruktion und Inbetriebnahme. Gerade für Gewerbekunden zählt, welche Probleme gelöst wurden — Zahlen und Fakten wirken stärker als Werbetexte.',
+      },
+      fr: {
+        title: 'Machine spéciale pour la production en série (exemple)',
+        summary:
+          "Référence fictive : conception et construction d'une machine spéciale — à remplacer par un vrai projet.",
+        description:
+          "Exemple pour le domaine de la construction mécanique : décrivez ici le cahier des charges, la conception et la mise en service. Pour les clients professionnels, les problèmes résolus comptent — les chiffres et les faits sont plus parlants que les textes publicitaires.",
+      },
+      slug: 'sondermaschine-serienfertigung-beispiel',
+      sector: 'gewerbe',
+      images: [imgMaschine],
+      year: 2026,
+    })
+  }
+
+  // ── Über uns (Struktur + Platzhalter-Stationen) ───────────────────────────
+  const about = await payload.findGlobal({ slug: 'about', locale: 'de', depth: 0 })
+  if (!about?.title) {
+    console.log('Befülle Über-uns-Seite …')
+    const imgOffice = await uploadImage(payload, '/fileadmin/_processed_/b/a/csm_Vincent-Hellmann_Office_2025-04_L1000859_fd5ef85f1f.jpg', 'Büro und Werkstatt')
+    const imgMaschine = await uploadImage(payload, '/fileadmin/_processed_/8/3/csm_Vincent_Hellmann_next_concept_maschine_IMG_1952_ret_b3e8a8bc81.jpg', 'Maschinenbau bei Next Concept')
+
+    const aboutDe = await payload.updateGlobal({
+      slug: 'about',
+      locale: 'de',
+      data: {
+        title: 'Über uns',
+        heroImage: imgOffice,
+        intro:
+          'Hinter Vincent Hellmann steht die Next-Concept SAS: eine Fertigung in Frankreich, in der Möbel, Leuchten und Objekte aus Stahl entstehen — vom ersten Entwurf über CNC-Fertigung und Schweißen bis zur Pulverbeschichtung. (Platzhalter-Text: Ergänzen Sie hier Ihre persönliche Geschichte.)',
+        timeline: [
+          {
+            year: 'Anfänge',
+            title: 'Handwerk als Fundament (Platzhalter)',
+            text: 'Beschreiben Sie hier den Werdegang: Ausbildung, prägende Stationen, erste Projekte.',
+          },
+          {
+            year: '2025',
+            title: 'Gründung der Next-Concept SAS',
+            text: 'Start der eigenen Fertigung in Frankreich — Maschinenbau, Pflanzkübel und die ersten Möbelserien.',
+          },
+          {
+            year: '2026',
+            title: 'Die Marke Vincent Hellmann',
+            text: 'Outdoor-Möbel, Leuchten und Objekte aus Stahl unter eigenem Namen — mit Online-Shop und Maßanfertigung.',
+          },
+        ],
+        gallery: [imgOffice, imgMaschine].filter((i): i is number => typeof i === 'number'),
+      },
+    })
+    await payload.updateGlobal({
+      slug: 'about',
+      locale: 'fr',
+      data: {
+        title: 'À propos',
+        intro:
+          "Derrière Vincent Hellmann se trouve Next-Concept SAS : un atelier en France où naissent meubles, luminaires et objets en acier — du premier croquis à l'usinage CNC, de la soudure au thermolaquage. (Texte provisoire : complétez ici votre histoire personnelle.)",
+        timeline: aboutDe.timeline?.map((s, i) => ({
+          id: s.id,
+          year: s.year,
+          title: [
+            "L'artisanat comme fondement (à compléter)",
+            'Création de Next-Concept SAS',
+            'La marque Vincent Hellmann',
+          ][i] ?? s.title,
+          text: [
+            'Décrivez ici le parcours : formation, étapes marquantes, premiers projets.',
+            "Lancement de l'atelier en France — construction mécanique, bacs à plantes et premières séries de meubles.",
+            'Mobilier outdoor, luminaires et objets en acier sous son propre nom — avec boutique en ligne et fabrication sur mesure.',
+          ][i] ?? s.text,
+        })),
+      },
+    })
+    console.log('  ✓ Über uns')
+  }
+
+  // ── Ratgeber-Artikel (eigene Fachtexte als SEO-Content) ───────────────────
+  const { totalDocs: guideCount } = await payload.count({
+    collection: 'news',
+    where: { type: { equals: 'ratgeber' } },
+  })
+  if (guideCount === 0) {
+    console.log('Lege Ratgeber-Artikel an …')
+    const imgSofaGruen = await uploadImage(payload, '/fileadmin/_processed_/9/f/csm_Vincent_Hellmann_Sofa_DSCF1185_3_1_gruen_fcbf2f0150.jpg', 'Outdoor-Sofa in Grün')
+    const imgSitzgruppe = await uploadImage(payload, '/fileadmin/_processed_/1/6/csm_Vincent-Hellmann_Sitzgruppe_blau_f43ed72158.jpg', 'Blaue Outdoor-Sitzgruppe')
+
+    const guide = async (opts: {
+      de: { title: string; excerpt: string; content: string }
+      fr: { title: string; excerpt: string; content: string }
+      slug: string
+      image?: number
+      daysAgo: number
+    }) => {
+      if (typeof opts.image !== 'number') return
+      const doc = await payload.create({
+        collection: 'news',
+        locale: 'de',
+        draft: false,
+        data: {
+          title: opts.de.title,
+          excerpt: opts.de.excerpt,
+          content: richText(opts.de.content),
+          slug: opts.slug,
+          type: 'ratgeber',
+          coverImage: opts.image,
+          publishedDate: new Date(Date.now() - opts.daysAgo * 86400_000).toISOString(),
+          _status: 'published',
+        },
+      })
+      await payload.update({
+        collection: 'news',
+        id: doc.id,
+        locale: 'fr',
+        data: {
+          title: opts.fr.title,
+          excerpt: opts.fr.excerpt,
+          content: richText(opts.fr.content),
+        },
+      })
+      console.log(`  ✓ Ratgeber: ${opts.slug}`)
+    }
+
+    await guide({
+      de: {
+        title: 'Pulverbeschichtet, verzinkt oder Corten — welcher Stahl für draußen?',
+        excerpt:
+          'Drei Oberflächen, drei Charaktere: Was die Varianten unterscheidet und welche zu Ihrem Garten passt.',
+        content: [
+          'Stahl ist für den Außenbereich ein hervorragendes Material — vorausgesetzt, die Oberfläche passt zum Einsatzzweck. Drei Wege haben sich bewährt.',
+          'Verzinkter Stahl: Beim Feuerverzinken überzieht eine Zinkschicht das Metall und schützt es zuverlässig vor Rost — auch an Kanten und Schweißnähten. Die silbrig-matte Optik ist zurückhaltend und technisch. Verzinkung ist die Basis für alles, was Jahrzehnte draußen stehen soll.',
+          'Pulverbeschichtung: Auf den verzinkten Grundkörper wird Farbpulver elektrostatisch aufgetragen und eingebrannt. Das Ergebnis ist eine widerstandsfähige, UV-stabile Farbschicht in praktisch jedem RAL-Ton — die Kombination aus Verzinkung und Pulverbeschichtung (Duplex-System) ist der Standard für hochwertige Außenmöbel.',
+          'Cortenstahl: Hier ist die Rostschicht gewollt — sie bildet eine schützende Patina in warmem Braunorange. Corten wirkt natürlich und lebendig, braucht aber einen Standort, an dem ablaufendes Rostwasser keine Spuren hinterlässt (z.B. auf Kies statt auf hellem Naturstein).',
+          'Unsere Empfehlung: Für Möbel mit Farbwunsch das Duplex-System, für Skulpturen und Pflanzkübel mit Naturcharakter Corten. Bei Fragen zur passenden Ausführung beraten wir gerne persönlich.',
+        ].join('\n\n'),
+      },
+      fr: {
+        title: 'Thermolaqué, galvanisé ou Corten — quel acier pour l\'extérieur ?',
+        excerpt:
+          'Trois finitions, trois caractères : ce qui les distingue et laquelle convient à votre jardin.',
+        content: [
+          "L'acier est un excellent matériau pour l'extérieur — à condition que la finition corresponde à l'usage. Trois approches ont fait leurs preuves.",
+          "L'acier galvanisé : la galvanisation à chaud dépose une couche de zinc qui protège durablement le métal de la rouille, y compris sur les arêtes et les soudures. Son aspect argenté mat est discret et technique. C'est la base de tout ce qui doit rester dehors des décennies.",
+          'Le thermolaquage : une poudre de couleur est appliquée par électrostatique sur le corps galvanisé puis cuite au four. Le résultat est une couche résistante et stable aux UV, dans pratiquement toutes les teintes RAL — la combinaison galvanisation + thermolaquage (système duplex) est le standard du mobilier extérieur haut de gamme.',
+          "L'acier Corten : ici, la rouille est voulue — elle forme une patine protectrice d'un brun-orangé chaleureux. Le Corten paraît naturel et vivant, mais demande un emplacement où les écoulements de rouille ne laissent pas de traces (sur du gravier plutôt que sur de la pierre claire).",
+          "Notre recommandation : le système duplex pour les meubles avec choix de couleur, le Corten pour les sculptures et bacs à plantes au caractère naturel. Nous vous conseillons volontiers personnellement.",
+        ].join('\n\n'),
+      },
+      slug: 'stahl-fuer-draussen',
+      image: imgSofaGruen,
+      daysAgo: 5,
+    })
+
+    await guide({
+      de: {
+        title: 'Die richtige RAL-Farbe für Gartenmöbel',
+        excerpt:
+          'Anthrazit ist nicht die einzige Antwort: Wie Sie eine Farbe finden, die zu Haus und Garten passt — und dauerhaft gefällt.',
+        content: [
+          'Bei pulverbeschichteten Möbeln ist die Farbwahl praktisch grenzenlos — genau das macht sie schwer. Ein paar Grundsätze helfen.',
+          'Orientieren Sie sich am Bestand: Fensterrahmen, Haustür oder Zaun geben oft schon eine Richtung vor. Ein Möbelstück im selben Ton wirkt wie aus einem Guss; ein bewusster Kontrast (z.B. ein rubinrotes Sofa vor grauer Fassade) setzt ein Statement.',
+          'Helle Farben zeigen Schmutz später als dunkle Staub — dafür wirken dunkle Töne wie Anthrazitgrau (RAL 7016) oder Schwarzgrau elegant und ruhig. Auf sonnigen Terrassen heizen sich sehr dunkle Flächen spürbar auf; gedeckte Mitteltöne wie Taubenblau oder Resedagrün sind hier ein guter Kompromiss.',
+          'Denken Sie in Jahren, nicht in Saisons: Eine Trendfarbe lässt sich über Kissen und Accessoires einbringen — das Möbel selbst darf zeitlos bleiben. Unsere fünf Standardtöne sind bewusst so gewählt; jede andere RAL-Farbe fertigen wir auf Wunsch.',
+          'Tipp: Bestellen Sie im Zweifel ein pulverbeschichtetes Farbmuster oder vergleichen Sie RAL-Fächer direkt am Aufstellort — Farben wirken im Tageslicht draußen anders als im Innenraum.',
+        ].join('\n\n'),
+      },
+      fr: {
+        title: 'La bonne teinte RAL pour vos meubles de jardin',
+        excerpt:
+          "L'anthracite n'est pas la seule réponse : comment trouver une couleur qui s'accorde à la maison et au jardin — durablement.",
+        content: [
+          'Avec le thermolaquage, le choix de couleurs est pratiquement illimité — et c\'est bien ce qui le rend difficile. Quelques principes aident.',
+          "Appuyez-vous sur l'existant : les cadres de fenêtres, la porte d'entrée ou la clôture donnent souvent la direction. Un meuble dans la même teinte semble couler de source ; un contraste assumé (un canapé rouge rubis devant une façade grise) crée un accent fort.",
+          "Les teintes claires révèlent la saleté plus tard que les foncées ne montrent la poussière — mais les tons sombres comme le gris anthracite (RAL 7016) restent élégants et apaisants. Sur les terrasses ensoleillées, les surfaces très sombres chauffent sensiblement ; des tons moyens comme le bleu pigeon ou le vert réséda sont un bon compromis.",
+          "Pensez en années, pas en saisons : une couleur tendance s'apporte par les coussins et accessoires — le meuble, lui, peut rester intemporel. Nos cinq teintes standard sont choisies dans cet esprit ; toute autre teinte RAL est possible sur demande.",
+          "Conseil : en cas de doute, demandez un échantillon thermolaqué ou comparez un nuancier RAL directement sur place — les couleurs paraissent différentes à la lumière du jour.",
+        ].join('\n\n'),
+      },
+      slug: 'ral-farbe-gartenmoebel',
+      image: imgSitzgruppe,
+      daysAgo: 10,
+    })
+  }
 }
 
 await run()

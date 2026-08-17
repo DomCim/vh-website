@@ -15,7 +15,15 @@ type Category = {
 }
 
 type Dict = {
-  nav: { news: string; contact: string; cart: string; promotions: string; menu: string }
+  nav: {
+    news: string
+    contact: string
+    cart: string
+    promotions: string
+    projects: string
+    about: string
+    menu: string
+  }
 }
 
 export function Header({
@@ -46,6 +54,8 @@ export function Header({
   const items: { href: string; label: string }[] = [
     { href: `/${locale}/news`, label: dict.nav.news },
     ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
+    { href: `/${locale}/projekte`, label: dict.nav.projects },
+    { href: `/${locale}/ueber-uns`, label: dict.nav.about },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]
 

@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 export type HeroSlide = {
   image?: string
+  video?: string
   alt?: string
   title?: string | null
   subtitle?: string | null
@@ -50,7 +51,18 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             i === index ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
-          {slide.image && (
+          {slide.video ? (
+            // Video-Slide: läuft stumm in Schleife, Bild dient als Poster
+            <video
+              src={slide.video}
+              poster={slide.image}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="h-full w-full object-cover"
+            />
+          ) : slide.image ? (
             // Langsamer Ken-Burns-Zoom auf dem aktiven Slide
             <motion.img
               src={slide.image}
@@ -60,7 +72,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               animate={reduceMotion ? undefined : { scale: i === index ? 1.08 : 1 }}
               transition={{ duration: 7, ease: 'linear' }}
             />
-          )}
+          ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           {(slide.title || slide.subtitle) && (
             <div className="absolute inset-x-0 bottom-0 p-6 pb-14 text-white sm:p-10 sm:pb-16">

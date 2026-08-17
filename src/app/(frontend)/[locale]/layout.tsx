@@ -35,6 +35,10 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
       locale,
       type: 'website',
     },
+    // Pinterest-Website-Verifizierung (Code aus den Website-Einstellungen)
+    ...(settings?.pinterestVerification && {
+      other: { 'p:domain_verify': settings.pinterestVerification },
+    }),
   }
 }
 

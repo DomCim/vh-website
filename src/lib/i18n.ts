@@ -12,6 +12,8 @@ const de = {
     contact: 'Kontakt',
     cart: 'Warenkorb',
     promotions: 'Aktionen',
+    projects: 'Referenzen',
+    about: 'Über uns',
     menu: 'Menü',
   },
   home: {
@@ -92,6 +94,25 @@ const de = {
     title: 'News',
     readMore: 'Weiterlesen',
     empty: 'Derzeit keine Beiträge.',
+    tabAll: 'Alle',
+    tabNews: 'News',
+    tabGuides: 'Ratgeber',
+    guideBadge: 'Ratgeber',
+  },
+  projects: {
+    title: 'Referenzen',
+    intro: 'Ausgewählte Projekte für Kommunen, Unternehmen und private Auftraggeber.',
+    empty: 'Referenzen folgen in Kürze.',
+    all: 'Alle',
+    sectors: { kommunal: 'Kommunen', gewerbe: 'Gewerbe', privat: 'Privat' } as Record<string, string>,
+    homeTitle: 'Referenzen',
+    viewAll: 'Alle Referenzen',
+  },
+  about: {
+    title: 'Über uns',
+  },
+  testimonials: {
+    title: 'Das sagen unsere Kunden',
   },
   promotions: {
     title: 'Aktuelle Aktionen',
@@ -134,6 +155,8 @@ const fr: Dictionary = {
     contact: 'Contact',
     cart: 'Panier',
     promotions: 'Offres',
+    projects: 'Références',
+    about: 'À propos',
     menu: 'Menu',
   },
   home: {
@@ -214,6 +237,25 @@ const fr: Dictionary = {
     title: 'Actualités',
     readMore: 'Lire la suite',
     empty: 'Aucun article pour le moment.',
+    tabAll: 'Tous',
+    tabNews: 'Actualités',
+    tabGuides: 'Conseils',
+    guideBadge: 'Conseils',
+  },
+  projects: {
+    title: 'Références',
+    intro: 'Une sélection de projets pour collectivités, entreprises et particuliers.',
+    empty: 'Références à venir prochainement.',
+    all: 'Toutes',
+    sectors: { kommunal: 'Collectivités', gewerbe: 'Entreprises', privat: 'Particuliers' },
+    homeTitle: 'Références',
+    viewAll: 'Toutes les références',
+  },
+  about: {
+    title: 'À propos',
+  },
+  testimonials: {
+    title: 'Ce que disent nos clients',
   },
   promotions: {
     title: 'Offres en cours',
@@ -254,6 +296,8 @@ const en: Dictionary = {
     contact: 'Contact',
     cart: 'Cart',
     promotions: 'Offers',
+    projects: 'References',
+    about: 'About us',
     menu: 'Menu',
   },
   home: {
@@ -334,6 +378,25 @@ const en: Dictionary = {
     title: 'News',
     readMore: 'Read more',
     empty: 'No articles yet.',
+    tabAll: 'All',
+    tabNews: 'News',
+    tabGuides: 'Guides',
+    guideBadge: 'Guide',
+  },
+  projects: {
+    title: 'References',
+    intro: 'Selected projects for municipalities, businesses and private clients.',
+    empty: 'References coming soon.',
+    all: 'All',
+    sectors: { kommunal: 'Municipalities', gewerbe: 'Businesses', privat: 'Private' },
+    homeTitle: 'References',
+    viewAll: 'All references',
+  },
+  about: {
+    title: 'About us',
+  },
+  testimonials: {
+    title: 'What our customers say',
   },
   promotions: {
     title: 'Current offers',

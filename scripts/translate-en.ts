@@ -257,6 +257,118 @@ async function run() {
   })
   console.log('  ✓ Startseite')
 
+  // ── Referenz-Projekte ─────────────────────────────────────────────────────
+  const projectsEN: Record<string, { title: string; summary: string; description: string }> = {
+    'pflanzkuebel-stadtgestaltung-beispiel': {
+      title: 'Planters for urban design (example)',
+      summary:
+        'Placeholder reference: robust steel planters for a municipal client — replace with a real project.',
+      description:
+        'This is a sample entry showing how a reference can be structured: context, execution and result in a few sentences, plus three to five meaningful photos. Replace this text in the admin under "References" with a real project.',
+    },
+    'sondermaschine-serienfertigung-beispiel': {
+      title: 'Special-purpose machine for series production (example)',
+      summary:
+        'Placeholder reference: design and construction of a special-purpose machine — replace with a real project.',
+      description:
+        'Sample entry for the mechanical engineering section: describe the requirements, design and commissioning here. For business clients, the problems solved are what counts — numbers and facts speak louder than marketing copy.',
+    },
+  }
+  for (const [slug, en] of Object.entries(projectsEN)) {
+    const { docs } = await payload.find({
+      collection: 'projects',
+      where: { slug: { equals: slug } },
+      limit: 1,
+    })
+    if (!docs[0]) continue
+    await payload.update({
+      collection: 'projects',
+      id: docs[0].id,
+      locale: 'en',
+      data: {
+        title: en.title,
+        summary: en.summary,
+        description: richText(en.description),
+      },
+    })
+    console.log(`  ✓ Referenz: ${slug}`)
+  }
+
+  // ── Ratgeber-Artikel ──────────────────────────────────────────────────────
+  const guidesEN: Record<string, { title: string; excerpt: string; content: string }> = {
+    'stahl-fuer-draussen': {
+      title: 'Powder-coated, galvanised or Corten — which steel for outdoors?',
+      excerpt:
+        'Three finishes, three characters: what sets them apart and which one suits your garden.',
+      content: [
+        'Steel is an excellent material for outdoor use — provided the finish matches the purpose. Three approaches have proven themselves.',
+        'Galvanised steel: hot-dip galvanising coats the metal in a layer of zinc that reliably protects it from rust, including edges and welds. The matt silvery look is understated and technical. Galvanising is the foundation for anything meant to stand outside for decades.',
+        'Powder coating: colour powder is applied electrostatically to the galvanised body and baked on. The result is a tough, UV-stable finish in practically any RAL shade — the combination of galvanising and powder coating (duplex system) is the standard for high-quality outdoor furniture.',
+        'Corten steel: here the rust is intentional — it forms a protective patina in warm brown-orange. Corten looks natural and alive, but needs a spot where rust run-off leaves no marks (gravel rather than light natural stone).',
+        'Our recommendation: the duplex system for furniture in your preferred colour, Corten for sculptures and planters with a natural character. We are happy to advise in person.',
+      ].join('\n\n'),
+    },
+    'ral-farbe-gartenmoebel': {
+      title: 'Choosing the right RAL colour for garden furniture',
+      excerpt:
+        'Anthracite is not the only answer: how to find a colour that suits house and garden — and keeps pleasing you.',
+      content: [
+        'With powder coating the choice of colours is practically unlimited — which is exactly what makes it hard. A few principles help.',
+        'Take your cue from what is already there: window frames, the front door or the fence often set the direction. A piece in the same shade looks all of one piece; a deliberate contrast (a ruby-red sofa against a grey façade) makes a statement.',
+        'Light colours show dirt later than dark ones show dust — but dark shades like anthracite grey (RAL 7016) remain elegant and calm. On sunny terraces very dark surfaces heat up noticeably; muted mid-tones like pigeon blue or reseda green are a good compromise.',
+        'Think in years, not seasons: a trend colour can come in through cushions and accessories — the furniture itself can stay timeless. Our five standard shades are chosen with this in mind; any other RAL colour is available on request.',
+        'Tip: when in doubt, order a powder-coated colour sample or compare a RAL fan deck right where the furniture will stand — colours look different in outdoor daylight.',
+      ].join('\n\n'),
+    },
+  }
+  for (const [slug, en] of Object.entries(guidesEN)) {
+    const { docs } = await payload.find({
+      collection: 'news',
+      where: { slug: { equals: slug } },
+      limit: 1,
+      draft: true,
+    })
+    if (!docs[0]) continue
+    await payload.update({
+      collection: 'news',
+      id: docs[0].id,
+      locale: 'en',
+      data: {
+        title: en.title,
+        excerpt: en.excerpt,
+        content: richText(en.content),
+      },
+    })
+    console.log(`  ✓ Ratgeber: ${slug}`)
+  }
+
+  // ── Über uns ──────────────────────────────────────────────────────────────
+  const aboutDe = await payload.findGlobal({ slug: 'about', locale: 'de', depth: 0 })
+  if (aboutDe?.title) {
+    await payload.updateGlobal({
+      slug: 'about',
+      locale: 'en',
+      data: {
+        title: 'About us',
+        intro:
+          'Behind Vincent Hellmann stands Next-Concept SAS: a workshop in France where furniture, lighting and objects are made of steel — from the first sketch through CNC machining and welding to powder coating. (Placeholder text: add your personal story here.)',
+        timeline: aboutDe.timeline?.map((s, i) => ({
+          id: s.id,
+          year: s.year,
+          title:
+            ['Craftsmanship as the foundation (to be completed)', 'Founding of Next-Concept SAS', 'The Vincent Hellmann brand'][i] ?? s.title,
+          text:
+            [
+              'Describe the journey here: training, formative stations, first projects.',
+              'Start of the own workshop in France — mechanical engineering, planters and the first furniture series.',
+              'Outdoor furniture, lighting and objects in steel under his own name — with online shop and made-to-measure work.',
+            ][i] ?? s.text,
+        })),
+      },
+    })
+    console.log('  ✓ Über uns (EN)')
+  }
+
   // ── Website-Einstellungen ─────────────────────────────────────────────────
   await payload.updateGlobal({
     slug: 'site-settings',

@@ -3,24 +3,70 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
-import { getNews, mediaAlt, mediaUrl } from '../../../../lib/data'
+import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
+import { mediaAlt, mediaUrl, payloadClient } from '../../../../lib/data'
 import { formatDate, isLocale, t } from '../../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function NewsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ rubrik?: string }>
+}) {
   const { locale } = await params
+  const { rubrik } = await searchParams
   if (!isLocale(locale)) notFound()
   const dict = t(locale)
 
-  const news = await getNews(locale, 50)
+  const type = rubrik === 'news' || rubrik === 'ratgeber' ? rubrik : undefined
+  const payload = await payloadClient()
+  const { docs: news } = await payload.find({
+    collection: 'news',
+    where: {
+      and: [
+        { _status: { equals: 'published' } },
+        ...(type ? [{ type: { equals: type } }] : []),
+      ],
+    },
+    sort: '-publishedDate',
+    locale,
+    limit: 50,
+    depth: 1,
+  })
+
+  const tabs = [
+    { key: undefined, label: dict.news.tabAll },
+    { key: 'news', label: dict.news.tabNews },
+    { key: 'ratgeber', label: dict.news.tabGuides },
+  ]
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <SplitTextReveal
+        as="h1"
+        text={dict.news.title}
+        className="tracking-nav text-ink mb-6 text-2xl font-semibold uppercase"
+      />
+
       <Reveal>
-        <h1 className="tracking-nav text-ink mb-10 text-2xl font-semibold uppercase">
-          {dict.news.title}
-        </h1>
+        <div className="mb-10 flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.label}
+              href={`/${locale}/news${tab.key ? `?rubrik=${tab.key}` : ''}`}
+              className={`tracking-nav border px-4 py-2 text-xs font-medium uppercase transition-colors ${
+                type === tab.key
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-line text-ink hover:border-ink'
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
       </Reveal>
 
       {news.length === 0 ? (
@@ -33,13 +79,18 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
                 href={`/${locale}/news/${n.slug}`}
                 className="group border-line block h-full border bg-white transition-shadow hover:shadow-lg"
               >
-                <div className="bg-paper-soft aspect-[16/10] overflow-hidden">
+                <div className="bg-paper-soft relative aspect-[16/10] overflow-hidden">
                   <img
                     src={mediaUrl(n.coverImage, 'card')}
                     alt={mediaAlt(n.coverImage, n.title)}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
+                  {n.type === 'ratgeber' && (
+                    <span className="bg-accent tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-white uppercase">
+                      {dict.news.guideBadge}
+                    </span>
+                  )}
                 </div>
                 <div className="p-5">
                   <p className="text-ink-soft text-xs">{formatDate(n.publishedDate, locale)}</p>

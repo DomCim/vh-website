@@ -10,7 +10,8 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **Dreisprachig** Deutsch/Französisch/Englisch — alle Inhalte im Backend übersetzbar (Fallback: Deutsch)
 - **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout via **Stripe** (Karte, Apple/Google Pay, Klarna) oder **PayPal**; Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
 - **Bestellverwaltung** im Admin (offen → bezahlt → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet", Bestätigungs-Mail an Kunden + Benachrichtigung an euch
-- **News** mit optionalem **Facebook-Autopost** beim Veröffentlichen
+- **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
+- **Referenzen** (Projekte für Kommunen/Gewerbe/Privat) mit Filter und Startseiten-Teaser; **Über-uns-Seite** mit Timeline; **Kundenstimmen** (nur echte!) auf Startseite und Produktseiten; optionales **Video im Hero**
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
@@ -62,12 +63,20 @@ Ohne Stripe-Keys funktioniert die Website vollständig, nur der Checkout meldet 
 2. Im Admin unter **Verwaltung → Integrationen → PayPal** eintragen; zum Testen Sandbox-Zugangsdaten + Haken „Sandbox-Modus".
 3. Sobald Zugangsdaten hinterlegt sind, erscheint PayPal automatisch als Zahlungsart in der Kasse. Die Zahlung wird beim Rücksprung auf die Danke-Seite server-seitig eingezogen (Capture).
 
-## Facebook-Autopost einrichten (optional)
+## Facebook- & Instagram-Autopost einrichten (optional)
 
 1. [Meta for Developers](https://developers.facebook.com) → App erstellen (Typ „Business").
-2. Berechtigungen `pages_manage_posts` + `pages_read_engagement` für die Facebook-Seite erteilen und einen **langlebigen Page Access Token** erzeugen.
-3. `FB_PAGE_ID` und `FB_PAGE_ACCESS_TOKEN` im Stack setzen.
-4. Bei einem News-Beitrag die Checkbox „Beim Veröffentlichen auf Facebook posten" aktivieren — nach dem Veröffentlichen erscheint die Post-ID (oder eine Fehlermeldung) in der Seitenleiste des Beitrags.
+2. Berechtigungen `pages_manage_posts` + `pages_read_engagement` (für Instagram zusätzlich `instagram_content_publish`) für die Facebook-Seite erteilen und einen **langlebigen Page Access Token** erzeugen.
+3. Im Admin unter **Verwaltung → Integrationen** eintragen: Facebook-Seiten-ID, Token und — für Instagram — die ID des mit der Seite verknüpften **Instagram-Business-Kontos**.
+4. Bei einem News-Beitrag die Checkboxen „auf Facebook posten" / „auf Instagram posten" aktivieren — nach dem Veröffentlichen erscheinen die Post-IDs (oder Fehlermeldungen) in der Seitenleiste des Beitrags. Instagram benötigt zwingend ein Titelbild.
+
+## Pinterest einrichten (optional)
+
+Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Produktseiten liefern bereits alle Daten für Rich Pins.
+
+1. Pinterest-**Business-Konto** anlegen und unter Einstellungen → „Website beanspruchen" den Meta-Tag-Code kopieren (nur den `content`-Wert).
+2. Code im Admin unter **Website-Einstellungen → Pinterest-Verifizierungscode** eintragen — das Meta-Tag erscheint automatisch auf allen Seiten.
+3. In Pinterest die Verifizierung abschließen und Produktbilder pinnen bzw. pinnen lassen.
 
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 

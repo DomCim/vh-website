@@ -138,12 +138,12 @@ export const Integrations: GlobalConfig = {
     },
     {
       name: 'facebook',
-      label: 'Facebook (News-Autopost)',
+      label: 'Facebook & Instagram (News-Autopost)',
       type: 'group',
       fields: [
         {
           name: 'pageId',
-          label: 'Seiten-ID',
+          label: 'Facebook-Seiten-ID',
           type: 'text',
         },
         {
@@ -151,7 +151,17 @@ export const Integrations: GlobalConfig = {
           label: 'Page Access Token',
           type: 'text',
           admin: {
-            description: 'Langlebiger Token einer Meta-App mit pages_manage_posts',
+            description:
+              'Langlebiger Token einer Meta-App mit pages_manage_posts (für Instagram zusätzlich instagram_content_publish)',
+          },
+        },
+        {
+          name: 'instagramAccountId',
+          label: 'Instagram-Business-Account-ID',
+          type: 'text',
+          admin: {
+            description:
+              'ID des mit der Facebook-Seite verknüpften Instagram-Business-Kontos — nur nötig für den Instagram-Autopost',
           },
         },
       ],

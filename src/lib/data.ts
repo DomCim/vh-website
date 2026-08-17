@@ -136,6 +136,73 @@ export async function getActivePromotions(locale: Locale) {
   return docs
 }
 
+export async function getProjects(locale: Locale, sector?: string) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'projects',
+    where: sector ? { sector: { equals: sector } } : undefined,
+    sort: 'order',
+    locale,
+    limit: 100,
+    depth: 1,
+  })
+  return docs
+}
+
+export async function getProjectBySlug(slug: string, locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'projects',
+    where: { slug: { equals: slug } },
+    locale,
+    limit: 1,
+    depth: 1,
+  })
+  return docs[0] ?? null
+}
+
+export async function getFeaturedProjects(locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'projects',
+    where: { featured: { equals: true } },
+    sort: 'order',
+    locale,
+    limit: 3,
+    depth: 1,
+  })
+  return docs
+}
+
+export async function getFeaturedTestimonials(locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'testimonials',
+    where: { featured: { equals: true } },
+    locale,
+    limit: 3,
+    depth: 0,
+  })
+  return docs
+}
+
+export async function getTestimonialsForProduct(productId: number | string, locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'testimonials',
+    where: { product: { equals: productId } },
+    locale,
+    limit: 5,
+    depth: 0,
+  })
+  return docs
+}
+
+export async function getAbout(locale: Locale) {
+  const payload = await payloadClient()
+  return payload.findGlobal({ slug: 'about', locale, depth: 1 })
+}
+
 export async function getHomepage(locale: Locale) {
   const payload = await payloadClient()
   return payload.findGlobal({ slug: 'homepage', locale, depth: 1 })

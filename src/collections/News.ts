@@ -43,6 +43,21 @@ export const News: CollectionConfig = {
       index: true,
     },
     {
+      name: 'type',
+      label: 'Rubrik',
+      type: 'select',
+      required: true,
+      defaultValue: 'news',
+      options: [
+        { label: 'News', value: 'news' },
+        { label: 'Ratgeber', value: 'ratgeber' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Ratgeber-Artikel bringen dauerhaft Google-Traffic (z.B. Material- und Pflegetipps)',
+      },
+    },
+    {
       name: 'publishedDate',
       label: 'Veröffentlichungsdatum',
       type: 'date',
@@ -100,6 +115,34 @@ export const News: CollectionConfig = {
     {
       name: 'facebookPostError',
       label: 'Facebook-Fehler',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'postToInstagram',
+      label: 'Beim Veröffentlichen auf Instagram posten',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Postet Titelbild + Teaser auf das verknüpfte Instagram-Business-Konto',
+      },
+    },
+    {
+      name: 'instagramPostId',
+      label: 'Instagram Post-ID',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'instagramPostError',
+      label: 'Instagram-Fehler',
       type: 'text',
       admin: {
         position: 'sidebar',

@@ -9,6 +9,7 @@ import { ProductDetail } from '../../../../../components/shop/ProductDetail'
 import {
   getCategoryBySlug,
   getProductBySlug,
+  getTestimonialsForProduct,
   mediaAlt,
   mediaUrl,
 } from '../../../../../lib/data'
@@ -47,6 +48,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
 
   const product = await getProductBySlug(itemSlug, locale)
   if (!product) notFound()
+
+  const testimonials = await getTestimonialsForProduct(product.id, locale)
 
   const images = (product.images ?? []).map((img) => ({
     url: mediaUrl(img, 'large') || '',
@@ -146,6 +149,27 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           <RichText data={product.description} />
         </Reveal>
       ) : null}
+
+      {testimonials.length > 0 && (
+        <div className="mt-14 max-w-3xl space-y-6">
+          <h2 className="tracking-nav text-ink text-lg font-semibold uppercase">
+            {dict.testimonials.title}
+          </h2>
+          {testimonials.map((tst) => (
+            <Reveal key={tst.id}>
+              <figure className="border-line border bg-white p-6">
+                <blockquote className="text-ink-soft leading-relaxed">„{tst.quote}"</blockquote>
+                <figcaption className="mt-3">
+                  <span className="tracking-nav text-ink text-sm font-semibold uppercase">
+                    {tst.author}
+                  </span>
+                  {tst.context && <span className="text-ink-soft text-xs"> · {tst.context}</span>}
+                </figcaption>
+              </figure>
+            </Reveal>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -70,6 +70,8 @@ export interface Config {
     products: Product;
     categories: Category;
     news: News;
+    projects: Project;
+    testimonials: Testimonial;
     promotions: Promotion;
     orders: Order;
     media: Media;
@@ -84,6 +86,8 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     news: NewsSelect<false> | NewsSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -99,12 +103,14 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('de' | 'fr' | 'en') | ('de' | 'fr' | 'en')[];
   globals: {
     homepage: Homepage;
+    about: About;
     'site-settings': SiteSetting;
     legal: Legal;
     integrations: Integration;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    about: AboutSelect<false> | AboutSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     legal: LegalSelect<false> | LegalSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
@@ -284,6 +290,10 @@ export interface News {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Ratgeber-Artikel bringen dauerhaft Google-Traffic (z.B. Material- und Pflegetipps)
+   */
+  type: 'news' | 'ratgeber';
   publishedDate: string;
   coverImage: number | Media;
   /**
@@ -314,9 +324,73 @@ export interface News {
    */
   facebookPostId?: string | null;
   facebookPostError?: string | null;
+  /**
+   * Postet Titelbild + Teaser auf das verknüpfte Instagram-Business-Konto
+   */
+  postToInstagram?: boolean | null;
+  instagramPostId?: string | null;
+  instagramPostError?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects".
+ */
+export interface Project {
+  id: number;
+  title: string;
+  slug: string;
+  sector: 'kommunal' | 'gewerbe' | 'privat';
+  images: (number | Media)[];
+  summary?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  client?: string | null;
+  year?: number | null;
+  featured?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Nur echte Stimmen mit Einverständnis der Kunden eintragen — erfundene Bewertungen sind wettbewerbswidrig.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  quote: string;
+  /**
+   * z.B. "Familie M." oder "Stadt Naila" — so wie es öffentlich stehen darf
+   */
+  author: string;
+  /**
+   * z.B. "Outdoor-Sofa OS, München"
+   */
+  context?: string | null;
+  /**
+   * Wird dann auf der Produktseite angezeigt
+   */
+  product?: (number | null) | Product;
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -460,6 +534,14 @@ export interface PayloadLockedDocument {
         value: number | News;
       } | null)
     | ({
+        relationTo: 'projects';
+        value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
         relationTo: 'promotions';
         value: number | Promotion;
       } | null)
@@ -572,6 +654,7 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface NewsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  type?: T;
   publishedDate?: T;
   coverImage?: T;
   excerpt?: T;
@@ -579,9 +662,43 @@ export interface NewsSelect<T extends boolean = true> {
   postToFacebook?: T;
   facebookPostId?: T;
   facebookPostError?: T;
+  postToInstagram?: T;
+  instagramPostId?: T;
+  instagramPostError?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  sector?: T;
+  images?: T;
+  summary?: T;
+  description?: T;
+  client?: T;
+  year?: T;
+  featured?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  quote?: T;
+  author?: T;
+  context?: T;
+  product?: T;
+  featured?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -778,6 +895,10 @@ export interface Homepage {
   heroSlides?:
     | {
         image: number | Media;
+        /**
+         * Läuft stumm in Schleife statt des Bilds; das Bild bleibt Poster/Fallback. Kurze Clips (10–20 s, ohne Ton) verwenden.
+         */
+        video?: (number | null) | Media;
         title?: string | null;
         subtitle?: string | null;
         link?: string | null;
@@ -806,6 +927,31 @@ export interface Homepage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about".
+ */
+export interface About {
+  id: number;
+  heroImage?: (number | null) | Media;
+  title?: string | null;
+  intro?: string | null;
+  timeline?:
+    | {
+        /**
+         * z.B. "2025" oder "seit 2020"
+         */
+        year: string;
+        title: string;
+        text?: string | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  gallery?: (number | Media)[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
  */
 export interface SiteSetting {
@@ -823,6 +969,10 @@ export interface SiteSetting {
     instagram?: string | null;
     youtube?: string | null;
   };
+  /**
+   * Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.
+   */
+  pinterestVerification?: string | null;
   seo?: {
     metaTitle?: string | null;
     metaDescription?: string | null;
@@ -940,9 +1090,13 @@ export interface Integration {
   facebook?: {
     pageId?: string | null;
     /**
-     * Langlebiger Token einer Meta-App mit pages_manage_posts
+     * Langlebiger Token einer Meta-App mit pages_manage_posts (für Instagram zusätzlich instagram_content_publish)
      */
     accessToken?: string | null;
+    /**
+     * ID des mit der Facebook-Seite verknüpften Instagram-Business-Kontos — nur nötig für den Instagram-Autopost
+     */
+    instagramAccountId?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -956,6 +1110,7 @@ export interface HomepageSelect<T extends boolean = true> {
     | T
     | {
         image?: T;
+        video?: T;
         title?: T;
         subtitle?: T;
         link?: T;
@@ -984,6 +1139,28 @@ export interface HomepageSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about_select".
+ */
+export interface AboutSelect<T extends boolean = true> {
+  heroImage?: T;
+  title?: T;
+  intro?: T;
+  timeline?:
+    | T
+    | {
+        year?: T;
+        title?: T;
+        text?: T;
+        image?: T;
+        id?: T;
+      };
+  gallery?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -1004,6 +1181,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         instagram?: T;
         youtube?: T;
       };
+  pinterestVerification?: T;
   seo?:
     | T
     | {
@@ -1060,6 +1238,7 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         pageId?: T;
         accessToken?: T;
+        instagramAccountId?: T;
       };
   updatedAt?: T;
   createdAt?: T;
