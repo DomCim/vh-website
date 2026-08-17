@@ -68,16 +68,16 @@ export function Header({
 
   return (
     <motion.header
-      className="border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur"
+      className="site-header border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur"
       animate={reduceMotion ? undefined : { y: hidden ? '-100%' : '0%' }}
       transition={{ duration: 0.35, ease: [0.22, 0.65, 0.28, 1] }}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
+      <div className="site-header-bar mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
         <Link href={`/${locale}`} className="shrink-0" onClick={() => setOpen(false)}>
           <img
             src="/logo.svg"
             alt="Vincent Hellmann"
-            className="h-4 w-auto sm:h-5"
+            className="site-logo h-4 w-auto sm:h-5"
           />
         </Link>
 

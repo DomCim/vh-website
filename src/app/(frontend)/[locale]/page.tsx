@@ -20,6 +20,7 @@ import {
   mediaAlt,
   mediaUrl,
 } from '../../../lib/data'
+import { heroTintFor } from '../../../lib/heroColor'
 import { formatDate, isLocale, t } from '../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -39,14 +40,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       getFeaturedTestimonials(locale),
     ])
 
-  const slides: HeroSlide[] = (homepage?.heroSlides ?? []).map((s) => ({
-    image: mediaUrl(s.image, 'large'),
-    video: mediaUrl(s.video),
-    alt: mediaAlt(s.image, s.title || ''),
-    title: s.title,
-    subtitle: s.subtitle,
-    link: s.link,
-  }))
+  const slides: HeroSlide[] = await Promise.all(
+    (homepage?.heroSlides ?? []).map(async (s) => ({
+      image: mediaUrl(s.image, 'large'),
+      video: mediaUrl(s.video),
+      alt: mediaAlt(s.image, s.title || ''),
+      title: s.title,
+      subtitle: s.subtitle,
+      link: s.link,
+      tint: await heroTintFor(s.image),
+    })),
+  )
 
   const gallery = homepage?.gallery ?? []
 

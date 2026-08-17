@@ -59,3 +59,32 @@ body {
 .prose-vh strong {
   @apply text-ink font-semibold;
 }
+
+/* Header-Überblendung: Auf der Startseite übernimmt der Header den Farbton
+   des aktiven Hero-Bildes (HeroCarousel setzt --hero-tint + data-hero-tint
+   auf <html>). Tailwind-Utilities lesen die --color-*-Variablen, daher
+   reicht es, sie im Header-Balken zu überschreiben. */
+.site-header {
+  transition:
+    background-color 0.7s ease,
+    border-color 0.7s ease;
+}
+:root[data-hero-tint] .site-header {
+  background-color: var(--hero-tint);
+  border-color: transparent;
+}
+.site-header .site-logo {
+  transition: filter 0.7s ease;
+}
+:root[data-hero-tint='dark'] .site-header .site-logo {
+  filter: invert(1);
+}
+:root[data-hero-tint='dark'] .site-header-bar {
+  --color-ink: #ffffff;
+  --color-ink-soft: rgba(255, 255, 255, 0.78);
+  --color-line: rgba(255, 255, 255, 0.35);
+  --color-accent: #ffffff;
+}
+:root[data-hero-tint='dark'] .site-header-bar .bg-accent {
+  background-color: rgba(0, 0, 0, 0.45);
+}
