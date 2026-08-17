@@ -1,0 +1,68 @@
+# Portainer-Stack: Vincent Hellmann Website
+#
+# Voraussetzungen:
+#  - Externes Docker-Netzwerk "edge" (dort läuft Traefik)
+#  - Nginx Proxy Manager leitet vh.dominikdill.com an Traefik weiter (TLS terminiert im NPM)
+#  - Umgebungsvariablen im Stack setzen (siehe .env.example)
+services:
+  web:
+    image: ghcr.io/domcim/vh-website:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vh.dominikdill.com}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Vincent Hellmann}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FB_PAGE_ID: ${FB_PAGE_ID:-}
+      FB_PAGE_ACCESS_TOKEN: ${FB_PAGE_ACCESS_TOKEN:-}
+      # Beim allerersten Start auf "true" setzen, um Startdaten einzuspielen
+      SEED: ${SEED:-false}
+    volumes:
+      # Persistente Uploads (Bilder aus dem Admin-Panel)
+      - media:/app/media
+    networks:
+      - edge
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=edge
+      - traefik.http.routers.vhweb.rule=Host(`${DOMAIN:-vh.dominikdill.com}`)
+      - traefik.http.routers.vhweb.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      - traefik.http.services.vhweb.loadbalancer.server.port=3000
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  edge:
+    external: true
+  internal:
+
+volumes:
+  media:
+  dbdata:

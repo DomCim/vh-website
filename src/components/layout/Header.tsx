@@ -1,0 +1,124 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { useState } from 'react'
+
+import type { Locale } from '../../lib/i18n'
+import { CartLink } from '../shop/CartLink'
+
+type Category = {
+  id: number | string
+  slug: string
+  name: string
+}
+
+type Dict = {
+  nav: { news: string; contact: string; cart: string; promotions: string; menu: string }
+}
+
+export function Header({
+  locale,
+  categories,
+  dict,
+}: {
+  locale: Locale
+  categories: Category[]
+  dict: Dict
+}) {
+  const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+
+  const items: { href: string; label: string }[] = [
+    { href: `/${locale}/news`, label: dict.nav.news },
+    ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
+    { href: `/${locale}/kontakt`, label: dict.nav.contact },
+  ]
+
+  // Sprachumschalter: gleicher Pfad in der anderen Sprache
+  const otherLocale: Locale = locale === 'de' ? 'fr' : 'de'
+  const switchedPath = pathname?.replace(`/${locale}`, `/${otherLocale}`) || `/${otherLocale}`
+
+  const isActive = (href: string) =>
+    pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
+
+  return (
+    <header className="border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
+        <Link href={`/${locale}`} className="shrink-0" onClick={() => setOpen(false)}>
+          <img
+            src="/logo.svg"
+            alt="Vincent Hellmann"
+            className="h-4 w-auto sm:h-5"
+          />
+        </Link>
+
+        <nav className="hidden items-center gap-6 lg:flex">
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`tracking-nav text-xs font-medium uppercase transition-colors ${
+                isActive(item.href) ? 'text-ink' : 'text-ink-soft hover:text-ink'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-4">
+          <div className="tracking-nav text-ink-soft flex items-center gap-2 text-xs uppercase">
+            <Link
+              href={`/${locale === 'de' ? pathname || `/${locale}` : switchedPath}`}
+              className={locale === 'de' ? 'text-ink font-semibold' : 'hover:text-ink'}
+            >
+              DE
+            </Link>
+            <span className="text-line">|</span>
+            <Link
+              href={`${locale === 'fr' ? pathname || `/${locale}` : switchedPath}`}
+              className={locale === 'fr' ? 'text-ink font-semibold' : 'hover:text-ink'}
+            >
+              FR
+            </Link>
+          </div>
+
+          <CartLink locale={locale} label={dict.nav.cart} />
+
+          <button
+            type="button"
+            aria-label={dict.nav.menu}
+            className="text-ink flex h-10 w-10 flex-col items-center justify-center gap-1.5 lg:hidden"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span
+              className={`bg-ink h-0.5 w-6 transition-transform ${open ? 'translate-y-2 rotate-45' : ''}`}
+            />
+            <span className={`bg-ink h-0.5 w-6 transition-opacity ${open ? 'opacity-0' : ''}`} />
+            <span
+              className={`bg-ink h-0.5 w-6 transition-transform ${open ? '-translate-y-2 -rotate-45' : ''}`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <nav className="border-line bg-paper border-t lg:hidden">
+          <div className="mx-auto flex max-w-7xl flex-col px-4 py-4 sm:px-6">
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="tracking-nav text-ink border-line border-b py-3 text-sm font-medium uppercase last:border-b-0"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+    </header>
+  )
+}
