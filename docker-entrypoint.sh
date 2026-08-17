@@ -20,5 +20,11 @@ if [ "$SEED" = "true" ]; then
   node_modules/.bin/payload run scripts/seed.ts || echo "Seed fehlgeschlagen oder bereits vorhanden."
 fi
 
+# Optional: Englische Übersetzungen der Seed-Inhalte einspielen (einmalig TRANSLATE_EN=true)
+if [ "$TRANSLATE_EN" = "true" ]; then
+  echo "Spiele EN-Übersetzungen ein …"
+  node_modules/.bin/payload run scripts/translate-en.ts || echo "EN-Übersetzung fehlgeschlagen."
+fi
+
 echo "Starte Next.js …"
 exec node_modules/.bin/next start -p "${PORT:-3000}"
