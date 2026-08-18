@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
-import { notifyOnShipped } from '../lib/orderHooks'
+import { notifyOnProduction, notifyOnShipped } from '../lib/orderHooks'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
@@ -15,7 +15,7 @@ export const Orders: CollectionConfig = {
     group: 'Shop',
   },
   hooks: {
-    afterChange: [notifyOnShipped],
+    afterChange: [notifyOnProduction, notifyOnShipped],
   },
   access: {
     // Bestellungen sind nur im Backend sichtbar; angelegt werden sie server-seitig (Local API)
@@ -45,11 +45,22 @@ export const Orders: CollectionConfig = {
       options: [
         { label: 'Offen (unbezahlt)', value: 'pending' },
         { label: 'Bezahlt', value: 'paid' },
+        { label: 'In Fertigung', value: 'inProduction' },
         { label: 'Versendet', value: 'shipped' },
         { label: 'Storniert', value: 'cancelled' },
       ],
       admin: {
         position: 'sidebar',
+      },
+    },
+    {
+      name: 'expectedReady',
+      label: 'Voraussichtlich fertig',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'z.B. „Ende April" oder „KW 18" — wird beim Umstellen auf „In Fertigung" an den Kunden gemeldet.',
       },
     },
     {
@@ -69,6 +80,18 @@ export const Orders: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: 'z.B. der DHL-/Speditions-Link zur Sendungsverfolgung',
+      },
+    },
+    {
+      name: 'accessToken',
+      label: 'Zugangsschlüssel (Bestellstatus-Seite)',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Teil des Links, den der Kunde in seiner Bestellbestätigung bekommt.',
       },
     },
     {

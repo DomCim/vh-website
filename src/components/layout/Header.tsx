@@ -22,6 +22,8 @@ type Dict = {
     promotions: string
     projects: string
     about: string
+    custom: string
+    search: string
     menu: string
   }
 }
@@ -55,6 +57,7 @@ export function Header({
     { href: `/${locale}/news`, label: dict.nav.news },
     ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
     { href: `/${locale}/projekte`, label: dict.nav.projects },
+    { href: `/${locale}/massanfertigung`, label: dict.nav.custom },
     { href: `/${locale}/ueber-uns`, label: dict.nav.about },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]
@@ -109,6 +112,26 @@ export function Header({
               </React.Fragment>
             ))}
           </div>
+
+          <Link
+            href={`/${locale}/suche`}
+            aria-label={dict.nav.search}
+            title={dict.nav.search}
+            className="text-ink-soft hover:text-bronze flex h-10 w-10 items-center justify-center transition-colors"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+            </svg>
+          </Link>
 
           <CartLink locale={locale} label={dict.nav.cart} />
 

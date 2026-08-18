@@ -15,6 +15,8 @@ type ProductProps = {
   shippingCost?: number
   onRequestOnly: boolean
   available: boolean
+  productionTime?: string | null
+  readyMade?: boolean
   variants: { title: string; price: number }[]
   colorOptions: { name: string; hex?: string }[]
   images: { url: string; alt: string }[]
@@ -33,6 +35,12 @@ type Dict = {
   freeShipping: string
   pickupAvailable: string
   unavailable: string
+  craftNotice?: string | null
+  craft: {
+    productionTime: string
+    readyMade: string
+    readyMadeNote: string
+  }
   inquiry: {
     name: string
     email: string
@@ -204,6 +212,7 @@ export function ProductDetail({
                 {' · '}
                 {dict.pickupAvailable}
               </p>
+              <FertigungsHinweis product={product} dict={dict} />
               <motion.button
                 type="button"
                 onClick={handleAdd}
@@ -219,5 +228,28 @@ export function ProductDetail({
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * Es gibt keine Serienfertigung — entweder steht das Stück fertig in der
+ * Werkstatt oder es wird für die Kundschaft gefertigt. Beides gehört vor den
+ * Kauf, damit die Wartezeit und kleine Abweichungen niemanden überraschen.
+ */
+function FertigungsHinweis({ product, dict }: { product: ProductProps; dict: Dict }) {
+  return (
+    <div className="border-line text-ink-soft mt-4 border-l-2 pl-3 text-xs leading-relaxed">
+      {product.readyMade ? (
+        <p>
+          <strong className="text-ink">{dict.craft.readyMade}</strong> — {dict.craft.readyMadeNote}
+        </p>
+      ) : product.productionTime ? (
+        <p>
+          <strong className="text-ink">{dict.craft.productionTime}:</strong>{' '}
+          {product.productionTime}
+        </p>
+      ) : null}
+      {dict.craftNotice && <p className="mt-1">{dict.craftNotice}</p>}
+    </div>
   )
 }

@@ -8,6 +8,7 @@ export type MailInput = {
   subject: string
   html: string
   replyTo?: string
+  attachments?: { filename: string; content: Buffer; contentType?: string }[]
 }
 
 /**
@@ -38,5 +39,6 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
     replyTo: mail.replyTo,
     subject: mail.subject,
     html: mail.html,
+    attachments: mail.attachments,
   })
 }

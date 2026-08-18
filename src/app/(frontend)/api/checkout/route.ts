@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 
 import {
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
       overrideAccess: true,
       data: {
         orderNumber,
+        accessToken: randomUUID(),
         status: 'pending',
         paymentProvider: paymentMethod,
         items: cart.lines.map((l) => ({

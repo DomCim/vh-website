@@ -225,7 +225,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <RevealItem key={tst.id}>
                 <figure className="border-line flex h-full flex-col border bg-white p-6">
                   <blockquote className="text-ink-soft flex-1 leading-relaxed">
-                    „{tst.quote}"
+                    „{tst.quote}&ldquo;
                   </blockquote>
                   <figcaption className="mt-4">
                     <p className="tracking-nav text-ink text-sm font-semibold uppercase">

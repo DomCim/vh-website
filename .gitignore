@@ -28,6 +28,13 @@ pnpm-debug.log*
 # payload
 /media
 
+# typescript
+*.tsbuildinfo
+
+# playwright
+/test-results
+/playwright-report
+
 # IDE
 .idea/
 .vscode/

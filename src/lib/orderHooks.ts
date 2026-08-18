@@ -1,6 +1,12 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 
-import { orderConfirmationEmail, orderNotificationEmail, orderShippedEmail } from './mail'
+import { rechnungPdf } from './invoice'
+import {
+  orderConfirmationEmail,
+  orderInProductionEmail,
+  orderNotificationEmail,
+  orderShippedEmail,
+} from './mail'
 import { sendMail } from './sendMail'
 import { getIntegrations } from './settings'
 
@@ -38,13 +44,70 @@ export async function markOrderPaid(
       vatId: settings?.company?.vatId,
       vatRate: settings?.company?.vatRate,
     }
-    await sendMail(payload, orderConfirmationEmail(order, company))
+    const craftNotice = settings?.craft?.notice ?? null
+
+    // Rechnung als PDF anhängen — schlägt das fehl, geht die Mail trotzdem raus
+    let anhang: { filename: string; content: Buffer; contentType: string }[] | undefined
+    try {
+      anhang = [
+        {
+          filename: `Rechnung-${order.orderNumber}.pdf`,
+          content: await rechnungPdf(order, company),
+          contentType: 'application/pdf',
+        },
+      ]
+    } catch (err) {
+      payload.logger.error({ err }, `Rechnung für ${order.orderNumber} konnte nicht erzeugt werden`)
+    }
+
+    await sendMail(payload, {
+      ...orderConfirmationEmail(order, company, craftNotice),
+      attachments: anhang,
+    })
     const { email } = await getIntegrations(payload)
     if (email.notificationEmail) {
       await sendMail(payload, orderNotificationEmail(order, email.notificationEmail, company))
     }
   } catch (err) {
     payload.logger.error({ err }, 'Bestell-E-Mails konnten nicht gesendet werden')
+  }
+
+  await werkstattStueckeAusbuchen(payload, order)
+}
+
+/**
+ * „Aus der Werkstatt"-Stücke stehen fertig da und gibt es nur einmal —
+ * nach dem Verkauf werden sie ausgeblendet. Auf Auftragsfertigung wirkt das
+ * ausdrücklich nicht: dort wird jedes Stück ohnehin neu gefertigt.
+ */
+async function werkstattStueckeAusbuchen(
+  payload: Payload,
+  order: { items?: { product?: unknown }[] | null },
+): Promise<void> {
+  const ids = (order.items ?? [])
+    .map((i) => (typeof i.product === 'object' ? (i.product as { id?: number })?.id : i.product))
+    .filter((id): id is number => typeof id === 'number')
+  if (!ids.length) return
+
+  try {
+    const { docs } = await payload.find({
+      collection: 'products',
+      where: { and: [{ id: { in: ids } }, { readyMade: { equals: true } }] },
+      limit: 50,
+      depth: 0,
+      overrideAccess: true,
+    })
+    for (const p of docs) {
+      await payload.update({
+        collection: 'products',
+        id: p.id,
+        overrideAccess: true,
+        data: { available: false },
+      })
+      payload.logger.info(`Werkstattstück "${p.title}" nach Verkauf ausgeblendet`)
+    }
+  } catch (err) {
+    payload.logger.error({ err }, 'Werkstattstücke konnten nicht ausgebucht werden')
   }
 }
 
@@ -53,6 +116,32 @@ export async function markOrderPaid(
  * bekommt der Kunde automatisch eine Versandbestätigung — inklusive
  * Trackingnummer/-link, falls im Admin eingetragen.
  */
+/**
+ * afterChange-Hook: Meldet dem Kunden, dass sein Stück in Fertigung ist.
+ * Ohne Serienfertigung ist das die längste Wartephase — vorher hörte der
+ * Kunde zwischen Zahlung und Versand gar nichts.
+ */
+export const notifyOnProduction: CollectionAfterChangeHook = async ({
+  doc,
+  previousDoc,
+  operation,
+  req,
+}) => {
+  if (operation !== 'update') return doc
+  if (doc.status !== 'inProduction' || previousDoc?.status === 'inProduction') return doc
+  if (!doc.customer?.email) return doc
+
+  try {
+    const settings = await req.payload.findGlobal({ slug: 'site-settings', depth: 0 })
+    await sendMail(req.payload, orderInProductionEmail(doc, settings?.craft?.notice ?? null))
+    req.payload.logger.info(`Fertigungs-Mail für ${doc.orderNumber} gesendet`)
+  } catch (err) {
+    req.payload.logger.error({ err }, `Fertigungs-Mail für ${doc.orderNumber} fehlgeschlagen`)
+  }
+
+  return doc
+}
+
 export const notifyOnShipped: CollectionAfterChangeHook = async ({
   doc,
   previousDoc,

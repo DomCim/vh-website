@@ -11,6 +11,8 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Categories } from './collections/Categories'
+import { Inquiries } from './collections/Inquiries'
+import { LoginCodes } from './collections/LoginCodes'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
 import { Orders } from './collections/Orders'
@@ -46,6 +48,7 @@ export default buildConfig({
     components: {
       // Änderungsprotokoll für den Betreiber: /admin/changelog + Link in der Seitenleiste
       afterNavLinks: ['/components/admin/ChangelogLink'],
+      beforeLogin: ['/components/admin/MfaLoginField#MfaLoginField'],
       views: {
         changelog: {
           Component: '/components/admin/ChangelogView',
@@ -54,7 +57,19 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Categories, News, Projects, Testimonials, Promotions, Orders, Media, Users],
+  collections: [
+    Products,
+    Categories,
+    News,
+    Projects,
+    Testimonials,
+    Promotions,
+    Orders,
+    Inquiries,
+    LoginCodes,
+    Media,
+    Users,
+  ],
   globals: [Homepage, About, SiteSettings, Legal, Integrations],
   // Feste Toolbar: alle Formatierungen immer sichtbar — deutlich besser am Handy
   editor: lexicalEditor({

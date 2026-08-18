@@ -54,12 +54,18 @@ export default async function LocaleLayout({ children, params }: Args) {
   const dict = t(locale)
 
   const orgJsonLd = jsonLd({
-    '@type': 'Organization',
+    // LocalBusiness statt reiner Organization: eine Werkstatt mit Adresse,
+    // die Suchmaschinen regional zuordnen können
+    '@type': 'LocalBusiness',
     name: settings?.siteName || 'Vincent Hellmann',
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
     ...(settings?.contact?.phone && { telephone: settings.contact.phone }),
     ...(settings?.contact?.email && { email: settings.contact.email }),
+    ...(settings?.contact?.address && {
+      address: { '@type': 'PostalAddress', streetAddress: settings.contact.address },
+    }),
+    ...(settings?.tagline && { description: settings.tagline }),
     sameAs: [
       settings?.social?.facebook,
       settings?.social?.instagram,
@@ -74,6 +80,14 @@ export default async function LocaleLayout({ children, params }: Args) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: orgJsonLd }}
         />
+        {/* Cookiefreie Besucherstatistik (z.B. Plausible/Umami) — nur wenn hinterlegt */}
+        {settings?.analytics?.scriptUrl && (
+          <script
+            defer
+            src={settings.analytics.scriptUrl}
+            {...(settings.analytics.domain ? { 'data-domain': settings.analytics.domain } : {})}
+          />
+        )}
         <CartProvider>
           <SmoothScroll />
           <Header locale={locale} categories={categories} dict={dict} />
