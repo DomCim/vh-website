@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
+import { lieferscheinPdf } from './lieferschein'
 import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
 import { firmenAngaben } from './settings'
 
@@ -31,7 +32,7 @@ export type Dokument = {
   nachSenden?: () => Promise<void>
 }
 
-export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung'
+export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
 const datum = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
@@ -398,6 +399,72 @@ export async function bestaetigungDokument(
   }
 }
 
+/**
+ * Lieferschein zu einem Auftrag.
+ *
+ * Die Nummer ist die des Auftrags mit einem Zusatz — ein eigener Nummernkreis
+ * wäre eine Reihe mehr, die lückenlos sein müsste, ohne dass jemand etwas
+ * davon hätte.
+ */
+export async function lieferscheinDokument(
+  payload: Payload,
+  id: string | number,
+): Promise<Dokument> {
+  const auftrag = await payload.findByID({
+    collection: 'jobs',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })
+  if (!auftrag) throw new Error('nicht-gefunden')
+
+  // Anschrift aus der Shop-Bestellung, falls der Auftrag daher kommt
+  const bestellId = typeof auftrag.order === 'object' ? auftrag.order?.id : auftrag.order
+  const bestellung = bestellId
+    ? await payload
+        .findByID({ collection: 'orders', id: bestellId, depth: 0, overrideAccess: true })
+        .catch(() => null)
+    : null
+
+  const a = bestellung?.shippingAddress
+  const anschrift = a
+    ? [a.line1, a.line2, [a.postalCode, a.city].filter(Boolean).join(' '), a.country].filter(
+        (z): z is string => Boolean(z),
+      )
+    : []
+
+  const datei = await lieferscheinPdf(
+    {
+      nummer: `LS-${auftrag.jobNumber}`,
+      datum: new Date().toISOString(),
+      auftrag: auftrag.jobNumber,
+      bestellreferenz: auftrag.customerOrderRef ?? bestellung?.orderNumber,
+      empfaenger: {
+        name: auftrag.customerName ?? bestellung?.customer?.name,
+        anschrift,
+      },
+      positionen: (auftrag.positions ?? []).map((p) => ({
+        bezeichnung: p.description,
+        menge: p.quantity ?? 1,
+        einheit: 'Stück',
+      })),
+      hinweis: auftrag.notes,
+    },
+    await firma(payload),
+  )
+
+  return {
+    datei,
+    dateiname: `Lieferschein-${auftrag.jobNumber}.pdf`,
+    betreff: `Lieferschein zu ${auftrag.jobNumber}${auftrag.title ? ` — ${auftrag.title}` : ''}`,
+    an: await partnerMail(payload, auftrag.contact),
+    text:
+      `Guten Tag${auftrag.customerName ? ` ${auftrag.customerName}` : ''},\n\n` +
+      `anbei der Lieferschein zu ${auftrag.jobNumber}.\n` +
+      `\nBitte prüfen Sie die Lieferung auf sichtbare Schäden und bestätigen Sie den Empfang.`,
+  }
+}
+
 export async function dokument(
   payload: Payload,
   art: DokumentArt,
@@ -406,5 +473,6 @@ export async function dokument(
   if (art === 'angebot') return angebotDokument(payload, id)
   if (art === 'rechnung') return rechnungDokument(payload, id)
   if (art === 'mahnung') return mahnungDokument(payload, id)
+  if (art === 'lieferschein') return lieferscheinDokument(payload, id)
   return bestaetigungDokument(payload, id)
 }

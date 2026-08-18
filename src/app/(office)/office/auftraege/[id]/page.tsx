@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
+import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
+import { Zeiterfassung } from '../../../../../components/office/Zeiterfassung'
 import { payloadClient } from '../../../../../lib/data'
 import { bestandsPruefung } from '../../../../../lib/material'
 import { bueroBenutzer } from '../../../../../lib/office'
@@ -19,7 +21,7 @@ export default async function AuftragBearbeiten({ params }: { params: Promise<{ 
     .catch(() => null)
   if (!j) notFound()
 
-  const [{ docs: posten }, bedarf] = await Promise.all([
+  const [{ docs: posten }, bedarf, einstellungen] = await Promise.all([
     payload.find({
       collection: 'inventory-items',
       sort: 'name',
@@ -28,9 +30,21 @@ export default async function AuftragBearbeiten({ params }: { params: Promise<{ 
       overrideAccess: true,
     }),
     bestandsPruefung(payload, j.material ?? []),
+    payload.findGlobal({ slug: 'site-settings', depth: 0 }),
   ])
 
   const fehlend = bedarf.filter((b) => b.fehlt > 0)
+
+  // Was das Stück wert ist und was es bisher gekostet hat — die Arbeitszeit
+  // kommt in der Zeiterfassung dazu.
+  const auftragswert = (j.positions ?? []).reduce(
+    (summe, p) => summe + (p.price ?? 0) * (p.quantity ?? 1),
+    0,
+  )
+  const materialkosten = bedarf.reduce((summe, b) => {
+    const stueck = posten.find((p) => p.id === b.itemId)
+    return summe + b.benoetigt * (stueck?.unitValue ?? 0)
+  }, 0)
   const bestellId = typeof j.order === 'object' ? j.order?.id : j.order
   const angebotId = typeof j.quote === 'object' ? j.quote?.id : j.quote
 
@@ -38,6 +52,16 @@ export default async function AuftragBearbeiten({ params }: { params: Promise<{ 
     <>
       <h1>{j.jobNumber}</h1>
       <p className="buero-unterzeile">{j.title}</p>
+
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', margin: '.6rem 0 1rem' }}>
+        <a className="buero-knopf schmal" href={`/api/office/auftrag/${j.id}/bestaetigung`}>
+          Auftragsbestätigung
+        </a>
+        <a className="buero-knopf schmal" href={`/api/office/auftrag/${j.id}/lieferschein`}>
+          Lieferschein
+        </a>
+        <VersandKnopf art="lieferschein" id={j.id} leise />
+      </div>
 
       {(bestellId || angebotId) && (
         <p className="buero-unterzeile">
@@ -93,6 +117,15 @@ export default async function AuftragBearbeiten({ params }: { params: Promise<{ 
           unit: p.unit ?? '',
           quantity: p.quantity ?? 0,
         }))}
+      />
+
+      <Zeiterfassung
+        auftragId={j.id}
+        laeuftSeit={j.runningSince}
+        buchungen={j.timeEntries ?? []}
+        stundensatz={einstellungen?.craft?.hourlyRate ?? 65}
+        auftragswert={auftragswert}
+        materialkosten={materialkosten}
       />
     </>
   )

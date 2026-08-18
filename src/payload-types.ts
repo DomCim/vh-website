@@ -256,6 +256,10 @@ export interface Product {
       }[]
     | null;
   /**
+   * Reine Werkstattzeit. Zusammen mit dem Stundensatz ergibt sie den größten Teil der Kosten — ohne sie ist jede Nachkalkulation geschönt.
+   */
+  productionMinutes?: number | null;
+  /**
    * z.B. „3–4 Wochen". Jedes Stück wird einzeln gefertigt — leer lassen übernimmt den Standardwert aus den Website-Einstellungen.
    */
   productionTime?: string | null;
@@ -861,6 +865,21 @@ export interface Job {
       }[]
     | null;
   materialGebucht?: boolean | null;
+  /**
+   * Gesetzt, solange die Stoppuhr im Büro läuft.
+   */
+  runningSince?: string | null;
+  /**
+   * Ohne Stunden weiß niemand, ob der Preis den Aufwand deckt — Material und Dienstleister sind nur die halbe Rechnung.
+   */
+  timeEntries?:
+    | {
+        day?: string | null;
+        minutes: number;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   notes?: string | null;
   order?: (number | null) | Order;
   quote?: (number | null) | Quote;
@@ -1313,6 +1332,7 @@ export interface ProductsSelect<T extends boolean = true> {
         note?: T;
         id?: T;
       };
+  productionMinutes?: T;
   productionTime?: T;
   readyMade?: T;
   onRequestOnly?: T;
@@ -1654,6 +1674,15 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  runningSince?: T;
+  timeEntries?:
+    | T
+    | {
+        day?: T;
+        minutes?: T;
+        note?: T;
+        id?: T;
+      };
   notes?: T;
   order?: T;
   quote?: T;
@@ -2084,6 +2113,14 @@ export interface SiteSetting {
      */
     notice?: string | null;
     /**
+     * Grundlage der Nachkalkulation: Werkstattstunde inklusive Maschinen, Strom und Raum — nicht der eigene Lohn.
+     */
+    hourlyRate?: number | null;
+    /**
+     * Aufschlag auf den Einsatz, aus dem der Preisvorschlag am Artikel entsteht.
+     */
+    targetMargin?: number | null;
+    /**
      * Gilt für alle Produkte ohne eigene Angabe, z.B. „3–4 Wochen".
      */
     defaultProductionTime?: string | null;
@@ -2501,6 +2538,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         notice?: T;
+        hourlyRate?: T;
+        targetMargin?: T;
         defaultProductionTime?: T;
       };
   analytics?:

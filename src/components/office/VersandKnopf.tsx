@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react'
 
-type Art = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung'
+type Art = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
 const BESCHRIFTUNG: Record<Art, string> = {
   angebot: 'Angebot senden',
   rechnung: 'Rechnung senden',
   bestaetigung: 'Bestätigung senden',
   mahnung: 'Erinnern / mahnen',
+  lieferschein: 'Lieferschein senden',
 }
 
 /**

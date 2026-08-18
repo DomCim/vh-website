@@ -125,8 +125,9 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Anfragen** | Kontakt-, Produkt- und Maßanfertigungsanfragen mit Status und interner Notiz; „Antworten" öffnet das Postfach mit vorbereitetem Entwurf. |
 | **Bestellungen** | Positionen, Anschrift, Stand (bezahlt → in Fertigung → versendet) und Sendungsnummer. Der Statuswechsel löst die E-Mail an die Kundschaft aus; ohne Sendungsnummer geht „Versendet" nicht. |
 | **Angebote** | Positionen mit Netto, Steuer und Fertigungszeit. Die Nummer wird erst beim Versenden vergeben — ein verworfener Entwurf reißt keine Lücke in die Reihe. Angenommene Angebote werden per Klick zum Auftrag oder zur Rechnung. |
-| **Aufträge** | Der Durchlauf durch die Werkstatt. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
-| **Artikel** | Stückliste (Material je Stück) und externe Dienstleister (Leistung, Kosten je Stück, Vorlaufzeit) — daraus rechnet die Seite den Einsatz je Stück gegen den Website-Preis. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
+| **Aufträge** | Der Durchlauf durch die Werkstatt, mit Stoppuhr für die Arbeitszeit und Lieferschein zum Mitgeben. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
+| **Artikel** | Stückliste (Material je Stück), externe Dienstleister und die Arbeitszeit je Stück — daraus rechnet die Seite den Einsatz gegen den Website-Preis und schlägt einen Preis vor. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
+| **Kalender** | Ein Monatsblatt mit allem, was ein Datum hat: Fertigstellungen, Liefertermine, ablaufende Angebote, fällige Belege. |
 | **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als PDF; Eingangsbelege per Foto, ausgelesen von Claude und danach geprüft. |
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
@@ -146,6 +147,16 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Werkstatt: Zeit, Kalender, Lieferschein
+
+**Arbeitszeit.** Am Auftrag steht eine Stoppuhr: großer Knopf, läuft sichtbar mit, stoppt in eine Buchung. Zeit lässt sich auch nachtragen, wenn das Telefon in der Jacke geblieben ist. Daraus rechnet das Büro die Lohnkosten (Stundensatz unter **Website-Einstellungen → Einzelfertigung**) und stellt sie neben Material und Fremdleistung — bis dahin war die Nachkalkulation ohne die größte Position.
+
+**Am Artikel** kommt dieselbe Rechnung vor dem Verkauf: Material + Fremdleistung + Arbeitszeit ergeben den Einsatz je Stück, dazu ein **Preisvorschlag** mit dem eingestellten Wunschaufschlag. Liegt der Website-Preis darunter, sagt die Seite es deutlich.
+
+**Kalender** (`/office/kalender`): ein Monatsblatt mit allem, was ein Datum hat — Fertigstellungen, zugesagte Liefertermine aus dem Shop, ablaufende Angebote, fällige Belege. Vorher lagen diese Termine in vier Listen, und eine überfüllte Woche fiel erst auf, wenn sie da war.
+
+**Lieferschein.** Zu jedem Auftrag gibt es einen Bon de livraison zum Ausdrucken oder Verschicken: was geliefert wurde, wohin, ohne Preise — und zwei Zeilen zum Unterschreiben. Bei Montagen ist die Unterschrift zugleich das Abnahmeprotokoll.
 
 ## Nachfassen, Mahnen, Newsletter
 

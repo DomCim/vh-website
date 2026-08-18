@@ -21,6 +21,7 @@ const ALLE = [
   { href: '/office/bestellungen', label: 'Bestellungen' },
   { href: '/office/angebote', label: 'Angebote' },
   { href: '/office/auftraege', label: 'Aufträge' },
+  { href: '/office/kalender', label: 'Kalender' },
   { href: '/office/rechnungen', label: 'Rechnungen' },
   { href: '/office/belege', label: 'Belege' },
   { href: '/office/artikel', label: 'Artikel' },
@@ -50,6 +51,7 @@ const BEREICHE: { titel: string; punkte: { href: string; label: string }[] }[] =
     titel: 'Werkstatt',
     punkte: [
       { href: '/office/auftraege', label: 'Aufträge' },
+      { href: '/office/kalender', label: 'Kalender' },
       { href: '/office/artikel', label: 'Artikel' },
       { href: '/office/inventar', label: 'Inventar' },
       { href: '/office/inventur', label: 'Inventur' },

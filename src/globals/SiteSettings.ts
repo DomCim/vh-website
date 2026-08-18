@@ -225,6 +225,28 @@ export const SiteSettings: GlobalConfig = {
           },
         },
         {
+          name: 'hourlyRate',
+          label: 'Stundensatz (EUR)',
+          type: 'number',
+          min: 0,
+          defaultValue: 65,
+          admin: {
+            description:
+              'Grundlage der Nachkalkulation: Werkstattstunde inklusive Maschinen, Strom und Raum — nicht der eigene Lohn.',
+          },
+        },
+        {
+          name: 'targetMargin',
+          label: 'Wunschaufschlag (%)',
+          type: 'number',
+          min: 0,
+          max: 500,
+          defaultValue: 40,
+          admin: {
+            description: 'Aufschlag auf den Einsatz, aus dem der Preisvorschlag am Artikel entsteht.',
+          },
+        },
+        {
           name: 'defaultProductionTime',
           label: 'Standard-Fertigungszeit',
           type: 'text',

@@ -18,7 +18,7 @@ export default async function ArtikelBearbeiten({ params }: { params: Promise<{ 
     .catch(() => null)
   if (!p) notFound()
 
-  const [{ docs: posten }, { docs: partner }] = await Promise.all([
+  const [{ docs: posten }, { docs: partner }, einstellungen] = await Promise.all([
     payload.find({
       collection: 'inventory-items',
       sort: 'name',
@@ -33,6 +33,7 @@ export default async function ArtikelBearbeiten({ params }: { params: Promise<{ 
       depth: 0,
       overrideAccess: true,
     }),
+    payload.findGlobal({ slug: 'site-settings', depth: 0 }),
   ])
 
   return (
@@ -67,6 +68,9 @@ export default async function ArtikelBearbeiten({ params }: { params: Promise<{ 
           unitValue: x.unitValue ?? 0,
         }))}
         partner={partner.map((x) => ({ id: x.id, name: x.name }))}
+        arbeitsminuten={p.productionMinutes}
+        stundensatz={einstellungen?.craft?.hourlyRate ?? 65}
+        wunschaufschlag={einstellungen?.craft?.targetMargin ?? 40}
       />
     </>
   )

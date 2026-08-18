@@ -32,6 +32,9 @@ export function ArtikelFormular({
   posten,
   partner,
   verkaufspreis,
+  arbeitsminuten,
+  stundensatz,
+  wunschaufschlag,
 }: {
   produktId: number
   stueckliste: StuecklistenZeile[]
@@ -39,10 +42,15 @@ export function ArtikelFormular({
   posten: PostenAuswahl[]
   partner: PartnerAuswahl[]
   verkaufspreis?: number | null
+  /** Arbeitszeit je Stück in Minuten — steht am Artikel in der Verwaltung */
+  arbeitsminuten?: number | null
+  stundensatz: number
+  wunschaufschlag: number
 }) {
   const router = useRouter()
   const [zeilen, setZeilen] = useState<StuecklistenZeile[]>(stueckliste)
   const [dienste, setDienste] = useState<DienstleisterZeile[]>(dienstleister)
+  const [minuten, setMinuten] = useState<number>(arbeitsminuten ?? 0)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -54,9 +62,20 @@ export function ArtikelFormular({
       return s + (p?.unitValue ?? 0) * (z.quantity || 0)
     }, 0)
     const fremd = dienste.reduce((s, d) => s + (d.cost ?? 0), 0)
+    const arbeit = (minuten / 60) * stundensatz
     const runden = (n: number) => Math.round(n * 100) / 100
-    return { material: runden(material), fremd: runden(fremd), summe: runden(material + fremd) }
-  }, [zeilen, dienste, posten])
+    const summe = material + fremd + arbeit
+    return {
+      material: runden(material),
+      fremd: runden(fremd),
+      arbeit: runden(arbeit),
+      summe: runden(summe),
+      // Preisvorschlag aus Einsatz plus Wunschaufschlag — der Anfang eines
+      // Angebots, nicht sein Ende: Was der Markt hergibt, weiß die Werkstatt
+      // besser als eine Formel.
+      vorschlag: runden(summe * (1 + wunschaufschlag / 100)),
+    }
+  }, [zeilen, dienste, posten, minuten, stundensatz, wunschaufschlag])
 
   async function speichern() {
     setLaeuft(true)
@@ -70,6 +89,7 @@ export function ArtikelFormular({
           produktId,
           zeilen: zeilen.filter((z) => z.item && z.quantity),
           dienstleister: dienste.filter((d) => d.contact && d.service?.trim()),
+          arbeitsminuten: minuten || 0,
         }),
       })
       setMeldung(res.ok ? 'Gespeichert.' : 'Das hat nicht geklappt.')
@@ -237,6 +257,25 @@ export function ArtikelFormular({
         Dienstleister hinzufügen
       </button>
 
+      <h2 style={{ marginTop: '1.5rem' }}>Arbeitszeit</h2>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Minuten je Stück</span>
+          <input
+            inputMode="numeric"
+            value={minuten || ''}
+            onChange={(e) => setMinuten(Number(e.target.value.replace(/[^\d]/g, '')) || 0)}
+            placeholder="z.B. 240"
+          />
+        </label>
+        <div className="buero-feld">
+          <span>Stundensatz</span>
+          <div style={{ padding: '.55rem 0', color: 'var(--buero-tinte-leise)' }}>
+            {euro(stundensatz)} — änderbar in den Website-Einstellungen
+          </div>
+        </div>
+      </div>
+
       <div
         style={{
           marginTop: '1.5rem',
@@ -255,6 +294,12 @@ export function ArtikelFormular({
           <span style={{ color: 'var(--buero-tinte-leise)' }}>Fremdleistung</span>
           <span className="buero-betrag">{euro(kosten.fremd)}</span>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--buero-tinte-leise)' }}>
+            Arbeitszeit ({Math.floor(minuten / 60)} h {String(minuten % 60).padStart(2, '0')} min)
+          </span>
+          <span className="buero-betrag">{euro(kosten.arbeit)}</span>
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
           <span>Einsatz je Stück</span>
           <span className="buero-betrag">{euro(kosten.summe)}</span>
@@ -268,10 +313,29 @@ export function ArtikelFormular({
               fontSize: '.85rem',
             }}
           >
-            <span>bleibt vom Website-Preis (ohne Arbeitszeit)</span>
+            <span>bleibt vom Website-Preis</span>
             <span className="buero-betrag">{euro(verkaufspreis - kosten.summe)}</span>
           </div>
         )}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            color: 'var(--buero-tinte-leise)',
+            fontSize: '.85rem',
+          }}
+        >
+          <span>Preisvorschlag (+{wunschaufschlag} %)</span>
+          <span className="buero-betrag">{euro(kosten.vorschlag)}</span>
+        </div>
+        {typeof verkaufspreis === 'number' &&
+          verkaufspreis > 0 &&
+          verkaufspreis < kosten.summe && (
+            <div className="buero-hinweis warn" style={{ marginTop: '.6rem' }}>
+              Der Website-Preis liegt unter dem Einsatz. Jedes verkaufte Stück kostet die Werkstatt
+              Geld.
+            </div>
+          )}
       </div>
 
       <div style={{ marginTop: '1.25rem' }}>

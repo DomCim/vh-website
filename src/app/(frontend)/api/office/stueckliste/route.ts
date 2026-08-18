@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         leadTime?: string
         note?: string
       }[]
+      arbeitsminuten?: number
     }
     if (!b.produktId) return NextResponse.json({ error: 'produktId fehlt' }, { status: 400 })
 
@@ -36,6 +37,8 @@ export async function POST(req: Request) {
       id: b.produktId,
       overrideAccess: true,
       data: {
+        productionMinutes:
+          typeof b.arbeitsminuten === 'number' ? Math.max(0, Math.round(b.arbeitsminuten)) : undefined,
         billOfMaterials: (b.zeilen ?? [])
           .filter((z) => z.item && z.quantity)
           .map((z) => ({ item: z.item as number, quantity: z.quantity as number, note: z.note })),
