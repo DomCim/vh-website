@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Inventar — Material, Werkzeug und Maschinen.
@@ -14,6 +15,8 @@ export const InventoryItems: CollectionConfig = {
     singular: 'Inventar-Posten',
     plural: 'Inventar',
   },
+  // Offene Büro-Seiten über Änderungen unterrichten
+  hooks: liveHooks('inventar'),
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'type', 'quantity', 'unit', 'location'],

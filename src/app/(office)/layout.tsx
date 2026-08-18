@@ -4,6 +4,7 @@ import React from 'react'
 
 import { Abmelden } from '../../components/office/Abmelden'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
+import { LiveAktualisierung } from '../../components/office/LiveAktualisierung'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import '../../styles/office.css'
 
@@ -40,6 +41,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
     <html lang="de">
       <body className="buero">
         <SitzungVerlaengern />
+        <LiveAktualisierung />
         <header className="buero-kopf">
           <Link href="/office" className="buero-marke">
             {/* Auf schmalen Geräten reicht das Kürzel — der volle Name

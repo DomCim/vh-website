@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 /** Ausgaben-Kategorien — bewusst grob, so wie der Steuerberater sie erwartet */
 export const AUSGABEN_KATEGORIEN = [
@@ -45,6 +46,8 @@ export const Expenses: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    afterDelete: liveHooks('belege').afterDelete,
+    afterChange: liveHooks('belege').afterChange,
     beforeValidate: [
       ({ data }) => {
         if (!data) return data
