@@ -74,6 +74,8 @@ export interface Config {
     testimonials: Testimonial;
     promotions: Promotion;
     orders: Order;
+    inquiries: Inquiry;
+    'login-codes': LoginCode;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -90,6 +92,8 @@ export interface Config {
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
+    'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -203,6 +207,14 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
+  /**
+   * z.B. „3–4 Wochen". Jedes Stück wird einzeln gefertigt — leer lassen übernimmt den Standardwert aus den Website-Einstellungen.
+   */
+  productionTime?: string | null;
+  /**
+   * Steht fertig in der Werkstatt. Wird nach dem Verkauf automatisch auf „nicht verfügbar" gesetzt.
+   */
+  readyMade?: boolean | null;
   /**
    * Statt Warenkorb wird ein Anfrage-Button angezeigt
    */
@@ -371,6 +383,10 @@ export interface Project {
   } | null;
   client?: string | null;
   year?: number | null;
+  /**
+   * Werden unter der Referenz gezeigt — und die Referenz erscheint umgekehrt auf der Produktseite.
+   */
+  relatedProducts?: (number | Product)[] | null;
   featured?: boolean | null;
   order?: number | null;
   updatedAt: string;
@@ -432,7 +448,11 @@ export interface Promotion {
 export interface Order {
   id: number;
   orderNumber: string;
-  status: 'pending' | 'paid' | 'shipped' | 'cancelled';
+  status: 'pending' | 'paid' | 'inProduction' | 'shipped' | 'cancelled';
+  /**
+   * z.B. „Ende April" oder „KW 18" — wird beim Umstellen auf „In Fertigung" an den Kunden gemeldet.
+   */
+  expectedReady?: string | null;
   /**
    * Vor dem Umstellen auf „Versendet" eintragen — sie wird in der Versand-Mail an den Kunden mitgeschickt.
    */
@@ -441,6 +461,10 @@ export interface Order {
    * z.B. der DHL-/Speditions-Link zur Sendungsverfolgung
    */
   trackingUrl?: string | null;
+  /**
+   * Teil des Links, den der Kunde in seiner Bestellbestätigung bekommt.
+   */
+  accessToken?: string | null;
   items: {
     product?: (number | null) | Product;
     titleSnapshot: string;
@@ -481,12 +505,74 @@ export interface Order {
   createdAt: string;
 }
 /**
+ * Eingegangene Anfragen über Kontaktformular, Produktseite und Maßanfertigung.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inquiries".
+ */
+export interface Inquiry {
+  id: number;
+  type: 'kontakt' | 'produkt' | 'massanfertigung';
+  status: 'neu' | 'inBearbeitung' | 'beantwortet' | 'erledigt';
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  /**
+   * Bei Anfragen direkt am Artikel
+   */
+  product?: (number | null) | Product;
+  productTitle?: string | null;
+  productUrl?: string | null;
+  custom?: {
+    width?: number | null;
+    depth?: number | null;
+    height?: number | null;
+    color?: string | null;
+    purpose?: string | null;
+    desiredDate?: string | null;
+  };
+  attachments?: (number | Media)[] | null;
+  locale?: string | null;
+  /**
+   * Nur im Backend sichtbar.
+   */
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-codes".
+ */
+export interface LoginCode {
+  id: number;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name?: string | null;
+  /**
+   * Wird über die Einrichtung unten aktiviert.
+   */
+  mfaEnabled?: boolean | null;
+  mfaSecret?: string | null;
+  mfaPendingSecret?: string | null;
+  mfaBackupCodes?:
+    | {
+        hash?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -557,6 +643,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'inquiries';
+        value: number | Inquiry;
+      } | null)
+    | ({
+        relationTo: 'login-codes';
+        value: number | LoginCode;
       } | null)
     | ({
         relationTo: 'media';
@@ -635,6 +729,8 @@ export interface ProductsSelect<T extends boolean = true> {
         hex?: T;
         id?: T;
       };
+  productionTime?: T;
+  readyMade?: T;
   onRequestOnly?: T;
   available?: T;
   featured?: T;
@@ -691,6 +787,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   description?: T;
   client?: T;
   year?: T;
+  relatedProducts?: T;
   featured?: T;
   order?: T;
   updatedAt?: T;
@@ -736,8 +833,10 @@ export interface PromotionsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
   status?: T;
+  expectedReady?: T;
   trackingNumber?: T;
   trackingUrl?: T;
+  accessToken?: T;
   items?:
     | T
     | {
@@ -777,6 +876,48 @@ export interface OrdersSelect<T extends boolean = true> {
   paypalOrderId?: T;
   paypalCaptureId?: T;
   customerNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inquiries_select".
+ */
+export interface InquiriesSelect<T extends boolean = true> {
+  type?: T;
+  status?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  message?: T;
+  product?: T;
+  productTitle?: T;
+  productUrl?: T;
+  custom?:
+    | T
+    | {
+        width?: T;
+        depth?: T;
+        height?: T;
+        color?: T;
+        purpose?: T;
+        desiredDate?: T;
+      };
+  attachments?: T;
+  locale?: T;
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-codes_select".
+ */
+export interface LoginCodesSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -838,6 +979,15 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  mfaEnabled?: T;
+  mfaSecret?: T;
+  mfaPendingSecret?: T;
+  mfaBackupCodes?:
+    | T
+    | {
+        hash?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -993,6 +1143,32 @@ export interface SiteSetting {
     vatRate?: number | null;
   };
   /**
+   * Es gibt keine Serienfertigung — jedes Stück entsteht einzeln. Diese Texte erscheinen am Produkt, in der Kasse und in den Bestellmails.
+   */
+  craft?: {
+    /**
+     * Kündigt Abweichungen vor dem Kauf an — das ist der rechtlich saubere Weg.
+     */
+    notice?: string | null;
+    /**
+     * Gilt für alle Produkte ohne eigene Angabe, z.B. „3–4 Wochen".
+     */
+    defaultProductionTime?: string | null;
+  };
+  /**
+   * Für cookiefreie Statistik wie selbst gehostetes Plausible oder Umami — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.
+   */
+  analytics?: {
+    /**
+     * z.B. https://statistik.example.com/script.js
+     */
+    scriptUrl?: string | null;
+    /**
+     * z.B. vincent-hellmann.com
+     */
+    domain?: string | null;
+  };
+  /**
    * Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.
    */
   pinterestVerification?: string | null;
@@ -1110,6 +1286,19 @@ export interface Integration {
      */
     sandbox?: boolean | null;
   };
+  /**
+   * Zugang für die Verwaltung per Claude. Ohne Schlüssel ist der Endpunkt abgeschaltet.
+   */
+  mcp?: {
+    /**
+     * Wirkt wie ein Admin-Passwort — nur an vertrauenswürdige Geräte weitergeben.
+     */
+    apiKey?: string | null;
+    /**
+     * Optional. Mit diesem Schlüssel lassen sich Inhalte und Auswertungen nur ansehen.
+     */
+    readonlyKey?: string | null;
+  };
   facebook?: {
     pageId?: string | null;
     /**
@@ -1211,6 +1400,18 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         vatId?: T;
         vatRate?: T;
       };
+  craft?:
+    | T
+    | {
+        notice?: T;
+        defaultProductionTime?: T;
+      };
+  analytics?:
+    | T
+    | {
+        scriptUrl?: T;
+        domain?: T;
+      };
   pinterestVerification?: T;
   seo?:
     | T
@@ -1262,6 +1463,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
         clientId?: T;
         clientSecret?: T;
         sandbox?: T;
+      };
+  mcp?:
+    | T
+    | {
+        apiKey?: T;
+        readonlyKey?: T;
       };
   facebook?:
     | T

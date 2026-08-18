@@ -1,0 +1,121 @@
+import type { CollectionConfig } from 'payload'
+
+import { admins } from '../access'
+
+/**
+ * Kontakt-, Produkt- und Maßanfertigungs-Anfragen.
+ *
+ * Angelegt wird ausschließlich server-seitig über die Local API — damit ein
+ * Lead auch dann erhalten bleibt, wenn der Mailversand scheitert.
+ */
+export const Inquiries: CollectionConfig = {
+  slug: 'inquiries',
+  labels: {
+    singular: 'Anfrage',
+    plural: 'Anfragen',
+  },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'type', 'status', 'createdAt'],
+    group: 'Shop',
+    description: 'Eingegangene Anfragen über Kontaktformular, Produktseite und Maßanfertigung.',
+  },
+  access: {
+    read: admins,
+    create: () => false,
+    update: admins,
+    delete: admins,
+  },
+  fields: [
+    {
+      name: 'type',
+      label: 'Art',
+      type: 'select',
+      required: true,
+      defaultValue: 'kontakt',
+      options: [
+        { label: 'Kontaktformular', value: 'kontakt' },
+        { label: 'Produktanfrage', value: 'produkt' },
+        { label: 'Maßanfertigung', value: 'massanfertigung' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      type: 'select',
+      required: true,
+      defaultValue: 'neu',
+      options: [
+        { label: 'Neu', value: 'neu' },
+        { label: 'In Bearbeitung', value: 'inBearbeitung' },
+        { label: 'Beantwortet', value: 'beantwortet' },
+        { label: 'Erledigt', value: 'erledigt' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+    {
+      type: 'row',
+      fields: [
+        { name: 'name', label: 'Name', type: 'text', required: true },
+        { name: 'email', label: 'E-Mail', type: 'email', required: true },
+      ],
+    },
+    { name: 'phone', label: 'Telefon', type: 'text' },
+    { name: 'message', label: 'Nachricht', type: 'textarea', required: true },
+    {
+      name: 'product',
+      label: 'Zugehöriges Produkt',
+      type: 'relationship',
+      relationTo: 'products',
+      admin: { description: 'Bei Anfragen direkt am Artikel' },
+    },
+    {
+      type: 'row',
+      fields: [
+        { name: 'productTitle', label: 'Produkt (Bezeichnung)', type: 'text' },
+        { name: 'productUrl', label: 'Produkt-Link', type: 'text' },
+      ],
+    },
+    {
+      name: 'custom',
+      label: 'Angaben zur Maßanfertigung',
+      type: 'group',
+      admin: {
+        condition: (data) => data?.type === 'massanfertigung',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'width', label: 'Breite (cm)', type: 'number' },
+            { name: 'depth', label: 'Tiefe (cm)', type: 'number' },
+            { name: 'height', label: 'Höhe (cm)', type: 'number' },
+          ],
+        },
+        { name: 'color', label: 'Wunschfarbe (RAL)', type: 'text' },
+        { name: 'purpose', label: 'Verwendungszweck', type: 'text' },
+        { name: 'desiredDate', label: 'Wunschtermin', type: 'text' },
+      ],
+    },
+    {
+      name: 'attachments',
+      label: 'Angehängte Bilder (Skizzen, Fotos)',
+      type: 'upload',
+      relationTo: 'media',
+      hasMany: true,
+    },
+    {
+      name: 'locale',
+      label: 'Sprachfassung der Anfrage',
+      type: 'text',
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      name: 'internalNote',
+      label: 'Interne Notiz',
+      type: 'textarea',
+      admin: { description: 'Nur im Backend sichtbar.' },
+    },
+  ],
+}

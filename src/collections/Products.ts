@@ -148,6 +148,26 @@ export const Products: CollectionConfig = {
       ],
     },
     {
+      name: 'productionTime',
+      label: 'Fertigungszeit',
+      type: 'text',
+      localized: true,
+      admin: {
+        description:
+          'z.B. „3–4 Wochen". Jedes Stück wird einzeln gefertigt — leer lassen übernimmt den Standardwert aus den Website-Einstellungen.',
+      },
+    },
+    {
+      name: 'readyMade',
+      label: 'Fertiges Stück — sofort lieferbar',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Steht fertig in der Werkstatt. Wird nach dem Verkauf automatisch auf „nicht verfügbar" gesetzt.',
+      },
+    },
+    {
       name: 'onRequestOnly',
       label: 'Nur auf Anfrage (kein Online-Kauf)',
       type: 'checkbox',

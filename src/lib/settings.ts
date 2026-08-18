@@ -24,6 +24,10 @@ export type ResolvedIntegrations = {
     accessToken?: string
     instagramAccountId?: string
   }
+  mcp: {
+    apiKey?: string
+    readonlyKey?: string
+  }
 }
 
 const val = (dbValue: unknown, envValue: string | undefined): string | undefined => {
@@ -69,6 +73,10 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       pageId: val(doc?.facebook?.pageId, process.env.FB_PAGE_ID),
       accessToken: val(doc?.facebook?.accessToken, process.env.FB_PAGE_ACCESS_TOKEN),
       instagramAccountId: val(doc?.facebook?.instagramAccountId, process.env.IG_ACCOUNT_ID),
+    },
+    mcp: {
+      apiKey: val(doc?.mcp?.apiKey, process.env.MCP_API_KEY),
+      readonlyKey: val(doc?.mcp?.readonlyKey, process.env.MCP_READONLY_API_KEY),
     },
   }
 }

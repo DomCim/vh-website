@@ -111,6 +111,59 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'craft',
+      label: 'Handarbeit & Fertigung',
+      type: 'group',
+      admin: {
+        description:
+          'Es gibt keine Serienfertigung — jedes Stück entsteht einzeln. Diese Texte erscheinen am Produkt, in der Kasse und in den Bestellmails.',
+      },
+      fields: [
+        {
+          name: 'notice',
+          label: 'Handarbeits-Hinweis',
+          type: 'textarea',
+          localized: true,
+          admin: {
+            description:
+              'Kündigt Abweichungen vor dem Kauf an — das ist der rechtlich saubere Weg.',
+          },
+        },
+        {
+          name: 'defaultProductionTime',
+          label: 'Standard-Fertigungszeit',
+          type: 'text',
+          localized: true,
+          admin: {
+            description: 'Gilt für alle Produkte ohne eigene Angabe, z.B. „3–4 Wochen".',
+          },
+        },
+      ],
+    },
+    {
+      name: 'analytics',
+      label: 'Besucherstatistik (optional)',
+      type: 'group',
+      admin: {
+        description:
+          'Für cookiefreie Statistik wie selbst gehostetes Plausible oder Umami — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.',
+      },
+      fields: [
+        {
+          name: 'scriptUrl',
+          label: 'Skript-URL',
+          type: 'text',
+          admin: { description: 'z.B. https://statistik.example.com/script.js' },
+        },
+        {
+          name: 'domain',
+          label: 'Erfasste Domain',
+          type: 'text',
+          admin: { description: 'z.B. vincent-hellmann.com' },
+        },
+      ],
+    },
+    {
       name: 'pinterestVerification',
       label: 'Pinterest-Verifizierungscode',
       type: 'text',

@@ -91,6 +91,17 @@ export const Projects: CollectionConfig = {
       ],
     },
     {
+      name: 'relatedProducts',
+      label: 'Verwendete Produkte',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+      admin: {
+        description:
+          'Werden unter der Referenz gezeigt — und die Referenz erscheint umgekehrt auf der Produktseite.',
+      },
+    },
+    {
       name: 'featured',
       label: 'Auf Startseite zeigen',
       type: 'checkbox',

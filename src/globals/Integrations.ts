@@ -137,6 +137,44 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      name: 'mcp',
+      label: 'KI-Assistent (MCP-Server)',
+      type: 'group',
+      admin: {
+        description:
+          'Zugang für die Verwaltung per Claude. Ohne Schlüssel ist der Endpunkt abgeschaltet.',
+      },
+      fields: [
+        {
+          name: 'apiKey',
+          label: 'Schlüssel (voller Zugriff)',
+          type: 'text',
+          admin: {
+            description:
+              'Wirkt wie ein Admin-Passwort — nur an vertrauenswürdige Geräte weitergeben.',
+          },
+        },
+        {
+          name: 'readonlyKey',
+          label: 'Schlüssel (nur lesen)',
+          type: 'text',
+          admin: {
+            description:
+              'Optional. Mit diesem Schlüssel lassen sich Inhalte und Auswertungen nur ansehen.',
+          },
+        },
+        {
+          name: 'zugang',
+          type: 'ui',
+          admin: {
+            components: {
+              Field: '/components/admin/McpZugang#McpZugang',
+            },
+          },
+        },
+      ],
+    },
+    {
       name: 'facebook',
       label: 'Facebook & Instagram (News-Autopost)',
       type: 'group',
