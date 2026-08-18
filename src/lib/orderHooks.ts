@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 
-import { rechnungPdf } from './invoice'
+import { bestellungAlsRechnung } from './invoice'
 import {
   orderConfirmationEmail,
   orderInProductionEmail,
@@ -8,7 +8,7 @@ import {
   orderShippedEmail,
 } from './mail'
 import { sendMail } from './sendMail'
-import { getIntegrations } from './settings'
+import { firmenAngaben, getIntegrations } from './settings'
 
 /**
  * Markiert eine Bestellung als bezahlt und verschickt Bestätigungs- und
@@ -38,12 +38,7 @@ export async function markOrderPaid(
 
   try {
     const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
-    const company = {
-      name: settings?.siteName,
-      siret: settings?.company?.siret,
-      vatId: settings?.company?.vatId,
-      vatRate: settings?.company?.vatRate,
-    }
+    const company = firmenAngaben(settings)
     const craftNotice = settings?.craft?.notice ?? null
 
     // Rechnung als PDF anhängen — schlägt das fehl, geht die Mail trotzdem raus
@@ -52,7 +47,7 @@ export async function markOrderPaid(
       anhang = [
         {
           filename: `Rechnung-${order.orderNumber}.pdf`,
-          content: await rechnungPdf(order, company),
+          content: await bestellungAlsRechnung(order, company),
           contentType: 'application/pdf',
         },
       ]

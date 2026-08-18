@@ -76,6 +76,12 @@ export interface Config {
     orders: Order;
     inquiries: Inquiry;
     'login-codes': LoginCode;
+    contacts: Contact;
+    expenses: Expense;
+    'outgoing-invoices': OutgoingInvoice;
+    'inventory-items': InventoryItem;
+    stocktakes: Stocktake;
+    counters: Counter;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -94,6 +100,12 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
+    contacts: ContactsSelect<false> | ContactsSelect<true>;
+    expenses: ExpensesSelect<false> | ExpensesSelect<true>;
+    'outgoing-invoices': OutgoingInvoicesSelect<false> | OutgoingInvoicesSelect<true>;
+    'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
+    stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
+    counters: CountersSelect<false> | CountersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -556,11 +568,221 @@ export interface LoginCode {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contacts".
+ */
+export interface Contact {
+  id: number;
+  name: string;
+  role?: ('lieferant' | 'kunde' | 'beides') | null;
+  email?: string | null;
+  phone?: string | null;
+  line1?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
+  /**
+   * Bei Geschäftskunden im EU-Ausland nötig — dann geht die Rechnung ohne Steuer raus (Reverse Charge).
+   */
+  vatId?: string | null;
+  siret?: string | null;
+  /**
+   * Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.
+   */
+  defaultCategory?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expenses".
+ */
+export interface Expense {
+  id: number;
+  /**
+   * Foto oder PDF der Rechnung. Wird für den Steuer-Export mit ausgegeben.
+   */
+  document?: (number | null) | Media;
+  title?: string | null;
+  supplier?: (number | null) | Contact;
+  /**
+   * Falls noch kein Geschäftspartner angelegt ist.
+   */
+  supplierName?: string | null;
+  invoiceNumber?: string | null;
+  invoiceDate: string;
+  netAmount?: number | null;
+  vatRate?: number | null;
+  vatAmount?: number | null;
+  grossAmount: number;
+  category:
+    | 'material'
+    | 'werkzeug'
+    | 'fremdleistung'
+    | 'fahrzeug'
+    | 'miete'
+    | 'versicherung'
+    | 'buero'
+    | 'werbung'
+    | 'reise'
+    | 'gebuehren'
+    | 'sonstiges';
+  paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
+  paid?: boolean | null;
+  /**
+   * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
+   */
+  deductible?: boolean | null;
+  notes?: string | null;
+  /**
+   * Ergebnis der KI-Auslesung — bitte immer gegen den Beleg prüfen.
+   */
+  extraction?: {
+    status?: ('ungeprueft' | 'bestaetigt' | 'fehler') | null;
+    confidence?: number | null;
+    note?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Rechnungen an Kommunen, Gewerbe und Privat außerhalb des Shops.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "outgoing-invoices".
+ */
+export interface OutgoingInvoice {
+  id: number;
+  /**
+   * Wird beim Festschreiben automatisch und lückenlos vergeben.
+   */
+  invoiceNumber?: string | null;
+  /**
+   * Ab „Gestellt" bekommt die Rechnung ihre Nummer und ist verbindlich.
+   */
+  status: 'entwurf' | 'gestellt' | 'bezahlt' | 'storniert';
+  customer?: (number | null) | Contact;
+  customerName?: string | null;
+  /**
+   * Wird aus dem Geschäftspartner übernommen, wenn dort hinterlegt.
+   */
+  customerAddress?: string | null;
+  issueDate?: string | null;
+  dueDate?: string | null;
+  paidDate?: string | null;
+  items?:
+    | {
+        description: string;
+        quantity: number;
+        unit?: string | null;
+        unitPrice: number;
+        vatRate: number;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  vatTotal?: number | null;
+  total?: number | null;
+  /**
+   * Bei Geschäftskunden im EU-Ausland mit gültiger USt-IdNr. — dann alle Sätze auf 0 setzen; der Hinweis erscheint auf der Rechnung.
+   */
+  reverseCharge?: boolean | null;
+  /**
+   * z.B. Bezug zum Angebot oder Zahlungsziel-Abrede.
+   */
+  note?: string | null;
+  /**
+   * Optional — verbindet die Rechnung mit dem gezeigten Projekt.
+   */
+  project?: (number | null) | Project;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory-items".
+ */
+export interface InventoryItem {
+  id: number;
+  name: string;
+  type: 'material' | 'werkzeug' | 'maschine' | 'fertigware' | 'sonstiges';
+  quantity: number;
+  unit?: string | null;
+  /**
+   * Darunter erscheint der Posten in der Übersicht als knapp.
+   */
+  minQuantity?: number | null;
+  /**
+   * Einkaufspreis — Grundlage für die Bewertung zum Stichtag.
+   */
+  unitValue?: number | null;
+  location?: string | null;
+  /**
+   * Bei Maschinen wichtig für die Abschreibung.
+   */
+  purchaseDate?: string | null;
+  purchaseValue?: number | null;
+  supplier?: (number | null) | Contact;
+  /**
+   * Nur bei fertigen Stücken, die im Shop stehen.
+   */
+  product?: (number | null) | Product;
+  photo?: (number | null) | Media;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stocktakes".
+ */
+export interface Stocktake {
+  id: number;
+  title: string;
+  date: string;
+  status: 'offen' | 'abgeschlossen';
+  lines?:
+    | {
+        item: number | InventoryItem;
+        expected?: number | null;
+        counted: number;
+        /**
+         * Stand zum Stichtag — wird beim Anlegen übernommen.
+         */
+        unitValue?: number | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  totalValue?: number | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "counters".
+ */
+export interface Counter {
+  id: number;
+  key: string;
+  lastNumber: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name?: string | null;
+  /**
+   * Nur die Inhaberrolle sieht Belege, Rechnungen, Inventar und den Steuer-Export unter /office.
+   */
+  role: 'redaktion' | 'inhaber';
   /**
    * Wird über die Einrichtung unten aktiviert.
    */
@@ -651,6 +873,30 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'login-codes';
         value: number | LoginCode;
+      } | null)
+    | ({
+        relationTo: 'contacts';
+        value: number | Contact;
+      } | null)
+    | ({
+        relationTo: 'expenses';
+        value: number | Expense;
+      } | null)
+    | ({
+        relationTo: 'outgoing-invoices';
+        value: number | OutgoingInvoice;
+      } | null)
+    | ({
+        relationTo: 'inventory-items';
+        value: number | InventoryItem;
+      } | null)
+    | ({
+        relationTo: 'stocktakes';
+        value: number | Stocktake;
+      } | null)
+    | ({
+        relationTo: 'counters';
+        value: number | Counter;
       } | null)
     | ({
         relationTo: 'media';
@@ -923,6 +1169,142 @@ export interface LoginCodesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contacts_select".
+ */
+export interface ContactsSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  email?: T;
+  phone?: T;
+  line1?: T;
+  postalCode?: T;
+  city?: T;
+  country?: T;
+  vatId?: T;
+  siret?: T;
+  defaultCategory?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expenses_select".
+ */
+export interface ExpensesSelect<T extends boolean = true> {
+  document?: T;
+  title?: T;
+  supplier?: T;
+  supplierName?: T;
+  invoiceNumber?: T;
+  invoiceDate?: T;
+  netAmount?: T;
+  vatRate?: T;
+  vatAmount?: T;
+  grossAmount?: T;
+  category?: T;
+  paymentMethod?: T;
+  paid?: T;
+  deductible?: T;
+  notes?: T;
+  extraction?:
+    | T
+    | {
+        status?: T;
+        confidence?: T;
+        note?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "outgoing-invoices_select".
+ */
+export interface OutgoingInvoicesSelect<T extends boolean = true> {
+  invoiceNumber?: T;
+  status?: T;
+  customer?: T;
+  customerName?: T;
+  customerAddress?: T;
+  issueDate?: T;
+  dueDate?: T;
+  paidDate?: T;
+  items?:
+    | T
+    | {
+        description?: T;
+        quantity?: T;
+        unit?: T;
+        unitPrice?: T;
+        vatRate?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  vatTotal?: T;
+  total?: T;
+  reverseCharge?: T;
+  note?: T;
+  project?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory-items_select".
+ */
+export interface InventoryItemsSelect<T extends boolean = true> {
+  name?: T;
+  type?: T;
+  quantity?: T;
+  unit?: T;
+  minQuantity?: T;
+  unitValue?: T;
+  location?: T;
+  purchaseDate?: T;
+  purchaseValue?: T;
+  supplier?: T;
+  product?: T;
+  photo?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stocktakes_select".
+ */
+export interface StocktakesSelect<T extends boolean = true> {
+  title?: T;
+  date?: T;
+  status?: T;
+  lines?:
+    | T
+    | {
+        item?: T;
+        expected?: T;
+        counted?: T;
+        unitValue?: T;
+        note?: T;
+        id?: T;
+      };
+  totalValue?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "counters_select".
+ */
+export interface CountersSelect<T extends boolean = true> {
+  key?: T;
+  lastNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -979,6 +1361,7 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
   mfaEnabled?: T;
   mfaSecret?: T;
   mfaPendingSecret?: T;
@@ -1132,11 +1515,41 @@ export interface SiteSetting {
    * Pflichtangaben für Bestellbestätigungen (französische SAS): SIRET und TVA-Nummer erscheinen in der Fußzeile der Bestell-Mails.
    */
   company?: {
+    /**
+     * Wie im Handelsregister eingetragen, z.B. „Next-Concept SAS".
+     */
+    legalName?: string | null;
+    /**
+     * Muss auf jeder Rechnung stehen.
+     */
+    legalForm?: string | null;
+    /**
+     * Bei einer SAS Pflichtangabe auf Rechnungen.
+     */
+    shareCapital?: number | null;
+    /**
+     * Handelsregisternummer
+     */
+    rcsNumber?: string | null;
+    /**
+     * Stadt der Eintragung, z.B. „RCS Colmar"
+     */
+    rcsCity?: string | null;
+    address?: string | null;
     siret?: string | null;
     /**
      * z.B. FR12345678901
      */
     vatId?: string | null;
+    paymentTerms?: string | null;
+    /**
+     * Bei Rechnungen an Geschäftskunden Pflicht. Vorschlag: „Bei Zahlungsverzug werden Verzugszinsen in Höhe des dreifachen gesetzlichen Zinssatzes sowie eine Pauschale für Beitreibungskosten von 40 € fällig." — Wortlaut mit dem Steuerberater abstimmen.
+     */
+    latePaymentNote?: string | null;
+    /**
+     * Beim Verkauf an Privatkunden in Frankreich Pflicht: Name und Anschrift des Médiateur de la consommation.
+     */
+    mediator?: string | null;
     /**
      * Wird für den Steuerausweis aus den Bruttopreisen herausgerechnet (Frankreich: 20). Hinweis: Ab 10.000 € EU-Fernverkauf/Jahr greift das OSS-Verfahren — mit dem Steuerberater klären.
      */
@@ -1396,8 +1809,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   company?:
     | T
     | {
+        legalName?: T;
+        legalForm?: T;
+        shareCapital?: T;
+        rcsNumber?: T;
+        rcsCity?: T;
+        address?: T;
         siret?: T;
         vatId?: T;
+        paymentTerms?: T;
+        latePaymentNote?: T;
+        mediator?: T;
         vatRate?: T;
       };
   craft?:

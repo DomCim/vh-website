@@ -34,6 +34,22 @@ export const Users: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'role',
+      label: 'Rolle',
+      type: 'select',
+      required: true,
+      defaultValue: 'redaktion',
+      options: [
+        { label: 'Redaktion (Website-Inhalte)', value: 'redaktion' },
+        { label: 'Inhaber (zusätzlich Büro & Zahlen)', value: 'inhaber' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Nur die Inhaberrolle sieht Belege, Rechnungen, Inventar und den Steuer-Export unter /office.',
+      },
+    },
+    {
       name: 'mfaEnabled',
       label: 'Zwei-Faktor-Anmeldung aktiv',
       type: 'checkbox',

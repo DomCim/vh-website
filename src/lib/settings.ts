@@ -80,3 +80,25 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     },
   }
 }
+
+/**
+ * Firmenangaben für Rechnungen und Bestellmails — an einer Stelle
+ * zusammengefasst, damit die Pflichtangaben überall dieselben sind.
+ */
+export function firmenAngaben(settings: Record<string, any> | null | undefined) {
+  const c = settings?.company ?? {}
+  return {
+    name: settings?.siteName,
+    legalName: c.legalName,
+    legalForm: c.legalForm,
+    shareCapital: c.shareCapital,
+    rcsNumber: c.rcsNumber,
+    rcsCity: c.rcsCity,
+    address: c.address,
+    siret: c.siret,
+    vatId: c.vatId,
+    vatRate: c.vatRate,
+    paymentTerms: c.paymentTerms,
+    latePaymentNote: c.latePaymentNote,
+  }
+}
