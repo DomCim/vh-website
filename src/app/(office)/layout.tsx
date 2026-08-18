@@ -47,7 +47,9 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
             <span className="buero-marke-zusatz">Büro</span>
           </Link>
           <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
-            <Link href="/admin" className="buero-marker">
+            {/* Am Handy steht der Verweis im Blatt hinter „Mehr" — oben wäre
+                daneben kein Platz für Marke und Abmelden */}
+            <Link href="/admin" className="buero-marker buero-nur-breit">
               Website-Verwaltung
             </Link>
             <Abmelden />

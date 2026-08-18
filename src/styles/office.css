@@ -5,6 +5,9 @@
   --buero-papier: #f7f6f4;
   --buero-flaeche: #ffffff;
   --buero-tinte: #1d1d1f;
+  /* Was auf einer Fläche in Tintenfarbe steht — im Dunkelmodus dreht sich
+     das um, sonst steht helle Schrift auf hellem Grund */
+  --buero-auf-tinte: #ffffff;
   --buero-tinte-leise: #6b6b70;
   --buero-linie: #e3e1dd;
   --buero-bronze: #a86b3d;
@@ -111,7 +114,143 @@
 
 .buero-nav a[aria-current='page'] {
   background: var(--buero-tinte);
-  color: #fff;
+  color: var(--buero-auf-tinte);
+}
+
+/* ── Tableiste am unteren Rand (nur Handy) ──────────────────────────────── */
+/* Dreizehn Punkte in einer seitlich scrollenden Leiste findet am Handy
+   niemand. Unten liegen die fünf, die man täglich braucht; der Rest steht
+   hinter „Mehr" — und der Daumen kommt überall hin. */
+.buero-tableiste {
+  display: none;
+}
+
+.buero-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.2rem;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--buero-tinte-leise);
+  cursor: pointer;
+  min-height: 3.25rem;
+}
+
+.buero-tab svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.buero-tab[aria-current='page'],
+.buero-tab.offen {
+  color: var(--buero-bronze);
+}
+
+/* ── Blatt mit allen Bereichen ──────────────────────────────────────────── */
+.buero-blatt-grund {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 40;
+  border: none;
+  padding: 0;
+}
+
+.buero-blatt {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  background: var(--buero-flaeche);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 0.75rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.buero-blatt-griff {
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--buero-linie);
+  margin: 0.15rem auto 0.9rem;
+}
+
+.buero-blatt h3 {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--buero-tinte-leise);
+  margin: 1.1rem 0 0.4rem;
+  font-weight: 600;
+}
+
+.buero-blatt h3:first-of-type {
+  margin-top: 0;
+}
+
+.buero-blatt-punkte {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.buero-blatt-punkte a {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.buero-blatt-punkte a[aria-current='page'] {
+  background: var(--buero-tinte);
+  color: var(--buero-auf-tinte);
+  border-color: var(--buero-tinte);
+}
+
+@media (max-width: 719px) {
+  .buero-nav,
+  .buero .buero-nur-breit {
+    display: none;
+  }
+
+  .buero-tableiste {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: var(--buero-flaeche);
+    border-top: 1px solid var(--buero-linie);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Platz, damit die Leiste nichts verdeckt */
+  .buero-inhalt {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 720px) {
+  .buero-blatt,
+  .buero-blatt-grund {
+    display: none;
+  }
 }
 
 /* ── Inhalt ─────────────────────────────────────────────────────────────── */
@@ -258,7 +397,7 @@
   align-items: center;
   gap: 0.4rem;
   background: var(--buero-tinte);
-  color: #fff;
+  color: var(--buero-auf-tinte);
   border: none;
   border-radius: 8px;
   padding: 0.65rem 1.1rem;
@@ -268,13 +407,33 @@
   transition: background-color 0.15s ease;
 }
 
-.buero-knopf:hover {
-  background: var(--buero-bronze);
+/* Ein Knopf ist oft ein Link. Ohne diese Zeilen greift `.buero a` und die
+   Schrift verschwindet im Hintergrund — genau das war der leere weiße Kasten. */
+.buero a.buero-knopf {
+  color: var(--buero-auf-tinte);
 }
 
+.buero a.buero-knopf.leise {
+  color: var(--buero-tinte);
+}
+
+.buero-knopf:hover,
+.buero a.buero-knopf:hover {
+  background: var(--buero-bronze);
+  color: #fff;
+}
+
+/* Ausgegraut, aber lesbar — halbdurchsichtige Schrift auf halbdurchsichtigem
+   Grund war auf dem Handy nicht mehr zu entziffern */
 .buero-knopf:disabled {
-  opacity: 0.5;
+  background: var(--buero-linie);
+  color: var(--buero-tinte-leise);
   cursor: default;
+}
+
+.buero-knopf:disabled:hover {
+  background: var(--buero-linie);
+  color: var(--buero-tinte-leise);
 }
 
 .buero-knopf.leise {
@@ -283,7 +442,8 @@
   border: 1px solid var(--buero-linie);
 }
 
-.buero-knopf.leise:hover {
+.buero-knopf.leise:hover,
+.buero a.buero-knopf.leise:hover {
   background: var(--buero-papier);
   color: var(--buero-tinte);
 }
@@ -392,6 +552,7 @@
     --buero-papier: #141416;
     --buero-flaeche: #1c1c1f;
     --buero-tinte: #ececed;
+    --buero-auf-tinte: #141416;
     --buero-tinte-leise: #9a9aa0;
     --buero-linie: #2c2c31;
     --buero-bronze: #c98a52;
