@@ -113,6 +113,26 @@ export function Header({
             ))}
           </div>
 
+          <Link
+            href={`/${locale}/suche`}
+            aria-label={dict.nav.search}
+            title={dict.nav.search}
+            className="text-ink-soft hover:text-bronze flex h-10 w-10 items-center justify-center transition-colors"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+            </svg>
+          </Link>
+
           <CartLink locale={locale} label={dict.nav.cart} />
 
           <button

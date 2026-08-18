@@ -10,7 +10,7 @@ import { SplitTextReveal } from '../../../../../components/motion/SplitTextRevea
 import { RichText } from '../../../../../components/RichText'
 import { getProjectBySlug, mediaAlt, mediaUrl } from '../../../../../lib/data'
 import { isLocale, t } from '../../../../../lib/i18n'
-import { absoluteUrl, alternatesFor } from '../../../../../lib/seo'
+import { absoluteUrl, alternatesFor, jsonLd } from '../../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,8 +57,20 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
     }))
     .filter((p) => p.slug && p.kategorieSlug)
 
+  // Strukturierte Daten: eine Referenz ist ein Werkstück, kein Produktangebot
+  const projektJsonLd = jsonLd({
+    '@type': 'CreativeWork',
+    name: project.title,
+    description: project.summary || undefined,
+    dateCreated: project.year ? String(project.year) : undefined,
+    creator: { '@type': 'Organization', name: 'Vincent Hellmann' },
+    image: images.map((b) => absoluteUrl(mediaUrl(b, 'large'))).filter(Boolean),
+    locationCreated: project.client || undefined,
+  })
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: projektJsonLd }} />
       <Reveal>
         <Link
           href={`/${locale}/projekte`}
