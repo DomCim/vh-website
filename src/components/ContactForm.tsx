@@ -42,6 +42,15 @@ export function ContactForm({ locale, labels }: { locale: Locale; labels: Labels
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Honigtopf gegen Spam-Bots — für Menschen unsichtbar */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
+      />
       <input type="text" name="name" required placeholder={labels.name} className={inputClass} />
       <input type="email" name="email" required placeholder={labels.email} className={inputClass} />
       <input type="tel" name="phone" placeholder={labels.phone} className={inputClass} />

@@ -74,6 +74,15 @@ export function ProductInquiryForm({
             className="overflow-hidden"
           >
             <div className="space-y-3 pt-4">
+              {/* Honigtopf gegen Spam-Bots — für Menschen unsichtbar */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute -left-[9999px] h-0 w-0 opacity-0"
+              />
               <input name="name" required placeholder={labels.name} className={inputClass} />
               <input name="email" type="email" required placeholder={labels.email} className={inputClass} />
               <input name="phone" type="tel" placeholder={labels.phone} className={inputClass} />
