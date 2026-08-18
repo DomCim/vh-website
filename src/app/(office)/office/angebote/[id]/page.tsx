@@ -80,6 +80,10 @@ export default async function AngebotBearbeiten({ params }: { params: Promise<{ 
             vatRate: p.vatRate,
           })),
           note: a.note,
+          discountKind: a.discountKind,
+          discountValue: a.discountValue,
+          discountReason: a.discountReason,
+          revision: a.revision,
         }}
       />
     </>

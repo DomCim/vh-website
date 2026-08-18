@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { betraege } from '../lib/betraege'
 import { naechsteRechnungsnummer } from '../lib/nummernkreis'
 
 /**
@@ -36,22 +37,15 @@ export const OutgoingInvoices: CollectionConfig = {
     beforeChange: [
       async ({ data, originalDoc, req, operation }) => {
         // Summen immer neu rechnen — nie dem übergebenen Wert vertrauen
-        const positionen = (data.items ?? []) as {
-          quantity?: number
-          unitPrice?: number
-          vatRate?: number
-        }[]
-        let netto = 0
-        let steuer = 0
-        for (const p of positionen) {
-          const zeile = (p.quantity ?? 0) * (p.unitPrice ?? 0)
-          netto += zeile
-          steuer += zeile * ((p.vatRate ?? 0) / 100)
-        }
-        const runden = (n: number) => Math.round(n * 100) / 100
-        data.subtotal = runden(netto)
-        data.vatTotal = runden(steuer)
-        data.total = runden(netto + steuer)
+        const summen = betraege(data.items ?? [], {
+          discountKind: data.discountKind,
+          discountValue: data.discountValue,
+        })
+        data.subtotal = summen.subtotal
+        data.discountTotal = summen.discountTotal
+        data.netTotal = summen.netTotal
+        data.vatTotal = summen.vatTotal
+        data.total = summen.total
 
         // Nummer erst beim Festschreiben vergeben, und nur einmal
         const wirdFestgeschrieben =
@@ -152,6 +146,35 @@ export const OutgoingInvoices: CollectionConfig = {
             },
           ],
         },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'discountKind',
+          label: 'Nachlass',
+          type: 'select',
+          defaultValue: 'kein',
+          options: [
+            { label: 'Kein Nachlass', value: 'kein' },
+            { label: 'Prozent', value: 'prozent' },
+            { label: 'Fester Betrag (EUR)', value: 'betrag' },
+          ],
+          admin: {
+            description:
+              'Ein gewährter Nachlass muss auf der Rechnung stehen — er wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.',
+          },
+        },
+        { name: 'discountValue', label: 'Höhe', type: 'number', min: 0 },
+        { name: 'discountReason', label: 'Begründung', type: 'text' },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        { name: 'discountTotal', label: 'Nachlass (EUR)', type: 'number', admin: { readOnly: true } },
+        { name: 'netTotal', label: 'Netto nach Nachlass', type: 'number', admin: { readOnly: true } },
       ],
     },
     {

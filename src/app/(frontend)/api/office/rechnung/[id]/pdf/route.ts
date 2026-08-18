@@ -39,6 +39,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         einzelpreis: p.unitPrice,
         steuersatz: p.vatRate,
       })),
+      rabatt: rechnung.discountTotal
+        ? { bezeichnung: rechnung.discountReason || 'Nachlass', betrag: rechnung.discountTotal }
+        : null,
       hinweis: rechnung.note,
       reverseCharge: Boolean(rechnung.reverseCharge),
     },

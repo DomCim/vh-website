@@ -7,6 +7,7 @@ import * as migration_20260817_181145_checkout_tva from './20260817_181145_check
 import * as migration_20260818_061725_mcp_portal_mfa from './20260818_061725_mcp_portal_mfa';
 import * as migration_20260818_075043_buero_belege_rechnungen from './20260818_075043_buero_belege_rechnungen';
 import * as migration_20260818_101629_buero_postfach_push from './20260818_101629_buero_postfach_push';
+import * as migration_20260818_123622_angebot_nachlass_kundenbestellung from './20260818_123622_angebot_nachlass_kundenbestellung';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260818_101629_buero_postfach_push.up,
     down: migration_20260818_101629_buero_postfach_push.down,
-    name: '20260818_101629_buero_postfach_push'
+    name: '20260818_101629_buero_postfach_push',
+  },
+  {
+    up: migration_20260818_123622_angebot_nachlass_kundenbestellung.up,
+    down: migration_20260818_123622_angebot_nachlass_kundenbestellung.down,
+    name: '20260818_123622_angebot_nachlass_kundenbestellung'
   },
 ];

@@ -59,6 +59,11 @@ export async function POST(req: Request) {
             vatRate: p.vatRate,
           })),
           note: angebot.note ?? undefined,
+          // Der zugesagte Nachlass gilt auch auf der Rechnung — sonst stünde
+          // dort plötzlich mehr, als verhandelt wurde
+          discountKind: angebot.discountKind ?? undefined,
+          discountValue: angebot.discountValue ?? undefined,
+          discountReason: angebot.discountReason ?? undefined,
           quote: angebot.id as number,
         },
       })
@@ -74,6 +79,9 @@ export async function POST(req: Request) {
       issueDate: b.issueDate || undefined,
       validUntil: b.validUntil || undefined,
       productionTime: b.productionTime || undefined,
+      discountKind: b.discountKind || 'kein',
+      discountValue: b.discountValue ?? undefined,
+      discountReason: b.discountReason || undefined,
       items: (b.items ?? [])
         .filter((p: { description?: string }) => p.description?.trim())
         .map((p: Record<string, unknown>) => ({
@@ -90,7 +98,12 @@ export async function POST(req: Request) {
       ? await payload.update({ collection: 'quotes', id: b.id, overrideAccess: true, data: daten })
       : await payload.create({ collection: 'quotes', overrideAccess: true, data: daten })
 
-    return NextResponse.json({ ok: true, id: doc.id, quoteNumber: doc.quoteNumber })
+    return NextResponse.json({
+      ok: true,
+      id: doc.id,
+      quoteNumber: doc.quoteNumber,
+      revision: doc.revision,
+    })
   } catch (err) {
     console.error('Angebot speichern fehlgeschlagen:', err)
     return NextResponse.json({ error: 'fehlgeschlagen' }, { status: 500 })

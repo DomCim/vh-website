@@ -236,6 +236,41 @@ export const Jobs: CollectionConfig = {
       admin: { readOnly: true },
     },
     { name: 'quote', label: 'Angebot', type: 'relationship', relationTo: 'quotes' },
+    {
+      type: 'collapsible',
+      label: 'Bestellung des Kunden',
+      admin: {
+        description:
+          'Im Projektgeschäft bestellt die Kundschaft auf Grundlage des Angebots — meist per Mail, Bestellschein oder Kommunal-Auftrag. Was sie geschickt hat, gehört hierher; die Auftragsbestätigung geht darauf zurück.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'customerOrderRef',
+              label: 'Bestellnummer des Kunden',
+              type: 'text',
+              admin: { description: 'Muss auf Auftragsbestätigung und Rechnung stehen.' },
+            },
+            { name: 'orderedAt', label: 'Bestellt am', type: 'date' },
+            {
+              name: 'confirmedAt',
+              label: 'Bestätigt am',
+              type: 'date',
+              admin: { readOnly: true, description: 'Wird beim Erzeugen der Bestätigung gesetzt.' },
+            },
+          ],
+        },
+        {
+          name: 'orderDocument',
+          label: 'Bestellung des Kunden (Scan)',
+          type: 'upload',
+          relationTo: 'media',
+          admin: { description: 'Bestellschein, Mail-Ausdruck oder Auftragsschreiben.' },
+        },
+      ],
+    },
     { name: 'invoice', label: 'Rechnung', type: 'relationship', relationTo: 'outgoing-invoices' },
     { name: 'project', label: 'Referenz', type: 'relationship', relationTo: 'projects' },
   ],

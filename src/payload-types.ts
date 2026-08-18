@@ -740,9 +740,25 @@ export interface Quote {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.
+   */
+  discountKind?: ('kein' | 'prozent' | 'betrag') | null;
+  discountValue?: number | null;
+  /**
+   * Steht so auf dem Angebot, z.B. „Projektnachlass".
+   */
+  discountReason?: string | null;
   subtotal?: number | null;
+  discountTotal?: number | null;
+  netTotal?: number | null;
   vatTotal?: number | null;
   total?: number | null;
+  /**
+   * Zählt bei jeder Änderung nach dem Versenden hoch. Die Nummer bleibt.
+   */
+  revision?: number | null;
+  revisedAt?: string | null;
   /**
    * z.B. „6–8 Wochen ab Auftragserteilung"
    */
@@ -797,6 +813,19 @@ export interface Job {
   notes?: string | null;
   order?: (number | null) | Order;
   quote?: (number | null) | Quote;
+  /**
+   * Muss auf Auftragsbestätigung und Rechnung stehen.
+   */
+  customerOrderRef?: string | null;
+  orderedAt?: string | null;
+  /**
+   * Wird beim Erzeugen der Bestätigung gesetzt.
+   */
+  confirmedAt?: string | null;
+  /**
+   * Bestellschein, Mail-Ausdruck oder Auftragsschreiben.
+   */
+  orderDocument?: (number | null) | Media;
   invoice?: (number | null) | OutgoingInvoice;
   project?: (number | null) | Project;
   updatedAt: string;
@@ -837,6 +866,14 @@ export interface OutgoingInvoice {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Ein gewährter Nachlass muss auf der Rechnung stehen — er wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.
+   */
+  discountKind?: ('kein' | 'prozent' | 'betrag') | null;
+  discountValue?: number | null;
+  discountReason?: string | null;
+  discountTotal?: number | null;
+  netTotal?: number | null;
   subtotal?: number | null;
   vatTotal?: number | null;
   total?: number | null;
@@ -1437,9 +1474,16 @@ export interface QuotesSelect<T extends boolean = true> {
         vatRate?: T;
         id?: T;
       };
+  discountKind?: T;
+  discountValue?: T;
+  discountReason?: T;
   subtotal?: T;
+  discountTotal?: T;
+  netTotal?: T;
   vatTotal?: T;
   total?: T;
+  revision?: T;
+  revisedAt?: T;
   productionTime?: T;
   note?: T;
   inquiry?: T;
@@ -1478,6 +1522,10 @@ export interface JobsSelect<T extends boolean = true> {
   notes?: T;
   order?: T;
   quote?: T;
+  customerOrderRef?: T;
+  orderedAt?: T;
+  confirmedAt?: T;
+  orderDocument?: T;
   invoice?: T;
   project?: T;
   updatedAt?: T;
@@ -1506,6 +1554,11 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
         vatRate?: T;
         id?: T;
       };
+  discountKind?: T;
+  discountValue?: T;
+  discountReason?: T;
+  discountTotal?: T;
+  netTotal?: T;
   subtotal?: T;
   vatTotal?: T;
   total?: T;

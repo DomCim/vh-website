@@ -41,6 +41,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         einzelpreis: p.unitPrice,
         steuersatz: p.vatRate,
       })),
+      rabatt: a.discountTotal
+        ? { bezeichnung: a.discountReason || 'Nachlass', betrag: a.discountTotal }
+        : null,
+      fassung: a.revision,
       hinweis: a.note,
     },
     firmenAngaben(settings),

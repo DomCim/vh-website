@@ -33,9 +33,13 @@ export type RechnungsDaten = {
   zusatzzeilen?: { bezeichnung: string; betrag: number; steuersatz: number }[]
   hinweis?: string | null
   reverseCharge?: boolean
+  /** Gewährter Nachlass auf die Nettosumme — anteilig auf alle Steuersätze */
+  rabatt?: { bezeichnung: string; betrag: number } | null
   /** nur bei Angeboten */
   gueltigBis?: string | null
   fertigungszeit?: string | null
+  /** Fassung eines nachverhandelten Angebots (1 = Erstfassung) */
+  fassung?: number | null
 }
 
 const euro = (v: number) =>
@@ -78,6 +82,9 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   doc.text(`${istAngebot ? 'Angebotsnummer' : 'Rechnungsnummer'}: ${daten.nummer}`)
   doc.text(`${istAngebot ? 'Angebotsdatum' : 'Rechnungsdatum'}: ${datum.toLocaleDateString('de-DE')}`)
   if (istAngebot) {
+    if ((daten.fassung ?? 1) > 1) {
+      doc.text(`Fassung ${daten.fassung} — ersetzt die vorherige Fassung`)
+    }
     if (daten.gueltigBis) {
       doc.text(`Gültig bis: ${new Date(daten.gueltigBis).toLocaleDateString('de-DE')}`)
     }
@@ -172,10 +179,29 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.moveDown(0.35)
   }
 
+  const vorRabatt = runden([...nachSatz.values()].reduce((s, w) => s + w.netto, 0))
+  summenzeile('Summe netto', euro(vorRabatt))
+
+  // Ein Nachlass wird anteilig auf alle Steuersätze verteilt — nur so stimmt
+  // die ausgewiesene Steuer, wenn zwei Sätze im Beleg stehen. Und ausgewiesen
+  // werden muss er: ein stillschweigend eingerechneter Rabatt ist auf einer
+  // französischen Rechnung nicht zulässig.
+  const nachlass = Math.min(Math.max(daten.rabatt?.betrag ?? 0, 0), vorRabatt)
+  if (nachlass > 0) {
+    summenzeile(daten.rabatt?.bezeichnung || 'Nachlass', `− ${euro(nachlass)}`)
+    const anteil = vorRabatt > 0 ? (vorRabatt - nachlass) / vorRabatt : 1
+    for (const [satz, werte] of nachSatz.entries()) {
+      nachSatz.set(satz, {
+        netto: runden(werte.netto * anteil),
+        steuer: runden(werte.steuer * anteil),
+      })
+    }
+  }
+
   const nettoGesamt = runden([...nachSatz.values()].reduce((s, w) => s + w.netto, 0))
   const steuerGesamt = runden([...nachSatz.values()].reduce((s, w) => s + w.steuer, 0))
 
-  summenzeile('Summe netto', euro(nettoGesamt))
+  if (nachlass > 0) summenzeile('Netto nach Nachlass', euro(nettoGesamt))
   for (const [satz, werte] of [...nachSatz.entries()].sort((a, b) => a[0] - b[0])) {
     if (satz === 0 && werte.steuer === 0) continue
     summenzeile(`MwSt./TVA ${satz} % auf ${euro(werte.netto)}`, euro(werte.steuer))

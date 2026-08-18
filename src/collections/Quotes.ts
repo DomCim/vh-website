@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { betraege } from '../lib/betraege'
 import { naechsteAngebotsnummer } from '../lib/nummernkreis'
 
 /**
@@ -36,22 +37,15 @@ export const Quotes: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, originalDoc, req, operation }) => {
-        const positionen = (data.items ?? []) as {
-          quantity?: number
-          unitPrice?: number
-          vatRate?: number
-        }[]
-        let netto = 0
-        let steuer = 0
-        for (const p of positionen) {
-          const zeile = (p.quantity ?? 0) * (p.unitPrice ?? 0)
-          netto += zeile
-          steuer += zeile * ((p.vatRate ?? 0) / 100)
-        }
-        const runden = (n: number) => Math.round(n * 100) / 100
-        data.subtotal = runden(netto)
-        data.vatTotal = runden(steuer)
-        data.total = runden(netto + steuer)
+        const summen = betraege(data.items ?? [], {
+          discountKind: data.discountKind,
+          discountValue: data.discountValue,
+        })
+        data.subtotal = summen.subtotal
+        data.discountTotal = summen.discountTotal
+        data.netTotal = summen.netTotal
+        data.vatTotal = summen.vatTotal
+        data.total = summen.total
 
         const wirdVersendet =
           data.status && data.status !== 'entwurf' && originalDoc?.status === 'entwurf'
@@ -59,6 +53,20 @@ export const Quotes: CollectionConfig = {
         if ((wirdVersendet || neuUndVersendet) && !data.quoteNumber) {
           data.quoteNumber = await naechsteAngebotsnummer(req.payload)
           if (!data.issueDate) data.issueDate = new Date().toISOString()
+          data.revision = 1
+        }
+
+        // Nachverhandelt: Die Nummer bleibt — darunter führt der Kunde das
+        // Gespräch —, aber die Fassung zählt hoch, damit auf dem Tisch nicht
+        // zwei verschiedene Angebote mit derselben Bezeichnung liegen.
+        if (operation === 'update' && originalDoc?.quoteNumber) {
+          const geaendert =
+            summen.total !== originalDoc.total ||
+            JSON.stringify(data.items ?? []) !== JSON.stringify(originalDoc.items ?? [])
+          if (geaendert) {
+            data.revision = (originalDoc.revision ?? 1) + 1
+            data.revisedAt = new Date().toISOString()
+          }
         }
         return data
       },
@@ -142,9 +150,60 @@ export const Quotes: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'subtotal', label: 'Netto', type: 'number', admin: { readOnly: true } },
+        {
+          name: 'discountKind',
+          label: 'Nachlass',
+          type: 'select',
+          defaultValue: 'kein',
+          options: [
+            { label: 'Kein Nachlass', value: 'kein' },
+            { label: 'Prozent', value: 'prozent' },
+            { label: 'Fester Betrag (EUR)', value: 'betrag' },
+          ],
+          admin: {
+            description:
+              'Wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.',
+          },
+        },
+        { name: 'discountValue', label: 'Höhe', type: 'number', min: 0 },
+        {
+          name: 'discountReason',
+          label: 'Begründung',
+          type: 'text',
+          admin: { description: 'Steht so auf dem Angebot, z.B. „Projektnachlass".' },
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        { name: 'subtotal', label: 'Netto vor Nachlass', type: 'number', admin: { readOnly: true } },
+        { name: 'discountTotal', label: 'Nachlass', type: 'number', admin: { readOnly: true } },
+        { name: 'netTotal', label: 'Netto', type: 'number', admin: { readOnly: true } },
         { name: 'vatTotal', label: 'Steuer', type: 'number', admin: { readOnly: true } },
         { name: 'total', label: 'Brutto', type: 'number', admin: { readOnly: true } },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'revision',
+          label: 'Fassung',
+          type: 'number',
+          defaultValue: 1,
+          admin: {
+            readOnly: true,
+            position: 'sidebar',
+            description: 'Zählt bei jeder Änderung nach dem Versenden hoch. Die Nummer bleibt.',
+          },
+        },
+        {
+          name: 'revisedAt',
+          label: 'Zuletzt nachverhandelt',
+          type: 'date',
+          admin: { readOnly: true, position: 'sidebar' },
+        },
       ],
     },
     {

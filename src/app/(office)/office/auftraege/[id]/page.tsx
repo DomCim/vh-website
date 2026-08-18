@@ -74,6 +74,9 @@ export default async function AuftragBearbeiten({ params }: { params: Promise<{ 
           dueDate: j.dueDate,
           notes: j.notes,
           materialGebucht: Boolean(j.materialGebucht),
+          customerOrderRef: j.customerOrderRef,
+          orderedAt: j.orderedAt,
+          confirmedAt: j.confirmedAt,
           positions: (j.positions ?? []).map((p) => ({
             description: p.description,
             quantity: p.quantity ?? 1,

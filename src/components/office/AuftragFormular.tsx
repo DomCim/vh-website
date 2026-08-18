@@ -27,6 +27,9 @@ export type AuftragWerte = {
   material?: AuftragMaterial[]
   notes?: string | null
   materialGebucht?: boolean
+  customerOrderRef?: string | null
+  orderedAt?: string | null
+  confirmedAt?: string | null
 }
 
 export type PostenAuswahl = { id: number; name: string; unit: string; quantity: number }
@@ -159,6 +162,38 @@ export function AuftragFormular({
             ))}
           </select>
         </label>
+      </div>
+
+      <h2>Bestellung des Kunden</h2>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Bestellnummer des Kunden</span>
+          <input
+            value={w.customerOrderRef ?? ''}
+            onChange={(e) => setzen({ customerOrderRef: e.target.value })}
+            placeholder="steht auf Bestätigung und Rechnung"
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Bestellt am</span>
+          <input
+            type="date"
+            value={nurTag(w.orderedAt)}
+            onChange={(e) => setzen({ orderedAt: e.target.value })}
+          />
+        </label>
+        {w.id && (
+          <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '.9rem' }}>
+            <a
+              className="buero-knopf leise"
+              href={`/api/office/auftrag/${w.id}/bestaetigung`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Auftragsbestätigung
+            </a>
+          </div>
+        )}
       </div>
 
       <h2>Was gefertigt wird</h2>

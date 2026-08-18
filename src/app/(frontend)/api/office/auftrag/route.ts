@@ -37,6 +37,8 @@ export async function POST(req: Request) {
           quantity: Number(m.quantity) || 0,
         })),
       source: b.source || 'manuell',
+      customerOrderRef: b.customerOrderRef || undefined,
+      orderedAt: b.orderedAt || undefined,
     }
 
     const doc = b.id

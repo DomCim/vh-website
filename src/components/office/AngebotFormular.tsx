@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
+import { betraege } from '../../lib/betraege'
+
 export type AngebotPosition = {
   description: string
   quantity: number
@@ -23,6 +25,10 @@ export type AngebotWerte = {
   productionTime?: string | null
   items?: AngebotPosition[]
   note?: string | null
+  discountKind?: string | null
+  discountValue?: number | null
+  discountReason?: string | null
+  revision?: number | null
 }
 
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
@@ -53,17 +59,11 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       items: (v.items ?? []).map((p, idx) => (idx === i ? { ...p, ...teil } : p)),
     }))
 
-  const summen = useMemo(() => {
-    const runden = (n: number) => Math.round(n * 100) / 100
-    let netto = 0
-    let steuer = 0
-    for (const p of w.items ?? []) {
-      const zeile = (p.quantity || 0) * (p.unitPrice || 0)
-      netto += zeile
-      steuer += zeile * ((p.vatRate || 0) / 100)
-    }
-    return { netto: runden(netto), steuer: runden(steuer), brutto: runden(netto + steuer) }
-  }, [w.items])
+  const summen = useMemo(
+    () =>
+      betraege(w.items ?? [], { discountKind: w.discountKind, discountValue: w.discountValue }),
+    [w.items, w.discountKind, w.discountValue],
+  )
 
   async function senden(rumpf: Record<string, unknown>) {
     setLaeuft(true)
@@ -105,7 +105,9 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
     <div className="buero-karte">
       {versendet && (
         <p className="buero-hinweis">
-          Angebot <strong>{w.quoteNumber}</strong> ist versendet.
+          Angebot <strong>{w.quoteNumber}</strong> ist versendet
+          {(w.revision ?? 1) > 1 ? ` — Fassung ${w.revision}` : ''}. Nachverhandeln ist möglich:
+          Positionen oder Nachlass ändern und speichern. Die Nummer bleibt, die Fassung zählt hoch.
         </p>
       )}
       {meldung && <p className="buero-hinweis">{meldung}</p>}
@@ -240,6 +242,41 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         Position hinzufügen
       </button>
 
+      <h2>Nachlass</h2>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Art</span>
+          <select
+            value={w.discountKind ?? 'kein'}
+            onChange={(e) => setzen({ discountKind: e.target.value })}
+          >
+            <option value="kein">Kein Nachlass</option>
+            <option value="prozent">Prozent</option>
+            <option value="betrag">Fester Betrag</option>
+          </select>
+        </label>
+        {w.discountKind && w.discountKind !== 'kein' && (
+          <>
+            <label className="buero-feld">
+              <span>{w.discountKind === 'prozent' ? 'Prozent' : 'Betrag (EUR)'}</span>
+              <input
+                inputMode="decimal"
+                value={w.discountValue ?? ''}
+                onChange={(e) => setzen({ discountValue: Number(e.target.value) || 0 })}
+              />
+            </label>
+            <label className="buero-feld">
+              <span>Begründung</span>
+              <input
+                value={w.discountReason ?? ''}
+                onChange={(e) => setzen({ discountReason: e.target.value })}
+                placeholder="z.B. Projektnachlass"
+              />
+            </label>
+          </>
+        )}
+      </div>
+
       <div
         style={{
           marginTop: '1.25rem',
@@ -253,15 +290,29 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--buero-tinte-leise)' }}>Netto</span>
-          <span className="buero-betrag">{euro(summen.netto)}</span>
+          <span className="buero-betrag">{euro(summen.subtotal)}</span>
         </div>
+        {summen.discountTotal > 0 && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--buero-tinte-leise)' }}>
+                {w.discountReason?.trim() || 'Nachlass'}
+              </span>
+              <span className="buero-betrag">− {euro(summen.discountTotal)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--buero-tinte-leise)' }}>Netto nach Nachlass</span>
+              <span className="buero-betrag">{euro(summen.netTotal)}</span>
+            </div>
+          </>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--buero-tinte-leise)' }}>Steuer</span>
-          <span className="buero-betrag">{euro(summen.steuer)}</span>
+          <span className="buero-betrag">{euro(summen.vatTotal)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
           <span>Gesamt</span>
-          <span className="buero-betrag">{euro(summen.brutto)}</span>
+          <span className="buero-betrag">{euro(summen.total)}</span>
         </div>
       </div>
 
