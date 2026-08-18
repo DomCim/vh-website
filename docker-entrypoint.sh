@@ -20,6 +20,14 @@ if [ "$SEED" = "true" ]; then
   node_modules/.bin/payload run scripts/seed.ts || echo "Seed fehlgeschlagen oder bereits vorhanden."
 fi
 
+# Optional: Büro-Zugänge anlegen (BENUTZER=true im Stack setzen, danach wieder
+# entfernen). Vorhandene Konten bleiben unangetastet; ohne VH_PASSWORT bzw.
+# ADMIN_PASSWORT würfelt das Skript die Passwörter und zeigt sie hier im Log.
+if [ "$BENUTZER" = "true" ]; then
+  echo "Lege Büro-Zugänge an …"
+  node_modules/.bin/payload run scripts/benutzer.ts || echo "Anlegen der Zugänge fehlgeschlagen."
+fi
+
 # Optional: Englische Übersetzungen der Seed-Inhalte einspielen (einmalig TRANSLATE_EN=true)
 if [ "$TRANSLATE_EN" = "true" ]; then
   echo "Spiele EN-Übersetzungen ein …"

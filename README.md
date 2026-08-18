@@ -134,6 +134,15 @@ pnpm benutzer
 
 Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **Inhaber** an. Die Passwörter kommen aus `VH_PASSWORT` und `ADMIN_PASSWORT`; fehlen sie, würfelt das Skript je eines und gibt es **einmal** auf der Konsole aus. Ein zweiter Aufruf ändert an vorhandenen Konten nichts.
 
+**Im Container** gibt es zwei Wege:
+
+- **Über den Stack** (bequemer): `BENUTZER=true` als Umgebungsvariable setzen, Container neu starten, die Passwörter aus dem Container-Log holen — danach die Variable wieder entfernen.
+- **Über die Console**: Das Image ist Alpine-basiert, es gibt also **kein `bash`** — in Portainer als Kommando `/bin/sh` wählen. Auch `pnpm` fehlt im Laufzeit-Image, deshalb direkt:
+
+  ```sh
+  node_modules/.bin/payload run scripts/benutzer.ts
+  ```
+
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 
 Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte, Kategorien, Referenzen, Kundenstimmen, News inkl. Facebook-/Instagram-Post, Aktionen, Bestellungen, Anfragen, Mediathek, Seitentexte und Auswertungen.
