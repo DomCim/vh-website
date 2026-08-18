@@ -66,7 +66,29 @@ jobs:
             echo "Kein Webhook hinterlegt — Ausrollen übersprungen."
             exit 0
           fi
-          curl -fsS -X POST "$HA_DEPLOY_WEBHOOK" \
+
+          # Die Adresse selbst darf nicht ins Protokoll (sie ist der Schlüssel),
+          # Länge und Anfang reichen aber, um einen Tippfehler zu erkennen
+          echo "Adresse: ${#HA_DEPLOY_WEBHOOK} Zeichen, beginnt mit ${HA_DEPLOY_WEBHOOK%%/*}//${HA_DEPLOY_WEBHOOK#*//}" \
+            | cut -c1-40
+          case "$HA_DEPLOY_WEBHOOK" in
+            https://*) ;;
+            *) echo "::error::Die Webhook-Adresse beginnt nicht mit https:// — vermutlich beim Kopieren verstümmelt."; exit 1 ;;
+          esac
+
+          antwort=$(mktemp)
+          code=$(curl -sS -o "$antwort" -w '%{http_code}' --max-time 30 \
+            -X POST "$HA_DEPLOY_WEBHOOK" \
             -H 'Content-Type: application/json' \
-            -d "{\"token\":\"$HA_DEPLOY_TOKEN\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\"}"
+            -d "{\"token\":\"$HA_DEPLOY_TOKEN\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\"}") || {
+              echo "::error::curl kam nicht durch — Adresse prüfen (Zeilenumbruch oder fehlendes = am Ende?)."
+              exit 1
+            }
+
+          echo "Antwort: HTTP $code"
+          head -c 300 "$antwort" || true
+          if [ "$code" != "200" ] && [ "$code" != "204" ]; then
+            echo "::error::Home Assistant hat den Webhook nicht angenommen (HTTP $code)."
+            exit 1
+          fi
           echo "Ausrollen angestoßen."

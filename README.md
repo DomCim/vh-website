@@ -52,7 +52,7 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 
 **Automatisch ausrollen (optional):** Portainer bietet je Stack einen Webhook an, der genau das auslöst — er ist aber nur im Heimnetz erreichbar, GitHub kommt also nicht heran. Dazwischen steht Home Assistant, das über Nabu Casa von außen ansprechbar ist:
 
-1. In Home Assistant eine Automatisierung mit **Webhook-Auslöser** anlegen (`local_only: false`) und dafür einen **Cloudhook** erzeugen — die Adresse lautet dann `https://hooks.nabu.casa/…`.
+1. In Home Assistant eine Automatisierung mit **Webhook-Auslöser** anlegen (`local_only: false`). Die Adresse ist dann `https://<ha-adresse>/api/webhook/<webhook-id>`. Steht Home Assistant nicht selbst im Internet, stattdessen einen **Cloudhook** über Nabu Casa erzeugen (`https://hooks.nabu.casa/…`) — der kommt ohne Portfreigabe aus.
 2. Als Aktion einen `shell_command` aufrufen, der den Portainer-Webhook intern anstößt:
 
    ```yaml
