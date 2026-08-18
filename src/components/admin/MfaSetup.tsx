@@ -117,7 +117,6 @@ export function MfaSetup() {
             </li>
             <li>Den angezeigten 6-stelligen Code hier eingeben.</li>
           </ol>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={start.qr} alt="QR-Code für die Authenticator-App" width={220} height={220} />
           <label style={{ display: 'block', margin: '.75rem 0' }}>
             Code aus der App

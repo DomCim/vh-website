@@ -86,15 +86,63 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 
-Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte anlegen/ändern, News verfassen (inkl. Facebook-Post), Aktionen starten, Bestellungen einsehen und Status setzen, Shop-Statistik abrufen.
+Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte, Kategorien, Referenzen, Kundenstimmen, News inkl. Facebook-/Instagram-Post, Aktionen, Bestellungen, Anfragen, Mediathek, Seitentexte und Auswertungen.
 
-1. Im Portainer-Stack `MCP_API_KEY` setzen (z.B. `openssl rand -hex 24`). Ohne Schlüssel ist der Endpunkt deaktiviert (503).
-2. Endpunkt: `https://vh.dominikdill.com/api/mcp` (Streamable HTTP).
-3. Verbinden:
-   - **claude.ai / Cowork** (Custom Connector, ohne Header-Support): URL mit Schlüssel als Query-Parameter angeben — `https://vh.dominikdill.com/api/mcp?key=<MCP_API_KEY>`
-   - **Claude Code**: `claude mcp add --transport http vh-website https://vh.dominikdill.com/api/mcp --header "Authorization: Bearer <MCP_API_KEY>"`
+### Einrichten
 
-Der Schlüssel gewährt vollen Verwaltungszugriff — wie ein Admin-Passwort behandeln.
+1. Im Admin unter **Verwaltung → Integrationen → KI-Assistent** einen Schlüssel erzeugen und **speichern**. Dort steht darunter die fertige Verbindungs-URL zum Kopieren.
+2. Verbinden:
+   - **claude.ai / Cowork** (Custom Connector, ohne Header-Support): die kopierte URL mit `?key=…` eintragen.
+   - **Claude Code**: `claude mcp add --transport http vh-website https://vh.dominikdill.com/api/mcp --header "Authorization: Bearer <Schlüssel>"`
+
+Alternativ lassen sich die Schlüssel weiterhin als Umgebungsvariablen `MCP_API_KEY` / `MCP_READONLY_API_KEY` setzen — sie greifen nur, wenn im Admin nichts hinterlegt ist. Ohne jeden Schlüssel antwortet der Endpunkt mit 503.
+
+Es gibt **zwei Schlüssel**: Der volle Zugriff bringt alle 47 Werkzeuge und wirkt wie ein Admin-Passwort. Der Nur-Lese-Schlüssel bringt 19 — Schreib- und Löschwerkzeuge erscheinen damit gar nicht erst in der Werkzeugliste. Praktisch für Auswertungen, ohne den Vollzugriff aus der Hand zu geben.
+
+### Was der Assistent kann
+
+| Bereich | Werkzeuge |
+|---|---|
+| **Produkte** | `produkte_liste`, `produkt_lesen`, `produkt_anlegen`, `produkt_aendern`, `produkt_bilder_setzen`, `produkt_varianten_setzen`, `produkt_loeschen` |
+| **Kategorien** | `kategorien_liste`, `kategorie_anlegen`, `kategorie_aendern` |
+| **Referenzen** | `referenzen_liste`, `referenz_lesen`, `referenz_anlegen`, `referenz_aendern`, `referenz_loeschen` |
+| **Kundenstimmen** | `kundenstimmen_liste`, `kundenstimme_anlegen`, `kundenstimme_aendern`, `kundenstimme_loeschen` |
+| **News** | `news_liste`, `news_lesen`, `news_verfassen`, `news_aendern`, `news_loeschen` |
+| **Aktionen** | `aktionen_liste`, `aktion_anlegen`, `aktion_aendern`, `aktion_beenden`, `aktion_loeschen` |
+| **Bestellungen** | `bestellungen_liste`, `bestellung_lesen`, `bestellung_in_fertigung`, `bestellung_versenden`, `bestellung_status_setzen` |
+| **Anfragen** | `anfragen_liste`, `anfrage_lesen`, `anfrage_status_setzen` |
+| **Mediathek** | `medien_liste`, `bild_hochladen`, `bild_aendern`, `bild_loeschen` |
+| **Seitentexte** | `seite_lesen`, `seite_schreiben` (Startseite, Über uns, Einstellungen, Rechtliches) |
+| **Auswertung** | `suchen`, `uebersetzungen_pruefen`, `website_check`, `shop_statistik` |
+
+### Vier Regeln, die überall gelten
+
+- **Sprachen.** Jedes lesende und ändernde Werkzeug kennt `sprache` (`de`/`fr`/`en`). Angelegt wird immer auf Deutsch, Französisch und Englisch trägt man mit demselben `*_aendern`-Aufruf nach. `uebersetzungen_pruefen` listet auf, was noch fehlt — das ist die Arbeitsliste.
+- **Seitentexte.** Vor jedem `seite_schreiben` zuerst `seite_lesen` aufrufen. Listen (Hero-Slider, Zeitleiste, Highlights) werden komplett ersetzt, nicht ergänzt.
+- **Löschen ist zweistufig.** Ohne `bestaetigen: true` kommt nur eine Vorschau, was gelöscht würde. Bestellungen und Seitentexte lassen sich gar nicht löschen; Bilder nur, wenn sie nirgends mehr verwendet werden.
+- **Zugangsdaten bleiben außen vor.** Das Global *Integrationen* mit SMTP-, Stripe-, PayPal- und Facebook-Zugängen ist bewusst nicht angebunden — weder lesend noch schreibend.
+
+### Bilder hochladen
+
+`bild_hochladen` nimmt zwei Wege:
+
+- **`url` — der empfohlene Weg.** Der Server holt die Datei selbst und schafft bis **150 MB**; ein 32-MB-Foto ist in rund 3,5 Sekunden drin, inklusive der automatisch erzeugten Zuschnitte (480/900/1800 px). Die Datei muss unter einer URL liegen, die der Container erreicht.
+- **`datenBase64` — nur bis 8 MB.** Darüber lehnt das Werkzeug ab und verweist auf `url`: Base64 müsste komplett durch die MCP-Nachricht wandern und wird dabei rund ein Drittel größer.
+
+### Sicherheit
+
+Der Schlüsselvergleich läuft zeitkonstant. Die Variante mit `?key=` ist für claude.ai nötig, weil dort keine Kopfzeilen gesetzt werden können — der Schlüssel landet damit aber in Proxy- und Zugriffsprotokollen. Für Claude Code deshalb den Header-Weg nehmen.
+
+## Zwei-Faktor-Anmeldung fürs Backend
+
+Payload bringt von Haus aus kein MFA mit; hier läuft es über einen eigenen Anmelde-Hook mit TOTP — kompatibel mit Google Authenticator, Microsoft Authenticator, 1Password, Aegis und anderen.
+
+1. Im Admin das **eigene Benutzerkonto** öffnen (Verwaltung → Benutzer).
+2. **„Zwei-Faktor einrichten"** klicken, den QR-Code scannen oder den angezeigten Schlüssel von Hand eintragen.
+3. Den 6-stelligen Code aus der App eingeben und aktivieren.
+4. **Die Ersatzcodes notieren — sie werden nur einmal angezeigt.** Jeder funktioniert genau einmal, falls das Handy nicht zur Hand ist.
+
+Ab dann erscheint auf der Anmeldeseite ein zusätzliches Feld für den Code. Unabhängig davon sperrt das Backend ein Konto nach zehn Fehlversuchen für zehn Minuten.
 
 ## Inhalte pflegen (Kurzanleitung Redaktion)
 
@@ -104,21 +152,29 @@ Alles unter `https://vh.dominikdill.com/admin`:
 |---|---|
 | **Produkte** | Titel, Bilder, Preis, Varianten (z.B. Größen), Farboptionen, „nur auf Anfrage", „auf Startseite hervorheben". Sprachumschalter oben rechts für die französische Fassung. |
 | **Kategorien** | Menüpunkte der Website (Reihenfolge über Feld „Reihenfolge"); Unterkategorien über „Übergeordnete Kategorie". |
-| **News** | Beiträge mit Titelbild und Teaser; als Entwurf speichern oder veröffentlichen; optional Facebook-Checkbox. |
+| **Referenzen** | Projekte für Kommunen, Gewerbe und Privat mit Bildern, Bereich, Jahr und Auftraggeber. Über „Verwendete Produkte" verknüpft — die Referenz erscheint dann auch auf der Produktseite und umgekehrt. |
+| **Kundenstimmen** | Zitat, Name und Kontext, optional einem Produkt zugeordnet. **Nur echte Stimmen mit Einverständnis eintragen** — erfundene Bewertungen sind wettbewerbswidrig. |
+| **News** | Beiträge mit Titelbild und Teaser; als Entwurf speichern oder veröffentlichen; optional Facebook- und Instagram-Checkbox (Instagram braucht zwingend ein Titelbild). |
 | **Aktionen** | Rabatt (% oder €), Zeitraum, Geltungsbereich, optional Gutscheincode. Aktive Aktionen erscheinen automatisch als Banner + im Warenkorb. |
-| **Bestellungen** | Eingegangene Bestellungen mit Status-Pflege (bezahlt/versendet/storniert). |
+| **Bestellungen** | Status-Pflege bezahlt → **in Fertigung** → versendet → storniert. Vor dem Umstellen auf „Versendet" die Sendungsnummer eintragen, sie geht in die Versandmail. Bei „In Fertigung" kann ein voraussichtlicher Termin mitgegeben werden. |
+| **Anfragen** | Alles, was über Kontaktformular, Produktseite und Maßanfertigung hereinkommt — mit Status (neu/in Bearbeitung/beantwortet/erledigt) und interner Notiz. Wird gespeichert, bevor die Mail rausgeht, damit kein Kontakt verloren geht. |
+| **Fertigung** | Je Produkt eine Fertigungszeit (z.B. „3–4 Wochen"); Standardwert und Handarbeits-Hinweis stehen in den Website-Einstellungen. „Fertiges Stück — sofort lieferbar" kennzeichnet Werkstattstücke; die werden nach dem Verkauf automatisch ausgeblendet. |
 | **Startseite** | Hero-Slider, Mission, Galerie, Highlights, Werte. |
-| **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte. |
+| **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte, Firmen-/Steuerangaben, Handarbeits-Hinweis und Fertigungszeit sowie optional eine cookiefreie Besucherstatistik. |
 | **Rechtliches** | Impressum, Datenschutzerklärung, AGB. |
-| **Integrationen** | SMTP-Zugangsdaten, Stripe-Keys und Facebook-Token — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
+| **Integrationen** | SMTP-Zugangsdaten, Stripe-Keys, Facebook-Token und die MCP-Schlüssel — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
 
 Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News, Produkte, Referenzen …) sind vollwertige Rich-Text-Editoren mit fester Toolbar: Überschriften, Fett/Kursiv, Listen, Links und Bilder mitten im Text (Upload-Button in der Toolbar). URL-Slugs können leer gelassen werden — sie entstehen automatisch aus dem Titel.
 
 ## Nach dem ersten Deployment zu erledigen
 
 - [ ] Admin-Passwort ändern
+- [ ] **Zwei-Faktor-Anmeldung** einrichten und die Ersatzcodes sicher ablegen
 - [ ] **Demo-Preise** der Produkte durch echte Preise ersetzen (Seed enthält Platzhalterwerte!)
 - [ ] Impressum, Datenschutzerklärung und AGB einpflegen (aktuell Platzhalter)
 - [ ] SMTP-Zugangsdaten eintragen (Admin → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
 - [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
+- [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit
 - [ ] Optional: Facebook-Token eintragen (Admin → Integrationen)
+- [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Admin → Integrationen)
+- [ ] Optional: cookiefreie Besucherstatistik hinterlegen (Admin → Website-Einstellungen) und einen Satz dazu in die Datenschutzerklärung aufnehmen

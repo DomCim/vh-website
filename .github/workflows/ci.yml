@@ -1,0 +1,83 @@
+name: Prüfen (Typen, Lint, Build, Rauchtests)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vh
+          POSTGRES_PASSWORD: vh
+          POSTGRES_DB: vh
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vh"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://vh:vh@localhost:5432/vh
+      PAYLOAD_SECRET: nur-fuer-die-pruefung
+      MCP_API_KEY: nur-fuer-die-pruefung-mcp
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: pnpm einrichten
+        uses: pnpm/action-setup@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Abhängigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      - name: Payload-Typen erzeugen
+        run: pnpm generate:types
+
+      - name: Typen und Import-Map müssen aktuell sein
+        run: |
+          pnpm generate:importmap
+          if ! git diff --quiet; then
+            echo "::error::Generierte Dateien sind veraltet — bitte 'pnpm generate:types' und 'pnpm generate:importmap' ausführen und mitcommitten."
+            git diff --stat
+            exit 1
+          fi
+
+      - name: Typprüfung
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Bauen
+        run: pnpm build
+
+      - name: Datenbank migrieren
+        run: pnpm migrate
+
+      - name: Browser für die Rauchtests
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Server starten
+        run: |
+          pnpm start &
+          npx --yes wait-on http://localhost:3000/api/healthz --timeout 90000
+
+      - name: Rauchtests
+        run: pnpm test

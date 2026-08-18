@@ -167,7 +167,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           {testimonials.map((tst) => (
             <Reveal key={tst.id}>
               <figure className="border-line border bg-white p-6">
-                <blockquote className="text-ink-soft leading-relaxed">„{tst.quote}"</blockquote>
+                <blockquote className="text-ink-soft leading-relaxed">„{tst.quote}&ldquo;</blockquote>
                 <figcaption className="mt-3">
                   <span className="tracking-nav text-ink text-sm font-semibold uppercase">
                     {tst.author}
