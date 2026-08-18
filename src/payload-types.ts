@@ -1700,6 +1700,19 @@ export interface Integration {
     sandbox?: boolean | null;
   };
   /**
+   * Schlüssel von console.anthropic.com. Damit liest die Verwaltung hochgeladene Belege aus und schlägt Texte und Übersetzungen vor. Ohne Schlüssel bleiben diese Knöpfe einfach aus.
+   */
+  anthropic?: {
+    /**
+     * Beginnt mit sk-ant-…
+     */
+    apiKey?: string | null;
+    /**
+     * Nur ändern, wenn es einen Grund gibt. Standard: claude-opus-5.
+     */
+    model?: string | null;
+  };
+  /**
    * Zugang für die Verwaltung per Claude. Ohne Schlüssel ist der Endpunkt abgeschaltet.
    */
   mcp?: {
@@ -1885,6 +1898,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
         clientId?: T;
         clientSecret?: T;
         sandbox?: T;
+      };
+  anthropic?:
+    | T
+    | {
+        apiKey?: T;
+        model?: T;
       };
   mcp?:
     | T
