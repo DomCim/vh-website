@@ -311,6 +311,29 @@ export const Orders: CollectionConfig = {
       },
     },
     {
+      name: 'consent',
+      label: 'Bestätigt beim Bestellen',
+      type: 'group',
+      admin: {
+        description:
+          'Wird beim Absenden der Kasse festgehalten. Im Streitfall zählt nicht, was auf der Seite stand, sondern was belegbar ist.',
+      },
+      fields: [
+        {
+          name: 'termsAt',
+          label: 'AGB und Widerrufsbelehrung bestätigt am',
+          type: 'date',
+          admin: { readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
+        },
+        {
+          name: 'waiver',
+          label: 'Kein Widerrufsrecht bei Einzelanfertigung bestätigt',
+          type: 'checkbox',
+          admin: { readOnly: true },
+        },
+      ],
+    },
+    {
       name: 'customerNote',
       label: 'Anmerkung des Kunden',
       type: 'textarea',

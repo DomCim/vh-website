@@ -33,6 +33,9 @@ type CheckoutDict = {
   country: string
   note: string
   payNow: string
+  consentTerms: string
+  consentWaiver: string
+  consentMissing: string
   redirectNote: string
   backToCart: string
   error: string
@@ -43,6 +46,44 @@ type CartDict = {
   continueShopping: string
   subtotal: string
   total: string
+}
+
+/**
+ * Setzt die Rechtsseiten als Links in den Zustimmungssatz ein.
+ *
+ * Der Satz steht als ganzer in der Übersetzung — mit Platzhaltern statt
+ * zusammengestückelter Halbsätze, weil sich die Wortstellung je Sprache
+ * unterscheidet.
+ */
+function mitLinks(satz: string, locale: Locale): React.ReactNode[] {
+  const ziele: Record<string, string> = {
+    agb: `/${locale}/kontakt/agb`,
+    widerruf: `/${locale}/kontakt/widerruf`,
+    datenschutz: `/${locale}/kontakt/datenschutzerklaerung`,
+  }
+  const beschriftung: Record<string, Record<Locale, string>> = {
+    agb: { de: 'AGB', fr: 'CGV', en: 'terms & conditions' },
+    widerruf: {
+      de: 'Widerrufsbelehrung',
+      fr: 'droit de rétractation',
+      en: 'right of withdrawal',
+    },
+    datenschutz: {
+      de: 'Datenschutzerklärung',
+      fr: 'politique de confidentialité',
+      en: 'privacy policy',
+    },
+  }
+
+  return satz.split(/(\{agb\}|\{widerruf\}|\{datenschutz\})/).map((teil, i) => {
+    const schluessel = teil.startsWith('{') ? teil.slice(1, -1) : null
+    if (!schluessel || !ziele[schluessel]) return <React.Fragment key={i}>{teil}</React.Fragment>
+    return (
+      <Link key={i} href={ziele[schluessel]} className="text-ink underline" target="_blank">
+        {beschriftung[schluessel][locale]}
+      </Link>
+    )
+  })
 }
 
 export function CheckoutForm({
@@ -66,11 +107,18 @@ export function CheckoutForm({
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe')
   const [differentAddress, setDifferentAddress] = useState(false)
+  const [zustimmung, setZustimmung] = useState(false)
+  const [verzicht, setVerzicht] = useState(false)
+  const [fehlendeZustimmung, setFehlendeZustimmung] = useState(false)
 
   // Bei PayPal + Lieferung kommt die Adresse aus dem PayPal-Konto,
   // außer der Kunde will explizit eine abweichende angeben
   const showAddressForm =
     deliveryMethod === 'shipping' && (paymentMethod !== 'paypal' || differentAddress)
+
+  // Nur wenn wir sicher wissen, dass ein Stück nach Vorgabe entsteht, wird der
+  // Verzicht abgefragt — sonst spräche die Kasse jemandem ein Recht ab, das er hat.
+  const einzelanfertigung = items.some((i) => i.madeToOrder === true)
 
   const shipping =
     deliveryMethod === 'pickup'
@@ -93,8 +141,13 @@ export function CheckoutForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!zustimmung || (einzelanfertigung && !verzicht)) {
+      setFehlendeZustimmung(true)
+      return
+    }
     setSubmitting(true)
     setError(false)
+    setFehlendeZustimmung(false)
     const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>
 
     try {
@@ -125,6 +178,9 @@ export function CheckoutForm({
             country: data.country,
           },
           note: data.note || undefined,
+          // Was bestätigt wurde, gehört in die Bestellung — im Streitfall zählt
+          // nicht, was auf der Seite stand, sondern was belegbar ist.
+          consent: { terms: true, waiver: einzelanfertigung ? verzicht : undefined },
         }),
       })
       const result = (await res.json()) as { url?: string }
@@ -263,13 +319,41 @@ export function CheckoutForm({
 
         {error && <p className="text-accent text-sm">{dict.error}</p>}
 
+        <div className="border-line space-y-3 border-t pt-5">
+          <label className="text-ink-soft flex cursor-pointer items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              required
+              checked={zustimmung}
+              onChange={(e) => setZustimmung(e.target.checked)}
+              className="accent-ink mt-0.5"
+            />
+            <span>{mitLinks(dict.consentTerms, locale)}</span>
+          </label>
+
+          {einzelanfertigung && (
+            <label className="text-ink-soft flex cursor-pointer items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                required
+                checked={verzicht}
+                onChange={(e) => setVerzicht(e.target.checked)}
+                className="accent-ink mt-0.5"
+              />
+              <span>{dict.consentWaiver}</span>
+            </label>
+          )}
+
+          {fehlendeZustimmung && <p className="text-accent text-sm">{dict.consentMissing}</p>}
+        </div>
+
         <div className="flex flex-wrap items-center gap-4">
           <button
             type="submit"
             disabled={submitting}
             className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
           >
-            {paymentMethod === 'paypal' ? dict.payNowPaypal : dict.payNowStripe}
+            {dict.payNow}
           </button>
           <Link href={`/${locale}/warenkorb`} className="text-ink-soft hover:text-ink text-sm underline">
             {dict.backToCart}

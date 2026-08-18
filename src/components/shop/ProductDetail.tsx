@@ -90,6 +90,9 @@ export function ProductDetail({
       quantity: 1,
       image: product.images[0]?.url,
       categorySlug: product.categorySlug,
+      // Fertige Werkstattstücke liegen schon da; alles andere entsteht erst
+      // nach der Bestellung — und zwar nach Vorgabe.
+      madeToOrder: !product.readyMade,
     })
     setJustAdded(true)
     window.setTimeout(() => setJustAdded(false), 1800)

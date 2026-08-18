@@ -16,6 +16,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
+- **Verbraucherrecht**: Widerrufsbelehrung, Muster-Widerrufsformular, Versand & Zahlung als eigene Seiten; Zustimmung in der Kasse wird mit Zeitpunkt an der Bestellung festgehalten
 - **Betrieb**: `/api/healthz` für Monitoring, **nächtliche Komplettsicherung** (Datenbank + Bilder in einem Archiv, auf die NAS geschoben, bedienbar im Büro), Sicherheits-Kopfzeilen inkl. CSP, Erinnerung an fällige Belege
 
 ## Lokale Entwicklung
@@ -143,6 +144,27 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Rechtstexte für den Shop
+
+Wer an Verbraucher verkauft, braucht mehr als Impressum, Datenschutz und AGB. Unter **Rechtliches** im Admin stehen deshalb zusätzlich:
+
+- **Widerrufsbelehrung** — 14 Tage, Fristbeginn, Folgen. Entscheidend für die Werkstatt ist der zweite Teil: Bei einem nach Kundenvorgabe gefertigten Einzelstück besteht **kein** Widerrufsrecht. Das gilt aber nur, wenn es ausdrücklich dasteht.
+- **Muster-Widerrufsformular** — erscheint automatisch unter der Belehrung.
+- **Versand & Zahlung** — Lieferzeiten, Versandkosten, Zahlungsarten.
+
+Beide neuen Seiten sind über den Footer erreichbar (`/kontakt/widerruf`, `/kontakt/versand-zahlung`).
+
+Entwürfe in allen drei Sprachen lassen sich einspielen mit
+
+```bash
+pnpm rechtstexte                    # schreibt nur, wo noch nichts steht
+pnpm rechtstexte --ueberschreiben   # ersetzt vorhandene Texte
+```
+
+**Die Entwürfe sind keine Rechtsberatung.** Sie tragen am Ende einen Hinweis darauf und müssen vor dem Verkaufsstart geprüft und an die tatsächliche Praxis angepasst werden — besonders bei den Rücksendekosten für schwere Stahlmöbel.
+
+In der **Kasse** wird vor dem Absenden bestätigt: AGB und Widerrufsbelehrung gelesen, und — falls ein Stück nach Vorgabe entsteht — dass dafür kein Widerrufsrecht besteht. Beides wird mit Zeitpunkt an der Bestellung festgehalten. Der Bestellknopf heißt „Zahlungspflichtig bestellen"; der Hinweis auf die Weiterleitung zu Stripe bzw. PayPal steht darunter.
 
 ## Sicherung (Büro → Sicherung)
 

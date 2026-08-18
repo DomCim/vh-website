@@ -34,6 +34,7 @@ type CheckoutBody = {
     country?: string
   }
   note?: string
+  consent?: { terms?: boolean; waiver?: boolean }
 }
 
 export async function POST(req: Request) {
@@ -109,6 +110,12 @@ export async function POST(req: Request) {
               }
             : undefined,
         customerNote: body.note,
+        // Zeitpunkt statt bloßem Haken: „hat zugestimmt" ohne Datum ist im
+        // Zweifel nichts wert.
+        consent: {
+          termsAt: body.consent?.terms ? new Date().toISOString() : undefined,
+          waiver: Boolean(body.consent?.waiver),
+        },
       },
     })
 

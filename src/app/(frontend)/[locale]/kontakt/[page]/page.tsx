@@ -11,6 +11,8 @@ const PAGES = {
   impressum: 'impressum',
   datenschutzerklaerung: 'datenschutz',
   agb: 'agb',
+  widerruf: 'widerruf',
+  'versand-zahlung': 'versandZahlung',
 } as const
 
 export default async function LegalPage({
@@ -32,6 +34,8 @@ export default async function LegalPage({
     impressum: dict.footer.impressum,
     datenschutz: dict.footer.datenschutz,
     agb: dict.footer.agb,
+    widerruf: dict.footer.widerruf,
+    versandZahlung: dict.footer.versandZahlung,
   }
 
   return (
@@ -40,6 +44,14 @@ export default async function LegalPage({
         {titles[field]}
       </h1>
       {content ? <RichText data={content} /> : <p className="text-ink-soft">—</p>}
+
+      {/* Das Muster-Widerrufsformular gehört unter die Belehrung, nicht auf eine
+          eigene Seite, die niemand findet. */}
+      {field === 'widerruf' && legal?.widerrufsformular ? (
+        <div className="border-line mt-10 border-t pt-8">
+          <RichText data={legal.widerrufsformular} />
+        </div>
+      ) : null}
     </div>
   )
 }

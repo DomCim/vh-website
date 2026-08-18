@@ -607,6 +607,13 @@ export interface Order {
   stripePaymentIntentId?: string | null;
   paypalOrderId?: string | null;
   paypalCaptureId?: string | null;
+  /**
+   * Wird beim Absenden der Kasse festgehalten. Im Streitfall zählt nicht, was auf der Seite stand, sondern was belegbar ist.
+   */
+  consent?: {
+    termsAt?: string | null;
+    waiver?: boolean | null;
+  };
   customerNote?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1379,6 +1386,12 @@ export interface OrdersSelect<T extends boolean = true> {
   stripePaymentIntentId?: T;
   paypalOrderId?: T;
   paypalCaptureId?: T;
+  consent?:
+    | T
+    | {
+        termsAt?: T;
+        waiver?: T;
+      };
   customerNote?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2031,6 +2044,60 @@ export interface Legal {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Pflicht im Verkauf an Verbraucher: 14 Tage Widerrufsfrist, Fristbeginn, Folgen. Wichtig für die Werkstatt ist der zweite Teil — bei einem nach Kundenvorgabe gefertigten Einzelstück besteht kein Widerrufsrecht. Das muss hier ausdrücklich stehen, sonst gilt es doch.
+   */
+  widerruf?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Das Formular muss zur Verfügung stehen, auch wenn es kaum jemand benutzt. Es steht auf der Widerrufsseite unter der Belehrung.
+   */
+  widerrufsformular?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Lieferzeiten, Versandkosten, Liefergebiete, Zahlungsarten. Muss vor dem Bestellen erreichbar sein.
+   */
+  versandZahlung?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2339,6 +2406,9 @@ export interface LegalSelect<T extends boolean = true> {
   impressum?: T;
   datenschutz?: T;
   agb?: T;
+  widerruf?: T;
+  widerrufsformular?: T;
+  versandZahlung?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

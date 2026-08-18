@@ -23,6 +23,8 @@ type Dict = {
     impressum: string
     datenschutz: string
     agb: string
+    widerruf: string
+    versandZahlung: string
     followUs: string
     contact: string
   }
@@ -95,6 +97,12 @@ export function Footer({
             </Link>
             <Link href={`/${locale}/kontakt/agb`} className="hover:text-white">
               {dict.footer.agb}
+            </Link>
+            <Link href={`/${locale}/kontakt/widerruf`} className="hover:text-white">
+              {dict.footer.widerruf}
+            </Link>
+            <Link href={`/${locale}/kontakt/versand-zahlung`} className="hover:text-white">
+              {dict.footer.versandZahlung}
             </Link>
           </div>
         </div>

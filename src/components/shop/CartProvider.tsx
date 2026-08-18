@@ -15,6 +15,13 @@ export type CartItem = {
   quantity: number
   image?: string
   categorySlug?: string
+  /**
+   * Einzelanfertigung nach Kundenvorgabe — dafür gibt es kein Widerrufsrecht,
+   * was in der Kasse ausdrücklich bestätigt werden muss. Fehlt die Angabe
+   * (alter Warenkorb im Browser), gilt bewusst „nein": Lieber einmal zu viel
+   * Widerrufsrecht als eine Kundschaft, der man es zu Unrecht abspricht.
+   */
+  madeToOrder?: boolean
 }
 
 type CartContextValue = {
