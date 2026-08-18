@@ -2,8 +2,16 @@ import { z } from 'zod'
 
 import { bestaetigen, bestaetigungNoetig, db, fehler, type McpServer, ok, sprache } from './helpers'
 
-const MAX_BYTES = 20 * 1024 * 1024
+/**
+ * Über eine URL holt der Server die Datei selbst — daher großzügig.
+ * Base64 muss dagegen komplett durch die MCP-Nachricht wandern und wird
+ * dabei rund ein Drittel größer; deshalb dort ein enger Riegel.
+ */
+const MAX_URL_BYTES = 150 * 1024 * 1024
+const MAX_BASE64_BYTES = 8 * 1024 * 1024
 const ERLAUBT = /^(image\/|video\/mp4$|video\/webm$)/
+
+const mb = (bytes: number) => Math.round((bytes / 1024 / 1024) * 10) / 10
 
 /** Wo überall ein Bild verwendet wird — vor dem Löschen geprüft */
 async function fundstellen(payload: Awaited<ReturnType<typeof db>>, id: number) {
@@ -65,11 +73,17 @@ export function registerMedien(server: McpServer) {
     'bild_hochladen',
     {
       description:
-        'Lädt ein Bild oder Video in die Mediathek — entweder von einer URL oder als Base64-Daten. Liefert die Media-ID für produkt_anlegen, referenz_anlegen und news_verfassen zurück. Die Zuschnitte (thumbnail/card/large) entstehen automatisch.',
+        'Lädt ein Bild oder Video in die Mediathek und liefert die Media-ID für produkt_anlegen, referenz_anlegen und news_verfassen. Die Zuschnitte (thumbnail/card/large) entstehen automatisch. BEVORZUGT die URL-Variante: der Server holt die Datei dann selbst und schafft bis 150 MB. Base64 ist nur für kleine Dateien bis 8 MB gedacht, weil die Daten sonst komplett durch die MCP-Nachricht wandern müssten.',
       inputSchema: {
         dateiname: z.string().describe('z.B. sitzbank-naila.jpg — die Endung bestimmt das Format'),
-        url: z.string().optional().describe('öffentlich erreichbare Bild-URL'),
-        datenBase64: z.string().optional().describe('Alternative zur URL: die Datei als Base64'),
+        url: z
+          .string()
+          .optional()
+          .describe('Öffentlich erreichbare URL — der empfohlene Weg, auch für große Fotos'),
+        datenBase64: z
+          .string()
+          .optional()
+          .describe('Nur für kleine Dateien bis 8 MB; darüber bitte url verwenden'),
         altText: z
           .string()
           .optional()
@@ -85,12 +99,22 @@ export function registerMedien(server: McpServer) {
       if (url) {
         let antwort: Response
         try {
-          antwort = await fetch(url)
+          antwort = await fetch(url, { redirect: 'follow' })
         } catch {
           return fehler(`Die URL ${url} war nicht erreichbar.`)
         }
         if (!antwort.ok) return fehler(`Die URL antwortete mit Status ${antwort.status}.`)
-        mimetype = antwort.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream'
+
+        // Wenn der Server die Größe vorab meldet, gar nicht erst herunterladen
+        const gemeldet = Number(antwort.headers.get('content-length') ?? 0)
+        if (gemeldet > MAX_URL_BYTES) {
+          return fehler(
+            `Die Datei ist ${mb(gemeldet)} MB groß — erlaubt sind höchstens ${mb(MAX_URL_BYTES)} MB.`,
+          )
+        }
+
+        mimetype =
+          antwort.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream'
         daten = Buffer.from(await antwort.arrayBuffer())
       } else {
         daten = Buffer.from(datenBase64!.replace(/^data:[^;]+;base64,/, ''), 'base64')
@@ -104,9 +128,12 @@ export function registerMedien(server: McpServer) {
       if (!ERLAUBT.test(mimetype)) {
         return fehler(`Dateityp ${mimetype} ist nicht erlaubt (nur Bilder, MP4 und WebM).`)
       }
-      if (daten.byteLength > MAX_BYTES) {
+      const grenze = url ? MAX_URL_BYTES : MAX_BASE64_BYTES
+      if (daten.byteLength > grenze) {
         return fehler(
-          `Die Datei ist ${Math.round(daten.byteLength / 1024 / 1024)} MB groß — erlaubt sind höchstens 20 MB.`,
+          url
+            ? `Die Datei ist ${mb(daten.byteLength)} MB groß — erlaubt sind höchstens ${mb(MAX_URL_BYTES)} MB.`
+            : `Die Datei ist ${mb(daten.byteLength)} MB groß. Über Base64 gehen höchstens ${mb(MAX_BASE64_BYTES)} MB — bitte die Datei irgendwo ablegen und stattdessen url angeben.`,
         )
       }
 
@@ -120,7 +147,7 @@ export function registerMedien(server: McpServer) {
         ok: true,
         id: doc.id,
         datei: doc.filename,
-        groesseKB: Math.round(daten.byteLength / 1024),
+        groesseMB: mb(daten.byteLength),
         ...(altText ? {} : { hinweis: 'Ohne Alt-Text — bitte mit bild_aendern nachtragen.' }),
       })
     },

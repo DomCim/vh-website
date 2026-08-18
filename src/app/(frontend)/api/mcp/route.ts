@@ -30,7 +30,8 @@ import { getIntegrations } from '../../../../lib/settings'
  */
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+// Große Bild-Uploads über bild_hochladen brauchen Luft
+export const maxDuration = 300
 
 function alleWerkzeuge(server: McpServer) {
   registerProdukte(server)
