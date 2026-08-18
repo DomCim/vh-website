@@ -2431,6 +2431,27 @@ export interface Integration {
     readonlyKey?: string | null;
   };
   /**
+   * Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.
+   */
+  wartung?: {
+    /**
+     * Abschalten heißt: keine nächtliche Sicherung, keine Erinnerungen, keine Meldung über neue Post.
+     */
+    aktiv?: boolean | null;
+    /**
+     * Bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — 60 reicht ebenso. Die Arbeiten selbst laufen höchstens einmal am Tag.
+     */
+    intervalMinuten?: number | null;
+    /**
+     * Wie schnell neue Post gemeldet wird. IMAP meldet sich nicht von allein, hier zahlt sich häufiger aus.
+     */
+    postfachMinuten?: number | null;
+    /**
+     * Ältere Einträge räumt die Wartung weg. Nur Kopfdaten, kein Inhalt — aber auch die müssen nicht ewig liegen.
+     */
+    mailprotokollMonate?: number | null;
+  };
+  /**
    * Jede Sicherung enthält die vollständige Datenbank und alle Bilder. Ohne zweiten Ort ist sie nur eine Schönwetter-Kopie — deshalb hier die NAS eintragen. Bedient wird das Ganze im Büro unter Sicherung.
    */
   sicherung?: {
@@ -2677,6 +2698,14 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         apiKey?: T;
         readonlyKey?: T;
+      };
+  wartung?:
+    | T
+    | {
+        aktiv?: T;
+        intervalMinuten?: T;
+        postfachMinuten?: T;
+        mailprotokollMonate?: T;
       };
   sicherung?:
     | T

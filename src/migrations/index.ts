@@ -15,6 +15,8 @@ import * as migration_20260818_190812_erechnung from './20260818_190812_erechnun
 import * as migration_20260818_192512_geld from './20260818_192512_geld';
 import * as migration_20260818_193349_werkstatt from './20260818_193349_werkstatt';
 import * as migration_20260818_194322_bilder from './20260818_194322_bilder';
+import * as migration_20260818_201010_takt from './20260818_201010_takt';
+import * as migration_20260818_201729_takt_aufbewahrung from './20260818_201729_takt_aufbewahrung';
 
 export const migrations = [
   {
@@ -100,6 +102,16 @@ export const migrations = [
   {
     up: migration_20260818_194322_bilder.up,
     down: migration_20260818_194322_bilder.down,
-    name: '20260818_194322_bilder'
+    name: '20260818_194322_bilder',
+  },
+  {
+    up: migration_20260818_201010_takt.up,
+    down: migration_20260818_201010_takt.down,
+    name: '20260818_201010_takt',
+  },
+  {
+    up: migration_20260818_201729_takt_aufbewahrung.up,
+    down: migration_20260818_201729_takt_aufbewahrung.down,
+    name: '20260818_201729_takt_aufbewahrung'
   },
 ];

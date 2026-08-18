@@ -54,6 +54,7 @@ export const Integrations: GlobalConfig = {
               name: 'smtpPass',
               label: 'Passwort',
               type: 'text',
+              admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
             },
           ],
         },
@@ -187,6 +188,7 @@ export const Integrations: GlobalConfig = {
               required: true,
               admin: {
                 description: 'Wird nur serverseitig verwendet und nie an den Browser ausgeliefert.',
+                components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
               },
             },
           ],
@@ -232,7 +234,12 @@ export const Integrations: GlobalConfig = {
             },
             { name: 'smtpPort', label: 'Port', type: 'number' },
             { name: 'smtpUser', label: 'Benutzername', type: 'text' },
-            { name: 'smtpPass', label: 'Passwort', type: 'text' },
+            {
+              name: 'smtpPass',
+              label: 'Passwort',
+              type: 'text',
+              admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
+            },
           ],
         },
       ],
@@ -248,6 +255,7 @@ export const Integrations: GlobalConfig = {
           type: 'text',
           admin: {
             description: 'sk_test_… oder sk_live_… (Stripe-Dashboard → API-Keys)',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
           },
         },
         {
@@ -256,6 +264,7 @@ export const Integrations: GlobalConfig = {
           type: 'text',
           admin: {
             description: 'whsec_… des Webhook-Endpunkts /api/stripe-webhook',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
           },
         },
       ],
@@ -277,6 +286,7 @@ export const Integrations: GlobalConfig = {
           name: 'clientSecret',
           label: 'Client Secret',
           type: 'text',
+          admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
         },
         {
           name: 'sandbox',
@@ -302,7 +312,10 @@ export const Integrations: GlobalConfig = {
           name: 'apiKey',
           label: 'Anthropic API-Schlüssel',
           type: 'text',
-          admin: { description: 'Beginnt mit sk-ant-…' },
+          admin: {
+            description: 'Beginnt mit sk-ant-…',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
         },
         {
           name: 'model',
@@ -331,6 +344,7 @@ export const Integrations: GlobalConfig = {
           admin: {
             description:
               'Wirkt wie ein Admin-Passwort — nur an vertrauenswürdige Geräte weitergeben.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
           },
         },
         {
@@ -338,6 +352,7 @@ export const Integrations: GlobalConfig = {
           label: 'Schlüssel (nur lesen)',
           type: 'text',
           admin: {
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
             description:
               'Optional. Mit diesem Schlüssel lassen sich Inhalte und Auswertungen nur ansehen.',
           },
@@ -349,6 +364,66 @@ export const Integrations: GlobalConfig = {
             components: {
               Field: '/components/admin/McpZugang#McpZugang',
             },
+          },
+        },
+      ],
+    },
+    {
+      name: 'wartung',
+      label: 'Takt (Automatik)',
+      type: 'group',
+      admin: {
+        description:
+          'Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.',
+      },
+      // Ohne `row`: In dieser Payload-Fassung bleibt eine Zeile innerhalb einer
+      // Gruppe im Admin leer — die Felder darin sind schlicht nicht da. Lieber
+      // untereinander und sichtbar als nebeneinander und unauffindbar.
+      fields: [
+        {
+          name: 'aktiv',
+          label: 'Automatik läuft',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Abschalten heißt: keine nächtliche Sicherung, keine Erinnerungen, keine Meldung über neue Post.',
+          },
+        },
+        {
+          name: 'intervalMinuten',
+          label: 'Wartung alle … Minuten',
+          type: 'number',
+          defaultValue: 15,
+          min: 1,
+          max: 1440,
+          admin: {
+            description:
+              'Bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — 60 reicht ebenso. Die Arbeiten selbst laufen höchstens einmal am Tag.',
+          },
+        },
+        {
+          name: 'postfachMinuten',
+          label: 'Postfach alle … Minuten',
+          type: 'number',
+          defaultValue: 5,
+          min: 1,
+          max: 120,
+          admin: {
+            description:
+              'Wie schnell neue Post gemeldet wird. IMAP meldet sich nicht von allein, hier zahlt sich häufiger aus.',
+          },
+        },
+        {
+          name: 'mailprotokollMonate',
+          label: 'Ausgangsprotokoll aufbewahren (Monate)',
+          type: 'number',
+          defaultValue: 12,
+          min: 1,
+          max: 120,
+          admin: {
+            description:
+              'Ältere Einträge räumt die Wartung weg. Nur Kopfdaten, kein Inhalt — aber auch die müssen nicht ewig liegen.',
           },
         },
       ],
@@ -373,12 +448,16 @@ export const Integrations: GlobalConfig = {
           ],
         },
         {
-          type: 'row',
+          name: 'smbServer',
+          label: 'Server (IP oder Name)',
+          type: 'text',
           admin: { condition: (_, gesch) => gesch?.protokoll !== 'webdav' },
-          fields: [
-            { name: 'smbServer', label: 'Server (IP oder Name)', type: 'text' },
-            { name: 'smbFreigabe', label: 'Freigabe', type: 'text' },
-          ],
+        },
+        {
+          name: 'smbFreigabe',
+          label: 'Freigabe',
+          type: 'text',
+          admin: { condition: (_, gesch) => gesch?.protokoll !== 'webdav' },
         },
         {
           name: 'smbPfad',
@@ -390,12 +469,19 @@ export const Integrations: GlobalConfig = {
           },
         },
         {
-          type: 'row',
+          name: 'smbBenutzer',
+          label: 'Benutzer',
+          type: 'text',
           admin: { condition: (_, gesch) => gesch?.protokoll !== 'webdav' },
-          fields: [
-            { name: 'smbBenutzer', label: 'Benutzer', type: 'text' },
-            { name: 'smbPasswort', label: 'Passwort', type: 'text' },
-          ],
+        },
+        {
+          name: 'smbPasswort',
+          label: 'Passwort',
+          type: 'text',
+          admin: {
+            condition: (_, gesch) => gesch?.protokoll !== 'webdav',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
         },
         {
           name: 'webdavUrl',
@@ -404,17 +490,20 @@ export const Integrations: GlobalConfig = {
           admin: { condition: (_, gesch) => gesch?.protokoll === 'webdav' },
         },
         {
-          type: 'row',
+          name: 'webdavBenutzer',
+          label: 'Benutzer',
+          type: 'text',
           admin: { condition: (_, gesch) => gesch?.protokoll === 'webdav' },
-          fields: [
-            { name: 'webdavBenutzer', label: 'Benutzer', type: 'text' },
-            {
-              name: 'webdavPasswort',
-              label: 'Passwort',
-              type: 'text',
-              admin: { description: 'Bei Nextcloud/ownCloud ein App-Passwort verwenden.' },
-            },
-          ],
+        },
+        {
+          name: 'webdavPasswort',
+          label: 'Passwort',
+          type: 'text',
+          admin: {
+            condition: (_, gesch) => gesch?.protokoll === 'webdav',
+            description: 'Bei Nextcloud/ownCloud ein App-Passwort verwenden.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
         },
         {
           name: 'automatik',
@@ -423,32 +512,27 @@ export const Integrations: GlobalConfig = {
           defaultValue: true,
         },
         {
-          type: 'row',
-          fields: [
-            {
-              name: 'uhrzeit',
-              label: 'Uhrzeit',
-              type: 'text',
-              defaultValue: '03:30',
-              admin: { description: 'Format HH:MM, Zeitzone des Servers.' },
-            },
-            {
-              name: 'behaltenLokal',
-              label: 'Kopien auf dem Server behalten',
-              type: 'number',
-              defaultValue: 7,
-              min: 1,
-              max: 50,
-            },
-            {
-              name: 'behaltenNas',
-              label: 'Kopien auf der NAS behalten',
-              type: 'number',
-              defaultValue: 30,
-              min: 1,
-              max: 365,
-            },
-          ],
+          name: 'uhrzeit',
+          label: 'Uhrzeit',
+          type: 'text',
+          defaultValue: '03:30',
+          admin: { description: 'Format HH:MM, Zeitzone des Servers.' },
+        },
+        {
+          name: 'behaltenLokal',
+          label: 'Kopien auf dem Server behalten',
+          type: 'number',
+          defaultValue: 7,
+          min: 1,
+          max: 50,
+        },
+        {
+          name: 'behaltenNas',
+          label: 'Kopien auf der NAS behalten',
+          type: 'number',
+          defaultValue: 30,
+          min: 1,
+          max: 365,
         },
       ],
     },
@@ -469,6 +553,7 @@ export const Integrations: GlobalConfig = {
           admin: {
             description:
               'Langlebiger Token einer Meta-App mit pages_manage_posts (für Instagram zusätzlich instagram_content_publish)',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
           },
         },
         {

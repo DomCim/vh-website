@@ -74,6 +74,12 @@ jobs:
       - name: Browser für die Rauchtests
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Zugang für die Oberflächen-Prüfung anlegen
+        run: pnpm benutzer
+        env:
+          ADMIN_PASSWORT: pruef-geheim-123
+          VH_PASSWORT: pruef-geheim-123
+
       - name: Server starten
         run: |
           pnpm start &
@@ -81,3 +87,5 @@ jobs:
 
       - name: Rauchtests
         run: pnpm test
+        env:
+          ADMIN_TEST_PASSWORT: pruef-geheim-123

@@ -248,28 +248,36 @@ pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump
 
 Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist eine Vermutung.
 
-## Wartungslauf (Taktgeber)
+## Wartungslauf (der Server taktet sich selbst)
 
-Alles Zeitgesteuerte macht die Anwendung selbst — sie muss nur regelmäßig gefragt werden, ob etwas ansteht. Dafür läuft im Stack der Dienst **`cron`** mit: ein winziger Container, der `/api/wartung` (Standard alle 15 Minuten) und `/api/office/post/pruefen` (alle 5 Minuten) anstupst. Einzurichten ist dafür **nur eines**: `CRON_SECRET` im Stack setzen (z.B. `openssl rand -hex 32`).
+Es gibt **keinen Cron einzurichten**. Der Server läuft ohnehin durch und sieht jede Minute selbst nach, ob etwas ansteht (`src/instrumentation.ts`) — ein zweiter Container, der ihm auf die Schulter tippt, wäre ein bewegliches Teil mehr und eine Anleitungszeile, die jemand überliest, bis das Backup fehlt.
 
-**Warum ein Schlüssel?** `/api/wartung` ist eine Adresse im Internet, und dahinter hängen Sicherung, Mailversand und Aufräumarbeiten — das soll niemand von außen auslösen. Ohne gesetztes `CRON_SECRET` ist der Endpunkt vollständig geschlossen (401), auch für dich; der Taktgeber schreibt dann eine Warnung ins Log und legt sich schlafen.
+Eingestellt wird das im Admin unter **Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
 
-**Warum so oft?** Nicht, weil alle 15 Minuten etwas zu tun wäre — der Aufruf schaut meistens nur nach und geht wieder. Der Takt bestimmt nur, wie genau die im Admin eingestellte Sicherungszeit getroffen wird: Bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei stündlichem Takt um 04:00. **Stündlich reicht völlig** — dafür `WARTUNG_TAKT=3600` setzen. Der Postfach-Takt (`POSTFACH_TAKT`, Standard 300 s) entscheidet dagegen, wie schnell neue Post gemeldet wird; dort zahlt sich häufiger aus.
+Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet nichts, und die Arbeiten selbst laufen höchstens einmal am Tag. Der Wartungstakt bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei 60 um 04:00. Beim Postfach zahlt sich häufiger aus, weil IMAP sich nicht von allein meldet.
 
-Wer den Takt lieber von außen gibt (z.B. aus Home Assistant, das ohnehin das Ausrollen anstößt), kann den Dienst `cron` aus dem Stack löschen und stattdessen aufrufen:
+Beides lässt sich zusätzlich von außen anstoßen — etwa aus Home Assistant, das ohnehin das Ausrollen auslöst. Dafür (und nur dafür) gibt es `CRON_SECRET`:
 
 ```sh
 curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
 ```
 
+Ohne gesetztes `CRON_SECRET` sind diese Endpunkte von außen geschlossen; der eigene Takt läuft trotzdem.
+
 Der Lauf entscheidet selbst, was ansteht:
 
 - **Nächtliche Sicherung** zur eingestellten Uhrzeit (einmal pro Tag, Riegel gegen Doppelläufe).
 - **Erinnerung an fällige Belege:** Steht auf einem Eingangsbeleg ein Zahlungsziel und der Beleg ist noch nicht auf „bezahlt", meldet sich das Büro **ab drei Tagen vor Fälligkeit jeden Tag** per Push — vorher bleibt es still. Das Zahlungsziel liest Claude beim Erfassen mit; steht dort nur „zahlbar innerhalb 30 Tagen", rechnet es die KI vom Rechnungsdatum aus.
-- **Aufräumen:** abgelaufene Anmeldecodes des Kundenportals, Mailprotokoll älter als zwölf Monate (`MAILLOG_MONATE`).
+- **Aufräumen:** abgelaufene Anmeldecodes des Kundenportals und ein Mailprotokoll, das älter ist als eingestellt (Standard zwölf Monate).
 - **Stillstandsprüfung:** Meldet, wenn Sicherung oder Postfach-Abruf seit Stunden nichts mehr getan haben — sonst fällt ein toter Cron erst auf, wenn man ihn braucht.
 
 Ohne gesetztes `CRON_SECRET` ist der Endpunkt geschlossen.
+
+## Anmeldung und Geheimnisse
+
+**Wie lange eine Anmeldung gilt:** 30 Tage. Payloads Standard sind zwei Stunden — gedacht für ein Redaktionssystem, an dem jemand eine Stunde arbeitet, nicht für ein Tablet in der Werkstatt, das den ganzen Tag am Auftrag hängt und bei jeder Anmeldung einen Code aus der Authenticator-App verlangt. Vertretbar ist die längere Frist, weil davor eine Sperre nach zehn Fehlversuchen steht, der zweite Faktor beim Anmelden gilt und ins Büro nur die Inhaberrolle kommt. **Ein geändertes Passwort macht alle bestehenden Anmeldungen ungültig** — das ist der Weg, wenn ein Gerät abhandenkommt. Das Kundenportal gilt ebenfalls 30 Tage.
+
+**Passwörter und Schlüssel** (SMTP, Postfächer, Stripe, PayPal, Anthropic, MCP, Facebook, NAS) stehen in der Verwaltung nicht mehr im Klartext: Sie sind verdeckt wie ein Passwortfeld, lassen sich mit einem Knopf aufdecken — und mit einem zweiten kopieren, ohne sie überhaupt sichtbar zu machen. Denn getippt werden solche Werte nie, sie werden von woanders hierher und wieder zurück kopiert.
 
 ## Sicherheits-Kopfzeilen
 
@@ -382,7 +390,7 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
 - [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
-- [ ] `CRON_SECRET` im Stack setzen — sonst laufen Sicherung, Erinnerungen und Postfach-Abruf nicht
+- [ ] Unter Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
 - [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
 - [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
 - [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können

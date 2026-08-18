@@ -13,6 +13,22 @@ export const Users: CollectionConfig = {
     // Bremst Rateversuche aus, bevor überhaupt der zweite Faktor greift
     maxLoginAttempts: 10,
     lockTime: 10 * 60 * 1000,
+    /**
+     * Wie lange eine Anmeldung gilt: 30 Tage.
+     *
+     * Payloads Standard sind zwei Stunden. Das ist für ein Redaktionssystem
+     * gedacht, an dem jemand eine Stunde arbeitet — nicht für ein Tablet in
+     * der Werkstatt, das den ganzen Tag am Auftrag hängt und bei dem jede
+     * Anmeldung zusätzlich einen Code aus der Authenticator-App verlangt.
+     * Dreimal täglich neu anmelden führt nur dazu, dass die Zwei-Faktor-
+     * Anmeldung irgendwann abgeschaltet wird.
+     *
+     * Vertretbar ist das, weil davor eine Sperre nach zehn Fehlversuchen
+     * steht, der zweite Faktor beim Anmelden gilt und das Büro nur die
+     * Inhaberrolle hereinlässt. Wer ein Gerät verliert, ändert das Passwort —
+     * damit sind alle bestehenden Anmeldungen ungültig.
+     */
+    tokenExpiration: 30 * 24 * 60 * 60,
   },
   admin: {
     useAsTitle: 'email',

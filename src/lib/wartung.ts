@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import { reviewRequestEmail } from './mail'
+import { postfaecher, ungeleseneAnzahl } from './postfach'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben } from './settings'
@@ -112,9 +113,9 @@ export async function datenAufraeumen(payload: Payload): Promise<Record<string, 
     ergebnis.anmeldecodes = 0
   }
 
-  const monate = Number(process.env.MAILLOG_MONATE || 12)
+  const { mailprotokollMonate } = await takteinstellungen(payload)
   const stichtag = new Date()
-  stichtag.setMonth(stichtag.getMonth() - (Number.isFinite(monate) ? monate : 12))
+  stichtag.setMonth(stichtag.getMonth() - mailprotokollMonate)
   try {
     const weg = await payload.delete({
       collection: 'mail-log',
@@ -323,6 +324,124 @@ export async function kundenstimmenBitten(payload: Payload): Promise<number> {
   }
 
   return gefragt
+}
+
+export type Takteinstellungen = {
+  aktiv: boolean
+  intervalMinuten: number
+  postfachMinuten: number
+  mailprotokollMonate: number
+}
+
+/**
+ * Wie oft der Server nachsehen soll — gepflegt im Admin unter
+ * Integrationen → Takt.
+ *
+ * Bewusst aus der Datenbank statt aus einer Umgebungsvariablen: Wer den Takt
+ * ändern will, soll das im Admin tun können und nicht den Container neu
+ * starten müssen.
+ */
+export async function takteinstellungen(payload: Payload): Promise<Takteinstellungen> {
+  try {
+    const global = (await payload.findGlobal({ slug: 'integrations', depth: 0 })) as Record<
+      string,
+      any
+    >
+    const w = global?.wartung ?? {}
+    const zahl = (wert: unknown, standard: number, kleinstes: number, groesstes: number) => {
+      const n = Number(wert)
+      return Number.isFinite(n) && n >= kleinstes && n <= groesstes ? n : standard
+    }
+    return {
+      aktiv: w.aktiv !== false,
+      intervalMinuten: zahl(w.intervalMinuten, 15, 1, 1440),
+      postfachMinuten: zahl(w.postfachMinuten, 5, 1, 120),
+      mailprotokollMonate: zahl(w.mailprotokollMonate, 12, 1, 120),
+    }
+  } catch {
+    // Datenbank noch nicht bereit (z.B. vor der ersten Migration) → Standard
+    return { aktiv: true, intervalMinuten: 15, postfachMinuten: 5, mailprotokollMonate: 12 }
+  }
+}
+
+/** Ist die Aufgabe seit ihrem letzten Lauf lange genug her? */
+export async function istFaellig(
+  payload: Payload,
+  schluessel: string,
+  minuten: number,
+): Promise<boolean> {
+  const zustand = await zustandLesen(payload, schluessel)
+  if (!zustand?.lastRun) return true
+  return Date.now() - new Date(zustand.lastRun).getTime() >= minuten * 60_000
+}
+
+/**
+ * In den Postfächern nachsehen und neue Post melden.
+ *
+ * IMAP kennt keinen Rückkanal zum Server — es bleibt nur nachschauen.
+ * Gemeldet wird ausschließlich, was seit dem letzten Blick dazugekommen ist;
+ * sonst käme bei jedem Durchgang dieselbe Meldung.
+ */
+export async function postfachPruefen(
+  payload: Payload,
+): Promise<{ fach: string; ungelesen: number; gemeldet: boolean }[]> {
+  // Lebenszeichen zuerst: Es hält fest, dass nachgesehen wurde, und daran
+  // erkennt der Takt, wann der nächste Blick fällig ist. Auch dann, wenn es
+  // gar kein Postfach zu prüfen gibt — sonst liefe der Blick jede Minute.
+  await zustandMerken(payload, 'postfach', { ok: true }).catch(() => {})
+
+  const faecher = await postfaecher(payload)
+  if (!faecher.length) return []
+
+  const ergebnis: { fach: string; ungelesen: number; gemeldet: boolean }[] = []
+
+  for (const fach of faecher) {
+    try {
+      const ungelesen = await ungeleseneAnzahl(fach)
+      const schluessel = `postfach-${fach.id}`
+
+      const { docs } = await payload.find({
+        collection: 'counters',
+        where: { key: { equals: schluessel } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      })
+      const zuletzt = docs[0]?.lastNumber ?? 0
+
+      if (docs[0]) {
+        await payload.update({
+          collection: 'counters',
+          id: docs[0].id,
+          overrideAccess: true,
+          data: { lastNumber: ungelesen },
+        })
+      } else {
+        await payload.create({
+          collection: 'counters',
+          overrideAccess: true,
+          data: { key: schluessel, lastNumber: ungelesen },
+        })
+      }
+
+      const neu = ungelesen > zuletzt
+      if (neu) {
+        await benachrichtige(payload, {
+          titel: `Neue Post für ${fach.label}`,
+          text:
+            ungelesen === 1 ? 'Eine ungelesene Nachricht.' : `${ungelesen} ungelesene Nachrichten.`,
+          url: `/office/post?fach=${fach.id}`,
+          tag: `post-${fach.id}`,
+        })
+      }
+      ergebnis.push({ fach: fach.label, ungelesen, gemeldet: neu })
+    } catch (err) {
+      payload.logger.warn({ err }, `Postfach ${fach.label} nicht erreichbar`)
+      ergebnis.push({ fach: fach.label, ungelesen: -1, gemeldet: false })
+    }
+  }
+
+  return ergebnis
 }
 
 export type WartungsBericht = {
