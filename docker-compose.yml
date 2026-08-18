@@ -89,6 +89,59 @@ services:
       timeout: 5s
       retries: 10
 
+  # Taktgeber.
+  #
+  # Zeitgesteuertes erledigt die Anwendung selbst — sie muss nur regelmäßig
+  # gefragt werden, ob etwas ansteht. Warum nicht einfach ein Cron mit fester
+  # Uhrzeit? Weil die Uhrzeit der nächtlichen Sicherung im Admin einstellbar
+  # ist: Stünde sie in der crontab, hätte das Ändern im Admin keine Wirkung.
+  # Deshalb klopft dieser Dienst regelmäßig an, und der Server entscheidet,
+  # was dran ist.
+  #
+  # WARTUNG_TAKT bestimmt nur, wie genau die eingestellte Zeit getroffen wird
+  # (900 s = Viertelstunde; 3600 s reicht ebenso). POSTFACH_TAKT steuert, wie
+  # schnell neue Post gemeldet wird — dort zählt jede Minute mehr.
+  cron:
+    image: alpine:3.20
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      CRON_SECRET: ${CRON_SECRET:-}
+      WARTUNG_TAKT: ${WARTUNG_TAKT:-900}
+      POSTFACH_TAKT: ${POSTFACH_TAKT:-300}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache curl >/dev/null 2>&1 || { echo "curl fehlt — Taktgeber steht"; sleep infinity; }
+        if [ -z "$$CRON_SECRET" ]; then
+          echo "CRON_SECRET ist nicht gesetzt — ohne Schlüssel bleibt der Endpunkt zu."
+          echo "Sicherung, Erinnerungen und Postfach-Abruf laufen deshalb NICHT."
+          sleep infinity
+        fi
+        klopfen() {
+          curl -fsS -m 900 -H "Authorization: Bearer $$CRON_SECRET" "http://web:3000/api/$$1" >/dev/null 2>&1 \
+            || echo "$$(date +%H:%M) $$1 nicht erreicht"
+        }
+        seit_wartung=$$WARTUNG_TAKT
+        seit_postfach=$$POSTFACH_TAKT
+        while true; do
+          if [ "$$seit_postfach" -ge "$$POSTFACH_TAKT" ]; then
+            klopfen "office/post/pruefen"
+            seit_postfach=0
+          fi
+          if [ "$$seit_wartung" -ge "$$WARTUNG_TAKT" ]; then
+            klopfen "wartung"
+            seit_wartung=0
+          fi
+          sleep 60
+          seit_wartung=$$((seit_wartung + 60))
+          seit_postfach=$$((seit_postfach + 60))
+        done
+    networks:
+      - internal
+
 networks:
   edge:
     external: true

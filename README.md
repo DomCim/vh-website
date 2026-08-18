@@ -248,12 +248,18 @@ pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump
 
 Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist eine Vermutung.
 
-## Wartungslauf (Cron)
+## Wartungslauf (Taktgeber)
 
-Ein einziger Aufruf im Viertelstundentakt erledigt alles Zeitgesteuerte:
+Alles Zeitgesteuerte macht die Anwendung selbst — sie muss nur regelmäßig gefragt werden, ob etwas ansteht. Dafür läuft im Stack der Dienst **`cron`** mit: ein winziger Container, der `/api/wartung` (Standard alle 15 Minuten) und `/api/office/post/pruefen` (alle 5 Minuten) anstupst. Einzurichten ist dafür **nur eines**: `CRON_SECRET` im Stack setzen (z.B. `openssl rand -hex 32`).
+
+**Warum ein Schlüssel?** `/api/wartung` ist eine Adresse im Internet, und dahinter hängen Sicherung, Mailversand und Aufräumarbeiten — das soll niemand von außen auslösen. Ohne gesetztes `CRON_SECRET` ist der Endpunkt vollständig geschlossen (401), auch für dich; der Taktgeber schreibt dann eine Warnung ins Log und legt sich schlafen.
+
+**Warum so oft?** Nicht, weil alle 15 Minuten etwas zu tun wäre — der Aufruf schaut meistens nur nach und geht wieder. Der Takt bestimmt nur, wie genau die im Admin eingestellte Sicherungszeit getroffen wird: Bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei stündlichem Takt um 04:00. **Stündlich reicht völlig** — dafür `WARTUNG_TAKT=3600` setzen. Der Postfach-Takt (`POSTFACH_TAKT`, Standard 300 s) entscheidet dagegen, wie schnell neue Post gemeldet wird; dort zahlt sich häufiger aus.
+
+Wer den Takt lieber von außen gibt (z.B. aus Home Assistant, das ohnehin das Ausrollen anstößt), kann den Dienst `cron` aus dem Stack löschen und stattdessen aufrufen:
 
 ```sh
-*/15 * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
 ```
 
 Der Lauf entscheidet selbst, was ansteht:
@@ -376,8 +382,7 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
 - [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
-- [ ] Optional: Cron-Job auf `/api/office/post/pruefen` (mit `CRON_SECRET`), damit neue Post gemeldet wird
-- [ ] Cron-Job auf `/api/wartung` (alle 15 Min) — Sicherung, Beleg-Erinnerungen, Aufräumen
+- [ ] `CRON_SECRET` im Stack setzen — sonst laufen Sicherung, Erinnerungen und Postfach-Abruf nicht
 - [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
 - [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
 - [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
