@@ -1,14 +1,16 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 
-import { rechnungPdf } from './invoice'
+import { bestellungAlsRechnung } from './invoice'
 import {
   orderConfirmationEmail,
   orderInProductionEmail,
   orderNotificationEmail,
   orderShippedEmail,
 } from './mail'
+import { bedarfFuerBestellung } from './material'
+import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
-import { getIntegrations } from './settings'
+import { firmenAngaben, getIntegrations } from './settings'
 
 /**
  * Markiert eine Bestellung als bezahlt und verschickt Bestätigungs- und
@@ -38,12 +40,7 @@ export async function markOrderPaid(
 
   try {
     const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
-    const company = {
-      name: settings?.siteName,
-      siret: settings?.company?.siret,
-      vatId: settings?.company?.vatId,
-      vatRate: settings?.company?.vatRate,
-    }
+    const company = firmenAngaben(settings)
     const craftNotice = settings?.craft?.notice ?? null
 
     // Rechnung als PDF anhängen — schlägt das fehl, geht die Mail trotzdem raus
@@ -52,7 +49,7 @@ export async function markOrderPaid(
       anhang = [
         {
           filename: `Rechnung-${order.orderNumber}.pdf`,
-          content: await rechnungPdf(order, company),
+          content: await bestellungAlsRechnung(order, company),
           contentType: 'application/pdf',
         },
       ]
@@ -63,16 +60,120 @@ export async function markOrderPaid(
     await sendMail(payload, {
       ...orderConfirmationEmail(order, company, craftNotice),
       attachments: anhang,
+      art: 'bestellung',
+      bezug: { order: order.id },
     })
     const { email } = await getIntegrations(payload)
     if (email.notificationEmail) {
-      await sendMail(payload, orderNotificationEmail(order, email.notificationEmail, company))
+      await sendMail(payload, {
+        ...orderNotificationEmail(order, email.notificationEmail, company),
+        art: 'bestellung',
+        bezug: { order: order.id },
+      })
     }
   } catch (err) {
     payload.logger.error({ err }, 'Bestell-E-Mails konnten nicht gesendet werden')
   }
 
   await werkstattStueckeAusbuchen(payload, order)
+  await auftragAusBestellung(payload, order)
+
+  // Meldung aufs Handy — Vincent steht meist in der Werkstatt, nicht am Rechner
+  await benachrichtige(payload, {
+    titel: 'Neue Bestellung',
+    text: `${order.orderNumber} über ${new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(order.total ?? 0)}`,
+    url: `/office/bestellungen/${order.id}`,
+    tag: `bestellung-${order.id}`,
+  }).catch(() => undefined)
+}
+
+/**
+ * Legt zu einer bezahlten Shop-Bestellung einen Fertigungsauftrag an.
+ *
+ * Für den Shop braucht es kein Angebot — der Preis steht auf der Website.
+ * Der Auftrag entsteht deshalb automatisch, damit der Durchlauf durch die
+ * Werkstatt an derselben Stelle steht wie beim Projektgeschäft.
+ *
+ * Fertige Werkstattstücke bekommen keinen Auftrag: Die liegen schon da.
+ */
+async function auftragAusBestellung(
+  payload: Payload,
+  order: {
+    id: number | string
+    orderNumber: string
+    customer?: { name?: string | null } | null
+    items?:
+      | {
+          product?: unknown
+          titleSnapshot: string
+          variantTitle?: string | null
+          color?: string | null
+          quantity: number
+          unitPrice: number
+        }[]
+      | null
+  },
+): Promise<void> {
+  try {
+    const { totalDocs } = await payload.count({
+      collection: 'jobs',
+      where: { order: { equals: order.id } },
+      overrideAccess: true,
+    })
+    if (totalDocs > 0) return
+
+    // Nur, was wirklich gefertigt werden muss
+    const zuFertigen: typeof order.items = []
+    for (const pos of order.items ?? []) {
+      const produktId = typeof pos.product === 'object' ? (pos.product as { id?: number })?.id : pos.product
+      if (typeof produktId !== 'number') {
+        zuFertigen.push(pos)
+        continue
+      }
+      const produkt = await payload
+        .findByID({ collection: 'products', id: produktId, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (!produkt?.readyMade) zuFertigen.push(pos)
+    }
+    if (!zuFertigen.length) return
+
+    // Material aus den Stücklisten vorbelegen — damit steht sofort da, was
+    // gebraucht wird und ob es im Haus ist
+    const bedarf = await bedarfFuerBestellung(payload, { items: zuFertigen })
+
+    const auftrag = await payload.create({
+      collection: 'jobs',
+      overrideAccess: true,
+      data: {
+        title: `Bestellung ${order.orderNumber}`,
+        status: 'geplant',
+        source: 'shop',
+        customerName: order.customer?.name ?? undefined,
+        order: order.id as number,
+        positions: zuFertigen.map((p) => ({
+          description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
+          quantity: p.quantity,
+          price: p.unitPrice,
+        })),
+        material: bedarf.map((b) => ({ item: b.itemId, quantity: b.benoetigt })),
+      },
+    })
+    payload.logger.info(`Auftrag ${auftrag.jobNumber} aus Bestellung ${order.orderNumber} angelegt`)
+
+    const fehlt = bedarf.filter((b) => b.fehlt > 0)
+    if (fehlt.length) {
+      payload.logger.warn(
+        `Auftrag ${auftrag.jobNumber}: Material fehlt — ${fehlt
+          .map((f) => `${f.name} (${f.fehlt} ${f.einheit})`)
+          .join(', ')}`,
+      )
+    }
+  } catch (err) {
+    payload.logger.error({ err }, `Auftrag zu Bestellung ${order.orderNumber} nicht angelegt`)
+  }
 }
 
 /**
@@ -133,7 +234,11 @@ export const notifyOnProduction: CollectionAfterChangeHook = async ({
 
   try {
     const settings = await req.payload.findGlobal({ slug: 'site-settings', depth: 0 })
-    await sendMail(req.payload, orderInProductionEmail(doc, settings?.craft?.notice ?? null))
+    await sendMail(req.payload, {
+      ...orderInProductionEmail(doc, settings?.craft?.notice ?? null),
+      art: 'fertigung',
+      bezug: { order: doc.id },
+    })
     req.payload.logger.info(`Fertigungs-Mail für ${doc.orderNumber} gesendet`)
   } catch (err) {
     req.payload.logger.error({ err }, `Fertigungs-Mail für ${doc.orderNumber} fehlgeschlagen`)
@@ -156,7 +261,11 @@ export const notifyOnShipped: CollectionAfterChangeHook = async ({
   if (!doc.customer?.email) return doc
 
   try {
-    await sendMail(req.payload, orderShippedEmail(doc))
+    await sendMail(req.payload, {
+      ...orderShippedEmail(doc),
+      art: 'versand',
+      bezug: { order: doc.id },
+    })
     req.payload.logger.info(`Versandbestätigung für ${doc.orderNumber} gesendet`)
   } catch (err) {
     req.payload.logger.error({ err }, `Versandbestätigung für ${doc.orderNumber} fehlgeschlagen`)

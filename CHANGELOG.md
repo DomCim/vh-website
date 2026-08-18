@@ -1,6 +1,18 @@
 # Changelog
 
-Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll ist im Admin unter **Changelog** einsehbar.
+Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
+
+## 18.08.2026 — Das Büro: Betrieb, Postfach und Meldungen aufs Handy
+
+- **Ein eigener Arbeitsplatz für den Betrieb.** Unter `/office` gibt es jetzt eine zweite Oberfläche neben der Website-Verwaltung — ruhiger, größer, fürs Handy gemacht und als App installierbar. Die Anmeldung ist dieselbe wie im Admin, inklusive Zwei-Faktor. Damit ist die Trennung klar: Die Website-Verwaltung ist für alles da, was nach außen geht, das Büro für alles, was niemand von außen sieht. Belege, Bestellungen, Aufträge und Zahlen stehen deshalb nur noch dort, und zwar an genau einer Stelle.
+- **Angebot, Auftrag, Rechnung an einem Faden.** Angebote entstehen mit Positionen, Steuer und zugesagter Fertigungszeit; ihre Nummer bekommen sie erst beim Versenden, damit verworfene Entwürfe keine Lücke in der Reihe hinterlassen. Ein angenommenes Angebot wird per Klick zum Fertigungsauftrag oder zur Rechnung — ohne die Positionen ein zweites Mal einzutippen. Bezahlte Shop-Bestellungen legen ihren Auftrag von selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen, die liegen ja schon da.
+- **Das System weiß jetzt, was ein Stück braucht.** Zu jedem Artikel lassen sich Material mit Menge und externe Dienstleister hinterlegen — Verzinkerei, Beschichter, Laserschneider, mit Kosten je Stück und Vorlaufzeit. Daraus rechnet das Büro den Einsatz je Stück gegen den Website-Preis. Kommt eine Bestellung herein, steht am Auftrag, ob alles im Haus ist und was nachbestellt werden muss — bevor die Kundschaft wartet. Abgebucht wird das Material erst beim Fertigmelden.
+- **Postfach im Büro.** Mehrere E-Mail-Konten lesen, beantworten, Anhänge öffnen und aufräumen, ohne ein anderes Programm zu starten. Gelesen wird direkt beim Anbieter — was hier gelöscht wird, ist auch am Rechner weg —, Antworten gehen mit der Adresse des jeweiligen Postfachs raus und landen als Kopie in „Gesendet". Aus einer Anfrage führt ein Klick ins fertig vorbereitete Antwortfenster.
+- **Ausgangsprotokoll.** Bestellbestätigungen, Zugangscodes und Versandmails gehen automatisch raus, und bisher sah sie niemand. Jetzt steht in einer Liste, was verschickt wurde, an wen und ob der Mailserver es angenommen hat. Auf die Frage „ich habe nie eine Bestätigung bekommen" gibt es damit eine Antwort statt eines Achselzuckens.
+- **Meldungen aufs Handy.** Ist das Büro als App abgelegt, meldet es neue Bestellungen, neue Anfragen und Mails, die nicht zugestellt werden konnten — auch neue Post im Postfach. Wer in der Werkstatt steht, muss dafür nicht mehr alle zehn Minuten nachschauen.
+- **Belege abfotografieren statt abtippen.** Eingangsrechnungen werden im Büro hochgeladen und von Claude ausgelesen — Lieferant, Datum, Netto, Steuer, Brutto stehen dann schon da und müssen nur bestätigt werden. Der Scan bleibt am Eintrag hängen, denn ohne Beleg zählt die Buchung beim Finanzamt nicht. Am Jahresende gibt es einen Auszug für den Steuerberater: Einnahmen, Ausgaben, Belege — fertig.
+- **Inventar und Inventur zu Ende gebaut**: Posten anlegen und ändern, Mindestbestände im Blick, und die Inventur bringt die Zählliste mit allen Posten und ihrem Soll-Bestand fertig mit. Beim Abschließen wandern die gezählten Mengen ins Inventar, danach ist der Lauf gesperrt.
+- Dazu die Geschäftspartner-Kartei für Lieferanten, Kunden und Dienstleister sowie Bestellungen und Anfragen mit Status, Sendungsnummer und interner Notiz.
 
 ## 18.08.2026 — Verwaltung per KI, Kundenportal und Einzelfertigung
 

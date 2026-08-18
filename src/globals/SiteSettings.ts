@@ -84,6 +84,53 @@ export const SiteSettings: GlobalConfig = {
       },
       fields: [
         {
+          name: 'legalName',
+          label: 'Firmierung',
+          type: 'text',
+          admin: { description: 'Wie im Handelsregister eingetragen, z.B. „Next-Concept SAS".' },
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'legalForm',
+              label: 'Rechtsform',
+              type: 'text',
+              defaultValue: 'SAS',
+              admin: { description: 'Muss auf jeder Rechnung stehen.' },
+            },
+            {
+              name: 'shareCapital',
+              label: 'Stammkapital (EUR)',
+              type: 'number',
+              min: 0,
+              admin: { description: 'Bei einer SAS Pflichtangabe auf Rechnungen.' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'rcsNumber',
+              label: 'RCS-Nummer',
+              type: 'text',
+              admin: { description: 'Handelsregisternummer' },
+            },
+            {
+              name: 'rcsCity',
+              label: 'RCS-Registergericht',
+              type: 'text',
+              admin: { description: 'Stadt der Eintragung, z.B. „RCS Colmar"' },
+            },
+          ],
+        },
+        {
+          name: 'address',
+          label: 'Anschrift für Rechnungen',
+          type: 'textarea',
+        },
+        {
           name: 'siret',
           label: 'SIRET-Nummer',
           type: 'text',
@@ -94,6 +141,30 @@ export const SiteSettings: GlobalConfig = {
           type: 'text',
           admin: {
             description: 'z.B. FR12345678901',
+          },
+        },
+        {
+          name: 'paymentTerms',
+          label: 'Zahlungsziel',
+          type: 'text',
+          defaultValue: '30 Tage netto',
+        },
+        {
+          name: 'latePaymentNote',
+          label: 'Hinweis auf Verzugszinsen',
+          type: 'textarea',
+          admin: {
+            description:
+              'Bei Rechnungen an Geschäftskunden Pflicht. Vorschlag: „Bei Zahlungsverzug werden Verzugszinsen in Höhe des dreifachen gesetzlichen Zinssatzes sowie eine Pauschale für Beitreibungskosten von 40 € fällig." — Wortlaut mit dem Steuerberater abstimmen.',
+          },
+        },
+        {
+          name: 'mediator',
+          label: 'Verbraucherschlichtungsstelle',
+          type: 'textarea',
+          admin: {
+            description:
+              'Beim Verkauf an Privatkunden in Frankreich Pflicht: Name und Anschrift des Médiateur de la consommation.',
           },
         },
         {

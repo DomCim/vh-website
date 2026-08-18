@@ -11,14 +11,24 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Categories } from './collections/Categories'
+import { Contacts } from './collections/Contacts'
+import { Counters } from './collections/Counters'
+import { MailLog } from './collections/MailLog'
+import { PushSubscriptions } from './collections/PushSubscriptions'
+import { Expenses } from './collections/Expenses'
 import { Inquiries } from './collections/Inquiries'
+import { InventoryItems } from './collections/InventoryItems'
+import { Jobs } from './collections/Jobs'
 import { LoginCodes } from './collections/LoginCodes'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
 import { Orders } from './collections/Orders'
+import { OutgoingInvoices } from './collections/OutgoingInvoices'
 import { Products } from './collections/Products'
 import { Projects } from './collections/Projects'
 import { Promotions } from './collections/Promotions'
+import { Quotes } from './collections/Quotes'
+import { Stocktakes } from './collections/Stocktakes'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
 import { About } from './globals/About'
@@ -46,15 +56,9 @@ export default buildConfig({
       ],
     },
     components: {
-      // Änderungsprotokoll für den Betreiber: /admin/changelog + Link in der Seitenleiste
-      afterNavLinks: ['/components/admin/ChangelogLink'],
+      // Das Änderungsprotokoll steht im Büro unter /office/neuerungen — es
+      // geht den Betrieb an, nicht die Redaktion.
       beforeLogin: ['/components/admin/MfaLoginField#MfaLoginField'],
-      views: {
-        changelog: {
-          Component: '/components/admin/ChangelogView',
-          path: '/changelog',
-        },
-      },
     },
   },
   collections: [
@@ -67,6 +71,17 @@ export default buildConfig({
     Orders,
     Inquiries,
     LoginCodes,
+    // Büro: Geschäftszahlen, nur für die Inhaberrolle
+    Contacts,
+    Expenses,
+    Quotes,
+    Jobs,
+    OutgoingInvoices,
+    InventoryItems,
+    Stocktakes,
+    Counters,
+    MailLog,
+    PushSubscriptions,
     Media,
     Users,
   ],

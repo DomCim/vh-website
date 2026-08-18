@@ -31,9 +31,17 @@ type OrderLike = {
 
 export type CompanyInfo = {
   name?: string | null
+  legalName?: string | null
+  legalForm?: string | null
+  shareCapital?: number | null
+  rcsNumber?: string | null
+  rcsCity?: string | null
+  address?: string | null
   siret?: string | null
   vatId?: string | null
   vatRate?: number | null
+  paymentTerms?: string | null
+  latePaymentNote?: string | null
 }
 
 const euro = (v: number) =>
@@ -47,13 +55,29 @@ function vatRow(order: OrderLike, company?: CompanyInfo): string {
   return `<tr><td></td><td style="padding:2px 12px 2px 0;color:#666;font-size:12px">enthaltene MwSt./TVA (${rate} %)</td><td style="text-align:right;color:#666;font-size:12px">${euro(vat)}</td></tr>`
 }
 
+/**
+ * Firmierung mit Rechtsform und Stammkapital — bei einer französischen SAS
+ * gehört beides auf jede Rechnung.
+ */
+export function firmenzeile(company?: CompanyInfo): string {
+  if (!company) return ''
+  const name = company.legalName || company.name || ''
+  const teile = [name, company.legalForm].filter(Boolean).join(' ')
+  const kapital =
+    typeof company.shareCapital === 'number' && company.shareCapital > 0
+      ? ` au capital de ${new Intl.NumberFormat('fr-FR').format(company.shareCapital)} €`
+      : ''
+  return `${teile}${kapital}`.trim()
+}
+
 /** Pflichtangaben-Fußzeile (SIRET, TVA-Nr.) für Bestell-Mails */
 function companyFooter(company?: CompanyInfo): string {
   if (!company) return ''
   const parts = [
-    company.name,
+    firmenzeile(company),
     company.siret ? `SIRET: ${company.siret}` : null,
     company.vatId ? `TVA: ${company.vatId}` : null,
+    company.rcsNumber ? `RCS ${company.rcsCity ?? ''} ${company.rcsNumber}`.trim() : null,
   ].filter(Boolean)
   if (parts.length === 0) return ''
   return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`

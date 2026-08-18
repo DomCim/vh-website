@@ -1,0 +1,61 @@
+import type { Metadata, Viewport } from 'next'
+import Link from 'next/link'
+import React from 'react'
+
+import { Abmelden } from '../../components/office/Abmelden'
+import { BueroNavigation } from '../../components/office/BueroNavigation'
+import '../../styles/office.css'
+
+export const metadata: Metadata = {
+  title: 'Büro — Vincent Hellmann',
+  applicationName: 'VH Büro',
+  manifest: '/office-manifest.webmanifest',
+  icons: { apple: '/office-icon-180.png' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'VH Büro',
+  },
+  robots: { index: false, follow: false },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f6f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#141416' },
+  ],
+}
+
+/**
+ * Eigene Oberfläche für den Geschäftsbetrieb — bewusst getrennt von der
+ * Kundenseite und vom Payload-Admin. Als App installierbar, damit Vincent
+ * Belege direkt in der Werkstatt abfotografieren kann.
+ */
+export default function BueroLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="de">
+      <body className="buero">
+        <header className="buero-kopf">
+          <Link href="/office" className="buero-marke">
+            {/* Auf schmalen Geräten reicht das Kürzel — der volle Name
+                bräuchte dort drei Zeilen. */}
+            <span className="nur-breit">Vincent Hellmann </span>
+            <span className="nur-schmal">VH </span>
+            <span className="buero-marke-zusatz">Büro</span>
+          </Link>
+          <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+            <Link href="/admin" className="buero-marker">
+              Website-Verwaltung
+            </Link>
+            <Abmelden />
+          </div>
+        </header>
+        <BueroNavigation />
+        <main className="buero-inhalt">{children}</main>
+      </body>
+    </html>
+  )
+}

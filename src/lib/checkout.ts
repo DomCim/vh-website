@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { naechsteBestellnummer } from './nummernkreis'
+
 import { findBestPromotion, type PricedItem } from './promotions'
 
 export type CheckoutItemInput = {
@@ -109,9 +111,13 @@ export async function priceCart(
   }
 }
 
-/** Fortlaufende, lesbare Bestellnummer, z.B. VH-2026-0042 */
+/**
+ * Fortlaufende, lesbare Bestellnummer, z.B. VH-2026-0042.
+ *
+ * Läuft über einen eigenen Zähler statt über die Anzahl der Bestellungen:
+ * Beim Zählen bekäme nach dem Löschen einer Bestellung die nächste dieselbe
+ * Nummer noch einmal — für die Buchhaltung ein ernstes Problem.
+ */
 export async function nextOrderNumber(payload: Payload): Promise<string> {
-  const year = new Date().getFullYear()
-  const { totalDocs } = await payload.count({ collection: 'orders' })
-  return `VH-${year}-${String(totalDocs + 1).padStart(4, '0')}`
+  return naechsteBestellnummer(payload)
 }

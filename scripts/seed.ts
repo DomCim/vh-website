@@ -67,7 +67,8 @@ async function run() {
   if (users.totalDocs === 0) {
     await payload.create({
       collection: 'users',
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: 'Admin' },
+      // Der erste Benutzer ist der Inhaber — er sieht auch Büro und Zahlen.
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: 'Admin', role: 'inhaber' },
     })
     console.log(`✓ Admin angelegt: ${ADMIN_EMAIL} (Passwort bitte sofort ändern!)`)
   }

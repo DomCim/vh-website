@@ -87,6 +87,9 @@ export const News: CollectionConfig = {
       type: 'textarea',
       localized: true,
       admin: {
+        components: {
+          afterInput: ['/components/admin/KiTextHilfe#KiNewsTeaser'],
+        },
         description: 'Wird in der News-Übersicht und beim Facebook-Post verwendet',
       },
     },

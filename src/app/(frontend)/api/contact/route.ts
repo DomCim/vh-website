@@ -91,9 +91,8 @@ export async function POST(req: Request) {
     }
 
     try {
-      await sendMail(
-        payload,
-        contactEmail(
+      await sendMail(payload, {
+        ...contactEmail(
           {
             name,
             email,
@@ -104,7 +103,9 @@ export async function POST(req: Request) {
           },
           to,
         ),
-      )
+        art: 'anfrage',
+        bezug: anfrageId ? { inquiry: anfrageId } : undefined,
+      })
     } catch (err) {
       console.error('Kontakt-Mail konnte nicht gesendet werden:', err)
       if (!anfrageId) return NextResponse.json({ error: 'send-failed' }, { status: 500 })

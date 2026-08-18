@@ -1,0 +1,321 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import React, { useMemo, useState } from 'react'
+
+export type AngebotPosition = {
+  description: string
+  quantity: number
+  unit: string
+  unitPrice: number
+  vatRate: number
+}
+
+export type AngebotWerte = {
+  id?: number | string
+  quoteNumber?: string | null
+  status?: string
+  title?: string | null
+  customerName?: string | null
+  customerAddress?: string | null
+  issueDate?: string | null
+  validUntil?: string | null
+  productionTime?: string | null
+  items?: AngebotPosition[]
+  note?: string | null
+}
+
+const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
+const euro = (v: number) =>
+  new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v)
+
+/**
+ * Angebot schreiben und weiterreichen.
+ *
+ * Angenommen? Ein Klick macht daraus einen Fertigungsauftrag, ein zweiter
+ * später die Rechnung — ohne die Positionen ein zweites Mal einzutippen.
+ */
+export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
+  const router = useRouter()
+  const [w, setW] = useState<AngebotWerte>({
+    status: 'entwurf',
+    items: [{ description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 }],
+    ...werte,
+  })
+  const [laeuft, setLaeuft] = useState(false)
+  const [meldung, setMeldung] = useState<string | null>(null)
+
+  const versendet = Boolean(w.quoteNumber)
+  const setzen = (teil: Partial<AngebotWerte>) => setW((v) => ({ ...v, ...teil }))
+  const setzePosition = (i: number, teil: Partial<AngebotPosition>) =>
+    setW((v) => ({
+      ...v,
+      items: (v.items ?? []).map((p, idx) => (idx === i ? { ...p, ...teil } : p)),
+    }))
+
+  const summen = useMemo(() => {
+    const runden = (n: number) => Math.round(n * 100) / 100
+    let netto = 0
+    let steuer = 0
+    for (const p of w.items ?? []) {
+      const zeile = (p.quantity || 0) * (p.unitPrice || 0)
+      netto += zeile
+      steuer += zeile * ((p.vatRate || 0) / 100)
+    }
+    return { netto: runden(netto), steuer: runden(steuer), brutto: runden(netto + steuer) }
+  }, [w.items])
+
+  async function senden(rumpf: Record<string, unknown>) {
+    setLaeuft(true)
+    setMeldung(null)
+    try {
+      const res = await fetch('/api/office/angebot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(rumpf),
+      })
+      const j = await res.json()
+      if (!res.ok) {
+        setMeldung('Das hat nicht geklappt.')
+        return null
+      }
+      return j
+    } catch {
+      setMeldung('Verbindung fehlgeschlagen.')
+      return null
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  async function speichern(neuerStatus?: string) {
+    if (!w.customerName?.trim()) {
+      setMeldung('Ein Kundenname wird gebraucht.')
+      return
+    }
+    const j = await senden({ ...w, status: neuerStatus ?? w.status })
+    if (j?.id) {
+      router.push(`/office/angebote/${j.id}`)
+      router.refresh()
+    }
+  }
+
+  return (
+    <div className="buero-karte">
+      {versendet && (
+        <p className="buero-hinweis">
+          Angebot <strong>{w.quoteNumber}</strong> ist versendet.
+        </p>
+      )}
+      {meldung && <p className="buero-hinweis">{meldung}</p>}
+
+      <label className="buero-feld">
+        <span>Bezeichnung</span>
+        <input
+          value={w.title ?? ''}
+          onChange={(e) => setzen({ title: e.target.value })}
+          placeholder="z.B. Sitzbänke Rathausplatz"
+        />
+      </label>
+
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Kunde</span>
+          <input
+            value={w.customerName ?? ''}
+            onChange={(e) => setzen({ customerName: e.target.value })}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Angebotsdatum</span>
+          <input
+            type="date"
+            value={nurTag(w.issueDate)}
+            onChange={(e) => setzen({ issueDate: e.target.value })}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Gültig bis</span>
+          <input
+            type="date"
+            value={nurTag(w.validUntil)}
+            onChange={(e) => setzen({ validUntil: e.target.value })}
+          />
+        </label>
+      </div>
+
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Zugesagte Fertigungszeit</span>
+          <input
+            value={w.productionTime ?? ''}
+            onChange={(e) => setzen({ productionTime: e.target.value })}
+            placeholder="z.B. 6–8 Wochen ab Auftrag"
+          />
+        </label>
+      </div>
+
+      <label className="buero-feld">
+        <span>Anschrift</span>
+        <textarea
+          rows={3}
+          value={w.customerAddress ?? ''}
+          onChange={(e) => setzen({ customerAddress: e.target.value })}
+        />
+      </label>
+
+      <h2>Positionen</h2>
+      {(w.items ?? []).map((p, i) => (
+        <div
+          key={i}
+          style={{
+            border: '1px solid var(--buero-linie)',
+            borderRadius: 8,
+            padding: '.8rem .9rem',
+            marginBottom: '.6rem',
+          }}
+        >
+          <label className="buero-feld">
+            <span>Beschreibung</span>
+            <input
+              value={p.description}
+              onChange={(e) => setzePosition(i, { description: e.target.value })}
+            />
+          </label>
+          <div className="buero-reihe">
+            <label className="buero-feld">
+              <span>Menge</span>
+              <input
+                inputMode="decimal"
+                value={p.quantity}
+                onChange={(e) => setzePosition(i, { quantity: Number(e.target.value) || 0 })}
+              />
+            </label>
+            <label className="buero-feld">
+              <span>Einheit</span>
+              <input value={p.unit} onChange={(e) => setzePosition(i, { unit: e.target.value })} />
+            </label>
+            <label className="buero-feld">
+              <span>Einzelpreis netto</span>
+              <input
+                inputMode="decimal"
+                value={p.unitPrice}
+                onChange={(e) => setzePosition(i, { unitPrice: Number(e.target.value) || 0 })}
+              />
+            </label>
+            <label className="buero-feld">
+              <span>Steuersatz (%)</span>
+              <input
+                inputMode="decimal"
+                value={p.vatRate}
+                onChange={(e) => setzePosition(i, { vatRate: Number(e.target.value) || 0 })}
+              />
+            </label>
+          </div>
+          {(w.items ?? []).length > 1 && (
+            <button
+              type="button"
+              className="buero-knopf leise"
+              onClick={() => setzen({ items: (w.items ?? []).filter((_, idx) => idx !== i) })}
+            >
+              Position entfernen
+            </button>
+          )}
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="buero-knopf leise"
+        onClick={() =>
+          setzen({
+            items: [
+              ...(w.items ?? []),
+              { description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 },
+            ],
+          })
+        }
+      >
+        Position hinzufügen
+      </button>
+
+      <div
+        style={{
+          marginTop: '1.25rem',
+          paddingTop: '.9rem',
+          borderTop: '1px solid var(--buero-linie)',
+          display: 'grid',
+          gap: '.25rem',
+          maxWidth: '20rem',
+          marginLeft: 'auto',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--buero-tinte-leise)' }}>Netto</span>
+          <span className="buero-betrag">{euro(summen.netto)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--buero-tinte-leise)' }}>Steuer</span>
+          <span className="buero-betrag">{euro(summen.steuer)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+          <span>Gesamt</span>
+          <span className="buero-betrag">{euro(summen.brutto)}</span>
+        </div>
+      </div>
+
+      <label className="buero-feld" style={{ marginTop: '1rem' }}>
+        <span>Hinweis auf dem Angebot</span>
+        <textarea rows={2} value={w.note ?? ''} onChange={(e) => setzen({ note: e.target.value })} />
+      </label>
+
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <button type="button" className="buero-knopf leise" disabled={laeuft} onClick={() => void speichern()}>
+          Speichern
+        </button>
+        {!versendet && (
+          <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('versendet')}>
+            Versenden &amp; Nummer vergeben
+          </button>
+        )}
+        {versendet && (
+          <a className="buero-knopf leise" href={`/api/office/angebot/${w.id}/pdf`} target="_blank" rel="noreferrer">
+            PDF
+          </a>
+        )}
+        {versendet && w.status !== 'angenommen' && (
+          <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('angenommen')}>
+            Angenommen
+          </button>
+        )}
+        {w.status === 'angenommen' && (
+          <>
+            <button
+              type="button"
+              className="buero-knopf"
+              disabled={laeuft}
+              onClick={async () => {
+                const j = await senden({ aktion: 'in-auftrag', id: w.id })
+                if (j?.auftragId) router.push(`/office/auftraege/${j.auftragId}`)
+              }}
+            >
+              Auftrag anlegen
+            </button>
+            <button
+              type="button"
+              className="buero-knopf leise"
+              disabled={laeuft}
+              onClick={async () => {
+                const j = await senden({ aktion: 'in-rechnung', id: w.id })
+                if (j?.rechnungId) router.push(`/office/rechnungen/${j.rechnungId}`)
+              }}
+            >
+              Rechnung daraus
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,401 @@
+/* Büro-Oberfläche — eigenständiges, ruhiges Layout mit derselben
+   Formensprache wie die Website: viel Weißraum, Corten als einziger Akzent. */
+
+:root {
+  --buero-papier: #f7f6f4;
+  --buero-flaeche: #ffffff;
+  --buero-tinte: #1d1d1f;
+  --buero-tinte-leise: #6b6b70;
+  --buero-linie: #e3e1dd;
+  --buero-bronze: #a86b3d;
+  --buero-gruen: #2f6b46;
+  --buero-rot: #a4342c;
+}
+
+.buero {
+  min-height: 100vh;
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.buero a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Kopfleiste ─────────────────────────────────────────────────────────── */
+.buero-kopf {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--buero-flaeche);
+  border-bottom: 1px solid var(--buero-linie);
+  padding: 0.9rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  /* Auf dem iPhone nicht unter die Statusleiste rutschen */
+  padding-top: max(0.9rem, env(safe-area-inset-top));
+}
+
+.buero-marke {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.buero-marke .buero-marke-zusatz {
+  color: var(--buero-bronze);
+}
+
+.nur-schmal {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .nur-breit {
+    display: none;
+  }
+
+  .nur-schmal {
+    display: inline;
+  }
+
+  .buero-kopf {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    gap: 0.5rem;
+  }
+
+  .buero-marker {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
+/* ── Navigation ─────────────────────────────────────────────────────────── */
+.buero-nav {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding: 0.5rem 1.25rem;
+  background: var(--buero-flaeche);
+  border-bottom: 1px solid var(--buero-linie);
+  scrollbar-width: none;
+}
+
+.buero-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.buero-nav a {
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--buero-tinte-leise);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.buero-nav a:hover {
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
+}
+
+.buero-nav a[aria-current='page'] {
+  background: var(--buero-tinte);
+  color: #fff;
+}
+
+/* ── Inhalt ─────────────────────────────────────────────────────────────── */
+.buero-inhalt {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+.buero h1 {
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.35rem;
+}
+
+.buero h2 {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--buero-tinte-leise);
+  margin: 2rem 0 0.75rem;
+}
+
+.buero-unterzeile {
+  color: var(--buero-tinte-leise);
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem;
+}
+
+/* ── Kacheln ────────────────────────────────────────────────────────────── */
+.buero-kacheln {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.buero-kachel {
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  display: block;
+}
+
+.buero-kachel-titel {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-kachel-wert {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.buero-kachel-fuss {
+  font-size: 0.8rem;
+  color: var(--buero-tinte-leise);
+  margin-top: 0.2rem;
+}
+
+/* ── Listen ─────────────────────────────────────────────────────────────── */
+.buero-liste {
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.buero-zeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--buero-linie);
+}
+
+.buero-zeile:last-child {
+  border-bottom: none;
+}
+
+.buero-zeile:hover {
+  background: var(--buero-papier);
+}
+
+.buero-zeile-haupt {
+  min-width: 0;
+}
+
+.buero-zeile-titel {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buero-zeile-neben {
+  font-size: 0.82rem;
+  color: var(--buero-tinte-leise);
+  margin-top: 0.1rem;
+}
+
+.buero-betrag {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ── Kennzeichen ────────────────────────────────────────────────────────── */
+.buero-marker {
+  display: inline-block;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--buero-linie);
+  color: var(--buero-tinte-leise);
+}
+
+.buero-marker.gut {
+  color: var(--buero-gruen);
+  border-color: color-mix(in srgb, var(--buero-gruen) 35%, transparent);
+}
+
+.buero-marker.offen {
+  color: var(--buero-bronze);
+  border-color: color-mix(in srgb, var(--buero-bronze) 35%, transparent);
+}
+
+.buero-marker.warn {
+  color: var(--buero-rot);
+  border-color: color-mix(in srgb, var(--buero-rot) 35%, transparent);
+}
+
+/* ── Bedienelemente ─────────────────────────────────────────────────────── */
+.buero-knopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--buero-tinte);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.buero-knopf:hover {
+  background: var(--buero-bronze);
+}
+
+.buero-knopf:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.buero-knopf.leise {
+  background: transparent;
+  color: var(--buero-tinte);
+  border: 1px solid var(--buero-linie);
+}
+
+.buero-knopf.leise:hover {
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
+}
+
+.buero-feld {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.buero-feld > span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--buero-tinte-leise);
+  margin-bottom: 0.3rem;
+}
+
+.buero-feld input,
+.buero-feld select,
+.buero-feld textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  font: inherit;
+  /* Verhindert das Hineinzoomen von Safari beim Tippen */
+  font-size: 16px;
+}
+
+.buero-feld input:focus,
+.buero-feld select:focus,
+.buero-feld textarea:focus {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 1px;
+}
+
+.buero-reihe {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0 0.75rem;
+}
+
+.buero-karte {
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+}
+
+/* ── Postfach ───────────────────────────────────────────────────────────── */
+.buero-fach-wahl {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  font: inherit;
+  /* Verhindert das Hineinzoomen von Safari beim Antippen */
+  font-size: 16px;
+  max-width: 100%;
+}
+
+/* Listenzeilen, die keine Links sind, sollen sich trotzdem wie welche anfühlen */
+.buero-zeile-knopf {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--buero-linie);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.buero-zeile-knopf:last-child {
+  border-bottom: none;
+}
+
+/* Fremdes Mail-HTML bleibt im eigenen Rahmen — ohne Skripte, ohne Zugriff */
+.buero-mailrahmen {
+  width: 100%;
+  min-height: 24rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.buero-leer {
+  color: var(--buero-tinte-leise);
+  padding: 2rem 1.1rem;
+  text-align: center;
+}
+
+.buero-hinweis {
+  background: color-mix(in srgb, var(--buero-bronze) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--buero-bronze) 25%, transparent);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --buero-papier: #141416;
+    --buero-flaeche: #1c1c1f;
+    --buero-tinte: #ececed;
+    --buero-tinte-leise: #9a9aa0;
+    --buero-linie: #2c2c31;
+    --buero-bronze: #c98a52;
+    --buero-gruen: #6cc08c;
+    --buero-rot: #e0796f;
+  }
+}

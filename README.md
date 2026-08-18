@@ -9,7 +9,8 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **1:1-Design** angelehnt an die bestehende Website (Logo, Navigation, Hero-Slider, dunkler Footer), veredelt mit dezenten Scroll-Animationen; der Header übernimmt auf der Startseite automatisch den Farbton des aktiven Hero-Bildes (berechnet aus dem oberen Bildstreifen, Schrift/Logo wechseln je nach Helligkeit)
 - **Dreisprachig** Deutsch/Französisch/Englisch — alle Inhalte im Backend übersetzbar (Fallback: Deutsch)
 - **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout via **Stripe** (Karte, Apple/Google Pay, Klarna) oder **PayPal**; Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
-- **Bestellverwaltung** im Admin (offen → bezahlt → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet", Bestätigungs-Mail an Kunden + Benachrichtigung an euch
+- **Bestellverwaltung** im Büro (offen → bezahlt → in Fertigung → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet“, Bestätigungs-Mail an Kunden + Benachrichtigung an euch
+- **Büro unter `/office`**: CRM und Warenwirtschaft mit einer Anmeldung — Angebote, Fertigungsaufträge, Stücklisten mit Dienstleistern, Belege per Foto (von Claude ausgelesen), Inventar mit Inventur, Steuer-Export, **Postfach für mehrere IMAP-Konten** und Push-Benachrichtigungen; als App installierbar
 - **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
 - **Referenzen** (Projekte für Kommunen/Gewerbe/Privat) mit Filter und Startseiten-Teaser; **Über-uns-Seite** mit Timeline; **Kundenstimmen** (nur echte!) auf Startseite und Produktseiten; optionales **Video im Hero**
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
@@ -84,6 +85,55 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 2. Code im Admin unter **Website-Einstellungen → Pinterest-Verifizierungscode** eintragen — das Meta-Tag erscheint automatisch auf allen Seiten.
 3. In Pinterest die Verifizierung abschließen und Produktbilder pinnen bzw. pinnen lassen.
 
+## Büro (`/office`) — Betrieb, Zahlen, Postfach
+
+Zwei getrennte Oberflächen mit einer gemeinsamen Anmeldung:
+
+- **`/admin` ist die öffentliche Verwaltung** — Artikel, News, Referenzen, Kundenstimmen, Seitentexte, Mediathek, Einstellungen. Alles, was auf der Website landet. Für die Artikel ist es die Wahrheit: Titel, Preis, Bilder, Texte stehen nur hier.
+- **`/office` ist der Betrieb** — Aufträge, Angebote, Belege, Inventar, Postfach, Steuern. Alles, was niemand von außen sieht.
+
+So hat jede Sache genau einen Platz. Die Büro-Daten sind im Admin bewusst ausgeblendet.
+
+Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang hat nur, wer die Rolle **Inhaber** trägt. Das Büro lässt sich als App installieren (iPhone: Safari → Teilen → „Zum Home-Bildschirm").
+
+| Bereich | Was |
+|---|---|
+| **Übersicht** | Einnahmen, Ausgaben, Differenz und Inventarwert des laufenden Jahres, dazu eine Liste „Kümmern": überfällige Rechnungen, Belege ohne Scan, knappes Material, unbeantwortete Anfragen. |
+| **Postfach** | Mehrere IMAP-Konten lesen, beantworten, Anhänge laden, löschen. Gelesen wird direkt beim Anbieter — was hier gelöscht wird, ist auch am Rechner weg. Antworten gehen mit der Adresse des jeweiligen Postfachs raus, die Kopie landet in „Gesendet". |
+| **Ausgangsprotokoll** | Jede Mail, die das System verschickt, mit Empfänger, Anlass und Ergebnis. Bei „ich habe nie eine Bestätigung bekommen" ist das die Stelle zum Nachsehen. Nur Kopfdaten, kein Inhalt. |
+| **Anfragen** | Kontakt-, Produkt- und Maßanfertigungsanfragen mit Status und interner Notiz; „Antworten" öffnet das Postfach mit vorbereitetem Entwurf. |
+| **Bestellungen** | Positionen, Anschrift, Stand (bezahlt → in Fertigung → versendet) und Sendungsnummer. Der Statuswechsel löst die E-Mail an die Kundschaft aus; ohne Sendungsnummer geht „Versendet" nicht. |
+| **Angebote** | Positionen mit Netto, Steuer und Fertigungszeit. Die Nummer wird erst beim Versenden vergeben — ein verworfener Entwurf reißt keine Lücke in die Reihe. Angenommene Angebote werden per Klick zum Auftrag oder zur Rechnung. |
+| **Aufträge** | Der Durchlauf durch die Werkstatt. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
+| **Artikel** | Stückliste (Material je Stück) und externe Dienstleister (Leistung, Kosten je Stück, Vorlaufzeit) — daraus rechnet die Seite den Einsatz je Stück gegen den Website-Preis. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
+| **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als PDF; Eingangsbelege per Foto, ausgelesen von Claude und danach geprüft. |
+| **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
+| **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
+| **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
+| **Einstellungen** | Benachrichtigungen dieses Geräts, Übersicht der Postfächer. |
+
+### Postfächer einrichten
+
+Im Admin unter **Integrationen → Postfächer** je Konto Bezeichnung, Adresse, IMAP-Server, Benutzername und Passwort eintragen; die Ordnernamen für „Gesendet" und „Papierkorb" heißen je nach Anbieter unterschiedlich (z.B. `Sent`, `INBOX.Sent`, `Gesendete Objekte`). Verschickt wird über den SMTP-Server aus demselben Bereich, sofern beim Postfach nichts Eigenes hinterlegt ist.
+
+Die Absenderadresse der Website (`noreply@…`) steht getrennt davon unter **Integrationen → E-Mail-Versand** und muss hier nicht eingetragen werden — dorthin antwortet ohnehin niemand.
+
+### Benachrichtigungen
+
+Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gemeldet werden neue Bestellungen, neue Anfragen und Mails, die nicht zugestellt werden konnten. Das Schlüsselpaar dafür erzeugt der Server beim ersten Mal selbst.
+
+Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
+
+Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+### Zugänge anlegen
+
+```bash
+pnpm benutzer
+```
+
+Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **Inhaber** an. Die Passwörter kommen aus `VH_PASSWORT` und `ADMIN_PASSWORT`; fehlen sie, würfelt das Skript je eines und gibt es **einmal** auf der Konsole aus. Ein zweiter Aufruf ändert an vorhandenen Konten nichts.
+
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 
 Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte, Kategorien, Referenzen, Kundenstimmen, News inkl. Facebook-/Instagram-Post, Aktionen, Bestellungen, Anfragen, Mediathek, Seitentexte und Auswertungen.
@@ -146,7 +196,7 @@ Ab dann erscheint auf der Anmeldeseite ein zusätzliches Feld für den Code. Una
 
 ## Inhalte pflegen (Kurzanleitung Redaktion)
 
-Alles unter `https://vh.dominikdill.com/admin`:
+Alles unter `https://vh.dominikdill.com/admin` — das ist die Verwaltung dessen, was auf der Website steht. Bestellungen, Anfragen, Aufträge und Zahlen liegen im **Büro** unter `/office` (siehe oben).
 
 | Bereich | Was |
 |---|---|
@@ -156,13 +206,11 @@ Alles unter `https://vh.dominikdill.com/admin`:
 | **Kundenstimmen** | Zitat, Name und Kontext, optional einem Produkt zugeordnet. **Nur echte Stimmen mit Einverständnis eintragen** — erfundene Bewertungen sind wettbewerbswidrig. |
 | **News** | Beiträge mit Titelbild und Teaser; als Entwurf speichern oder veröffentlichen; optional Facebook- und Instagram-Checkbox (Instagram braucht zwingend ein Titelbild). |
 | **Aktionen** | Rabatt (% oder €), Zeitraum, Geltungsbereich, optional Gutscheincode. Aktive Aktionen erscheinen automatisch als Banner + im Warenkorb. |
-| **Bestellungen** | Status-Pflege bezahlt → **in Fertigung** → versendet → storniert. Vor dem Umstellen auf „Versendet" die Sendungsnummer eintragen, sie geht in die Versandmail. Bei „In Fertigung" kann ein voraussichtlicher Termin mitgegeben werden. |
-| **Anfragen** | Alles, was über Kontaktformular, Produktseite und Maßanfertigung hereinkommt — mit Status (neu/in Bearbeitung/beantwortet/erledigt) und interner Notiz. Wird gespeichert, bevor die Mail rausgeht, damit kein Kontakt verloren geht. |
-| **Fertigung** | Je Produkt eine Fertigungszeit (z.B. „3–4 Wochen"); Standardwert und Handarbeits-Hinweis stehen in den Website-Einstellungen. „Fertiges Stück — sofort lieferbar" kennzeichnet Werkstattstücke; die werden nach dem Verkauf automatisch ausgeblendet. |
+| **Fertigung** | Je Produkt eine Fertigungszeit (z.B. „3–4 Wochen“); Standardwert und Handarbeits-Hinweis stehen in den Website-Einstellungen. „Fertiges Stück — sofort lieferbar“ kennzeichnet Werkstattstücke; die werden nach dem Verkauf automatisch ausgeblendet. Stückliste und Dienstleister eines Artikels stehen im Büro unter **Artikel**. |
 | **Startseite** | Hero-Slider, Mission, Galerie, Highlights, Werte. |
 | **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte, Firmen-/Steuerangaben, Handarbeits-Hinweis und Fertigungszeit sowie optional eine cookiefreie Besucherstatistik. |
 | **Rechtliches** | Impressum, Datenschutzerklärung, AGB. |
-| **Integrationen** | SMTP-Zugangsdaten, Stripe-Keys, Facebook-Token und die MCP-Schlüssel — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
+| **Integrationen** | SMTP-Zugangsdaten, **Postfächer (IMAP)**, Stripe-Keys, PayPal, Facebook-Token, der Claude-Schlüssel und die MCP-Schlüssel — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
 
 Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News, Produkte, Referenzen …) sind vollwertige Rich-Text-Editoren mit fester Toolbar: Überschriften, Fett/Kursiv, Listen, Links und Bilder mitten im Text (Upload-Button in der Toolbar). URL-Slugs können leer gelassen werden — sie entstehen automatisch aus dem Titel.
 
@@ -173,6 +221,11 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] **Demo-Preise** der Produkte durch echte Preise ersetzen (Seed enthält Platzhalterwerte!)
 - [ ] Impressum, Datenschutzerklärung und AGB einpflegen (aktuell Platzhalter)
 - [ ] SMTP-Zugangsdaten eintragen (Admin → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
+- [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
+- [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
+- [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
+- [ ] Optional: Cron-Job auf `/api/office/post/pruefen` (mit `CRON_SECRET`), damit neue Post gemeldet wird
+- [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
 - [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit
 - [ ] Optional: Facebook-Token eintragen (Admin → Integrationen)

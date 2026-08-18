@@ -5,6 +5,8 @@ import * as migration_20260817_152621_ausbau from './20260817_152621_ausbau';
 import * as migration_20260817_172510_reichweite from './20260817_172510_reichweite';
 import * as migration_20260817_181145_checkout_tva from './20260817_181145_checkout_tva';
 import * as migration_20260818_061725_mcp_portal_mfa from './20260818_061725_mcp_portal_mfa';
+import * as migration_20260818_075043_buero_belege_rechnungen from './20260818_075043_buero_belege_rechnungen';
+import * as migration_20260818_101629_buero_postfach_push from './20260818_101629_buero_postfach_push';
 
 export const migrations = [
   {
@@ -40,6 +42,16 @@ export const migrations = [
   {
     up: migration_20260818_061725_mcp_portal_mfa.up,
     down: migration_20260818_061725_mcp_portal_mfa.down,
-    name: '20260818_061725_mcp_portal_mfa'
+    name: '20260818_061725_mcp_portal_mfa',
+  },
+  {
+    up: migration_20260818_075043_buero_belege_rechnungen.up,
+    down: migration_20260818_075043_buero_belege_rechnungen.down,
+    name: '20260818_075043_buero_belege_rechnungen',
+  },
+  {
+    up: migration_20260818_101629_buero_postfach_push.up,
+    down: migration_20260818_101629_buero_postfach_push.down,
+    name: '20260818_101629_buero_postfach_push'
   },
 ];

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
+import { benachrichtige } from '../lib/push'
 
 /**
  * Kontakt-, Produkt- und Maßanfertigungs-Anfragen.
@@ -18,6 +19,9 @@ export const Inquiries: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'type', 'status', 'createdAt'],
     group: 'Shop',
+    // Geführt wird das im Büro unter /office — Payload bleibt die
+    // öffentliche Verwaltung.
+    hidden: true,
     description: 'Eingegangene Anfragen über Kontaktformular, Produktseite und Maßanfertigung.',
   },
   access: {
@@ -25,6 +29,21 @@ export const Inquiries: CollectionConfig = {
     create: () => false,
     update: admins,
     delete: admins,
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        if (operation !== 'create') return doc
+        // Eine Anfrage, die drei Tage liegen bleibt, ist meist verloren
+        await benachrichtige(req.payload, {
+          titel: 'Neue Anfrage',
+          text: `${doc.name}: ${String(doc.message ?? '').slice(0, 120)}`,
+          url: `/office/anfragen/${doc.id}`,
+          tag: `anfrage-${doc.id}`,
+        }).catch(() => undefined)
+        return doc
+      },
+    ],
   },
   fields: [
     {
