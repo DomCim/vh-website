@@ -7,6 +7,8 @@ type OrderLike = {
   deliveryMethod?: string | null
   trackingNumber?: string | null
   trackingUrl?: string | null
+  accessToken?: string | null
+  expectedReady?: string | null
   promotionTitle?: string | null
   items?:
     | {
@@ -101,7 +103,32 @@ function addressBlock(order: OrderLike): string {
     .join('<br>')
 }
 
-export function orderConfirmationEmail(order: OrderLike, company?: CompanyInfo) {
+/** Link auf die Bestellstatus-Seite — dauerhaft gültig, verbraucht nichts */
+function statusLink(order: OrderLike): string {
+  if (!order.accessToken) return ''
+  const basis = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || ''
+  const url = `${basis}/de/bestellung/${order.accessToken}`
+  return `<p style="margin-top:20px"><a href="${url}" style="color:#1d1d1f">Stand Ihrer Bestellung ansehen</a></p>`
+}
+
+/** Hinweis auf die Einzelfertigung, wenn ein Zeitraum bekannt ist */
+function fertigungsHinweis(order: OrderLike, hinweis?: string | null): string {
+  const teile = [
+    hinweis?.trim()
+      ? `<p style="color:#666;font-size:13px">${hinweis.trim()}</p>`
+      : '',
+    order.expectedReady
+      ? `<p><strong>Voraussichtlich fertig:</strong> ${order.expectedReady}</p>`
+      : '',
+  ].filter(Boolean)
+  return teile.join('')
+}
+
+export function orderConfirmationEmail(
+  order: OrderLike,
+  company?: CompanyInfo,
+  craftNotice?: string | null,
+) {
   return {
     to: order.customer?.email ?? '',
     subject: `Bestellbestätigung ${order.orderNumber} – Vincent Hellmann`,
@@ -110,9 +137,12 @@ export function orderConfirmationEmail(order: OrderLike, company?: CompanyInfo) 
         <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
         <p>Guten Tag ${order.customer?.name ?? ''},</p>
         <p>vielen Dank für Ihre Bestellung <strong>${order.orderNumber}</strong>.
-        Ihre Zahlung ist bei uns eingegangen. Wir melden uns in Kürze mit den Details zur Lieferung.</p>
+        Ihre Zahlung ist bei uns eingegangen. Ihr Stück wird jetzt für Sie gefertigt — wir melden uns,
+        sobald es in die Werkstatt geht.</p>
+        ${fertigungsHinweis(order, craftNotice)}
         ${orderTable(order, company)}
         <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
+        ${statusLink(order)}
         <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
         ${companyFooter(company)}
       </div>`,
@@ -130,6 +160,23 @@ export function orderNotificationEmail(order: OrderLike, to: string, company?: C
         ${orderTable(order, company)}
         <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
         <p>Details im Admin-Panel unter „Bestellungen".</p>
+      </div>`,
+  }
+}
+
+export function orderInProductionEmail(order: OrderLike, craftNotice?: string | null) {
+  return {
+    to: order.customer?.email ?? '',
+    subject: `Ihre Bestellung ${order.orderNumber} ist in Fertigung – Vincent Hellmann`,
+    html: `
+      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
+        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
+        <p>Guten Tag ${order.customer?.name ?? ''},</p>
+        <p>Ihre Bestellung <strong>${order.orderNumber}</strong> ist in der Werkstatt und wird jetzt
+        gefertigt. Sobald sie unterwegs ist, bekommen Sie die Sendungsnummer von uns.</p>
+        ${fertigungsHinweis(order, craftNotice)}
+        ${statusLink(order)}
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
       </div>`,
   }
 }
@@ -152,6 +199,7 @@ export function orderShippedEmail(order: OrderLike) {
         <p>gute Nachrichten: Ihre Bestellung <strong>${order.orderNumber}</strong> wurde soeben versendet.</p>
         ${tracking}
         <p style="margin-top:20px"><strong>Lieferadresse</strong><br>${addressBlock(order)}</p>
+        ${statusLink(order)}
         <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
       </div>`,
   }
