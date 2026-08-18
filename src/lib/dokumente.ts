@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
 import { firmenAngaben } from './settings'
 
@@ -90,6 +91,50 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
   }
 }
 
+/**
+ * Die Rechnung noch einmal als Datensatz — Grundlage der Factur-X-XML im PDF.
+ *
+ * Bewusst aus denselben Feldern wie das Blatt: Zwei getrennte Aufbereitungen
+ * laufen früher oder später auseinander, und dann steht im PDF eine andere
+ * Summe als in der XML. Genau das prüft jede Empfängerplattform zuerst.
+ */
+function facturxAusRechnung(
+  r: Record<string, any>,
+  firmenangaben: { vatRate?: number | null; iban?: string | null; bic?: string | null },
+): FacturXDaten {
+  return {
+    nummer: r.invoiceNumber,
+    datum: r.issueDate ? new Date(r.issueDate) : new Date(),
+    faelligAm: r.dueDate ? new Date(r.dueDate) : null,
+    kunde: {
+      name: r.customerName || '—',
+      anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+      kennung: r.customerSiret,
+      umsatzsteuerId: r.customerVatId,
+    },
+    lieferung: r.deliveryAddress
+      ? { name: r.customerName, anschrift: String(r.deliveryAddress).split('\n').filter(Boolean) }
+      : null,
+    lieferdatum: r.deliveryDate ? new Date(r.deliveryDate) : null,
+    bestellreferenz: r.buyerReference,
+    positionen: (r.items ?? []).map((p: Record<string, any>) => ({
+      bezeichnung: [p.description, p.unit && p.unit !== 'Stück' ? `(${p.unit})` : null]
+        .filter(Boolean)
+        .join(' '),
+      menge: p.quantity ?? 1,
+      einzelpreis: p.unitPrice ?? 0,
+      steuersatz: p.vatRate ?? firmenangaben.vatRate ?? 20,
+    })),
+    rabatt: r.discountTotal
+      ? { bezeichnung: r.discountReason || 'Nachlass', betrag: r.discountTotal }
+      : null,
+    reverseCharge: Boolean(r.reverseCharge),
+    iban: firmenangaben.iban,
+    bic: firmenangaben.bic,
+    hinweis: r.note,
+  }
+}
+
 export async function rechnungDokument(payload: Payload, id: string | number): Promise<Dokument> {
   const r = await payload.findByID({
     collection: 'outgoing-invoices',
@@ -98,6 +143,8 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
     overrideAccess: true,
   })
   if (!r?.invoiceNumber) throw new Error('entwurf')
+
+  const angaben = await firma(payload)
 
   const datei = await rechnungPdf(
     {
@@ -121,8 +168,9 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
         : null,
       hinweis: r.note,
       reverseCharge: Boolean(r.reverseCharge),
+      facturx: facturxAusRechnung(r, angaben),
     },
-    await firma(payload),
+    angaben,
   )
 
   return {
@@ -135,6 +183,29 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
       `anbei die Rechnung ${r.invoiceNumber} vom ${datum(r.issueDate)}.\n` +
       (r.dueDate ? `Zahlbar bis zum ${datum(r.dueDate)}.\n` : '') +
       `\nVielen Dank für die Zusammenarbeit.`,
+  }
+}
+
+/**
+ * Die reine XML einer Rechnung — für den Steuerberater oder die Plattform,
+ * die sie ohne das PDF drumherum haben will.
+ */
+export async function rechnungFacturX(
+  payload: Payload,
+  id: string | number,
+): Promise<{ xml: string; dateiname: string }> {
+  const r = (await payload.findByID({
+    collection: 'outgoing-invoices',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })) as Record<string, any>
+  if (!r?.invoiceNumber) throw new Error('entwurf')
+
+  const angaben = await firma(payload)
+  return {
+    xml: facturXml(facturxAusRechnung(r, angaben), angaben),
+    dateiname: `${r.invoiceNumber}-factur-x.xml`,
   }
 }
 

@@ -3,6 +3,7 @@ import path from 'path'
 
 import PDFDocument from 'pdfkit'
 
+import { facturXml, type FacturXDaten } from './facturx'
 import { BRONZE, type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
 
 /**
@@ -43,6 +44,11 @@ export type RechnungsDaten = {
   fertigungszeit?: string | null
   /** Fassung eines nachverhandelten Angebots (1 = Erstfassung) */
   fassung?: number | null
+  /**
+   * Angaben für die elektronische Rechnung. Sind sie da, entsteht ein
+   * Factur-X-PDF: dasselbe Blatt, zusätzlich mit eingebetteter XML.
+   */
+  facturx?: FacturXDaten | null
 }
 
 const euro = (v: number) =>
@@ -73,8 +79,107 @@ function zerlege(betrag: number, satz: number, preiseSind: 'brutto' | 'netto') {
   return { netto, steuer: runden(betrag - netto) }
 }
 
+/**
+ * Schriften für PDF/A.
+ *
+ * Die in PDF eingebauten Standardschriften sind nicht eingebettet — PDF/A
+ * verlangt aber genau das, sonst sieht die Rechnung in zehn Jahren womöglich
+ * anders aus. Liberation Sans liegt deshalb im Verzeichnis public/fonts und
+ * ist in den Maßen mit Helvetica verträglich; das Rechnungsbild ändert sich
+ * dadurch nicht.
+ */
+const SCHRIFTEN = {
+  normal: path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf'),
+  fett: path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Bold.ttf'),
+}
+
+const schriftenDa = () => fs.existsSync(SCHRIFTEN.normal) && fs.existsSync(SCHRIFTEN.fett)
+
+/**
+ * XMP-Kennzeichnung, an der ein Empfänger die eingebettete Rechnung erkennt.
+ * Ohne diesen Abschnitt ist die XML nur ein Anhang wie jeder andere.
+ */
+function facturxMetadaten(profil = 'BASIC'): string {
+  return `
+        <rdf:Description rdf:about="" xmlns:pdfaExtension="http://www.aiim.org/pdfa/ns/extension/" xmlns:pdfaSchema="http://www.aiim.org/pdfa/ns/schema#" xmlns:pdfaProperty="http://www.aiim.org/pdfa/ns/property#">
+          <pdfaExtension:schemas>
+            <rdf:Bag>
+              <rdf:li rdf:parseType="Resource">
+                <pdfaSchema:schema>Factur-X PDFA Extension Schema</pdfaSchema:schema>
+                <pdfaSchema:namespaceURI>urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#</pdfaSchema:namespaceURI>
+                <pdfaSchema:prefix>fx</pdfaSchema:prefix>
+                <pdfaSchema:property>
+                  <rdf:Seq>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>DocumentFileName</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Name des eingebetteten XML-Dokuments</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>DocumentType</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>INVOICE</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>Version</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Fassung des Factur-X-Standards</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>ConformanceLevel</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Profil des eingebetteten Datensatzes</pdfaProperty:description>
+                    </rdf:li>
+                  </rdf:Seq>
+                </pdfaSchema:property>
+              </rdf:li>
+            </rdf:Bag>
+          </pdfaExtension:schemas>
+        </rdf:Description>
+        <rdf:Description rdf:about="" xmlns:fx="urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#">
+          <fx:DocumentType>INVOICE</fx:DocumentType>
+          <fx:DocumentFileName>factur-x.xml</fx:DocumentFileName>
+          <fx:Version>1.0</fx:Version>
+          <fx:ConformanceLevel>${profil}</fx:ConformanceLevel>
+        </rdf:Description>`
+}
+
 export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo): Promise<Buffer> {
-  const doc = new PDFDocument({ size: 'A4', margin: 50 })
+  // Eine elektronische Rechnung ist ein PDF/A-3 mit eingebetteter XML. Das
+  // geht nur mit echten Schriftdateien — fehlen sie, entsteht wie bisher ein
+  // gewöhnliches PDF, statt dass die Rechnung gar nicht erst herauskommt.
+  const elektronisch = Boolean(daten.facturx) && schriftenDa()
+
+  const doc = new PDFDocument({
+    size: 'A4',
+    margin: 50,
+    ...(elektronisch
+      ? {
+          subset: 'PDF/A-3b' as const,
+          pdfVersion: '1.7' as const,
+          tagged: true,
+          displayTitle: true,
+          info: {
+            Title: `Rechnung ${daten.nummer}`,
+            Author: company?.legalName || company?.name || 'Vincent Hellmann',
+            Subject: `Rechnung ${daten.nummer}`,
+            Keywords: 'Factur-X, EN 16931, Rechnung',
+            Creator: 'vincent-hellmann.com',
+            Producer: 'vincent-hellmann.com',
+          },
+        }
+      : {}),
+  })
+
+  if (schriftenDa()) {
+    doc.registerFont('Sans', SCHRIFTEN.normal)
+    doc.registerFont('Sans-Fett', SCHRIFTEN.fett)
+    doc.font('Sans')
+  }
 
   // Einmal an der Quelle geradeziehen statt an jeder der dreißig Textstellen
   const textRoh = doc.text.bind(doc)
@@ -313,12 +418,48 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.y,
     { width: rechts - links },
   )
+  if (!istAngebot && company?.iban) {
+    doc.moveDown(0.4)
+    doc.text(
+      `Bankverbindung: IBAN ${company.iban}${company.bic ? ` · BIC ${company.bic}` : ''}`,
+      links,
+      doc.y,
+      { width: rechts - links },
+    )
+  }
+  // Wer zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf
+  // jeder Rechnung vermerken — sonst fehlt eine Pflichtangabe.
+  if (!istAngebot && company?.vatOnDebits) {
+    doc.moveDown(0.4)
+    doc.fontSize(8).text("TVA acquittée d'après les débits.", links, doc.y, {
+      width: rechts - links,
+    })
+    doc.fontSize(9)
+  }
   if (!istAngebot && company?.latePaymentNote) {
     doc.moveDown(0.4)
     doc.fontSize(8).text(company.latePaymentNote, links, doc.y, { width: rechts - links })
   }
 
   fussZeichnen()
+
+  if (elektronisch && daten.facturx) {
+    const xml = facturXml(daten.facturx, company)
+    const zeitpunkt = daten.datum ? new Date(daten.datum) : new Date()
+    doc.file(Buffer.from(xml, 'utf8'), {
+      name: 'factur-x.xml',
+      type: 'text/xml',
+      description: 'Rechnungsdaten nach EN 16931 (Factur-X BASIC)',
+      creationDate: zeitpunkt,
+      modifiedDate: zeitpunkt,
+      // „Alternative": Die XML ist dieselbe Rechnung in maschinenlesbarer
+      // Form, kein zusätzliches Beiwerk — genau das schreibt Factur-X vor.
+      // PDFKit kann das, nur die mitgelieferten Typen kennen das Feld nicht.
+      relationship: 'Alternative',
+    } as PDFKit.Mixins.PDFAttachmentOptions & { relationship: string })
+    doc.appendXML(facturxMetadaten('BASIC'))
+  }
+
   doc.end()
   return fertig
 }

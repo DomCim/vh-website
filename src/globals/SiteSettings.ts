@@ -150,6 +150,30 @@ export const SiteSettings: GlobalConfig = {
           defaultValue: '30 Tage netto',
         },
         {
+          type: 'row',
+          fields: [
+            {
+              name: 'iban',
+              label: 'IBAN',
+              type: 'text',
+              admin: {
+                description:
+                  'Steht auf der Rechnung und in der elektronischen Fassung — ohne Bankverbindung kann niemand überweisen.',
+              },
+            },
+            { name: 'bic', label: 'BIC', type: 'text' },
+          ],
+        },
+        {
+          name: 'vatOnDebits',
+          label: 'Option „TVA d\'après les débits" gewählt',
+          type: 'checkbox',
+          admin: {
+            description:
+              'Wer bei Dienstleistungen zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf jeder Rechnung vermerken. Der Hinweis erscheint dann automatisch.',
+          },
+        },
+        {
           name: 'latePaymentNote',
           label: 'Hinweis auf Verzugszinsen',
           type: 'textarea',

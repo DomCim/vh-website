@@ -864,12 +864,33 @@ export interface OutgoingInvoice {
   customer?: (number | null) | Contact;
   customerName?: string | null;
   /**
+   * Für die elektronische Rechnung Pflicht, wenn der Kunde ein Unternehmen ist. Bei Privatkundschaft leer lassen.
+   */
+  customerSiret?: string | null;
+  customerVatId?: string | null;
+  /**
    * Wird aus dem Geschäftspartner übernommen, wenn dort hinterlegt.
    */
   customerAddress?: string | null;
   issueDate?: string | null;
   dueDate?: string | null;
   paidDate?: string | null;
+  /**
+   * Pflichtangabe, wenn es vom Rechnungsdatum abweicht.
+   */
+  deliveryDate?: string | null;
+  /**
+   * Steht auf der E-Rechnung und entscheidet über den Zeitpunkt der Steuer.
+   */
+  businessType?: ('lieferung' | 'dienstleistung' | 'gemischt') | null;
+  /**
+   * Aktenzeichen, Bestell- oder Vergabenummer. Öffentliche Auftraggeber brauchen das, sonst bleibt die Rechnung liegen.
+   */
+  buyerReference?: string | null;
+  /**
+   * Nur ausfüllen, wenn woandershin geliefert wurde als abgerechnet wird.
+   */
+  deliveryAddress?: string | null;
   items?:
     | {
         description: string;
@@ -1579,10 +1600,16 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   status?: T;
   customer?: T;
   customerName?: T;
+  customerSiret?: T;
+  customerVatId?: T;
   customerAddress?: T;
   issueDate?: T;
   dueDate?: T;
   paidDate?: T;
+  deliveryDate?: T;
+  businessType?: T;
+  buyerReference?: T;
+  deliveryAddress?: T;
   items?:
     | T
     | {
@@ -1943,6 +1970,15 @@ export interface SiteSetting {
      */
     vatId?: string | null;
     paymentTerms?: string | null;
+    /**
+     * Steht auf der Rechnung und in der elektronischen Fassung — ohne Bankverbindung kann niemand überweisen.
+     */
+    iban?: string | null;
+    bic?: string | null;
+    /**
+     * Wer bei Dienstleistungen zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf jeder Rechnung vermerken. Der Hinweis erscheint dann automatisch.
+     */
+    vatOnDebits?: boolean | null;
     /**
      * Bei Rechnungen an Geschäftskunden Pflicht. Vorschlag: „Bei Zahlungsverzug werden Verzugszinsen in Höhe des dreifachen gesetzlichen Zinssatzes sowie eine Pauschale für Beitreibungskosten von 40 € fällig." — Wortlaut mit dem Steuerberater abstimmen.
      */
@@ -2371,6 +2407,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         siret?: T;
         vatId?: T;
         paymentTerms?: T;
+        iban?: T;
+        bic?: T;
+        vatOnDebits?: T;
         latePaymentNote?: T;
         mediator?: T;
         vatRate?: T;

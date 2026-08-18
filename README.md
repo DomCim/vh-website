@@ -14,6 +14,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
 - **Referenzen** (Projekte für Kommunen/Gewerbe/Privat) mit Filter und Startseiten-Teaser; **Über-uns-Seite** mit Timeline; **Kundenstimmen** (nur echte!) auf Startseite und Produktseiten; optionales **Video im Hero**
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
+- **Elektronische Rechnung**: Ausgangsrechnungen als **Factur-X** (PDF/A-3 mit eingebetteter XML nach EN 16931), XML auch einzeln herunterladbar
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
 - **Verbraucherrecht**: Widerrufsbelehrung, Muster-Widerrufsformular, Versand & Zahlung als eigene Seiten; Zustimmung in der Kasse wird mit Zeitpunkt an der Bestellung festgehalten
@@ -144,6 +145,23 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Elektronische Rechnung (Factur-X)
+
+Frankreich stellt die Rechnungsstellung auf elektronische Rechnungen um: Ab **1. September 2026** muss jedes französische Unternehmen E-Rechnungen **empfangen** können, das Ausstellen folgt gestaffelt (kleine Betriebe später). Eine E-Rechnung ist dabei kein PDF im Mailanhang, sondern ein strukturierter Datensatz.
+
+Die Ausgangsrechnungen aus dem Büro sind deshalb jetzt **Factur-X**: ein PDF/A-3, in dem dieselbe Rechnung zusätzlich als XML nach EN 16931 (Profil BASIC) steckt. Das Blatt sieht aus wie vorher, die Maschine liest die Daten.
+
+Damit das aufgeht, sind neue Angaben nötig:
+
+- **Website-Einstellungen → Firmen-/Steuerangaben**: SIRET, TVA-Nummer, **IBAN/BIC** und — falls gewählt — die Option „TVA d'après les débits" (der Pflichtvermerk erscheint dann automatisch auf jeder Rechnung).
+- **An der Rechnung**: SIRET/SIREN und TVA-Nummer des Kunden (bei Geschäftskunden Pflicht), Bestellnummer des Kunden, Liefer-/Leistungsdatum, Art des Geschäfts, bei Bedarf eine abweichende Lieferanschrift.
+
+Fehlt etwas davon, steht das als Hinweis an der Rechnung — das PDF entsteht trotzdem, eine Empfängerplattform würde es aber zurückweisen. Neben „PDF ansehen" gibt es „XML herunterladen", falls Steuerberater oder Plattform den Datensatz einzeln wollen.
+
+**Was hier nicht dabei ist:** die Anbindung an eine *Plateforme Agréée* (PA). Die Datei ist normgerecht, den Übertragungsweg dorthin muss der Betrieb wählen — das ist eine Vertrags-, keine Programmierfrage. Ebenso das **E-Reporting** der Shop-Umsätze an Privatkundschaft. Beides mit dem Expert-Comptable klären; die Angaben hier sind keine Steuerberatung.
+
+Technisch: `src/lib/facturx.ts` baut die XML, `src/lib/invoice.ts` bettet sie ein. Für PDF/A müssen die Schriften im Dokument stecken — deshalb liegen in `public/fonts/` zwei Liberation-Sans-Dateien (SIL Open Font License).
 
 ## Rechtstexte für den Shop
 

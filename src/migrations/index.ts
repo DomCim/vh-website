@@ -11,6 +11,7 @@ import * as migration_20260818_123622_angebot_nachlass_kundenbestellung from './
 import * as migration_20260818_150138_postfach_signatur from './20260818_150138_postfach_signatur';
 import * as migration_20260818_184332_sicherung_wartung from './20260818_184332_sicherung_wartung';
 import * as migration_20260818_185517_shop_recht from './20260818_185517_shop_recht';
+import * as migration_20260818_190812_erechnung from './20260818_190812_erechnung';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260818_185517_shop_recht.up,
     down: migration_20260818_185517_shop_recht.down,
-    name: '20260818_185517_shop_recht'
+    name: '20260818_185517_shop_recht',
+  },
+  {
+    up: migration_20260818_190812_erechnung.up,
+    down: migration_20260818_190812_erechnung.down,
+    name: '20260818_190812_erechnung'
   },
 ];

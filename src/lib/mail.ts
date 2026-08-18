@@ -42,6 +42,10 @@ export type CompanyInfo = {
   vatRate?: number | null
   paymentTerms?: string | null
   latePaymentNote?: string | null
+  iban?: string | null
+  bic?: string | null
+  /** Option „TVA d'après les débits" — muss dann auf jeder Rechnung stehen */
+  vatOnDebits?: boolean | null
 }
 
 const euro = (v: number) =>

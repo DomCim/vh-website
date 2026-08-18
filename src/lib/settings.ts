@@ -154,5 +154,8 @@ export function firmenAngaben(settings: Record<string, any> | null | undefined) 
     vatRate: c.vatRate,
     paymentTerms: c.paymentTerms,
     latePaymentNote: c.latePaymentNote,
+    iban: c.iban,
+    bic: c.bic,
+    vatOnDebits: c.vatOnDebits,
   }
 }
