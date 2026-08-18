@@ -8,6 +8,7 @@ import {
   istBereich,
 } from '../../../../../lib/bereiche'
 import { payloadClient } from '../../../../../lib/data'
+import { getIntegrations } from '../../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,22 @@ type BereichsAntwort = {
   geloescht: string[]
   stand: string
   mehr: boolean
+}
+
+/**
+ * Der Rahmen: was die Büro-Seiten außer den Datensätzen noch brauchen.
+ *
+ * Kommt bei jedem Abgleich mit, damit auch das im Gerät liegt — sonst wüsste
+ * eine Seite ohne Netz etwa nicht, ob der KI-Zugang eingerichtet ist, und
+ * bliebe bei einem ausgegrauten Knopf stehen, ohne zu sagen warum.
+ */
+async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
+  try {
+    const integrationen = await getIntegrations(payload)
+    return { kiVerfuegbar: Boolean(integrationen.anthropic.apiKey) }
+  } catch {
+    return { kiVerfuegbar: false }
+  }
 }
 
 export async function POST(req: Request) {
@@ -126,5 +143,6 @@ export async function POST(req: Request) {
     bereiche: antwort,
     // Diese Bereiche bitte vorher leeren — der bisherige Bestand ist zu alt
     voll: vollstaendig,
+    rahmen: await rahmen(payload),
   })
 }

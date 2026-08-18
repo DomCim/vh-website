@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
 import { istBereich } from '../../lib/bereiche'
@@ -29,6 +29,7 @@ const SAMMELN_MS = 400
 
 export function BestandAnbieter() {
   const router = useRouter()
+  const pfad = usePathname()
   const draht = useRef<WebSocket | null>(null)
   const sammler = useRef<number | null>(null)
   const offen = useRef(new Set<string>())
@@ -70,6 +71,13 @@ export function BestandAnbieter() {
       let karte: string
       try {
         const antwort = await fetch('/api/office/live', { credentials: 'include' })
+        // Die Seiten selbst fragen den Server nicht mehr, also merkt niemand
+        // sonst, dass die Anmeldung abgelaufen ist. Hier schon.
+        if (antwort.status === 401 || antwort.status === 403) {
+          if (!pfad.startsWith('/office/login') && !pfad.startsWith('/office/kein-zugang')) {
+            router.replace('/office/login')
+          }
+        }
         // Auf der Anmeldeseite gibt es noch keine Karte. Nicht aufgeben,
         // sondern nachfassen — sonst bliebe die Verbindung nach dem Anmelden
         // aus, weil diese Hülle dabei nicht neu geladen wird.
@@ -146,7 +154,7 @@ export function BestandAnbieter() {
       if (sammler.current) window.clearTimeout(sammler.current)
       draht.current?.close()
     }
-  }, [router])
+  }, [pfad, router])
 
   return null
 }

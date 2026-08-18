@@ -18,6 +18,7 @@ export const BEREICHE = {
   inventar: 'inventory-items',
   inventur: 'stocktakes',
   kundenstimmen: 'testimonials',
+  medien: 'media',
   newsletter: 'newsletter-subscribers',
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',

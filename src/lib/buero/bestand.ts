@@ -36,6 +36,16 @@ import {
 
 export type Datensatz = Record<string, unknown> & { id: number | string }
 
+/**
+ * Was die Seiten außer den Datensätzen brauchen — kommt beim Abgleich mit und
+ * liegt ebenfalls im Gerät, damit es auch ohne Netz da ist.
+ */
+export type Rahmen = { kiVerfuegbar: boolean }
+
+const RAHMEN_LEER: Rahmen = { kiVerfuegbar: false }
+let rahmen: Rahmen = RAHMEN_LEER
+const rahmenHoerer = new Set<() => void>()
+
 /** Eine gemeinsame leere Liste — sonst rendert React bei jedem Durchlauf neu. */
 const LEER: Datensatz[] = []
 
@@ -106,6 +116,15 @@ export function bestandLaden(): Promise<void> {
         }
       }),
     )
+    try {
+      const gemerkt = await merkenLesen<Rahmen>('rahmen')
+      if (gemerkt) {
+        rahmen = gemerkt
+        for (const h of rahmenHoerer) h()
+      }
+    } catch {
+      // Ohne Rahmen läuft das Büro auch, nur vorsichtiger
+    }
     zustandSetzen({ bereit: true })
   })()
 
@@ -190,6 +209,15 @@ export function abgleichen(nurBereiche?: Bereich[]): Promise<void> {
         const ergebnis = (await antwort.json()) as {
           bereiche: Record<string, BereichsAntwort>
           voll: string[]
+          rahmen?: Rahmen
+        }
+
+        if (ergebnis.rahmen) {
+          rahmen = ergebnis.rahmen
+          for (const h of rahmenHoerer) h()
+          if (speicherVerfuegbar()) {
+            await merkenSchreiben('rahmen', ergebnis.rahmen).catch(() => undefined)
+          }
         }
         const vollstaendig = new Set(ergebnis.voll ?? [])
 
@@ -277,6 +305,21 @@ export function useDatensatz<T = Datensatz>(
     () => (id === undefined ? undefined : alle.find((d) => String(d.id) === String(id))),
     [alle, id],
   ) as T | undefined
+}
+
+/** Der Rahmen: Einstellungen, die eine Seite zum Rendern braucht. */
+export function useRahmen(): Rahmen {
+  const anmelden = useCallback((benachrichtigen: () => void) => {
+    rahmenHoerer.add(benachrichtigen)
+    return () => {
+      rahmenHoerer.delete(benachrichtigen)
+    }
+  }, [])
+  return useSyncExternalStore(
+    anmelden,
+    () => rahmen,
+    () => RAHMEN_LEER,
+  )
 }
 
 /** Zustand des Abgleichs — für die Hinweisleiste über den Seiten. */

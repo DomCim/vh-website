@@ -1,14 +1,15 @@
 import React from 'react'
 
 import { PartnerFormular } from '../../../../../components/office/PartnerFormular'
-import { AUSGABEN_KATEGORIEN } from '../../../../../collections/Expenses'
-import { bueroBenutzer } from '../../../../../lib/office'
+import { AUSGABEN_KATEGORIEN } from '../../../../../lib/listen'
 
-export const dynamic = 'force-dynamic'
-
-export default async function NeuerPartner() {
-  await bueroBenutzer()
-
+/**
+ * Neuer Geschäftspartner.
+ *
+ * Braucht nichts vom Server: Das Formular ist ohnehin eine Client-Komponente,
+ * und die Kategorien sind eine feste Liste.
+ */
+export default function NeuerPartnerSeite() {
   return (
     <>
       <h1>Neuer Geschäftspartner</h1>
