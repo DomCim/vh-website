@@ -40,9 +40,9 @@ export type Datensatz = Record<string, unknown> & { id: number | string }
  * Was die Seiten außer den Datensätzen brauchen — kommt beim Abgleich mit und
  * liegt ebenfalls im Gerät, damit es auch ohne Netz da ist.
  */
-export type Rahmen = { kiVerfuegbar: boolean }
+export type Rahmen = { kiVerfuegbar: boolean; stundensatz: number }
 
-const RAHMEN_LEER: Rahmen = { kiVerfuegbar: false }
+const RAHMEN_LEER: Rahmen = { kiVerfuegbar: false, stundensatz: 65 }
 let rahmen: Rahmen = RAHMEN_LEER
 const rahmenHoerer = new Set<() => void>()
 

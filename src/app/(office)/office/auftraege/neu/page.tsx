@@ -1,36 +1,32 @@
-import React from 'react'
+'use client'
+
+import React, { useMemo } from 'react'
 
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
-import { payloadClient } from '../../../../../lib/data'
-import { bueroBenutzer } from '../../../../../lib/office'
+import { useBestand } from '../../../../../lib/buero/bestand'
+import type { Posten } from '../../../../../lib/buero/material'
 
-export const dynamic = 'force-dynamic'
-
-export default async function NeuerAuftrag() {
-  await bueroBenutzer()
-  const payload = await payloadClient()
-
-  const { docs: posten } = await payload.find({
-    collection: 'inventory-items',
-    sort: 'name',
-    limit: 300,
-    depth: 0,
-    overrideAccess: true,
-  })
+/** Neuer Auftrag — die Inventarposten kommen aus dem Bestand im Gerät. */
+export default function NeuerAuftragSeite() {
+  const inventar = useBestand<Posten>('inventar')
+  const posten = useMemo(
+    () =>
+      [...inventar]
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'de'))
+        .map((p) => ({
+          id: Number(p.id),
+          name: p.name ?? '',
+          unit: p.unit ?? '',
+          quantity: p.quantity ?? 0,
+        })),
+    [inventar],
+  )
 
   return (
     <>
       <h1>Neuer Auftrag</h1>
       <p className="buero-unterzeile">Für alles, was nicht aus dem Shop oder einem Angebot kommt.</p>
-      <AuftragFormular
-        werte={{}}
-        posten={posten.map((p) => ({
-          id: p.id,
-          name: p.name,
-          unit: p.unit ?? '',
-          quantity: p.quantity ?? 0,
-        }))}
-      />
+      <AuftragFormular werte={{}} posten={posten} />
     </>
   )
 }

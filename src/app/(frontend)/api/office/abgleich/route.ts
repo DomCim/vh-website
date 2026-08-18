@@ -48,12 +48,22 @@ type BereichsAntwort = {
  * bliebe bei einem ausgegrauten Knopf stehen, ohne zu sagen warum.
  */
 async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
+  const rahmen = { kiVerfuegbar: false, stundensatz: 65 }
   try {
     const integrationen = await getIntegrations(payload)
-    return { kiVerfuegbar: Boolean(integrationen.anthropic.apiKey) }
+    rahmen.kiVerfuegbar = Boolean(integrationen.anthropic.apiKey)
   } catch {
-    return { kiVerfuegbar: false }
+    // Ohne KI läuft das Büro auch
   }
+  try {
+    const einstellungen = (await payload.findGlobal({ slug: 'site-settings', depth: 0 })) as {
+      craft?: { hourlyRate?: number | null } | null
+    }
+    rahmen.stundensatz = einstellungen?.craft?.hourlyRate ?? 65
+  } catch {
+    // Voreinstellung genügt
+  }
+  return rahmen
 }
 
 export async function POST(req: Request) {
