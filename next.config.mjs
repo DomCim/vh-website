@@ -20,6 +20,15 @@ const extraSkript = (process.env.CSP_EXTRA_SCRIPT || '').trim()
  * Der Gewinn bliebe gering: Was dieses Regelwerk verhindern soll, ist ein
  * eingeschleustes Skript von einer fremden Adresse, und das tut es auch so.
  */
+/**
+ * In der Entwicklung übersetzt Next die Module mit `eval` — das ist Teil
+ * seiner Quellkarten und lässt sich nicht abstellen. Ohne diese Ausnahme
+ * blockt der Browser dort die gesamte Anwendung: Die Seite steht da, aber
+ * kein Knopf tut etwas, und in der Konsole steht nur „Refused to evaluate".
+ * Im gebauten Stand kommt kein `eval` mehr vor, dort bleibt es also weg.
+ */
+const entwicklungsSkript = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"
+
 const gemeinsam = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -35,7 +44,7 @@ const gemeinsam = [
 
 const website = [
   ...gemeinsam,
-  `script-src 'self' 'unsafe-inline'${extraSkript ? ` ${extraSkript}` : ''}`,
+  `script-src 'self' 'unsafe-inline'${entwicklungsSkript}${extraSkript ? ` ${extraSkript}` : ''}`,
   `connect-src 'self'${extraSkript ? ` ${extraSkript}` : ''}`,
 ].join('; ')
 
@@ -57,7 +66,7 @@ const verwaltung = [
  */
 const buero = [
   ...gemeinsam,
-  `script-src 'self' 'unsafe-inline'${extraSkript ? ` ${extraSkript}` : ''}`,
+  `script-src 'self' 'unsafe-inline'${entwicklungsSkript}${extraSkript ? ` ${extraSkript}` : ''}`,
   "connect-src 'self' ws: wss:",
 ].join('; ')
 
