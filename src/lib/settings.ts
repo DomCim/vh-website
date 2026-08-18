@@ -18,6 +18,7 @@ export type MailboxKonfiguration = {
   pass: string
   sentMailbox: string
   trashMailbox: string
+  signature?: string
   smtpHost?: string
   smtpPort?: number
   smtpUser?: string
@@ -103,6 +104,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
         pass: m.pass,
         sentMailbox: m.sentMailbox || 'Sent',
         trashMailbox: m.trashMailbox || 'Trash',
+        signature: m.signature || undefined,
         smtpHost: m.smtpHost || undefined,
         smtpPort: m.smtpPort ? Number(m.smtpPort) : undefined,
         smtpUser: m.smtpUser || undefined,

@@ -1,6 +1,9 @@
+import fs from 'fs'
+import path from 'path'
+
 import PDFDocument from 'pdfkit'
 
-import { type CompanyInfo, firmenzeile } from './mail'
+import { type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
 
 /**
  * Rechnungs-PDF.
@@ -45,6 +48,19 @@ export type RechnungsDaten = {
 const euro = (v: number) =>
   new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v)
 
+/**
+ * Die eingebauten PDF-Schriften kennen nur den WinAnsi-Zeichenvorrat.
+ * Ein schmales geschütztes Leerzeichen (aus der französischen
+ * Zahlenformatierung) wurde dadurch als „/" gezeichnet, ein echtes
+ * Minuszeichen als Anführungszeichen. Deshalb hier einmal geradeziehen.
+ */
+const pdfText = (s: string): string =>
+  s
+    .replace(/[\u00a0\u202f\u2009\u2007]/g, ' ')
+    .replace(/\u2212/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d\u201e]/g, '"')
+
 const runden = (v: number) => Math.round(v * 100) / 100
 
 /** Netto und Steuer einer Zeile — je nachdem, ob der Preis brutto oder netto ist */
@@ -59,6 +75,15 @@ function zerlege(betrag: number, satz: number, preiseSind: 'brutto' | 'netto') {
 
 export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margin: 50 })
+
+  // Einmal an der Quelle geradeziehen statt an jeder der dreißig Textstellen
+  const textRoh = doc.text.bind(doc)
+  ;(doc as unknown as { text: (...a: unknown[]) => unknown }).text = (...a: unknown[]) =>
+    (textRoh as (...b: unknown[]) => unknown)(
+      typeof a[0] === 'string' ? pdfText(a[0]) : a[0],
+      ...a.slice(1),
+    )
+
   const teile: Buffer[] = []
   doc.on('data', (t: Buffer) => teile.push(t))
   const fertig = new Promise<Buffer>((auf) => doc.on('end', () => auf(Buffer.concat(teile))))
@@ -67,12 +92,58 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   const rechts = 545
   const datum = daten.datum ? new Date(daten.datum) : new Date()
 
-  // ── Kopf ──────────────────────────────────────────────────────────────────
-  doc.fontSize(16).text('VINCENT HELLMANN', { characterSpacing: 2 })
-  doc.moveDown(0.2)
+  // ── Fußzeile auf jeder Seite ──────────────────────────────────────────────
+  // Firmierung, SIRET und TVA gehören auf jedes Blatt, das das Haus verlässt —
+  // nicht nur auf die erste Seite eines mehrseitigen Angebots.
+  const angaben = pflichtangaben(company).join(' · ')
+  const fussZeichnen = () => {
+    if (!angaben) return
+    const yAlt = doc.y
+    const untenAlt = doc.page.margins.bottom
+    doc.page.margins.bottom = 0
+    doc
+      .fontSize(7)
+      .fillColor('#999')
+      .text(angaben, links, doc.page.height - 38, { width: rechts - links, align: 'center' })
+    doc.page.margins.bottom = untenAlt
+    doc.fillColor('#000').fontSize(10)
+    doc.y = yAlt
+  }
+  doc.on('pageAdded', fussZeichnen)
+
+  // ── Briefkopf ─────────────────────────────────────────────────────────────
+  // Das Logo als Bild statt gesperrter Schrift: Wer ein Angebot über mehrere
+  // tausend Euro bekommt, soll dieselbe Marke sehen wie auf der Website.
+  const logo = path.join(process.cwd(), 'public', 'logo.png')
+  let kopfhoehe = 0
+  try {
+    if (fs.existsSync(logo)) {
+      doc.image(logo, links, 48, { width: 190 })
+      // 1994 × 140 — daraus die Höhe bei 190 pt Breite
+      kopfhoehe = Math.round((190 * 140) / 1994)
+      doc.y = 48 + kopfhoehe + 10
+    }
+  } catch {
+    // Ohne Logo geht es auch weiter, nur eben mit Schriftzug
+  }
+  if (!kopfhoehe) {
+    doc.fontSize(16).text('VINCENT HELLMANN', { characterSpacing: 2 })
+    doc.moveDown(0.2)
+  }
+
+  // Corten-Strich wie auf der Website — ein Akzent, mehr nicht
+  doc
+    .moveTo(links, doc.y)
+    .lineTo(links + 64, doc.y)
+    .lineWidth(1.5)
+    .strokeColor('#a86b3d')
+    .stroke()
+  doc.lineWidth(1)
+  doc.moveDown(0.6)
+
   doc.fontSize(9).fillColor('#666')
   const absender = [firmenzeile(company), company?.address].filter(Boolean).join(' · ')
-  if (absender) doc.text(absender, { width: rechts - links })
+  if (absender) doc.text(absender, links, doc.y, { width: rechts - links })
   doc.fillColor('#000')
 
   const istAngebot = daten.art === 'angebot'
@@ -237,21 +308,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.fontSize(8).text(company.latePaymentNote, links, doc.y, { width: rechts - links })
   }
 
-  // ── Pflichtangaben ────────────────────────────────────────────────────────
-  const fuss = [
-    firmenzeile(company),
-    company?.address,
-    company?.siret ? `SIRET: ${company.siret}` : null,
-    company?.vatId ? `TVA: ${company.vatId}` : null,
-    company?.rcsNumber ? `RCS ${company.rcsCity ?? ''} ${company.rcsNumber}`.trim() : null,
-  ].filter(Boolean)
-  if (fuss.length) {
-    doc.moveDown(1)
-    doc.fontSize(7).fillColor('#888').text(fuss.join(' · '), links, doc.y, {
-      width: rechts - links,
-    })
-  }
-
+  fussZeichnen()
   doc.end()
   return fertig
 }

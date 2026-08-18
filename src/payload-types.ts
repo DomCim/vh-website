@@ -2073,6 +2073,10 @@ export interface Integration {
         sentMailbox?: string | null;
         trashMailbox?: string | null;
         /**
+         * Wird unter jede Mail gesetzt, die aus dem Büro rausgeht. Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.
+         */
+        signature?: string | null;
+        /**
          * Nur nötig, wenn dieses Postfach über einen anderen Server verschickt als oben eingestellt.
          */
         smtpHost?: string | null;
@@ -2310,6 +2314,7 @@ export interface IntegrationsSelect<T extends boolean = true> {
         pass?: T;
         sentMailbox?: T;
         trashMailbox?: T;
+        signature?: T;
         smtpHost?: T;
         smtpPort?: T;
         smtpUser?: T;

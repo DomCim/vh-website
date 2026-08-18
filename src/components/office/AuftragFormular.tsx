@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { VersandKnopf } from './VersandKnopf'
+
 export type AuftragPosition = {
   description: string
   quantity: number
@@ -190,11 +192,17 @@ export function AuftragFormular({
               target="_blank"
               rel="noreferrer"
             >
-              Auftragsbestätigung
+              Bestätigung ansehen
             </a>
           </div>
         )}
       </div>
+
+      {w.id && (
+        <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <VersandKnopf art="bestaetigung" id={w.id} leise />
+        </div>
+      )}
 
       <h2>Was gefertigt wird</h2>
       {(w.positions ?? []).map((p, i) => (

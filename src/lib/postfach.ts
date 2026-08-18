@@ -1,11 +1,15 @@
+import fs from 'fs'
+import path from 'path'
+
 import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
 import MailComposer from 'nodemailer/lib/mail-composer'
 import type { Payload } from 'payload'
 
+import { pflichtangaben } from './mail'
 import type { MailboxKonfiguration } from './settings'
-import { getIntegrations } from './settings'
+import { firmenAngaben, getIntegrations } from './settings'
 
 /**
  * Postfach im Büro.
@@ -275,6 +279,56 @@ export async function nachrichtAendern(
  * Die Kopie ist der Grund, warum das nicht einfach `sendMail` ist: Sonst fehlt
  * die Antwort im Postfach, sobald man am Rechner nachschaut.
  */
+/** Fremdtext gehört escaped in eine HTML-Mail, sonst zerlegt ein Preis „<" das Layout */
+const sicher = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+/**
+ * Briefbogen für Mails aus dem Büro.
+ *
+ * Dasselbe Bild wie auf der Website und auf dem PDF: Logo, Corten-Strich,
+ * ruhiger Satz. Das Logo hängt als Anhang mit drin und wird über `cid`
+ * eingebunden — ein aus dem Netz nachgeladenes Bild blocken die meisten
+ * Mailprogramme, und dann stünde die Mail ohne Kopf da.
+ */
+function briefbogen(rumpf: string, signatur: string, angaben: string[]): string {
+  return `<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px;font-size:14px;line-height:1.55">
+  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:18px;display:block" />
+  <div style="width:64px;height:2px;background:#a86b3d;margin:10px 0 22px"></div>
+  <div style="white-space:pre-wrap">${sicher(rumpf)}</div>
+  ${signatur ? `<div style="margin-top:24px;white-space:pre-wrap;color:#444">${sicher(signatur)}</div>` : ''}
+  ${
+    angaben.length
+      ? `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${sicher(
+          angaben.join(' · '),
+        )}</p>`
+      : ''
+  }
+</div>`
+}
+
+/** Signatur aus dem Postfach, sonst aus Absendername und Kontaktdaten */
+function signaturText(
+  fach: MailboxKonfiguration,
+  absenderName: string,
+  kontakt: { phone?: string | null; website?: string | null },
+): string {
+  if (fach.signature?.trim()) return fach.signature.trim()
+  return [
+    'Mit freundlichen Grüßen',
+    absenderName,
+    fach.address,
+    kontakt.phone || null,
+    kontakt.website || null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
 export async function nachrichtSenden(
   payload: Payload,
   fach: MailboxKonfiguration,
@@ -301,18 +355,38 @@ export async function nachrichtSenden(
     auth: benutzer ? { user: benutzer, pass: passwort } : undefined,
   })
 
+  // Briefbogen zusammenstellen — Pflichtangaben kommen aus den
+  // Website-Einstellungen und lassen sich nicht wegkonfigurieren
+  const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 }).catch(() => null)
+  const firma = firmenAngaben(settings)
+  const signatur = signaturText(fach, email.fromName, {
+    phone: (settings as Record<string, any>)?.contact?.phone,
+    website: (settings as Record<string, any>)?.contact?.website,
+  })
+  const angaben = pflichtangaben(firma)
+
+  const logoDatei = path.join(process.cwd(), 'public', 'logo.png')
+  const logoAnhang = fs.existsSync(logoDatei)
+    ? [{ filename: 'logo.png', path: logoDatei, cid: 'vh-logo' }]
+    : []
+
   const nachricht = {
     from: `"${email.fromName}" <${fach.address}>`,
     to: eingabe.an,
     subject: eingabe.betreff,
-    text: eingabe.text,
+    // Nur-Text-Fassung bleibt dabei: Manche lesen so, und Spamfilter mögen es
+    text: [eingabe.text, signatur, angaben.join(' · ')].filter(Boolean).join('\n\n--\n'),
+    html: briefbogen(eingabe.text, signatur, angaben),
     inReplyTo: eingabe.antwortAufMessageId,
     references: eingabe.antwortAufMessageId,
-    attachments: (eingabe.dateien ?? []).map((d) => ({
-      filename: d.name,
-      content: d.inhalt,
-      contentType: d.typ,
-    })),
+    attachments: [
+      ...logoAnhang,
+      ...(eingabe.dateien ?? []).map((d) => ({
+        filename: d.name,
+        content: d.inhalt,
+        contentType: d.typ,
+      })),
+    ],
   }
 
   // Einmal bauen, zweimal verwenden: einmal verschicken, einmal ablegen —

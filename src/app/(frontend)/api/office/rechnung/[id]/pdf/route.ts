@@ -1,6 +1,5 @@
 import { payloadClient } from '../../../../../../../lib/data'
-import { rechnungPdf } from '../../../../../../../lib/invoice'
-import { firmenAngaben } from '../../../../../../../lib/settings'
+import { rechnungDokument } from '../../../../../../../lib/dokumente'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,45 +12,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { id } = await params
-  const rechnung = await payload
-    .findByID({ collection: 'outgoing-invoices', id, depth: 1, overrideAccess: true })
-    .catch(() => null)
-  if (!rechnung) return new Response('Nicht gefunden', { status: 404 })
-  if (!rechnung.invoiceNumber) {
-    return new Response('Diese Rechnung ist noch ein Entwurf und hat keine Nummer.', { status: 409 })
-  }
-
-  const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
-  const pdf = await rechnungPdf(
-    {
-      nummer: rechnung.invoiceNumber,
-      datum: rechnung.issueDate,
-      faelligAm: rechnung.dueDate,
-      preiseSind: 'netto',
-      empfaenger: {
-        name: rechnung.customerName,
-        anschrift: (rechnung.customerAddress ?? '').split('\n').filter(Boolean),
+  try {
+    const unterlage = await rechnungDokument(payload, id)
+    return new Response(new Uint8Array(unterlage.datei), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${unterlage.dateiname}"`,
       },
-      positionen: (rechnung.items ?? []).map((p) => ({
-        bezeichnung: p.description,
-        zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-        menge: p.quantity,
-        einzelpreis: p.unitPrice,
-        steuersatz: p.vatRate,
-      })),
-      rabatt: rechnung.discountTotal
-        ? { bezeichnung: rechnung.discountReason || 'Nachlass', betrag: rechnung.discountTotal }
-        : null,
-      hinweis: rechnung.note,
-      reverseCharge: Boolean(rechnung.reverseCharge),
-    },
-    firmenAngaben(settings),
-  )
-
-  return new Response(new Uint8Array(pdf), {
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${rechnung.invoiceNumber}.pdf"`,
-    },
-  })
+    })
+  } catch (err) {
+    const grund = err instanceof Error ? err.message : ''
+    if (grund === 'entwurf') {
+      return new Response('Diese Rechnung ist noch ein Entwurf und hat keine Nummer.', {
+        status: 409,
+      })
+    }
+    return new Response('Nicht gefunden', { status: 404 })
+  }
 }

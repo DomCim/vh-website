@@ -70,15 +70,26 @@ export function firmenzeile(company?: CompanyInfo): string {
   return `${teile}${kapital}`.trim()
 }
 
-/** Pflichtangaben-Fußzeile (SIRET, TVA-Nr.) für Bestell-Mails */
-function companyFooter(company?: CompanyInfo): string {
-  if (!company) return ''
-  const parts = [
+/**
+ * Pflichtangaben, die unter jede geschäftliche Mail gehören.
+ *
+ * In Frankreich gilt für die geschäftliche E-Mail dasselbe wie für den
+ * Briefbogen: Firmierung, SIRET und TVA-Nummer müssen darauf stehen. Deshalb
+ * liegt das hier zentral und nicht in jeder einzelnen Vorlage.
+ */
+export function pflichtangaben(company?: CompanyInfo): string[] {
+  if (!company) return []
+  return [
     firmenzeile(company),
     company.siret ? `SIRET: ${company.siret}` : null,
     company.vatId ? `TVA: ${company.vatId}` : null,
     company.rcsNumber ? `RCS ${company.rcsCity ?? ''} ${company.rcsNumber}`.trim() : null,
-  ].filter(Boolean)
+  ].filter(Boolean) as string[]
+}
+
+/** Pflichtangaben-Fußzeile (SIRET, TVA-Nr.) für Bestell-Mails */
+function companyFooter(company?: CompanyInfo): string {
+  const parts = pflichtangaben(company)
   if (parts.length === 0) return ''
   return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`
 }

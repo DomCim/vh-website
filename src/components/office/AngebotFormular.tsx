@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
 import { betraege } from '../../lib/betraege'
+import { VersandKnopf } from './VersandKnopf'
 
 export type AngebotPosition = {
   description: string
@@ -332,9 +333,10 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         )}
         {versendet && (
           <a className="buero-knopf leise" href={`/api/office/angebot/${w.id}/pdf`} target="_blank" rel="noreferrer">
-            PDF
+            PDF ansehen
           </a>
         )}
+        {versendet && w.id && <VersandKnopf art="angebot" id={w.id} />}
         {versendet && w.status !== 'angenommen' && (
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('angenommen')}>
             Angenommen

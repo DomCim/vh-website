@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
+import { VersandKnopf } from './VersandKnopf'
+
 export type Position = {
   description: string
   quantity: number
@@ -291,9 +293,17 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           </button>
         )}
         {festgeschrieben && (
-          <a className="buero-knopf leise" href={`/api/office/rechnung/${w.id}/pdf`} target="_blank" rel="noreferrer">
-            PDF herunterladen
-          </a>
+          <>
+            <a
+              className="buero-knopf leise"
+              href={`/api/office/rechnung/${w.id}/pdf`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              PDF ansehen
+            </a>
+            {w.id && <VersandKnopf art="rechnung" id={w.id} />}
+          </>
         )}
       </div>
     </div>

@@ -210,6 +210,15 @@ export const Integrations: GlobalConfig = {
           ],
         },
         {
+          name: 'signature',
+          label: 'Signatur',
+          type: 'textarea',
+          admin: {
+            description:
+              'Wird unter jede Mail gesetzt, die aus dem Büro rausgeht. Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.',
+          },
+        },
+        {
           type: 'row',
           fields: [
             {
