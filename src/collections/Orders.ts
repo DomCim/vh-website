@@ -311,6 +311,18 @@ export const Orders: CollectionConfig = {
       },
     },
     {
+      name: 'reviewRequestedAt',
+      label: 'Um Kundenstimme gebeten am',
+      type: 'date',
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'shippedAt',
+      label: 'Versendet am',
+      type: 'date',
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
       name: 'consent',
       label: 'Bestätigt beim Bestellen',
       type: 'group',

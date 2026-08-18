@@ -17,6 +17,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **Elektronische Rechnung**: Ausgangsrechnungen als **Factur-X** (PDF/A-3 mit eingebetteter XML nach EN 16931), XML auch einzeln herunterladbar
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
+- **Newsletter** mit Double-Opt-In, Versand aus dem Büro und Abmeldelink; **Mahnwesen** in drei Stufen; automatisches Nachfassen bei Angeboten und Bitte um Kundenstimmen nach der Lieferung
 - **Verbraucherrecht**: Widerrufsbelehrung, Muster-Widerrufsformular, Versand & Zahlung als eigene Seiten; Zustimmung in der Kasse wird mit Zeitpunkt an der Bestellung festgehalten
 - **Betrieb**: `/api/healthz` für Monitoring, **nächtliche Komplettsicherung** (Datenbank + Bilder in einem Archiv, auf die NAS geschoben, bedienbar im Büro), Sicherheits-Kopfzeilen inkl. CSP, Erinnerung an fällige Belege
 
@@ -145,6 +146,18 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Nachfassen, Mahnen, Newsletter
+
+Drei Stellen, an denen bisher Geld liegen blieb:
+
+**Mahnwesen.** An einer gestellten Rechnung steht im Büro „Erinnern / mahnen". Welche Stufe dran ist, ergibt sich aus dem, was schon draußen war — Zahlungserinnerung (freundlich, ohne Kosten, zehn Tage Frist), Mahnung (mit der gesetzlichen Pauschale von 40 € nach Art. L441-10 Code de commerce) und letzte Mahnung. Verschickt wird über das Postfach wie jedes andere Dokument; erst nach erfolgreichem Versand wird die Stufe hochgezählt. Die Rechnungsliste hat einen Filter „Überfällig", und einmal am Tag meldet das Büro die offenen Posten aufs Handy.
+
+**Angebote nachfassen.** Beim Verschicken merkt sich das Angebot den Tag. Bleibt es sieben Tage ohne Antwort, meldet sich das Büro — danach höchstens wöchentlich, damit die Meldung nicht zur Tapete wird. Läuft die Gültigkeit demnächst ab, steht das dabei.
+
+**Newsletter.** Anmeldung im Fuß jeder Seite, Bestätigung per Mail (Double-Opt-In — ohne den Klick geht nichts raus), Abmeldung mit einem Klick aus jeder Mail. Geschrieben und verschickt wird unter **Büro → Newsletter**: Vorlage aus einem News-Beitrag übernehmen, Testmail an sich selbst, dann an alle. Ein Newsletter lässt sich nicht zurückholen, deshalb die Zwischenschritte.
+
+**Kundenstimmen einholen.** Zwei Wochen nach dem Versand fragt eine Mail, ob die Kundschaft ein paar Sätze schreiben mag — genau einmal. Der Text landet zur Prüfung im Admin (Haken „Zur Prüfung eingegangen") und erscheint erst auf der Website, wenn jemand ihn freigibt. Die Seite dafür ist nur mit dem Schlüssel aus der Bestellung erreichbar: Hinter jeder Stimme steht damit eine echte Lieferung.
 
 ## Elektronische Rechnung (Factur-X)
 

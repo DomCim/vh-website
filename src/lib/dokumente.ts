@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
+import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
 import { firmenAngaben } from './settings'
 
 /**
@@ -22,9 +23,15 @@ export type Dokument = {
   an?: string | null
   /** Vorschlag für den Mailtext */
   text: string
+  /**
+   * Was nach dem erfolgreichen Verschicken festzuhalten ist — etwa die
+   * verschickte Mahnstufe. Bewusst erst danach: Beim Ansehen im Browser wird
+   * dasselbe Dokument erzeugt, und das darf nichts verändern.
+   */
+  nachSenden?: () => Promise<void>
 }
 
-export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung'
+export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung'
 
 const datum = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
@@ -80,6 +87,18 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
   return {
     datei,
     dateiname: `${a.quoteNumber}.pdf`,
+    // Ab wann nachgefasst wird, hängt daran — deshalb erst nach dem Versand
+    // setzen und nicht schon beim Ansehen im Browser.
+    nachSenden: a.sentAt
+      ? undefined
+      : async () => {
+          await payload.update({
+            collection: 'quotes',
+            id: a.id,
+            overrideAccess: true,
+            data: { sentAt: new Date().toISOString() },
+          })
+        },
     betreff: `Angebot ${a.quoteNumber}${fassung}${a.title ? ` — ${a.title}` : ''}`,
     an: await partnerMail(payload, a.customer),
     text:
@@ -209,6 +228,87 @@ export async function rechnungFacturX(
   }
 }
 
+/**
+ * Die nächste Mahnstufe zu einer offenen Rechnung.
+ *
+ * Welche Stufe dran ist, ergibt sich aus dem, was schon verschickt wurde —
+ * niemand muss sich merken, ob die Erinnerung raus war. Die Frist ist bewusst
+ * kurz (zehn Tage bei der Erinnerung, sieben danach): Eine Mahnung ohne Datum
+ * ist eine Bitte.
+ */
+export async function mahnungDokument(
+  payload: Payload,
+  id: string | number,
+): Promise<Dokument> {
+  const r = await payload.findByID({
+    collection: 'outgoing-invoices',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })
+  if (!r?.invoiceNumber) throw new Error('entwurf')
+  if (r.status === 'bezahlt' || r.status === 'storniert') throw new Error('nicht-offen')
+
+  const bisher = (r.reminders ?? []).length
+  const stufe = Math.min(bisher + 1, 3) as Mahnstufe
+
+  const angaben = await firma(payload)
+  // Erst ab der zweiten Stufe: Die Pauschale steht dem Betrieb zwar ab Verzug
+  // zu, aber eine freundliche Erinnerung mit Gebühr ist keine freundliche
+  // Erinnerung mehr.
+  const pauschale = stufe >= 2 ? 40 : 0
+
+  const frist = new Date()
+  frist.setDate(frist.getDate() + (stufe === 1 ? 10 : 7))
+
+  const datei = await mahnungPdf(
+    {
+      stufe,
+      rechnungsnummer: r.invoiceNumber,
+      rechnungsdatum: r.issueDate,
+      faelligAm: r.dueDate,
+      betrag: r.total ?? 0,
+      pauschale,
+      fristBis: frist,
+      empfaenger: {
+        name: r.customerName,
+        anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+      },
+    },
+    angaben,
+  )
+
+  const titel = MAHN_TITEL[stufe]
+
+  return {
+    datei,
+    dateiname: `${titel.replace(/ /g, '-')}-${r.invoiceNumber}.pdf`,
+    betreff: `${titel} zur Rechnung ${r.invoiceNumber}`,
+    an: await partnerMail(payload, r.customer),
+    text:
+      `Guten Tag${r.customerName ? ` ${r.customerName}` : ''},\n\n` +
+      `anbei ${stufe === 1 ? 'eine Zahlungserinnerung' : 'unsere Mahnung'} zur Rechnung ` +
+      `${r.invoiceNumber} vom ${datum(r.issueDate)}.\n` +
+      `Wir bitten um Ausgleich bis zum ${datum(frist.toISOString())}.\n` +
+      (stufe === 1
+        ? `\nSollte sich die Zahlung überschnitten haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.`
+        : `\nBitte melden Sie sich, falls es Gründe für die Verzögerung gibt — eine Ratenzahlung lässt sich vereinbaren.`),
+    nachSenden: async () => {
+      await payload.update({
+        collection: 'outgoing-invoices',
+        id: r.id,
+        overrideAccess: true,
+        data: {
+          reminders: [
+            ...(r.reminders ?? []),
+            { level: stufe, sentAt: new Date().toISOString(), lateFee: pauschale || undefined },
+          ],
+        },
+      })
+    },
+  }
+}
+
 export async function bestaetigungDokument(
   payload: Payload,
   id: string | number,
@@ -305,5 +405,6 @@ export async function dokument(
 ): Promise<Dokument> {
   if (art === 'angebot') return angebotDokument(payload, id)
   if (art === 'rechnung') return rechnungDokument(payload, id)
+  if (art === 'mahnung') return mahnungDokument(payload, id)
   return bestaetigungDokument(payload, id)
 }

@@ -107,6 +107,26 @@ export const Quotes: CollectionConfig = {
     {
       type: 'row',
       fields: [
+        {
+          name: 'sentAt',
+          label: 'Verschickt am',
+          type: 'date',
+          admin: {
+            readOnly: true,
+            description: 'Wird beim Versenden gesetzt und ist der Beginn des Nachfassens.',
+          },
+        },
+        {
+          name: 'lastFollowUpAt',
+          label: 'Zuletzt nachgefasst am',
+          type: 'date',
+          admin: { readOnly: true },
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
         { name: 'issueDate', label: 'Angebotsdatum', type: 'date' },
         {
           name: 'validUntil',

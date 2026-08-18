@@ -28,6 +28,7 @@ const ALLE = [
   { href: '/office/inventur', label: 'Inventur' },
   { href: '/office/partner', label: 'Partner' },
   { href: '/office/steuer', label: 'Steuer' },
+  { href: '/office/newsletter', label: 'Newsletter' },
   { href: '/office/sicherung', label: 'Sicherung' },
   { href: '/office/einstellungen', label: 'Einstellungen' },
   { href: '/office/neuerungen', label: 'Neuerungen' },
@@ -42,6 +43,7 @@ const BEREICHE: { titel: string; punkte: { href: string; label: string }[] }[] =
       { href: '/office/anfragen', label: 'Anfragen' },
       { href: '/office/bestellungen', label: 'Bestellungen' },
       { href: '/office/angebote', label: 'Angebote' },
+      { href: '/office/newsletter', label: 'Newsletter' },
     ],
   },
   {

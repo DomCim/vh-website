@@ -166,7 +166,9 @@ export async function getFeaturedProjects(locale: Locale) {
   const payload = await payloadClient()
   const { docs } = await payload.find({
     collection: 'projects',
-    where: { featured: { equals: true } },
+    // `not_equals: true` statt `equals: false`: Stimmen aus der Zeit vor der
+    // Prüfung haben gar keinen Wert im Feld und sollen sichtbar bleiben.
+    where: { and: [{ featured: { equals: true } }, { pending: { not_equals: true } }] },
     sort: 'order',
     locale,
     limit: 3,
@@ -191,7 +193,7 @@ export async function getTestimonialsForProduct(productId: number | string, loca
   const payload = await payloadClient()
   const { docs } = await payload.find({
     collection: 'testimonials',
-    where: { product: { equals: productId } },
+    where: { and: [{ product: { equals: productId } }, { pending: { not_equals: true } }] },
     locale,
     limit: 5,
     depth: 0,

@@ -257,6 +257,21 @@ export const notifyOnShipped: CollectionAfterChangeHook = async ({
   if (context?.skipShippedMail) return doc
   if (operation !== 'update') return doc
   if (doc.status !== 'shipped' || previousDoc?.status === 'shipped') return doc
+
+  // Wann das Stück raus ist, entscheidet später darüber, wann wir um eine
+  // Kundenstimme bitten — direkt nach dem Kauf wäre es zu früh.
+  if (!doc.shippedAt) {
+    await req.payload
+      .update({
+        collection: 'orders',
+        id: doc.id,
+        overrideAccess: true,
+        context: { skipShippedMail: true },
+        data: { shippedAt: new Date().toISOString() },
+      })
+      .catch(() => undefined)
+  }
+
   if (doc.deliveryMethod === 'pickup') return doc
   if (!doc.customer?.email) return doc
 

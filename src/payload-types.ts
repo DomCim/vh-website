@@ -76,6 +76,7 @@ export interface Config {
     orders: Order;
     inquiries: Inquiry;
     'login-codes': LoginCode;
+    'newsletter-subscribers': NewsletterSubscriber;
     contacts: Contact;
     expenses: Expense;
     quotes: Quote;
@@ -105,6 +106,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
+    'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
     contacts: ContactsSelect<false> | ContactsSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
     quotes: QuotesSelect<false> | QuotesSelect<true>;
@@ -520,6 +522,12 @@ export interface Testimonial {
    * Wird dann auf der Produktseite angezeigt
    */
   product?: (number | null) | Product;
+  /**
+   * Von der Kundschaft selbst eingereicht. Solange der Haken steht, erscheint die Stimme nicht auf der Website — erst lesen, dann freigeben.
+   */
+  pending?: boolean | null;
+  submittedEmail?: string | null;
+  orderNumber?: string | null;
   featured?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -607,6 +615,8 @@ export interface Order {
   stripePaymentIntentId?: string | null;
   paypalOrderId?: string | null;
   paypalCaptureId?: string | null;
+  reviewRequestedAt?: string | null;
+  shippedAt?: string | null;
   /**
    * Wird beim Absenden der Kasse festgehalten. Im Streitfall zählt nicht, was auf der Seite stand, sondern was belegbar ist.
    */
@@ -665,6 +675,28 @@ export interface LoginCode {
   codeHash: string;
   expiresAt: string;
   attempts: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Nur bestätigte Adressen bekommen Post.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers".
+ */
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  status: 'offen' | 'bestaetigt' | 'abgemeldet';
+  locale?: ('de' | 'fr' | 'en') | null;
+  token?: string | null;
+  confirmedAt?: string | null;
+  unsubscribedAt?: string | null;
+  /**
+   * Wo die Anmeldung herkam — für den Nachweis.
+   */
+  source?: string | null;
+  lastMailAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -739,6 +771,11 @@ export interface Quote {
   customer?: (number | null) | Contact;
   customerName?: string | null;
   customerAddress?: string | null;
+  /**
+   * Wird beim Versenden gesetzt und ist der Beginn des Nachfassens.
+   */
+  sentAt?: string | null;
+  lastFollowUpAt?: string | null;
   issueDate?: string | null;
   /**
    * Bei Stahlpreisen üblich: 30 Tage.
@@ -912,6 +949,17 @@ export interface OutgoingInvoice {
   subtotal?: number | null;
   vatTotal?: number | null;
   total?: number | null;
+  /**
+   * Wird beim Verschicken fortgeschrieben. Die nächste Stufe ergibt sich daraus von selbst.
+   */
+  reminders?:
+    | {
+        level?: number | null;
+        sentAt?: string | null;
+        lateFee?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Bei Geschäftskunden im EU-Ausland mit gültiger USt-IdNr. — dann alle Sätze auf 0 setzen; der Hinweis erscheint auf der Rechnung.
    */
@@ -1121,6 +1169,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'login-codes';
         value: number | LoginCode;
+      } | null)
+    | ({
+        relationTo: 'newsletter-subscribers';
+        value: number | NewsletterSubscriber;
       } | null)
     | ({
         relationTo: 'contacts';
@@ -1334,6 +1386,9 @@ export interface TestimonialsSelect<T extends boolean = true> {
   author?: T;
   context?: T;
   product?: T;
+  pending?: T;
+  submittedEmail?: T;
+  orderNumber?: T;
   featured?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1407,6 +1462,8 @@ export interface OrdersSelect<T extends boolean = true> {
   stripePaymentIntentId?: T;
   paypalOrderId?: T;
   paypalCaptureId?: T;
+  reviewRequestedAt?: T;
+  shippedAt?: T;
   consent?:
     | T
     | {
@@ -1456,6 +1513,22 @@ export interface LoginCodesSelect<T extends boolean = true> {
   codeHash?: T;
   expiresAt?: T;
   attempts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers_select".
+ */
+export interface NewsletterSubscribersSelect<T extends boolean = true> {
+  email?: T;
+  status?: T;
+  locale?: T;
+  token?: T;
+  confirmedAt?: T;
+  unsubscribedAt?: T;
+  source?: T;
+  lastMailAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1522,6 +1595,8 @@ export interface QuotesSelect<T extends boolean = true> {
   customer?: T;
   customerName?: T;
   customerAddress?: T;
+  sentAt?: T;
+  lastFollowUpAt?: T;
   issueDate?: T;
   validUntil?: T;
   items?:
@@ -1628,6 +1703,14 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   subtotal?: T;
   vatTotal?: T;
   total?: T;
+  reminders?:
+    | T
+    | {
+        level?: T;
+        sentAt?: T;
+        lateFee?: T;
+        id?: T;
+      };
   reverseCharge?: T;
   note?: T;
   project?: T;

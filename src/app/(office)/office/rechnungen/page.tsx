@@ -13,11 +13,16 @@ const STATUS: Record<string, { text: string; art: string }> = {
   storniert: { text: 'Storniert', art: 'warn' },
 }
 
-export default async function RechnungenSeite() {
+export default async function RechnungenSeite({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>
+}) {
   await bueroBenutzer()
+  const { filter } = await searchParams
   const payload = await payloadClient()
 
-  const { docs, totalDocs } = await payload.find({
+  const { docs: alle, totalDocs } = await payload.find({
     collection: 'outgoing-invoices',
     sort: '-issueDate',
     limit: 100,
@@ -25,8 +30,25 @@ export default async function RechnungenSeite() {
     overrideAccess: true,
   })
 
-  const offen = docs.filter((r) => r.status === 'gestellt')
+  const ueberfaellig = (r: { status?: string | null; dueDate?: string | null }) =>
+    r.status === 'gestellt' && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()
+
+  const docs =
+    filter === 'ueberfaellig'
+      ? alle.filter(ueberfaellig)
+      : filter === 'offen'
+        ? alle.filter((r) => r.status === 'gestellt')
+        : alle
+
+  const offen = alle.filter((r) => r.status === 'gestellt')
   const offenSumme = Math.round(offen.reduce((s, r) => s + (r.total ?? 0), 0) * 100) / 100
+  const spaeteAnzahl = alle.filter(ueberfaellig).length
+
+  const filterPunkte = [
+    { wert: undefined, label: 'Alle' },
+    { wert: 'offen', label: 'Offen' },
+    { wert: 'ueberfaellig', label: `Überfällig${spaeteAnzahl ? ` (${spaeteAnzahl})` : ''}` },
+  ]
 
   return (
     <>
@@ -42,7 +64,19 @@ export default async function RechnungenSeite() {
         </Link>
       </div>
 
-      <div className="buero-liste">
+      <div className="buero-nav" style={{ borderRadius: 10, border: '1px solid var(--buero-linie)' }}>
+        {filterPunkte.map((f) => (
+          <Link
+            key={f.label}
+            href={f.wert ? `/office/rechnungen?filter=${f.wert}` : '/office/rechnungen'}
+            aria-current={filter === f.wert ? 'page' : undefined}
+          >
+            {f.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="buero-liste" style={{ marginTop: '1rem' }}>
         {docs.length === 0 ? (
           <div className="buero-leer">
             Noch keine Rechnung.
@@ -54,8 +88,8 @@ export default async function RechnungenSeite() {
         ) : (
           docs.map((r) => {
             const s = STATUS[r.status] ?? { text: r.status, art: '' }
-            const spaet =
-              r.status === 'gestellt' && r.dueDate && new Date(r.dueDate).getTime() < Date.now()
+            const spaet = ueberfaellig(r)
+            const gemahnt = (r.reminders ?? []).length
             return (
               <Link key={r.id} href={`/office/rechnungen/${r.id}`} className="buero-zeile">
                 <div className="buero-zeile-haupt">
@@ -68,6 +102,11 @@ export default async function RechnungenSeite() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                  {gemahnt > 0 && (
+                    <span className="buero-marker offen">
+                      {gemahnt === 1 ? 'erinnert' : `${gemahnt}× gemahnt`}
+                    </span>
+                  )}
                   <span className={`buero-marker ${spaet ? 'warn' : s.art}`}>
                     {spaet ? 'überfällig' : s.text}
                   </span>

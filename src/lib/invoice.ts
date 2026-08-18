@@ -1,10 +1,8 @@
-import fs from 'fs'
-import path from 'path'
-
 import PDFDocument from 'pdfkit'
 
 import { facturXml, type FacturXDaten } from './facturx'
-import { BRONZE, type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
+import type { CompanyInfo } from './mail'
+import { briefkopf, fusszeile, LINKS, RECHTS, schriftenDa, schriftenSetzen } from './pdfkopf'
 
 /**
  * Rechnungs-PDF.
@@ -78,22 +76,6 @@ function zerlege(betrag: number, satz: number, preiseSind: 'brutto' | 'netto') {
   const netto = runden(betrag / (1 + satz / 100))
   return { netto, steuer: runden(betrag - netto) }
 }
-
-/**
- * Schriften für PDF/A.
- *
- * Die in PDF eingebauten Standardschriften sind nicht eingebettet — PDF/A
- * verlangt aber genau das, sonst sieht die Rechnung in zehn Jahren womöglich
- * anders aus. Liberation Sans liegt deshalb im Verzeichnis public/fonts und
- * ist in den Maßen mit Helvetica verträglich; das Rechnungsbild ändert sich
- * dadurch nicht.
- */
-const SCHRIFTEN = {
-  normal: path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf'),
-  fett: path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Bold.ttf'),
-}
-
-const schriftenDa = () => fs.existsSync(SCHRIFTEN.normal) && fs.existsSync(SCHRIFTEN.fett)
 
 /**
  * XMP-Kennzeichnung, an der ein Empfänger die eingebettete Rechnung erkennt.
@@ -175,11 +157,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
       : {}),
   })
 
-  if (schriftenDa()) {
-    doc.registerFont('Sans', SCHRIFTEN.normal)
-    doc.registerFont('Sans-Fett', SCHRIFTEN.fett)
-    doc.font('Sans')
-  }
+  schriftenSetzen(doc)
 
   // Einmal an der Quelle geradeziehen statt an jeder der dreißig Textstellen
   const textRoh = doc.text.bind(doc)
@@ -193,71 +171,13 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   doc.on('data', (t: Buffer) => teile.push(t))
   const fertig = new Promise<Buffer>((auf) => doc.on('end', () => auf(Buffer.concat(teile))))
 
-  const links = 50
-  const rechts = 545
+  const links = LINKS
+  const rechts = RECHTS
   const datum = daten.datum ? new Date(daten.datum) : new Date()
 
-  // ── Fußzeile auf jeder Seite ──────────────────────────────────────────────
-  // Firmierung, SIRET und TVA gehören auf jedes Blatt, das das Haus verlässt —
-  // nicht nur auf die erste Seite eines mehrseitigen Angebots.
-  const angaben = pflichtangaben(company).join(' · ')
-  const fussZeichnen = () => {
-    if (!angaben) return
-    const yAlt = doc.y
-    const untenAlt = doc.page.margins.bottom
-    doc.page.margins.bottom = 0
-    doc
-      .fontSize(7)
-      .fillColor('#999')
-      .text(angaben, links, doc.page.height - 38, { width: rechts - links, align: 'center' })
-    doc.page.margins.bottom = untenAlt
-    doc.fillColor('#000').fontSize(10)
-    doc.y = yAlt
-  }
-  doc.on('pageAdded', fussZeichnen)
+  const fussZeichnen = fusszeile(doc, company)
 
-  // ── Briefkopf ─────────────────────────────────────────────────────────────
-  // Das Logo als Bild statt gesperrter Schrift: Wer ein Angebot über mehrere
-  // tausend Euro bekommt, soll dieselbe Marke sehen wie auf der Website.
-  const logo = path.join(process.cwd(), 'public', 'logo.png')
-  let kopfhoehe = 0
-  try {
-    if (fs.existsSync(logo)) {
-      doc.image(logo, links, 48, { width: 190 })
-      // 1994 × 140 — daraus die Höhe bei 190 pt Breite
-      kopfhoehe = Math.round((190 * 140) / 1994)
-      doc.y = 48 + kopfhoehe + 10
-    }
-  } catch {
-    // Ohne Logo geht es auch weiter, nur eben mit Schriftzug
-  }
-  if (!kopfhoehe) {
-    doc.fontSize(16).text('VINCENT HELLMANN', { characterSpacing: 2 })
-    doc.moveDown(0.2)
-  }
-
-  /**
-   * Corten-Strich wie auf der Website: läuft nach rechts weich aus, je größer
-   * die Überschrift, desto länger der Strich. Im PDF als echter Verlauf —
-   * anders als in der Mail muss hier kein Outlook mitspielen.
-   */
-  const cortenStrich = (gross = false) => {
-    const breite = gross ? 112 : 40
-    const hoehe = gross ? 2.5 : 1.5
-    const y = doc.y + (gross ? 4 : 3)
-    const verlauf = doc.linearGradient(links, y, links + breite, y)
-    verlauf.stop(0, BRONZE).stop(0.3, BRONZE).stop(1, BRONZE, 0)
-    doc.rect(links, y, breite, hoehe).fill(verlauf)
-    doc.fillColor('#000')
-    doc.y = y + hoehe + (gross ? 10 : 7)
-  }
-
-  cortenStrich(true)
-
-  doc.fontSize(9).fillColor('#666')
-  const absender = [firmenzeile(company), company?.address].filter(Boolean).join(' · ')
-  if (absender) doc.text(absender, links, doc.y, { width: rechts - links })
-  doc.fillColor('#000')
+  const cortenStrich = briefkopf(doc, company)
 
   const istAngebot = daten.art === 'angebot'
   doc.moveDown(1.5)

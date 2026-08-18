@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { RechnungFormular } from '../../../../../components/office/RechnungFormular'
+import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
 import { payloadClient } from '../../../../../lib/data'
 import { bueroBenutzer } from '../../../../../lib/office'
+import { MAHN_TITEL } from '../../../../../lib/mahnung'
 import { firmenAngaben } from '../../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +25,7 @@ export default async function RechnungBearbeiten({
   if (!r) notFound()
 
   const angaben = firmenAngaben(await payload.findGlobal({ slug: 'site-settings', depth: 0 }))
+  const mahnungen = r.reminders ?? []
 
   // Was der elektronischen Fassung noch fehlt. Lieber hier auffallen als beim
   // Empfänger, der die Rechnung kommentarlos abweist.
@@ -48,7 +51,22 @@ export default async function RechnungBearbeiten({
             <a className="buero-knopf schmal" href={`/api/office/rechnung/${r.id}/xml`}>
               XML herunterladen
             </a>
+            {r.status === 'gestellt' && <VersandKnopf art="mahnung" id={r.id} leise />}
           </div>
+
+          {mahnungen.length > 0 && (
+            <p className="buero-unterzeile" style={{ marginTop: '-.6rem' }}>
+              Bereits verschickt:{' '}
+              {mahnungen
+                .map(
+                  (m) =>
+                    `${MAHN_TITEL[(m.level ?? 1) as 1 | 2 | 3]} am ${new Date(
+                      m.sentAt ?? '',
+                    ).toLocaleDateString('de-DE')}`,
+                )
+                .join(' · ')}
+            </p>
+          )}
           {fehlt.length > 0 && (
             <div className="buero-hinweis warn">
               <strong>Für die elektronische Rechnung fehlt noch:</strong> {fehlt.join(' · ')}. Das

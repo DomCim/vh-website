@@ -22,6 +22,7 @@ import { Jobs } from './collections/Jobs'
 import { LoginCodes } from './collections/LoginCodes'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
+import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { Orders } from './collections/Orders'
 import { OutgoingInvoices } from './collections/OutgoingInvoices'
 import { Products } from './collections/Products'
@@ -72,6 +73,7 @@ export default buildConfig({
     Orders,
     Inquiries,
     LoginCodes,
+    NewsletterSubscribers,
     // Büro: Geschäftszahlen, nur für die Inhaberrolle
     Contacts,
     Expenses,

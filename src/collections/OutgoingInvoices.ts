@@ -254,6 +254,25 @@ export const OutgoingInvoices: CollectionConfig = {
       ],
     },
     {
+      name: 'reminders',
+      label: 'Verschickte Mahnungen',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description:
+          'Wird beim Verschicken fortgeschrieben. Die nächste Stufe ergibt sich daraus von selbst.',
+      },
+      fields: [
+        {
+          name: 'level',
+          label: 'Stufe',
+          type: 'number',
+        },
+        { name: 'sentAt', label: 'Verschickt am', type: 'date' },
+        { name: 'lateFee', label: 'Pauschale (EUR)', type: 'number' },
+      ],
+    },
+    {
       name: 'reverseCharge',
       label: 'Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge)',
       type: 'checkbox',

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import type { Locale } from '../../lib/i18n'
+import { NewsletterAnmeldung, type NewsletterDict } from '../NewsletterAnmeldung'
 
 type Settings = {
   siteName?: string | null
@@ -19,6 +20,7 @@ type Settings = {
 } | null
 
 type Dict = {
+  newsletter: NewsletterDict
   footer: {
     impressum: string
     datenschutz: string
@@ -134,6 +136,14 @@ export function Footer({
               />
             )}
           </div>
+
+          {/* Die Liste der Interessierten ist bei Einzelstücken das
+              wertvollste Gut — deshalb steht sie hier und nicht versteckt. */}
+          <p className="tracking-nav mt-8 mb-1 text-xs font-semibold uppercase text-white">
+            {dict.newsletter.title}
+          </p>
+          <p className="text-sm text-white/60">{dict.newsletter.intro}</p>
+          <NewsletterAnmeldung locale={locale} dict={dict.newsletter} kompakt />
         </div>
       </div>
 
