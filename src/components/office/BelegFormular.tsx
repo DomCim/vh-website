@@ -73,7 +73,9 @@ export function BelegFormular({
         return
       }
       setzen({ documentId: j.id, documentUrl: j.url })
-      if (kiVerfuegbar) await auslesen(j.id)
+      // Immer versuchen: Eine elektronische Rechnung liest sich auch ohne
+      // hinterlegten KI-Schlüssel, weil die Daten im PDF stehen.
+      await auslesen(j.id)
     } catch {
       setMeldung('Upload fehlgeschlagen.')
     } finally {
@@ -97,7 +99,7 @@ export function BelegFormular({
       if (!res.ok) {
         setMeldung(
           j.error === 'kein-schluessel'
-            ? 'Kein Anthropic-Schlüssel hinterlegt — Felder bitte von Hand ausfüllen.'
+            ? 'Keine elektronische Rechnung im PDF und kein KI-Schlüssel hinterlegt — Felder bitte von Hand ausfüllen.'
             : 'Der Beleg konnte nicht gelesen werden.',
         )
         return
@@ -117,9 +119,13 @@ export function BelegFormular({
         extraction: { status: 'ungeprueft', confidence: b.sicherheit, note: b.hinweis },
       })
       setMeldung(
-        `Gelesen mit ${b.sicherheit} % Sicherheit — bitte gegen den Beleg prüfen.${
-          b.hinweis ? ` Hinweis: ${b.hinweis}` : ''
-        }`,
+        j.quelle === 'factur-x'
+          ? `Elektronische Rechnung erkannt — die Werte kommen unverändert aus dem Beleg.${
+              b.hinweis ? ` ${b.hinweis}` : ''
+            } Nur die Kategorie muss noch stimmen.`
+          : `Gelesen mit ${b.sicherheit} % Sicherheit — bitte gegen den Beleg prüfen.${
+              b.hinweis ? ` Hinweis: ${b.hinweis}` : ''
+            }`,
       )
     } catch {
       setMeldung('Der Beleg konnte nicht gelesen werden.')
@@ -175,8 +181,8 @@ export function BelegFormular({
           />
           <span style={{ marginTop: '.4rem' }}>
             {kiVerfuegbar
-              ? 'Nach dem Hochladen wird der Beleg automatisch ausgelesen.'
-              : 'Ohne hinterlegten KI-Schlüssel werden die Felder von Hand ausgefüllt.'}
+              ? 'Nach dem Hochladen liest sich der Beleg selbst: Steckt eine elektronische Rechnung im PDF, kommen die Werte von dort — sonst schaut Claude sich den Beleg an.'
+              : 'Ohne hinterlegten KI-Schlüssel werden nur elektronische Rechnungen ausgelesen, alles andere von Hand ausgefüllt.'}
           </span>
         </label>
       ) : (
@@ -186,16 +192,14 @@ export function BelegFormular({
               Beleg ansehen
             </a>
           )}
-          {kiVerfuegbar && (
-            <button
-              type="button"
-              className="buero-knopf leise"
-              disabled={laeuft !== null}
-              onClick={() => void auslesen()}
-            >
-              {laeuft === 'lesen' ? 'liest …' : 'Erneut auslesen'}
-            </button>
-          )}
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft !== null}
+            onClick={() => void auslesen()}
+          >
+            {laeuft === 'lesen' ? 'liest …' : 'Erneut auslesen'}
+          </button>
           <button
             type="button"
             className="buero-knopf leise"

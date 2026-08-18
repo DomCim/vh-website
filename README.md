@@ -129,7 +129,7 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Aufträge** | Der Durchlauf durch die Werkstatt, mit Stoppuhr für die Arbeitszeit und Lieferschein zum Mitgeben. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
 | **Artikel** | Stückliste (Material je Stück), externe Dienstleister und die Arbeitszeit je Stück — daraus rechnet die Seite den Einsatz gegen den Website-Preis und schlägt einen Preis vor. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
 | **Kalender** | Ein Monatsblatt mit allem, was ein Datum hat: Fertigstellungen, Liefertermine, ablaufende Angebote, fällige Belege. |
-| **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als PDF; Eingangsbelege per Foto, ausgelesen von Claude und danach geprüft. |
+| **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als Factur-X-PDF; Eingangsbelege per Foto oder PDF — steckt eine elektronische Rechnung darin, werden die Werte von dort übernommen, sonst liest Claude den Beleg. |
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
 | **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
@@ -197,6 +197,8 @@ Damit das aufgeht, sind neue Angaben nötig:
 - **An der Rechnung**: SIRET/SIREN und TVA-Nummer des Kunden (bei Geschäftskunden Pflicht), Bestellnummer des Kunden, Liefer-/Leistungsdatum, Art des Geschäfts, bei Bedarf eine abweichende Lieferanschrift.
 
 Fehlt etwas davon, steht das als Hinweis an der Rechnung — das PDF entsteht trotzdem, eine Empfängerplattform würde es aber zurückweisen. Neben „PDF ansehen" gibt es „XML herunterladen", falls Steuerberater oder Plattform den Datensatz einzeln wollen.
+
+**Eingehende E-Rechnungen** liest das Büro ebenfalls: Wird ein Beleg als PDF hochgeladen, sucht das System zuerst nach einer eingebetteten Rechnungs-XML (Factur-X/ZUGFeRD ab 1.0, XRechnung im CII-Format). Ist eine da, kommen Lieferant, Nummer, Datum, Zahlungsziel und alle Beträge unverändert von dort — exakt, sofort und ohne KI. Erst wenn keine XML im PDF steckt (oder es ein Foto ist), schaut Claude sich den Beleg an. Damit ist auch die Empfangspflicht ab September 2026 abgedeckt.
 
 **Was hier nicht dabei ist:** die Anbindung an eine *Plateforme Agréée* (PA). Die Datei ist normgerecht, den Übertragungsweg dorthin muss der Betrieb wählen — das ist eine Vertrags-, keine Programmierfrage. Ebenso das **E-Reporting** der Shop-Umsätze an Privatkundschaft. Beides mit dem Expert-Comptable klären; die Angaben hier sind keine Steuerberatung.
 
