@@ -33,6 +33,9 @@ export const Expenses: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'invoiceDate', 'grossAmount', 'category', 'paid'],
     group: 'Büro',
+    // Gepflegt wird das im Büro unter /office — Payload ist die
+    // öffentliche Verwaltung, alles Interne hat dort genau einen Platz.
+    hidden: true,
     description: 'Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.',
   },
   access: {

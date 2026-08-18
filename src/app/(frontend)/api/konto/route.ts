@@ -55,6 +55,7 @@ export async function POST(req: Request) {
               <p style="color:#666;font-size:13px">Der Code gilt 10 Minuten. Wenn Sie ihn nicht angefordert
               haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.</p>
             </div>`,
+          art: 'zugangscode',
         })
       }
 

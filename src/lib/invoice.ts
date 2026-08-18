@@ -21,6 +21,8 @@ export type RechnungsPosition = {
 }
 
 export type RechnungsDaten = {
+  /** Angebot und Rechnung teilen sich dasselbe Layout */
+  art?: 'rechnung' | 'angebot'
   nummer: string
   datum?: string | null
   faelligAm?: string | null
@@ -31,6 +33,9 @@ export type RechnungsDaten = {
   zusatzzeilen?: { bezeichnung: string; betrag: number; steuersatz: number }[]
   hinweis?: string | null
   reverseCharge?: boolean
+  /** nur bei Angeboten */
+  gueltigBis?: string | null
+  fertigungszeit?: string | null
 }
 
 const euro = (v: number) =>
@@ -66,12 +71,18 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   if (absender) doc.text(absender, { width: rechts - links })
   doc.fillColor('#000')
 
+  const istAngebot = daten.art === 'angebot'
   doc.moveDown(1.5)
-  doc.fontSize(14).text('Rechnung')
+  doc.fontSize(14).text(istAngebot ? 'Angebot' : 'Rechnung')
   doc.fontSize(10)
-  doc.text(`Rechnungsnummer: ${daten.nummer}`)
-  doc.text(`Rechnungsdatum: ${datum.toLocaleDateString('de-DE')}`)
-  if (daten.faelligAm) {
+  doc.text(`${istAngebot ? 'Angebotsnummer' : 'Rechnungsnummer'}: ${daten.nummer}`)
+  doc.text(`${istAngebot ? 'Angebotsdatum' : 'Rechnungsdatum'}: ${datum.toLocaleDateString('de-DE')}`)
+  if (istAngebot) {
+    if (daten.gueltigBis) {
+      doc.text(`Gültig bis: ${new Date(daten.gueltigBis).toLocaleDateString('de-DE')}`)
+    }
+    if (daten.fertigungszeit) doc.text(`Fertigungszeit: ${daten.fertigungszeit}`)
+  } else if (daten.faelligAm) {
     doc.text(`Fällig am: ${new Date(daten.faelligAm).toLocaleDateString('de-DE')}`)
   } else if (company?.paymentTerms) {
     doc.text(`Zahlungsziel: ${company.paymentTerms}`)
@@ -79,7 +90,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
 
   // ── Empfänger ─────────────────────────────────────────────────────────────
   doc.moveDown(1)
-  doc.fontSize(10).text('Rechnungsempfänger', { underline: true })
+  doc.fontSize(10).text(istAngebot ? 'Angebot für' : 'Rechnungsempfänger', { underline: true })
   if (daten.empfaenger.name) doc.text(daten.empfaenger.name)
   for (const zeile of daten.empfaenger.anschrift ?? []) if (zeile) doc.text(zeile)
   if (daten.empfaenger.email) doc.text(daten.empfaenger.email)
@@ -188,12 +199,14 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.moveDown(0.4)
   }
   doc.text(
-    'Jedes Stück entsteht einzeln in Handarbeit. Vielen Dank für Ihren Auftrag.',
+    istAngebot
+      ? 'Jedes Stück entsteht einzeln in Handarbeit. Wir freuen uns auf Ihre Rückmeldung.'
+      : 'Jedes Stück entsteht einzeln in Handarbeit. Vielen Dank für Ihren Auftrag.',
     links,
     doc.y,
     { width: rechts - links },
   )
-  if (company?.latePaymentNote) {
+  if (!istAngebot && company?.latePaymentNote) {
     doc.moveDown(0.4)
     doc.fontSize(8).text(company.latePaymentNote, links, doc.y, { width: rechts - links })
   }

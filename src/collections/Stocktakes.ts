@@ -19,6 +19,9 @@ export const Stocktakes: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'date', 'status', 'totalValue'],
     group: 'Büro',
+    // Gepflegt wird das im Büro unter /office — Payload ist die
+    // öffentliche Verwaltung, alles Interne hat dort genau einen Platz.
+    hidden: true,
   },
   access: {
     read: office,

@@ -334,6 +334,44 @@
   padding: 1.1rem 1.2rem;
 }
 
+/* ── Postfach ───────────────────────────────────────────────────────────── */
+.buero-fach-wahl {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  font: inherit;
+  /* Verhindert das Hineinzoomen von Safari beim Antippen */
+  font-size: 16px;
+  max-width: 100%;
+}
+
+/* Listenzeilen, die keine Links sind, sollen sich trotzdem wie welche anfühlen */
+.buero-zeile-knopf {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--buero-linie);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.buero-zeile-knopf:last-child {
+  border-bottom: none;
+}
+
+/* Fremdes Mail-HTML bleibt im eigenen Rahmen — ohne Skripte, ohne Zugriff */
+.buero-mailrahmen {
+  width: 100%;
+  min-height: 24rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  background: #fff;
+}
+
 .buero-leer {
   color: var(--buero-tinte-leise);
   padding: 2rem 1.1rem;

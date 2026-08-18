@@ -85,6 +85,150 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      name: 'push',
+      label: 'Benachrichtigungen (Büro-App)',
+      type: 'group',
+      admin: {
+        description:
+          'Schlüssel für die Push-Benachrichtigungen der Büro-App. Wird beim ersten Mal automatisch erzeugt — hier ist nichts einzutragen. Wer den Schlüssel austauscht, muss alle Geräte neu anmelden.',
+      },
+      fields: [
+        {
+          name: 'publicKey',
+          label: 'Öffentlicher Schlüssel',
+          type: 'text',
+          admin: { readOnly: true },
+        },
+        {
+          name: 'privateKey',
+          label: 'Privater Schlüssel',
+          type: 'text',
+          admin: { readOnly: true, hidden: true },
+        },
+        {
+          name: 'subject',
+          label: 'Kontaktadresse für den Push-Dienst',
+          type: 'text',
+          defaultValue: 'mailto:info@vincent-hellmann.com',
+          admin: {
+            description: 'Verlangen die Push-Dienste, falls es Rückfragen zum Versand gibt.',
+          },
+        },
+      ],
+    },
+    {
+      name: 'mailboxes',
+      label: 'Postfächer (IMAP)',
+      labels: { singular: 'Postfach', plural: 'Postfächer' },
+      type: 'array',
+      admin: {
+        description:
+          'Postfächer, die im Büro unter /office/post gelesen und beantwortet werden — z.B. info@ und bestellungen@. Die Website selbst verschickt weiterhin über die Absenderadresse oben (noreply@), die hier nicht eingetragen werden muss.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'label',
+              label: 'Bezeichnung',
+              type: 'text',
+              required: true,
+              admin: { description: 'z.B. „Info" — steht so in der Auswahl im Büro.' },
+            },
+            {
+              name: 'address',
+              label: 'E-Mail-Adresse',
+              type: 'email',
+              required: true,
+              admin: { description: 'Wird beim Antworten als Absender verwendet.' },
+            },
+            {
+              name: 'isDefault',
+              label: 'Beim Öffnen zeigen',
+              type: 'checkbox',
+              defaultValue: false,
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'imapHost',
+              label: 'IMAP-Server',
+              type: 'text',
+              required: true,
+              admin: { description: 'z.B. imap.strato.de' },
+            },
+            {
+              name: 'imapPort',
+              label: 'Port',
+              type: 'number',
+              defaultValue: 993,
+              admin: { description: '993 (SSL) oder 143 (STARTTLS)' },
+            },
+            {
+              name: 'imapSecure',
+              label: 'Verschlüsselt (SSL)',
+              type: 'checkbox',
+              defaultValue: true,
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'user', label: 'Benutzername', type: 'text', required: true },
+            {
+              name: 'pass',
+              label: 'Passwort',
+              type: 'text',
+              required: true,
+              admin: {
+                description: 'Wird nur serverseitig verwendet und nie an den Browser ausgeliefert.',
+              },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'sentMailbox',
+              label: 'Ordner „Gesendet"',
+              type: 'text',
+              defaultValue: 'Sent',
+              admin: { description: 'Bei manchen Anbietern „Gesendete Objekte" oder „INBOX.Sent".' },
+            },
+            {
+              name: 'trashMailbox',
+              label: 'Ordner „Papierkorb"',
+              type: 'text',
+              defaultValue: 'Trash',
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'smtpHost',
+              label: 'Eigener SMTP-Server (optional)',
+              type: 'text',
+              admin: {
+                description:
+                  'Nur nötig, wenn dieses Postfach über einen anderen Server verschickt als oben eingestellt.',
+              },
+            },
+            { name: 'smtpPort', label: 'Port', type: 'number' },
+            { name: 'smtpUser', label: 'Benutzername', type: 'text' },
+            { name: 'smtpPass', label: 'Passwort', type: 'text' },
+          ],
+        },
+      ],
+    },
+    {
       name: 'stripe',
       label: 'Stripe (Zahlungen)',
       type: 'group',

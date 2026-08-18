@@ -13,9 +13,12 @@ import sharp from 'sharp'
 import { Categories } from './collections/Categories'
 import { Contacts } from './collections/Contacts'
 import { Counters } from './collections/Counters'
+import { MailLog } from './collections/MailLog'
+import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
 import { Inquiries } from './collections/Inquiries'
 import { InventoryItems } from './collections/InventoryItems'
+import { Jobs } from './collections/Jobs'
 import { LoginCodes } from './collections/LoginCodes'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
@@ -24,6 +27,7 @@ import { OutgoingInvoices } from './collections/OutgoingInvoices'
 import { Products } from './collections/Products'
 import { Projects } from './collections/Projects'
 import { Promotions } from './collections/Promotions'
+import { Quotes } from './collections/Quotes'
 import { Stocktakes } from './collections/Stocktakes'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
@@ -76,10 +80,14 @@ export default buildConfig({
     // Büro: Geschäftszahlen, nur für die Inhaberrolle
     Contacts,
     Expenses,
+    Quotes,
+    Jobs,
     OutgoingInvoices,
     InventoryItems,
     Stocktakes,
     Counters,
+    MailLog,
+    PushSubscriptions,
     Media,
     Users,
   ],

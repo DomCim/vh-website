@@ -178,12 +178,12 @@ export default async function BueroUebersicht() {
               </Link>
             )}
             {offeneAnfragen.totalDocs > 0 && (
-              <Link href="/admin/collections/inquiries" className="buero-zeile">
+              <Link href="/office/anfragen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {offeneAnfragen.totalDocs} neue Kundenanfragen
                   </div>
-                  <div className="buero-zeile-neben">In der Website-Verwaltung</div>
+                  <div className="buero-zeile-neben">Noch unbeantwortet</div>
                 </div>
                 <span className="buero-marker offen">ansehen</span>
               </Link>

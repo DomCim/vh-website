@@ -21,6 +21,9 @@ export const OutgoingInvoices: CollectionConfig = {
     useAsTitle: 'invoiceNumber',
     defaultColumns: ['invoiceNumber', 'customerName', 'issueDate', 'total', 'status'],
     group: 'Büro',
+    // Gepflegt wird das im Büro unter /office — Payload ist die
+    // öffentliche Verwaltung, alles Interne hat dort genau einen Platz.
+    hidden: true,
     description: 'Rechnungen an Kommunen, Gewerbe und Privat außerhalb des Shops.',
   },
   access: {
@@ -186,6 +189,13 @@ export const OutgoingInvoices: CollectionConfig = {
       type: 'relationship',
       relationTo: 'projects',
       admin: { description: 'Optional — verbindet die Rechnung mit dem gezeigten Projekt.' },
+    },
+    {
+      name: 'quote',
+      label: 'Aus Angebot entstanden',
+      type: 'relationship',
+      relationTo: 'quotes',
+      admin: { readOnly: true, description: 'Wird beim Umwandeln eines Angebots gesetzt.' },
     },
   ],
 }

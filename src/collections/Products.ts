@@ -153,6 +153,84 @@ export const Products: CollectionConfig = {
       ],
     },
     {
+      name: 'billOfMaterials',
+      label: 'Stückliste (Materialbedarf je Stück)',
+      type: 'array',
+      labels: { singular: 'Materialposten', plural: 'Stückliste' },
+      admin: {
+        // Gepflegt wird die Stückliste im Büro unter /office/artikel — dort
+        // steht sie neben dem Inventar, wo sie hingehört.
+        hidden: true,
+      },
+      fields: [
+        {
+          name: 'item',
+          label: 'Posten aus dem Inventar',
+          type: 'relationship',
+          relationTo: 'inventory-items',
+          required: true,
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'quantity',
+              label: 'Menge je Stück',
+              type: 'number',
+              required: true,
+              min: 0,
+            },
+            { name: 'note', label: 'Bemerkung', type: 'text' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'serviceProviders',
+      label: 'Externe Dienstleister',
+      type: 'array',
+      labels: { singular: 'Dienstleister', plural: 'Dienstleister' },
+      admin: {
+        // Wie die Stückliste eine Sache des Betriebs: gepflegt im Büro unter
+        // /office/artikel, in der Website-Verwaltung hat sie nichts zu suchen.
+        hidden: true,
+      },
+      fields: [
+        {
+          name: 'contact',
+          label: 'Betrieb',
+          type: 'relationship',
+          relationTo: 'contacts',
+          required: true,
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'service',
+              label: 'Leistung',
+              type: 'text',
+              required: true,
+              admin: { description: 'z.B. Verzinken, Pulverbeschichten, Lasern' },
+            },
+            {
+              name: 'cost',
+              label: 'Kosten netto je Stück (EUR)',
+              type: 'number',
+              min: 0,
+            },
+            {
+              name: 'leadTime',
+              label: 'Vorlaufzeit',
+              type: 'text',
+              admin: { description: 'z.B. „10 Werktage" — geht in die zugesagte Lieferzeit ein.' },
+            },
+          ],
+        },
+        { name: 'note', label: 'Bemerkung', type: 'text' },
+      ],
+    },
+    {
       name: 'productionTime',
       label: 'Fertigungszeit',
       type: 'text',

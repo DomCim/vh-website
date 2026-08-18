@@ -18,6 +18,9 @@ export const InventoryItems: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'type', 'quantity', 'unit', 'location'],
     group: 'Büro',
+    // Gepflegt wird das im Büro unter /office — Payload ist die
+    // öffentliche Verwaltung, alles Interne hat dort genau einen Platz.
+    hidden: true,
   },
   access: {
     read: office,

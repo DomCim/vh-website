@@ -43,3 +43,17 @@ export async function naechsteRechnungsnummer(payload: Payload): Promise<string>
   const nummer = await naechsteNummer(payload, `rechnung-${jahr}`)
   return `RE-${jahr}-${String(nummer).padStart(4, '0')}`
 }
+
+/** Angebotsnummer, z.B. AN-2026-0003 */
+export async function naechsteAngebotsnummer(payload: Payload): Promise<string> {
+  const jahr = new Date().getFullYear()
+  const nummer = await naechsteNummer(payload, `angebot-${jahr}`)
+  return `AN-${jahr}-${String(nummer).padStart(4, '0')}`
+}
+
+/** Auftragsnummer, z.B. AU-2026-0012 */
+export async function naechsteAuftragsnummer(payload: Payload): Promise<string> {
+  const jahr = new Date().getFullYear()
+  const nummer = await naechsteNummer(payload, `auftrag-${jahr}`)
+  return `AU-${jahr}-${String(nummer).padStart(4, '0')}`
+}

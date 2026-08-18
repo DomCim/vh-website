@@ -5,11 +5,19 @@ import { usePathname } from 'next/navigation'
 
 const PUNKTE = [
   { href: '/office', label: 'Übersicht' },
-  { href: '/office/belege', label: 'Belege' },
+  { href: '/office/post', label: 'Postfach' },
+  { href: '/office/anfragen', label: 'Anfragen' },
+  { href: '/office/bestellungen', label: 'Bestellungen' },
+  { href: '/office/angebote', label: 'Angebote' },
+  { href: '/office/auftraege', label: 'Aufträge' },
   { href: '/office/rechnungen', label: 'Rechnungen' },
+  { href: '/office/belege', label: 'Belege' },
+  { href: '/office/artikel', label: 'Artikel' },
   { href: '/office/inventar', label: 'Inventar' },
   { href: '/office/inventur', label: 'Inventur' },
+  { href: '/office/partner', label: 'Partner' },
   { href: '/office/steuer', label: 'Steuer' },
+  { href: '/office/einstellungen', label: 'Einstellungen' },
 ]
 
 export function BueroNavigation() {

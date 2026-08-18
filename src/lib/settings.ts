@@ -1,5 +1,29 @@
 import type { Payload } from 'payload'
 
+/**
+ * Ein Postfach, das im Büro gelesen wird.
+ *
+ * Vincent hat mehrere Adressen — info@ für Kundschaft, dazu die Adresse, unter
+ * der die Website verschickt. Deshalb eine Liste und nicht ein festes Konto.
+ */
+export type MailboxKonfiguration = {
+  id: string
+  label: string
+  address: string
+  isDefault: boolean
+  imapHost: string
+  imapPort: number
+  imapSecure: boolean
+  user: string
+  pass: string
+  sentMailbox: string
+  trashMailbox: string
+  smtpHost?: string
+  smtpPort?: number
+  smtpUser?: string
+  smtpPass?: string
+}
+
 export type ResolvedIntegrations = {
   email: {
     smtpHost?: string
@@ -10,6 +34,7 @@ export type ResolvedIntegrations = {
     fromName: string
     notificationEmail?: string
   }
+  mailboxes: MailboxKonfiguration[]
   stripe: {
     secretKey?: string
     webhookSecret?: string
@@ -64,6 +89,25 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
     },
+    mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])
+      .filter((m) => m?.imapHost && m?.user && m?.pass && m?.address)
+      .map((m, i) => ({
+        id: String(m.id ?? i),
+        label: m.label || m.address,
+        address: m.address,
+        isDefault: Boolean(m.isDefault),
+        imapHost: m.imapHost,
+        imapPort: Number(m.imapPort) || 993,
+        imapSecure: m.imapSecure !== false,
+        user: m.user,
+        pass: m.pass,
+        sentMailbox: m.sentMailbox || 'Sent',
+        trashMailbox: m.trashMailbox || 'Trash',
+        smtpHost: m.smtpHost || undefined,
+        smtpPort: m.smtpPort ? Number(m.smtpPort) : undefined,
+        smtpUser: m.smtpUser || undefined,
+        smtpPass: m.smtpPass || undefined,
+      })),
     stripe: {
       secretKey: val(doc?.stripe?.secretKey, process.env.STRIPE_SECRET_KEY),
       webhookSecret: val(doc?.stripe?.webhookSecret, process.env.STRIPE_WEBHOOK_SECRET),

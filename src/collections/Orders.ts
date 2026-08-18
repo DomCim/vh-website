@@ -13,6 +13,9 @@ export const Orders: CollectionConfig = {
     useAsTitle: 'orderNumber',
     defaultColumns: ['orderNumber', 'status', 'total', 'createdAt'],
     group: 'Shop',
+    // Geführt wird das im Büro unter /office — Payload bleibt die
+    // öffentliche Verwaltung.
+    hidden: true,
   },
   hooks: {
     afterChange: [notifyOnProduction, notifyOnShipped],

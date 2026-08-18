@@ -27,7 +27,7 @@ export default async function InventurSeite() {
             Der gezählte Bestand zum Stichtag — das braucht der Steuerberater zum Jahresabschluss.
           </p>
         </div>
-        <Link href="/admin/collections/stocktakes/create" className="buero-knopf">
+        <Link href="/office/inventur/neu" className="buero-knopf">
           Inventur anlegen
         </Link>
       </div>
@@ -42,7 +42,7 @@ export default async function InventurSeite() {
           <div className="buero-leer">Noch keine Inventur erfasst.</div>
         ) : (
           docs.map((s) => (
-            <Link key={s.id} href={`/admin/collections/stocktakes/${s.id}`} className="buero-zeile">
+            <Link key={s.id} href={`/office/inventur/${s.id}`} className="buero-zeile">
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">{s.title}</div>
                 <div className="buero-zeile-neben">

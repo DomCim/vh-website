@@ -40,7 +40,7 @@ export default async function InventarSeite() {
             {totalDocs} Posten · Bestandswert {euro(wert)}
           </p>
         </div>
-        <Link href="/admin/collections/inventory-items/create" className="buero-knopf">
+        <Link href="/office/inventar/neu" className="buero-knopf">
           Posten anlegen
         </Link>
       </div>
@@ -60,7 +60,7 @@ export default async function InventarSeite() {
             return (
               <Link
                 key={i.id}
-                href={`/admin/collections/inventory-items/${i.id}`}
+                href={`/office/inventar/${i.id}`}
                 className="buero-zeile"
               >
                 <div className="buero-zeile-haupt">

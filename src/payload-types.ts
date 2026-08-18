@@ -78,10 +78,14 @@ export interface Config {
     'login-codes': LoginCode;
     contacts: Contact;
     expenses: Expense;
+    quotes: Quote;
+    jobs: Job;
     'outgoing-invoices': OutgoingInvoice;
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     counters: Counter;
+    'mail-log': MailLog;
+    'push-subscriptions': PushSubscription;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -102,10 +106,14 @@ export interface Config {
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
     contacts: ContactsSelect<false> | ContactsSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
+    quotes: QuotesSelect<false> | QuotesSelect<true>;
+    jobs: JobsSelect<false> | JobsSelect<true>;
     'outgoing-invoices': OutgoingInvoicesSelect<false> | OutgoingInvoicesSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
+    'mail-log': MailLogSelect<false> | MailLogSelect<true>;
+    'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -219,6 +227,30 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
+  billOfMaterials?:
+    | {
+        item: number | InventoryItem;
+        quantity: number;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  serviceProviders?:
+    | {
+        contact: number | Contact;
+        /**
+         * z.B. Verzinken, Pulverbeschichten, Lasern
+         */
+        service: string;
+        cost?: number | null;
+        /**
+         * z.B. „10 Werktage" — geht in die zugesagte Lieferzeit ein.
+         */
+        leadTime?: string | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * z.B. „3–4 Wochen". Jedes Stück wird einzeln gefertigt — leer lassen übernimmt den Standardwert aus den Website-Einstellungen.
    */
@@ -308,6 +340,67 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory-items".
+ */
+export interface InventoryItem {
+  id: number;
+  name: string;
+  type: 'material' | 'werkzeug' | 'maschine' | 'fertigware' | 'sonstiges';
+  quantity: number;
+  unit?: string | null;
+  /**
+   * Darunter erscheint der Posten in der Übersicht als knapp.
+   */
+  minQuantity?: number | null;
+  /**
+   * Einkaufspreis — Grundlage für die Bewertung zum Stichtag.
+   */
+  unitValue?: number | null;
+  location?: string | null;
+  /**
+   * Bei Maschinen wichtig für die Abschreibung.
+   */
+  purchaseDate?: string | null;
+  purchaseValue?: number | null;
+  supplier?: (number | null) | Contact;
+  /**
+   * Nur bei fertigen Stücken, die im Shop stehen.
+   */
+  product?: (number | null) | Product;
+  photo?: (number | null) | Media;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contacts".
+ */
+export interface Contact {
+  id: number;
+  name: string;
+  role?: ('lieferant' | 'kunde' | 'dienstleister' | 'beides') | null;
+  email?: string | null;
+  phone?: string | null;
+  line1?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
+  /**
+   * Bei Geschäftskunden im EU-Ausland nötig — dann geht die Rechnung ohne Steuer raus (Reverse Charge).
+   */
+  vatId?: string | null;
+  siret?: string | null;
+  /**
+   * Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.
+   */
+  defaultCategory?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -567,33 +660,6 @@ export interface LoginCode {
   createdAt: string;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "contacts".
- */
-export interface Contact {
-  id: number;
-  name: string;
-  role?: ('lieferant' | 'kunde' | 'beides') | null;
-  email?: string | null;
-  phone?: string | null;
-  line1?: string | null;
-  postalCode?: string | null;
-  city?: string | null;
-  country?: string | null;
-  /**
-   * Bei Geschäftskunden im EU-Ausland nötig — dann geht die Rechnung ohne Steuer raus (Reverse Charge).
-   */
-  vatId?: string | null;
-  siret?: string | null;
-  /**
-   * Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.
-   */
-  defaultCategory?: string | null;
-  notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -648,6 +714,95 @@ export interface Expense {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes".
+ */
+export interface Quote {
+  id: number;
+  quoteNumber?: string | null;
+  status: 'entwurf' | 'versendet' | 'angenommen' | 'abgelehnt';
+  title?: string | null;
+  customer?: (number | null) | Contact;
+  customerName?: string | null;
+  customerAddress?: string | null;
+  issueDate?: string | null;
+  /**
+   * Bei Stahlpreisen üblich: 30 Tage.
+   */
+  validUntil?: string | null;
+  items?:
+    | {
+        description: string;
+        quantity: number;
+        unit?: string | null;
+        unitPrice: number;
+        vatRate: number;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  vatTotal?: number | null;
+  total?: number | null;
+  /**
+   * z.B. „6–8 Wochen ab Auftragserteilung"
+   */
+  productionTime?: string | null;
+  note?: string | null;
+  inquiry?: (number | null) | Inquiry;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "jobs".
+ */
+export interface Job {
+  id: number;
+  jobNumber?: string | null;
+  /**
+   * Bei einer Shop-Bestellung löst „In Fertigung" die E-Mail an die Kundschaft aus.
+   */
+  status: 'geplant' | 'inFertigung' | 'fertig' | 'geliefert' | 'abgebrochen';
+  title: string;
+  source: 'shop' | 'angebot' | 'manuell';
+  customerName?: string | null;
+  contact?: (number | null) | Contact;
+  startDate?: string | null;
+  /**
+   * Wird der Kundschaft als voraussichtlicher Termin gemeldet.
+   */
+  dueDate?: string | null;
+  positions?:
+    | {
+        description: string;
+        quantity?: number | null;
+        /**
+         * Bei Shop-Bestellungen der Preis von der Website.
+         */
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wird erst beim Abschließen des Auftrags vom Inventar abgezogen — vorher ist es nur Planung.
+   */
+  material?:
+    | {
+        item: number | InventoryItem;
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  materialGebucht?: boolean | null;
+  notes?: string | null;
+  order?: (number | null) | Order;
+  quote?: (number | null) | Quote;
+  invoice?: (number | null) | OutgoingInvoice;
+  project?: (number | null) | Project;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Rechnungen an Kommunen, Gewerbe und Privat außerhalb des Shops.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -697,40 +852,10 @@ export interface OutgoingInvoice {
    * Optional — verbindet die Rechnung mit dem gezeigten Projekt.
    */
   project?: (number | null) | Project;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "inventory-items".
- */
-export interface InventoryItem {
-  id: number;
-  name: string;
-  type: 'material' | 'werkzeug' | 'maschine' | 'fertigware' | 'sonstiges';
-  quantity: number;
-  unit?: string | null;
   /**
-   * Darunter erscheint der Posten in der Übersicht als knapp.
+   * Wird beim Umwandeln eines Angebots gesetzt.
    */
-  minQuantity?: number | null;
-  /**
-   * Einkaufspreis — Grundlage für die Bewertung zum Stichtag.
-   */
-  unitValue?: number | null;
-  location?: string | null;
-  /**
-   * Bei Maschinen wichtig für die Abschreibung.
-   */
-  purchaseDate?: string | null;
-  purchaseValue?: number | null;
-  supplier?: (number | null) | Contact;
-  /**
-   * Nur bei fertigen Stücken, die im Shop stehen.
-   */
-  product?: (number | null) | Product;
-  photo?: (number | null) | Media;
-  notes?: string | null;
+  quote?: (number | null) | Quote;
   updatedAt: string;
   createdAt: string;
 }
@@ -769,6 +894,44 @@ export interface Counter {
   id: number;
   key: string;
   lastNumber: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mail-log".
+ */
+export interface MailLog {
+  id: number;
+  to: string;
+  from?: string | null;
+  subject: string;
+  status: 'gesendet' | 'fehler' | 'ohneVersand';
+  kind?: ('bestellung' | 'fertigung' | 'versand' | 'anfrage' | 'zugangscode' | 'postfach' | 'sonstiges') | null;
+  /**
+   * Antwort des Mailservers, wenn der Versand nicht geklappt hat.
+   */
+  error?: string | null;
+  /**
+   * Dateinamen, durch Komma getrennt.
+   */
+  attachments?: string | null;
+  order?: (number | null) | Order;
+  inquiry?: (number | null) | Inquiry;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "push-subscriptions".
+ */
+export interface PushSubscription {
+  id: number;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  label?: string | null;
+  user?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -883,6 +1046,14 @@ export interface PayloadLockedDocument {
         value: number | Expense;
       } | null)
     | ({
+        relationTo: 'quotes';
+        value: number | Quote;
+      } | null)
+    | ({
+        relationTo: 'jobs';
+        value: number | Job;
+      } | null)
+    | ({
         relationTo: 'outgoing-invoices';
         value: number | OutgoingInvoice;
       } | null)
@@ -897,6 +1068,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'counters';
         value: number | Counter;
+      } | null)
+    | ({
+        relationTo: 'mail-log';
+        value: number | MailLog;
+      } | null)
+    | ({
+        relationTo: 'push-subscriptions';
+        value: number | PushSubscription;
       } | null)
     | ({
         relationTo: 'media';
@@ -973,6 +1152,24 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         name?: T;
         hex?: T;
+        id?: T;
+      };
+  billOfMaterials?:
+    | T
+    | {
+        item?: T;
+        quantity?: T;
+        note?: T;
+        id?: T;
+      };
+  serviceProviders?:
+    | T
+    | {
+        contact?: T;
+        service?: T;
+        cost?: T;
+        leadTime?: T;
+        note?: T;
         id?: T;
       };
   productionTime?: T;
@@ -1219,6 +1416,75 @@ export interface ExpensesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes_select".
+ */
+export interface QuotesSelect<T extends boolean = true> {
+  quoteNumber?: T;
+  status?: T;
+  title?: T;
+  customer?: T;
+  customerName?: T;
+  customerAddress?: T;
+  issueDate?: T;
+  validUntil?: T;
+  items?:
+    | T
+    | {
+        description?: T;
+        quantity?: T;
+        unit?: T;
+        unitPrice?: T;
+        vatRate?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  vatTotal?: T;
+  total?: T;
+  productionTime?: T;
+  note?: T;
+  inquiry?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "jobs_select".
+ */
+export interface JobsSelect<T extends boolean = true> {
+  jobNumber?: T;
+  status?: T;
+  title?: T;
+  source?: T;
+  customerName?: T;
+  contact?: T;
+  startDate?: T;
+  dueDate?: T;
+  positions?:
+    | T
+    | {
+        description?: T;
+        quantity?: T;
+        price?: T;
+        id?: T;
+      };
+  material?:
+    | T
+    | {
+        item?: T;
+        quantity?: T;
+        id?: T;
+      };
+  materialGebucht?: T;
+  notes?: T;
+  order?: T;
+  quote?: T;
+  invoice?: T;
+  project?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "outgoing-invoices_select".
  */
 export interface OutgoingInvoicesSelect<T extends boolean = true> {
@@ -1246,6 +1512,7 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   reverseCharge?: T;
   note?: T;
   project?: T;
+  quote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1300,6 +1567,36 @@ export interface StocktakesSelect<T extends boolean = true> {
 export interface CountersSelect<T extends boolean = true> {
   key?: T;
   lastNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mail-log_select".
+ */
+export interface MailLogSelect<T extends boolean = true> {
+  to?: T;
+  from?: T;
+  subject?: T;
+  status?: T;
+  kind?: T;
+  error?: T;
+  attachments?: T;
+  order?: T;
+  inquiry?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "push-subscriptions_select".
+ */
+export interface PushSubscriptionsSelect<T extends boolean = true> {
+  endpoint?: T;
+  p256dh?: T;
+  auth?: T;
+  label?: T;
+  user?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1678,6 +1975,60 @@ export interface Integration {
      */
     notificationEmail?: string | null;
   };
+  /**
+   * Schlüssel für die Push-Benachrichtigungen der Büro-App. Wird beim ersten Mal automatisch erzeugt — hier ist nichts einzutragen. Wer den Schlüssel austauscht, muss alle Geräte neu anmelden.
+   */
+  push?: {
+    publicKey?: string | null;
+    privateKey?: string | null;
+    /**
+     * Verlangen die Push-Dienste, falls es Rückfragen zum Versand gibt.
+     */
+    subject?: string | null;
+  };
+  /**
+   * Postfächer, die im Büro unter /office/post gelesen und beantwortet werden — z.B. info@ und bestellungen@. Die Website selbst verschickt weiterhin über die Absenderadresse oben (noreply@), die hier nicht eingetragen werden muss.
+   */
+  mailboxes?:
+    | {
+        /**
+         * z.B. „Info" — steht so in der Auswahl im Büro.
+         */
+        label: string;
+        /**
+         * Wird beim Antworten als Absender verwendet.
+         */
+        address: string;
+        isDefault?: boolean | null;
+        /**
+         * z.B. imap.strato.de
+         */
+        imapHost: string;
+        /**
+         * 993 (SSL) oder 143 (STARTTLS)
+         */
+        imapPort?: number | null;
+        imapSecure?: boolean | null;
+        user: string;
+        /**
+         * Wird nur serverseitig verwendet und nie an den Browser ausgeliefert.
+         */
+        pass: string;
+        /**
+         * Bei manchen Anbietern „Gesendete Objekte" oder „INBOX.Sent".
+         */
+        sentMailbox?: string | null;
+        trashMailbox?: string | null;
+        /**
+         * Nur nötig, wenn dieses Postfach über einen anderen Server verschickt als oben eingestellt.
+         */
+        smtpHost?: string | null;
+        smtpPort?: number | null;
+        smtpUser?: string | null;
+        smtpPass?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   stripe?: {
     /**
      * sk_test_… oder sk_live_… (Stripe-Dashboard → API-Keys)
@@ -1885,6 +2236,32 @@ export interface IntegrationsSelect<T extends boolean = true> {
         fromAddress?: T;
         fromName?: T;
         notificationEmail?: T;
+      };
+  push?:
+    | T
+    | {
+        publicKey?: T;
+        privateKey?: T;
+        subject?: T;
+      };
+  mailboxes?:
+    | T
+    | {
+        label?: T;
+        address?: T;
+        isDefault?: T;
+        imapHost?: T;
+        imapPort?: T;
+        imapSecure?: T;
+        user?: T;
+        pass?: T;
+        sentMailbox?: T;
+        trashMailbox?: T;
+        smtpHost?: T;
+        smtpPort?: T;
+        smtpUser?: T;
+        smtpPass?: T;
+        id?: T;
       };
   stripe?:
     | T

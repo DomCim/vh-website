@@ -16,6 +16,9 @@ export const Contacts: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'city'],
     group: 'Büro',
+    // Gepflegt wird das im Büro unter /office — Payload ist die
+    // öffentliche Verwaltung, alles Interne hat dort genau einen Platz.
+    hidden: true,
   },
   access: {
     read: office,
@@ -33,6 +36,7 @@ export const Contacts: CollectionConfig = {
       options: [
         { label: 'Lieferant', value: 'lieferant' },
         { label: 'Kunde', value: 'kunde' },
+        { label: 'Dienstleister', value: 'dienstleister' },
         { label: 'Beides', value: 'beides' },
       ],
       admin: { position: 'sidebar' },
