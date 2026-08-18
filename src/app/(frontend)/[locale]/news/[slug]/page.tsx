@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../../components/Bild'
+
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { RichText } from '../../../../../components/RichText'
-import { getNewsBySlug, mediaAlt, mediaUrl } from '../../../../../lib/data'
+import { getNewsBySlug, mediaUrl } from '../../../../../lib/data'
 import { formatDate, isLocale } from '../../../../../lib/i18n'
 import { absoluteUrl, alternatesFor, BASE_URL, jsonLd } from '../../../../../lib/seo'
 
@@ -67,11 +69,13 @@ export default async function NewsDetailPage({
 
       {article.coverImage ? (
         <Reveal className="bg-paper-soft mb-8 overflow-hidden">
-          <img
-            src={mediaUrl(article.coverImage, 'large')}
-            alt={mediaAlt(article.coverImage, article.title)}
-            className="w-full object-cover"
-          />
+          <Bild
+              media={article.coverImage as BildQuelle}
+              alt={article.title}
+              bevorzugt="large"
+              sizes="(min-width: 1024px) 66vw, 100vw"
+              className="w-full object-cover"
+            />
         </Reveal>
       ) : null}
 

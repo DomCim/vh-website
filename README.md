@@ -15,6 +15,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **Referenzen** (Projekte für Kommunen/Gewerbe/Privat) mit Filter und Startseiten-Teaser; **Über-uns-Seite** mit Timeline; **Kundenstimmen** (nur echte!) auf Startseite und Produktseiten; optionales **Video im Hero**
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
 - **Elektronische Rechnung**: Ausgangsrechnungen als **Factur-X** (PDF/A-3 mit eingebetteter XML nach EN 16931), XML auch einzeln herunterladbar
+- **Bilder** in fünf Größen als WebP, per `srcset` passend zum Gerät ausgeliefert
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
 - **Newsletter** mit Double-Opt-In, Versand aus dem Büro und Abmeldelink; **Mahnwesen** in drei Stufen; automatisches Nachfassen bei Angeboten und Bitte um Kundenstimmen nach der Lieferung
@@ -147,6 +148,20 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Bilder
+
+Die Website lebt von Werkstattaufnahmen — ausgeliefert wurde davon bisher für jeden dieselbe Datei. Jetzt legt Payload fünf Zuschnitte an (320, 480, 900, 1800 und 2600 Pixel), alle als **WebP**, und jedes Bild bringt sie als `srcset` mit. Der Browser nimmt, was zum Platz im Layout passt: Ein Handy lädt keine 1800er mehr, ein großer Bildschirm bekommt endlich ein scharfes Hero-Bild. Höhe und Breite stehen dabei, damit beim Laden nichts springt.
+
+Die Originaldatei bleibt unangetastet — sie ist das Archiv.
+
+**Wichtig nach dem Update:** Zuschnitte entstehen beim Hochladen, nicht rückwirkend. Vorhandene Bilder haben also weiterhin nur die alten drei Größen. Einmalig:
+
+```bash
+pnpm bilder-neu     # rechnet die Zuschnitte aller vorhandenen Bilder neu
+```
+
+Im Container läuft das über `node_modules/.bin/payload run scripts/bilder-neu.ts`.
 
 ## Werkstatt: Zeit, Kalender, Lieferschein
 

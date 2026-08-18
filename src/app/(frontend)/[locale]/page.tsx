@@ -1,15 +1,21 @@
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import React from 'react'
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import React from "react";
 
-import { CategoryTile } from '../../../components/CategoryTile'
-import { HeroCarousel, type HeroSlide } from '../../../components/HeroCarousel'
-import { ImageReveal } from '../../../components/motion/ImageReveal'
-import { Marquee } from '../../../components/motion/Marquee'
-import { Parallax } from '../../../components/motion/Parallax'
-import { Reveal, RevealItem, RevealStagger } from '../../../components/motion/Reveal'
-import { SplitTextReveal } from '../../../components/motion/SplitTextReveal'
-import { PromoBanner } from '../../../components/PromoBanner'
+import { Bild, bildQuellen, type BildQuelle } from "../../../components/Bild";
+
+import { CategoryTile } from "../../../components/CategoryTile";
+import { HeroCarousel, type HeroSlide } from "../../../components/HeroCarousel";
+import { ImageReveal } from "../../../components/motion/ImageReveal";
+import { Marquee } from "../../../components/motion/Marquee";
+import { Parallax } from "../../../components/motion/Parallax";
+import {
+  Reveal,
+  RevealItem,
+  RevealStagger,
+} from "../../../components/motion/Reveal";
+import { SplitTextReveal } from "../../../components/motion/SplitTextReveal";
+import { PromoBanner } from "../../../components/PromoBanner";
 import {
   getActivePromotions,
   getFeaturedProjects,
@@ -19,40 +25,53 @@ import {
   getNews,
   mediaAlt,
   mediaUrl,
-} from '../../../lib/data'
-import { heroTintFor } from '../../../lib/heroColor'
-import { formatDate, isLocale, t } from '../../../lib/i18n'
+} from "../../../lib/data";
+import { heroTintFor } from "../../../lib/heroColor";
+import { formatDate, isLocale, t } from "../../../lib/i18n";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params
-  if (!isLocale(locale)) notFound()
-  const dict = t(locale)
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  const dict = t(locale);
 
-  const [homepage, categories, news, promotions, featuredProjects, testimonials] =
-    await Promise.all([
-      getHomepage(locale),
-      getMainCategories(locale),
-      getNews(locale, 3),
-      getActivePromotions(locale),
-      getFeaturedProjects(locale),
-      getFeaturedTestimonials(locale),
-    ])
+  const [
+    homepage,
+    categories,
+    news,
+    promotions,
+    featuredProjects,
+    testimonials,
+  ] = await Promise.all([
+    getHomepage(locale),
+    getMainCategories(locale),
+    getNews(locale, 3),
+    getActivePromotions(locale),
+    getFeaturedProjects(locale),
+    getFeaturedTestimonials(locale),
+  ]);
 
   const slides: HeroSlide[] = await Promise.all(
     (homepage?.heroSlides ?? []).map(async (s) => ({
-      image: mediaUrl(s.image, 'large'),
+      image: mediaUrl(s.image, "large"),
+      // Der Hero ist das größte Bild der Seite; ohne srcset lädt ein Handy
+      // dieselbe Datei wie ein 4K-Bildschirm.
+      srcSet: bildQuellen(s.image as BildQuelle, "xl")?.srcSet,
       video: mediaUrl(s.video),
-      alt: mediaAlt(s.image, s.title || ''),
+      alt: mediaAlt(s.image, s.title || ""),
       title: s.title,
       subtitle: s.subtitle,
       link: s.link,
       tint: await heroTintFor(s.image),
     })),
-  )
+  );
 
-  const gallery = homepage?.gallery ?? []
+  const gallery = homepage?.gallery ?? [];
 
   return (
     <>
@@ -60,26 +79,28 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* Der Farbton des aktiven Hero-Bildes strahlt hier weich ins Weiß aus */}
       <div className="hero-fade">
-      {promotions.length > 0 && <PromoBanner promotions={promotions} locale={locale} />}
+        {promotions.length > 0 && (
+          <PromoBanner promotions={promotions} locale={locale} />
+        )}
 
-      {(homepage?.missionTitle || homepage?.missionText) && (
-        <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          {homepage.missionTitle && (
-            <SplitTextReveal
-              as="h1"
-              text={homepage.missionTitle}
-              className="tracking-nav text-ink rule-bronze rule-bronze-center text-2xl font-semibold uppercase sm:text-3xl"
-            />
-          )}
-          {homepage.missionText && (
-            <Reveal delay={0.25}>
-              <p className="text-ink-soft mt-5 text-base leading-relaxed sm:text-lg">
-                {homepage.missionText}
-              </p>
-            </Reveal>
-          )}
-        </section>
-      )}
+        {(homepage?.missionTitle || homepage?.missionText) && (
+          <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
+            {homepage.missionTitle && (
+              <SplitTextReveal
+                as="h1"
+                text={homepage.missionTitle}
+                className="tracking-nav text-ink rule-bronze rule-bronze-center text-2xl font-semibold uppercase sm:text-3xl"
+              />
+            )}
+            {homepage.missionText && (
+              <Reveal delay={0.25}>
+                <p className="text-ink-soft mt-5 text-base leading-relaxed sm:text-lg">
+                  {homepage.missionText}
+                </p>
+              </Reveal>
+            )}
+          </section>
+        )}
       </div>
 
       <Marquee words={[...dict.home.marquee]} />
@@ -115,8 +136,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <RevealStagger className="grid gap-8 sm:grid-cols-3">
               {homepage!.highlights!.map((h, i) => (
                 <RevealItem key={i}>
-                  <h3 className="tracking-nav text-ink rule-bronze-sm text-sm font-semibold uppercase">{h.title}</h3>
-                  {h.text && <p className="text-ink-soft mt-2 text-sm leading-relaxed">{h.text}</p>}
+                  <h3 className="tracking-nav text-ink rule-bronze-sm text-sm font-semibold uppercase">
+                    {h.title}
+                  </h3>
+                  {h.text && (
+                    <p className="text-ink-soft mt-2 text-sm leading-relaxed">
+                      {h.text}
+                    </p>
+                  )}
                 </RevealItem>
               ))}
             </RevealStagger>
@@ -132,13 +159,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           />
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {gallery.map((img, i) => (
-              <ImageReveal key={i} delay={i * 0.08} className="bg-paper-soft aspect-square">
+              <ImageReveal
+                key={i}
+                delay={i * 0.08}
+                className="bg-paper-soft aspect-square"
+              >
                 <Parallax amount={16} className="h-full w-full">
-                  <img
-                    src={mediaUrl(img, 'card')}
-                    alt={mediaAlt(img)}
+                  <Bild
+                    media={img as BildQuelle}
+                    bevorzugt="card"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className="h-full w-full scale-110 object-cover"
-                    loading="lazy"
                   />
                 </Parallax>
               </ImageReveal>
@@ -157,8 +188,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <RevealStagger className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
               {homepage!.values!.map((v, i) => (
                 <RevealItem key={i}>
-                  <h3 className="tracking-nav rule-bronze-sm text-sm font-semibold uppercase">{v.title}</h3>
-                  {v.text && <p className="mt-2 text-sm leading-relaxed text-white/75">{v.text}</p>}
+                  <h3 className="tracking-nav rule-bronze-sm text-sm font-semibold uppercase">
+                    {v.title}
+                  </h3>
+                  {v.text && (
+                    <p className="mt-2 text-sm leading-relaxed text-white/75">
+                      {v.text}
+                    </p>
+                  )}
                 </RevealItem>
               ))}
             </RevealStagger>
@@ -190,17 +227,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     className="group border-line block h-full border bg-white transition-shadow hover:shadow-lg"
                   >
                     <div className="bg-paper-soft aspect-[4/3] overflow-hidden">
-                      <img
-                        src={mediaUrl(p.images?.[0], 'card')}
-                        alt={mediaAlt(p.images?.[0], p.title)}
+                      <Bild
+                        media={p.images?.[0] as BildQuelle}
+                        alt={p.title}
+                        bevorzugt="card"
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
                       />
                     </div>
                     <div className="p-5">
                       <p className="text-ink-soft text-xs uppercase">
                         {dict.projects.sectors[p.sector] ?? p.sector}
-                        {p.year ? ` · ${p.year}` : ''}
+                        {p.year ? ` · ${p.year}` : ""}
                       </p>
                       <h3 className="tracking-nav text-ink mt-1 text-sm font-semibold uppercase">
                         {p.title}
@@ -231,7 +269,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <p className="tracking-nav text-ink text-sm font-semibold uppercase">
                       {tst.author}
                     </p>
-                    {tst.context && <p className="text-ink-soft text-xs">{tst.context}</p>}
+                    {tst.context && (
+                      <p className="text-ink-soft text-xs">{tst.context}</p>
+                    )}
                   </figcaption>
                 </figure>
               </RevealItem>
@@ -263,20 +303,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   className="group border-line block border bg-white transition-shadow hover:shadow-lg"
                 >
                   <div className="bg-paper-soft aspect-[16/10] overflow-hidden">
-                    <img
-                      src={mediaUrl(n.coverImage, 'card')}
-                      alt={mediaAlt(n.coverImage, n.title)}
+                    <Bild
+                      media={n.coverImage as BildQuelle}
+                      alt={n.title}
+                      bevorzugt="card"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
                     />
                   </div>
                   <div className="p-5">
-                    <p className="text-ink-soft text-xs">{formatDate(n.publishedDate, locale)}</p>
+                    <p className="text-ink-soft text-xs">
+                      {formatDate(n.publishedDate, locale)}
+                    </p>
                     <h3 className="tracking-nav text-ink mt-1 text-sm font-semibold uppercase">
                       {n.title}
                     </h3>
                     {n.excerpt && (
-                      <p className="text-ink-soft mt-2 line-clamp-3 text-sm">{n.excerpt}</p>
+                      <p className="text-ink-soft mt-2 line-clamp-3 text-sm">
+                        {n.excerpt}
+                      </p>
                     )}
                   </div>
                 </Link>
@@ -286,5 +331,5 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </section>
       )}
     </>
-  )
+  );
 }

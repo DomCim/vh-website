@@ -224,7 +224,7 @@ export async function getLegal(locale: Locale) {
 /** URL eines Media-Dokuments (bevorzugt eine passende Größe) */
 export function mediaUrl(
   media: unknown,
-  size?: 'thumbnail' | 'card' | 'large',
+  size?: 'klein' | 'thumbnail' | 'card' | 'large' | 'xl',
 ): string | undefined {
   if (!media || typeof media !== 'object') return undefined
   const m = media as {

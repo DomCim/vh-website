@@ -14,6 +14,7 @@ import * as migration_20260818_185517_shop_recht from './20260818_185517_shop_re
 import * as migration_20260818_190812_erechnung from './20260818_190812_erechnung';
 import * as migration_20260818_192512_geld from './20260818_192512_geld';
 import * as migration_20260818_193349_werkstatt from './20260818_193349_werkstatt';
+import * as migration_20260818_194322_bilder from './20260818_194322_bilder';
 
 export const migrations = [
   {
@@ -94,6 +95,11 @@ export const migrations = [
   {
     up: migration_20260818_193349_werkstatt.up,
     down: migration_20260818_193349_werkstatt.down,
-    name: '20260818_193349_werkstatt'
+    name: '20260818_193349_werkstatt',
+  },
+  {
+    up: migration_20260818_194322_bilder.up,
+    down: migration_20260818_194322_bilder.down,
+    name: '20260818_194322_bilder'
   },
 ];

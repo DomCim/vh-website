@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../components/Bild'
+
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
-import { getActivePromotions, mediaAlt, mediaUrl } from '../../../../lib/data'
+import { getActivePromotions } from '../../../../lib/data'
 import { formatDate, isLocale, t } from '../../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -31,12 +33,13 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
               <article className="border-line grid overflow-hidden border bg-white sm:grid-cols-[280px_1fr]">
                 {p.image ? (
                   <div className="bg-paper-soft aspect-[4/3] sm:aspect-auto">
-                    <img
-                      src={mediaUrl(p.image, 'card')}
-                      alt={mediaAlt(p.image, p.title)}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
+                    <Bild
+                        media={p.image as BildQuelle}
+                        alt={p.title}
+                        bevorzugt="card"
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="h-full w-full object-cover"
+                      />
                   </div>
                 ) : (
                   <div className="bg-accent flex items-center justify-center p-8 text-4xl font-bold text-white">

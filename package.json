@@ -22,7 +22,8 @@
     "migrate:create": "payload migrate:create",
     "seed": "payload run scripts/seed.ts",
     "benutzer": "payload run scripts/benutzer.ts",
-    "rechtstexte": "payload run scripts/rechtstexte.ts"
+    "rechtstexte": "payload run scripts/rechtstexte.ts",
+    "bilder-neu": "payload run scripts/bilder-neu.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
