@@ -3,12 +3,15 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { MassanfertigungHinweis } from '../../../../../components/MassanfertigungHinweis'
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { RichText } from '../../../../../components/RichText'
 import { ProductDetail } from '../../../../../components/shop/ProductDetail'
 import {
   getCategoryBySlug,
   getProductBySlug,
+  getProjectsForProduct,
+  getSiteSettings,
   getTestimonialsForProduct,
   mediaAlt,
   mediaUrl,
@@ -50,6 +53,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
   if (!product) notFound()
 
   const testimonials = await getTestimonialsForProduct(product.id, locale)
+  const settings = await getSiteSettings(locale)
+  const referenzen = await getProjectsForProduct(product.id, locale)
 
   const images = (product.images ?? []).map((img) => ({
     url: mediaUrl(img, 'large') || '',
@@ -107,6 +112,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
             shippingCost: product.shippingCost ?? undefined,
             onRequestOnly: Boolean(product.onRequestOnly),
             available: product.available !== false,
+            productionTime: product.productionTime ?? settings?.craft?.defaultProductionTime ?? null,
+            readyMade: Boolean(product.readyMade),
             variants: (product.variants ?? []).map((v) => ({
               title: v.title,
               price: v.price,
@@ -130,6 +137,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
             freeShipping: dict.product.freeShipping,
             pickupAvailable: dict.product.pickupAvailable,
             unavailable: dict.product.unavailable,
+            craftNotice: settings?.craft?.notice ?? null,
+            craft: dict.craft,
             inquiry: {
               name: dict.contact.name,
               email: dict.contact.email,
@@ -170,6 +179,40 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           ))}
         </div>
       )}
+
+      {referenzen.length > 0 && (
+        <div className="mt-16">
+          <h2 className="tracking-nav text-ink heading-rule text-lg font-semibold uppercase">
+            {dict.custom.seenInProjects}
+          </h2>
+          <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {referenzen.map((r) => (
+              <li key={r.id}>
+                <Link href={`/${locale}/projekte/${r.slug}`} className="group block">
+                  <div className="bg-paper-soft overflow-hidden">
+                    <img
+                      src={mediaUrl(r.images?.[0], 'card')}
+                      alt={mediaAlt(r.images?.[0], r.title)}
+                      className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="group-hover:text-bronze mt-3 text-sm font-semibold transition-colors">
+                    {r.title}
+                  </p>
+                  {r.client && <p className="text-ink-soft text-xs">{r.client}</p>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <MassanfertigungHinweis
+        locale={locale}
+        text={dict.custom.cta}
+        label={dict.custom.title}
+      />
     </div>
   )
 }

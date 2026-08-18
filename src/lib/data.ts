@@ -156,7 +156,8 @@ export async function getProjectBySlug(slug: string, locale: Locale) {
     where: { slug: { equals: slug } },
     locale,
     limit: 1,
-    depth: 1,
+    // Tiefe 2: verknüpfte Produkte samt Kategorie und Bild für die Detailseite
+    depth: 2,
   })
   return docs[0] ?? null
 }
@@ -236,4 +237,18 @@ export function mediaAlt(media: unknown, fallback = ''): string {
   if (!media || typeof media !== 'object') return fallback
   const m = media as { alt?: string | null }
   return m.alt || fallback
+}
+
+/** Referenzen, in denen ein bestimmtes Produkt verbaut wurde */
+export async function getProjectsForProduct(productId: number | string, locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'projects',
+    where: { relatedProducts: { equals: productId } },
+    locale,
+    limit: 6,
+    depth: 1,
+    sort: 'order',
+  })
+  return docs
 }

@@ -22,6 +22,8 @@ type Dict = {
     promotions: string
     projects: string
     about: string
+    custom: string
+    search: string
     menu: string
   }
 }
@@ -55,6 +57,7 @@ export function Header({
     { href: `/${locale}/news`, label: dict.nav.news },
     ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
     { href: `/${locale}/projekte`, label: dict.nav.projects },
+    { href: `/${locale}/massanfertigung`, label: dict.nav.custom },
     { href: `/${locale}/ueber-uns`, label: dict.nav.about },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]

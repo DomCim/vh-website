@@ -14,6 +14,8 @@ const de = {
     promotions: 'Aktionen',
     projects: 'Referenzen',
     about: 'Über uns',
+    custom: 'Maßanfertigung',
+    search: 'Suche',
     menu: 'Menü',
   },
   home: {
@@ -166,6 +168,8 @@ const de = {
     success: 'Vielen Dank — wir melden uns mit einem Vorschlag.',
     error: 'Das hat nicht geklappt. Bitte erneut versuchen.',
     cta: 'Nichts Passendes dabei? Wir fertigen nach Maß.',
+    usedProducts: 'Verwendete Arbeiten',
+    seenInProjects: 'So sieht das in echt aus',
   },
   craft: {
     productionTime: 'Fertigungszeit',
@@ -239,6 +243,8 @@ const fr: Dictionary = {
     promotions: 'Offres',
     projects: 'Références',
     about: 'À propos',
+    custom: 'Sur mesure',
+    search: 'Recherche',
     menu: 'Menu',
   },
   home: {
@@ -391,6 +397,8 @@ const fr: Dictionary = {
     success: 'Merci — nous revenons vers vous avec une proposition.',
     error: "Cela n'a pas fonctionné. Merci de réessayer.",
     cta: 'Rien ne correspond ? Nous fabriquons sur mesure.',
+    usedProducts: 'Pièces utilisées',
+    seenInProjects: 'En situation réelle',
   },
   craft: {
     productionTime: 'Délai de fabrication',
@@ -462,6 +470,8 @@ const en: Dictionary = {
     promotions: 'Offers',
     projects: 'References',
     about: 'About us',
+    custom: 'Made to measure',
+    search: 'Search',
     menu: 'Menu',
   },
   home: {
@@ -613,6 +623,8 @@ const en: Dictionary = {
     success: 'Thank you — we will come back to you with a proposal.',
     error: 'That did not work. Please try again.',
     cta: 'Nothing quite right? We build to measure.',
+    usedProducts: 'Pieces used',
+    seenInProjects: 'Seen in real life',
   },
   craft: {
     productionTime: 'Lead time',

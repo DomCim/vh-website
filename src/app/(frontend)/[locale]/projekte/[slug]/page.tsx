@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { MassanfertigungHinweis } from '../../../../../components/MassanfertigungHinweis'
 import { ImageReveal } from '../../../../../components/motion/ImageReveal'
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { SplitTextReveal } from '../../../../../components/motion/SplitTextReveal'
@@ -42,6 +43,19 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
   if (!project) notFound()
 
   const images = project.images ?? []
+
+  // Verknüpfte Produkte für den Abschnitt „Verwendete Arbeiten"
+  const verknuepfteProdukte = (project.relatedProducts ?? [])
+    .filter((p): p is Exclude<typeof p, number> => typeof p === 'object' && p !== null)
+    .map((p) => ({
+      id: p.id,
+      titel: p.title,
+      slug: p.slug ?? '',
+      kategorieSlug: typeof p.category === 'object' ? (p.category?.slug ?? '') : '',
+      bild: mediaUrl(p.images?.[0], 'card'),
+      bildAlt: mediaAlt(p.images?.[0], p.title),
+    }))
+    .filter((p) => p.slug && p.kategorieSlug)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
@@ -103,6 +117,41 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
           ))}
         </div>
       )}
+
+      {verknuepfteProdukte.length > 0 && (
+        <div className="mt-16">
+          <h2 className="tracking-nav text-ink heading-rule text-lg font-semibold uppercase">
+            {dict.custom.usedProducts}
+          </h2>
+          <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {verknuepfteProdukte.map((p) => (
+              <li key={p.id}>
+                <Link href={`/${locale}/${p.kategorieSlug}/${p.slug}`} className="group block">
+                  {p.bild && (
+                    <div className="bg-paper-soft overflow-hidden">
+                      <img
+                        src={p.bild}
+                        alt={p.bildAlt}
+                        className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <p className="group-hover:text-bronze mt-3 text-sm font-semibold transition-colors">
+                    {p.titel}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <MassanfertigungHinweis
+        locale={locale}
+        text={dict.custom.cta}
+        label={dict.custom.title}
+      />
     </div>
   )
 }
