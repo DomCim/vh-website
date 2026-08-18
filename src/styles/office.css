@@ -15,6 +15,17 @@
   --buero-rot: #a4342c;
 }
 
+/* Die Website bekommt das von Tailwind, das Büro bringt sein eigenes
+   Stylesheet mit: Ohne diese Zeilen rechnet der Browser Innenabstand und
+   Rahmen auf die volle Breite obendrauf — Eingabefelder standen dann ein
+   paar Pixel über die Karte hinaus. */
+.buero,
+.buero *,
+.buero *::before,
+.buero *::after {
+  box-sizing: border-box;
+}
+
 .buero {
   min-height: 100vh;
   background: var(--buero-papier);
@@ -485,6 +496,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 0 0.75rem;
+}
+
+/* Vier Spalten auf einem Handy heißt vier unlesbare Spalten */
+@media (max-width: 520px) {
+  .buero-reihe {
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0 0.6rem;
+  }
 }
 
 .buero-karte {
