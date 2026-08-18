@@ -46,8 +46,15 @@ export async function POST(req: Request) {
     } catch (err) {
       const grund = err instanceof Error ? err.message : 'fehler'
       return NextResponse.json(
-        { error: grund === 'entwurf' ? 'noch-entwurf' : 'nicht-gefunden' },
-        { status: grund === 'entwurf' ? 409 : 404 },
+        {
+          error:
+            grund === 'entwurf'
+              ? 'noch-entwurf'
+              : grund === 'nicht-offen'
+                ? 'nicht-offen'
+                : 'nicht-gefunden',
+        },
+        { status: grund === 'entwurf' || grund === 'nicht-offen' ? 409 : 404 },
       )
     }
 
@@ -62,6 +69,14 @@ export async function POST(req: Request) {
         { name: unterlage.dateiname, inhalt: unterlage.datei, typ: 'application/pdf' },
       ],
     })
+
+    // Erst jetzt festhalten, was verschickt wurde — vorher hätte ein
+    // gescheiterter Versand die Mahnstufe hochgezählt.
+    if (unterlage.nachSenden) {
+      await unterlage.nachSenden().catch((err) => {
+        console.error('Nachbereitung nach dem Versand fehlgeschlagen:', err)
+      })
+    }
 
     return NextResponse.json({ ok: true, an, dateiname: unterlage.dateiname })
   } catch (err) {
@@ -96,8 +111,15 @@ export async function GET(req: Request) {
   } catch (err) {
     const grund = err instanceof Error ? err.message : 'fehler'
     return NextResponse.json(
-      { error: grund === 'entwurf' ? 'noch-entwurf' : 'nicht-gefunden' },
-      { status: grund === 'entwurf' ? 409 : 404 },
+      {
+        error:
+          grund === 'entwurf'
+            ? 'noch-entwurf'
+            : grund === 'nicht-offen'
+              ? 'nicht-offen'
+              : 'nicht-gefunden',
+      },
+      { status: grund === 'entwurf' || grund === 'nicht-offen' ? 409 : 404 },
     )
   }
 }

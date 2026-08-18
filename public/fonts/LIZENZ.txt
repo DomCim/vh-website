@@ -1,0 +1,11 @@
+Liberation Sans (Regular und Bold)
+SIL Open Font License, Version 1.1 — https://github.com/liberationfonts
+
+Warum liegen hier Schriftdateien?
+
+Rechnungen müssen als Factur-X ausgeliefert werden: ein PDF/A-3 mit
+eingebetteter XML-Datei. PDF/A verlangt, dass jede verwendete Schrift im
+Dokument eingebettet ist — die in PDF eingebauten Standardschriften
+(Helvetica & Co.) sind es nicht. Liberation Sans ist frei lizenziert und in
+den Maßen mit Arial/Helvetica verträglich, das Rechnungsbild bleibt also
+dasselbe.

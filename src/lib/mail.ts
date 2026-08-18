@@ -42,6 +42,10 @@ export type CompanyInfo = {
   vatRate?: number | null
   paymentTerms?: string | null
   latePaymentNote?: string | null
+  iban?: string | null
+  bic?: string | null
+  /** Option „TVA d'après les débits" — muss dann auf jeder Rechnung stehen */
+  vatOnDebits?: boolean | null
 }
 
 const euro = (v: number) =>
@@ -277,6 +281,34 @@ export function orderShippedEmail(order: OrderLike) {
         <p>${addressBlock(order)}</p>
         ${statusLink(order)}
         <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+    ),
+  }
+}
+
+/**
+ * Bitte um eine Kundenstimme, ein paar Wochen nach der Lieferung.
+ *
+ * Warum nicht sofort? Weil die Stimme dann nichts über das Stück aussagt,
+ * sondern über die Vorfreude. Nach zwei Wochen steht es an seinem Platz, und
+ * die Kundschaft weiß, ob es hält, was es versprochen hat.
+ */
+export function reviewRequestEmail(order: OrderLike, link: string, company?: CompanyInfo) {
+  const stueck = order.items?.[0]?.titleSnapshot
+  return {
+    to: order.customer?.email ?? '',
+    subject: `Wie steht es bei Ihnen? – Vincent Hellmann`,
+    html: briefbogen(
+      `<p>Guten Tag ${order.customer?.name ?? ''},</p>
+        <p>vor einigen Wochen haben wir Ihnen ${
+          stueck ? `<strong>${stueck}</strong>` : 'Ihre Bestellung'
+        } geschickt. Wir hoffen, es hat seinen Platz gefunden.</p>
+        <p>Wenn Sie kurz beschreiben mögen, wie es bei Ihnen wirkt, würden wir uns freuen — zwei, drei Sätze genügen. Wir veröffentlichen nur, was Sie uns dafür freigeben, und nur unter dem Namen, den Sie angeben.</p>
+        <p style="margin:24px 0">
+          <a href="${link}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">Ein paar Sätze schreiben</a>
+        </p>
+        <p style="color:#666;font-size:12px">Keine Lust? Dann ignorieren Sie diese Mail einfach — wir fragen kein zweites Mal.</p>
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+      company,
     ),
   }
 }

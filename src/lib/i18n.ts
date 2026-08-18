@@ -82,7 +82,12 @@ const de = {
     city: 'Ort',
     country: 'Land',
     note: 'Anmerkung zur Bestellung (optional)',
-    payNow: 'Kostenpflichtig bestellen',
+    payNow: 'Zahlungspflichtig bestellen',
+    consentTerms:
+      'Ich habe die {agb} und die {widerruf} gelesen und stimme ihnen zu. Die {datenschutz} habe ich zur Kenntnis genommen.',
+    consentWaiver:
+      'Mein Auftrag enthält ein nach meinen Vorgaben angefertigtes Einzelstück. Mir ist bekannt, dass dafür kein Widerrufsrecht besteht, sobald die Fertigung beginnt.',
+    consentMissing: 'Bitte bestätigen Sie die Bedingungen, bevor Sie bestellen.',
     payNowStripe: 'Weiter zur sicheren Zahlung',
     payNowPaypal: 'Weiter zu PayPal',
     redirectNote: 'Zur Zahlung werden Sie sicher zu Stripe weitergeleitet.',
@@ -219,10 +224,46 @@ const de = {
     phoneLabel: 'Telefon',
     emailLabel: 'E-Mail',
   },
+  review: {
+    title: 'Ihre Erfahrung',
+    intro:
+      'Sie haben {stueck} bei uns bestellt. Wenn Sie mögen, schreiben Sie zwei, drei Sätze dazu — wie es bei Ihnen steht, wie es sich hält.',
+    yourPiece: 'Ihr Stück',
+    unknown:
+      'Zu diesem Link finden wir keine Bestellung. Vielleicht ist er unvollständig — schreiben Sie uns einfach direkt.',
+    quoteLabel: 'Was möchten Sie sagen?',
+    authorLabel: 'Name, wie er dabeistehen soll',
+    contextLabel: 'Ort oder Anlass (optional)',
+    consent:
+      'Ich bin damit einverstanden, dass dieser Text mit meinem Namen auf der Website erscheint. Ich kann das jederzeit widerrufen.',
+    submit: 'Absenden',
+    thanks:
+      'Vielen Dank — das freut uns wirklich. Wir lesen es und stellen es dann auf die Seite.',
+    error: 'Das ließ sich nicht absenden. Bitte später noch einmal versuchen.',
+  },
+  newsletter: {
+    title: 'Neues aus der Werkstatt',
+    intro:
+      'Ein paar Mal im Jahr: fertige Stücke, Einblicke in laufende Arbeiten, gelegentlich ein Angebot. Kein Wort zu viel, jederzeit abbestellbar.',
+    emailLabel: 'E-Mail-Adresse',
+    submit: 'Anmelden',
+    sent: 'Bitte schauen Sie in Ihr Postfach — wir haben Ihnen einen Bestätigungslink geschickt. Erst danach sind Sie dabei.',
+    error: 'Das hat nicht geklappt. Bitte später noch einmal versuchen.',
+    privacy: 'Bestätigung per E-Mail. Abmeldung jederzeit mit einem Klick.',
+    confirmedTitle: 'Sie sind dabei',
+    confirmedText: 'Ihre Anmeldung ist bestätigt. Wir melden uns, wenn es etwas zu zeigen gibt.',
+    goodbyeTitle: 'Abgemeldet',
+    goodbyeText: 'Sie bekommen keine weiteren Nachrichten von uns. Danke fürs Vorbeischauen.',
+    unknownTitle: 'Link nicht mehr gültig',
+    unknownText:
+      'Dieser Link ist abgelaufen oder gehört zu keiner Anmeldung. Melden Sie sich einfach neu an.',
+  },
   footer: {
     impressum: 'Impressum',
     datenschutz: 'Datenschutzerklärung',
     agb: 'AGB',
+    widerruf: 'Widerrufsrecht',
+    versandZahlung: 'Versand & Zahlung',
     followUs: 'Folgen Sie uns',
     contact: 'Kontakt',
   },
@@ -312,6 +353,11 @@ const fr: Dictionary = {
     country: 'Pays',
     note: 'Remarque sur la commande (facultatif)',
     payNow: 'Commander avec obligation de paiement',
+    consentTerms:
+      "J'ai lu et j'accepte les {agb} et le {widerruf}. J'ai pris connaissance de la {datenschutz}.",
+    consentWaiver:
+      "Ma commande comprend une pièce réalisée sur mesure d'après mes indications. Je sais qu'aucun droit de rétractation ne s'applique dès que la fabrication commence.",
+    consentMissing: 'Merci de confirmer les conditions avant de commander.',
     payNowStripe: 'Continuer vers le paiement sécurisé',
     payNowPaypal: 'Continuer vers PayPal',
     redirectNote: 'Vous serez redirigé en toute sécurité vers Stripe pour le paiement.',
@@ -448,10 +494,45 @@ const fr: Dictionary = {
     phoneLabel: 'Téléphone',
     emailLabel: 'E-mail',
   },
+  review: {
+    title: 'Votre expérience',
+    intro:
+      "Vous avez commandé {stueck} chez nous. Si vous le souhaitez, écrivez deux ou trois phrases — comment la pièce vit chez vous, comment elle tient.",
+    yourPiece: 'votre pièce',
+    unknown:
+      "Nous ne trouvons aucune commande pour ce lien. Il est peut-être incomplet — écrivez-nous directement.",
+    quoteLabel: 'Que souhaitez-vous dire ?',
+    authorLabel: 'Nom tel qu’il apparaîtra',
+    contextLabel: 'Lieu ou occasion (facultatif)',
+    consent:
+      "J'accepte que ce texte paraisse avec mon nom sur le site. Je peux revenir sur cet accord à tout moment.",
+    submit: 'Envoyer',
+    thanks: 'Merci beaucoup — cela nous touche. Nous le lisons puis le mettons en ligne.',
+    error: "L'envoi a échoué. Merci de réessayer plus tard.",
+  },
+  newsletter: {
+    title: "Des nouvelles de l'atelier",
+    intro:
+      "Quelques fois par an : pièces terminées, coulisses des travaux en cours, parfois une offre. Pas un mot de trop, désinscription à tout moment.",
+    emailLabel: 'Adresse e-mail',
+    submit: "S'inscrire",
+    sent: "Regardez votre boîte aux lettres — nous vous avons envoyé un lien de confirmation. L'inscription n'est valable qu'après ce clic.",
+    error: "Cela n'a pas fonctionné. Merci de réessayer plus tard.",
+    privacy: 'Confirmation par e-mail. Désinscription en un clic.',
+    confirmedTitle: 'Vous êtes inscrit',
+    confirmedText: "Votre inscription est confirmée. Nous écrirons quand il y aura quelque chose à montrer.",
+    goodbyeTitle: 'Désinscription effectuée',
+    goodbyeText: 'Vous ne recevrez plus de messages de notre part. Merci de votre visite.',
+    unknownTitle: "Lien plus valable",
+    unknownText:
+      "Ce lien a expiré ou ne correspond à aucune inscription. Vous pouvez simplement vous réinscrire.",
+  },
   footer: {
     impressum: 'Mentions légales',
     datenschutz: 'Politique de confidentialité',
     agb: 'CGV',
+    widerruf: 'Droit de rétractation',
+    versandZahlung: 'Livraison & paiement',
     followUs: 'Suivez-nous',
     contact: 'Contact',
   },
@@ -538,7 +619,12 @@ const en: Dictionary = {
     city: 'City',
     country: 'Country',
     note: 'Order note (optional)',
-    payNow: 'Place binding order',
+    payNow: 'Order with obligation to pay',
+    consentTerms:
+      'I have read and accept the {agb} and the {widerruf}. I have taken note of the {datenschutz}.',
+    consentWaiver:
+      'My order contains a piece made to my specifications. I understand that there is no right of withdrawal once production starts.',
+    consentMissing: 'Please confirm the terms before ordering.',
     payNowStripe: 'Continue to secure payment',
     payNowPaypal: 'Continue to PayPal',
     redirectNote: 'You will be securely redirected to our payment provider.',
@@ -674,10 +760,44 @@ const en: Dictionary = {
     phoneLabel: 'Phone',
     emailLabel: 'Email',
   },
+  review: {
+    title: 'Your experience',
+    intro:
+      'You ordered {stueck} from us. If you like, write two or three sentences — how it sits with you, how it holds up.',
+    yourPiece: 'your piece',
+    unknown:
+      'We cannot find an order for this link. It may be incomplete — just write to us directly.',
+    quoteLabel: 'What would you like to say?',
+    authorLabel: 'Name as it should appear',
+    contextLabel: 'Place or occasion (optional)',
+    consent:
+      'I agree that this text may appear with my name on the website. I can withdraw this at any time.',
+    submit: 'Send',
+    thanks: 'Thank you — that means a lot. We will read it and put it on the site.',
+    error: 'That could not be sent. Please try again later.',
+  },
+  newsletter: {
+    title: 'News from the workshop',
+    intro:
+      'A few times a year: finished pieces, a look at work in progress, occasionally an offer. Not a word too many, unsubscribe any time.',
+    emailLabel: 'Email address',
+    submit: 'Subscribe',
+    sent: 'Please check your inbox — we sent you a confirmation link. You are on the list once you click it.',
+    error: 'That did not work. Please try again later.',
+    privacy: 'Confirmation by email. Unsubscribe with one click.',
+    confirmedTitle: 'You are in',
+    confirmedText: 'Your subscription is confirmed. We will write when there is something to show.',
+    goodbyeTitle: 'Unsubscribed',
+    goodbyeText: 'You will not receive any further messages from us. Thanks for stopping by.',
+    unknownTitle: 'Link no longer valid',
+    unknownText: 'This link has expired or belongs to no subscription. Simply sign up again.',
+  },
   footer: {
     impressum: 'Legal notice',
     datenschutz: 'Privacy policy',
     agb: 'Terms & conditions',
+    widerruf: 'Right of withdrawal',
+    versandZahlung: 'Shipping & payment',
     followUs: 'Follow us',
     contact: 'Contact',
   },

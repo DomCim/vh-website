@@ -447,6 +447,37 @@
   color: var(--buero-tinte-leise);
 }
 
+/* Zweitrangige Aktionen an einer Listenzeile — schmal genug, dass drei davon
+   nebeneinander auf ein Handy passen */
+.buero-knopf.schmal,
+.buero a.buero-knopf.schmal {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: var(--buero-tinte);
+  border: 1px solid var(--buero-linie);
+}
+
+.buero-knopf.schmal:hover,
+.buero a.buero-knopf.schmal:hover {
+  background: var(--buero-bronze);
+  border-color: var(--buero-bronze);
+  color: #fff;
+}
+
+.buero-knopf.gefahr,
+.buero a.buero-knopf.gefahr {
+  color: var(--buero-rot);
+  border-color: color-mix(in srgb, var(--buero-rot) 40%, transparent);
+}
+
+.buero-knopf.gefahr:hover,
+.buero a.buero-knopf.gefahr:hover {
+  background: var(--buero-rot);
+  border-color: var(--buero-rot);
+  color: #fff;
+}
+
 .buero-knopf.leise {
   background: transparent;
   color: var(--buero-tinte);
@@ -566,6 +597,13 @@
   margin-bottom: 1rem;
 }
 
+/* Dasselbe in Rot, wenn etwas schiefging — z.B. eine Sicherung, die es nicht
+   auf die NAS geschafft hat */
+.buero-hinweis.warn {
+  background: color-mix(in srgb, var(--buero-rot) 10%, transparent);
+  border-color: color-mix(in srgb, var(--buero-rot) 35%, transparent);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --buero-papier: #141416;
@@ -577,5 +615,100 @@
     --buero-bronze: #c98a52;
     --buero-gruen: #6cc08c;
     --buero-rot: #e0796f;
+  }
+}
+
+
+/* ── Kalender ──────────────────────────────────────────────────────────────
+   Monatsraster mit Montag als erstem Tag. Am Handy wird es eng, deshalb
+   schrumpfen die Zellen mit und die Einträge werden zu schmalen Streifen. */
+.buero-kalender {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 1rem;
+  background: var(--buero-linie);
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.buero-kalender-kopf {
+  background: var(--buero-flaeche);
+  padding: 0.45rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--buero-tinte-leise);
+  text-align: center;
+}
+
+.buero-kalender-zelle {
+  background: var(--buero-papier);
+  min-height: 5.5rem;
+  padding: 0.3rem 0.3rem 0.4rem;
+}
+
+.buero-kalender-zelle.leer {
+  background: var(--buero-flaeche);
+}
+
+.buero-kalender-zelle.heute {
+  box-shadow: inset 0 0 0 2px var(--buero-bronze);
+}
+
+.buero-kalender-tag {
+  font-size: 0.72rem;
+  color: var(--buero-tinte-leise);
+  margin-bottom: 0.25rem;
+}
+
+.buero a.buero-kalender-eintrag {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  padding: 0.2rem 0.3rem;
+  margin-bottom: 0.2rem;
+  border-radius: 4px;
+  border-left: 3px solid var(--buero-tinte-leise);
+  background: var(--buero-flaeche);
+  color: var(--buero-tinte);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buero a.buero-kalender-eintrag span {
+  color: var(--buero-tinte-leise);
+}
+
+.buero a.buero-kalender-eintrag.auftrag {
+  border-left-color: var(--buero-bronze);
+}
+.buero a.buero-kalender-eintrag.bestellung {
+  border-left-color: var(--buero-gruen);
+}
+.buero a.buero-kalender-eintrag.angebot {
+  border-left-color: var(--buero-tinte-leise);
+}
+.buero a.buero-kalender-eintrag.beleg {
+  border-left-color: var(--buero-rot);
+}
+
+@media (max-width: 640px) {
+  .buero-kalender-zelle {
+    min-height: 4rem;
+    padding: 0.2rem;
+  }
+
+  .buero a.buero-kalender-eintrag {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.2rem;
+  }
+
+  .buero a.buero-kalender-eintrag span {
+    display: none;
   }
 }

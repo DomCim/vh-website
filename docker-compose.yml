@@ -32,6 +32,17 @@ services:
       PAYPAL_SANDBOX: ${PAYPAL_SANDBOX:-false}
       # Schlüssel für den MCP-Endpunkt (leer = deaktiviert)
       MCP_API_KEY: ${MCP_API_KEY:-}
+      # Nur nötig, wenn Wartung und Postfach zusätzlich von außen angestoßen
+      # werden sollen (z.B. aus Home Assistant). Den Takt hält der Server
+      # selbst; eingestellt wird er im Admin unter Integrationen → Takt.
+      CRON_SECRET: ${CRON_SECRET:-}
+      # Zugangsdaten der Datenbank für pg_dump (Sicherung)
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+      # Herkunft der Besucherstatistik für die Sicherheitsrichtlinie (CSP),
+      # z.B. https://plausible.io — sonst blockt der Browser das Skript
+      CSP_EXTRA_SCRIPT: ${CSP_EXTRA_SCRIPT:-}
       # Beim allerersten Start auf "true" setzen, um Startdaten einzuspielen
       SEED: ${SEED:-false}
       # Einmalig auf "true" setzen, um die englischen Übersetzungen
@@ -40,6 +51,9 @@ services:
     volumes:
       # Persistente Uploads (Bilder aus dem Admin-Panel)
       - media:/app/media
+      # Fertige Sicherungen (Datenbank + Medien in einem Archiv). Die App legt
+      # sie hier ab und schiebt sie auf die NAS — siehe Büro → Sicherung.
+      - backups:/app/backups
     networks:
       - edge
       - internal
@@ -76,37 +90,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
-  # Tägliches Datenbank-Backup (pg_dump), behält die letzten 14 Dumps
-  backup:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PGHOST: db
-      PGUSER: ${POSTGRES_USER:-vh}
-      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
-      PGDATABASE: ${POSTGRES_DB:-vh}
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        while true; do
-          ts=$$(date +%Y-%m-%d_%H%M)
-          if pg_dump -Fc -f "/backups/vh_$$ts.dump"; then
-            echo "Backup OK: vh_$$ts.dump"
-          else
-            echo "Backup FEHLGESCHLAGEN: $$ts" >&2
-          fi
-          ls -1t /backups/vh_*.dump 2>/dev/null | tail -n +15 | xargs -r rm -f
-          sleep 86400
-        done
-    volumes:
-      - backups:/backups
-    networks:
-      - internal
 
 networks:
   edge:

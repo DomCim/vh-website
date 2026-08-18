@@ -9,6 +9,15 @@ import * as migration_20260818_075043_buero_belege_rechnungen from './20260818_0
 import * as migration_20260818_101629_buero_postfach_push from './20260818_101629_buero_postfach_push';
 import * as migration_20260818_123622_angebot_nachlass_kundenbestellung from './20260818_123622_angebot_nachlass_kundenbestellung';
 import * as migration_20260818_150138_postfach_signatur from './20260818_150138_postfach_signatur';
+import * as migration_20260818_184332_sicherung_wartung from './20260818_184332_sicherung_wartung';
+import * as migration_20260818_185517_shop_recht from './20260818_185517_shop_recht';
+import * as migration_20260818_190812_erechnung from './20260818_190812_erechnung';
+import * as migration_20260818_192512_geld from './20260818_192512_geld';
+import * as migration_20260818_193349_werkstatt from './20260818_193349_werkstatt';
+import * as migration_20260818_194322_bilder from './20260818_194322_bilder';
+import * as migration_20260818_201010_takt from './20260818_201010_takt';
+import * as migration_20260818_201729_takt_aufbewahrung from './20260818_201729_takt_aufbewahrung';
+import * as migration_20260818_211055_passkeys from './20260818_211055_passkeys';
 
 export const migrations = [
   {
@@ -64,6 +73,51 @@ export const migrations = [
   {
     up: migration_20260818_150138_postfach_signatur.up,
     down: migration_20260818_150138_postfach_signatur.down,
-    name: '20260818_150138_postfach_signatur'
+    name: '20260818_150138_postfach_signatur',
+  },
+  {
+    up: migration_20260818_184332_sicherung_wartung.up,
+    down: migration_20260818_184332_sicherung_wartung.down,
+    name: '20260818_184332_sicherung_wartung',
+  },
+  {
+    up: migration_20260818_185517_shop_recht.up,
+    down: migration_20260818_185517_shop_recht.down,
+    name: '20260818_185517_shop_recht',
+  },
+  {
+    up: migration_20260818_190812_erechnung.up,
+    down: migration_20260818_190812_erechnung.down,
+    name: '20260818_190812_erechnung',
+  },
+  {
+    up: migration_20260818_192512_geld.up,
+    down: migration_20260818_192512_geld.down,
+    name: '20260818_192512_geld',
+  },
+  {
+    up: migration_20260818_193349_werkstatt.up,
+    down: migration_20260818_193349_werkstatt.down,
+    name: '20260818_193349_werkstatt',
+  },
+  {
+    up: migration_20260818_194322_bilder.up,
+    down: migration_20260818_194322_bilder.down,
+    name: '20260818_194322_bilder',
+  },
+  {
+    up: migration_20260818_201010_takt.up,
+    down: migration_20260818_201010_takt.down,
+    name: '20260818_201010_takt',
+  },
+  {
+    up: migration_20260818_201729_takt_aufbewahrung.up,
+    down: migration_20260818_201729_takt_aufbewahrung.down,
+    name: '20260818_201729_takt_aufbewahrung',
+  },
+  {
+    up: migration_20260818_211055_passkeys.up,
+    down: migration_20260818_211055_passkeys.down,
+    name: '20260818_211055_passkeys'
   },
 ];

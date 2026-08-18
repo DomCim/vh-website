@@ -14,9 +14,13 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
 - **Referenzen** (Projekte für Kommunen/Gewerbe/Privat) mit Filter und Startseiten-Teaser; **Über-uns-Seite** mit Timeline; **Kundenstimmen** (nur echte!) auf Startseite und Produktseiten; optionales **Video im Hero**
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
+- **Elektronische Rechnung**: Ausgangsrechnungen als **Factur-X** (PDF/A-3 mit eingebetteter XML nach EN 16931), XML auch einzeln herunterladbar
+- **Bilder** in fünf Größen als WebP, per `srcset` passend zum Gerät ausgeliefert
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
-- **Betrieb**: `/api/healthz` für Monitoring, tägliche DB-Backups (pg_dump-Sidecar, letzte 14 Dumps im Volume `backups`)
+- **Newsletter** mit Double-Opt-In, Versand aus dem Büro und Abmeldelink; **Mahnwesen** in drei Stufen; automatisches Nachfassen bei Angeboten und Bitte um Kundenstimmen nach der Lieferung
+- **Verbraucherrecht**: Widerrufsbelehrung, Muster-Widerrufsformular, Versand & Zahlung als eigene Seiten; Zustimmung in der Kasse wird mit Zeitpunkt an der Bestellung festgehalten
+- **Betrieb**: `/api/healthz` für Monitoring, **nächtliche Komplettsicherung** (Datenbank + Bilder in einem Archiv, auf die NAS geschoben, bedienbar im Büro), Sicherheits-Kopfzeilen inkl. CSP, Erinnerung an fällige Belege
 
 ## Lokale Entwicklung
 
@@ -46,7 +50,7 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 4. **NPM-Weiterleitung**: `vh.dominikdill.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vh.dominikdill.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`).
 5. **Erster Login**: `https://vh.dominikdill.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
 
-**Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`. Beide überleben Updates — für Backups diese beiden Volumes sichern (DB z.B. per `pg_dump`).
+**Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`, die fertigen Sicherungen im Volume `backups` (`/app/backups`). Alle drei überleben Updates. Gesichert wird nicht von Hand, sondern über **Büro → Sicherung** (siehe unten).
 
 **Update:** Neues Image wird bei Push auf `main` gebaut → in Portainer „Re-pull image & redeploy". Migrationen laufen automatisch beim Start.
 
@@ -122,9 +126,10 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Anfragen** | Kontakt-, Produkt- und Maßanfertigungsanfragen mit Status und interner Notiz; „Antworten" öffnet das Postfach mit vorbereitetem Entwurf. |
 | **Bestellungen** | Positionen, Anschrift, Stand (bezahlt → in Fertigung → versendet) und Sendungsnummer. Der Statuswechsel löst die E-Mail an die Kundschaft aus; ohne Sendungsnummer geht „Versendet" nicht. |
 | **Angebote** | Positionen mit Netto, Steuer und Fertigungszeit. Die Nummer wird erst beim Versenden vergeben — ein verworfener Entwurf reißt keine Lücke in die Reihe. Angenommene Angebote werden per Klick zum Auftrag oder zur Rechnung. |
-| **Aufträge** | Der Durchlauf durch die Werkstatt. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
-| **Artikel** | Stückliste (Material je Stück) und externe Dienstleister (Leistung, Kosten je Stück, Vorlaufzeit) — daraus rechnet die Seite den Einsatz je Stück gegen den Website-Preis. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
-| **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als PDF; Eingangsbelege per Foto, ausgelesen von Claude und danach geprüft. |
+| **Aufträge** | Der Durchlauf durch die Werkstatt, mit Stoppuhr für die Arbeitszeit und Lieferschein zum Mitgeben. Bezahlte Shop-Bestellungen legen ihren Auftrag selbst an, mit dem Preis von der Website; fertige Werkstattstücke bekommen keinen. Material wird erst beim Abschließen vom Inventar abgezogen. |
+| **Artikel** | Stückliste (Material je Stück), externe Dienstleister und die Arbeitszeit je Stück — daraus rechnet die Seite den Einsatz gegen den Website-Preis und schlägt einen Preis vor. Fehlt Material für eine Bestellung, steht das am Auftrag, bevor die Kundschaft wartet. |
+| **Kalender** | Ein Monatsblatt mit allem, was ein Datum hat: Fertigstellungen, Liefertermine, ablaufende Angebote, fällige Belege. |
+| **Rechnungen & Belege** | Ausgangsrechnungen fürs Projektgeschäft als Factur-X-PDF; Eingangsbelege per Foto oder PDF — steckt eine elektronische Rechnung darin, werden die Werte von dort übernommen, sonst liest Claude den Beleg. |
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
 | **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
@@ -143,6 +148,155 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Bilder
+
+Die Website lebt von Werkstattaufnahmen — ausgeliefert wurde davon bisher für jeden dieselbe Datei. Jetzt legt Payload fünf Zuschnitte an (320, 480, 900, 1800 und 2600 Pixel), alle als **WebP**, und jedes Bild bringt sie als `srcset` mit. Der Browser nimmt, was zum Platz im Layout passt: Ein Handy lädt keine 1800er mehr, ein großer Bildschirm bekommt endlich ein scharfes Hero-Bild. Höhe und Breite stehen dabei, damit beim Laden nichts springt.
+
+Die Originaldatei bleibt unangetastet — sie ist das Archiv.
+
+**Wichtig nach dem Update:** Zuschnitte entstehen beim Hochladen, nicht rückwirkend. Vorhandene Bilder haben also weiterhin nur die alten drei Größen. Einmalig:
+
+```bash
+pnpm bilder-neu     # rechnet die Zuschnitte aller vorhandenen Bilder neu
+```
+
+Im Container läuft das über `node_modules/.bin/payload run scripts/bilder-neu.ts`.
+
+## Werkstatt: Zeit, Kalender, Lieferschein
+
+**Arbeitszeit.** Am Auftrag steht eine Stoppuhr: großer Knopf, läuft sichtbar mit, stoppt in eine Buchung. Zeit lässt sich auch nachtragen, wenn das Telefon in der Jacke geblieben ist. Daraus rechnet das Büro die Lohnkosten (Stundensatz unter **Website-Einstellungen → Einzelfertigung**) und stellt sie neben Material und Fremdleistung — bis dahin war die Nachkalkulation ohne die größte Position.
+
+**Am Artikel** kommt dieselbe Rechnung vor dem Verkauf: Material + Fremdleistung + Arbeitszeit ergeben den Einsatz je Stück, dazu ein **Preisvorschlag** mit dem eingestellten Wunschaufschlag. Liegt der Website-Preis darunter, sagt die Seite es deutlich.
+
+**Kalender** (`/office/kalender`): ein Monatsblatt mit allem, was ein Datum hat — Fertigstellungen, zugesagte Liefertermine aus dem Shop, ablaufende Angebote, fällige Belege. Vorher lagen diese Termine in vier Listen, und eine überfüllte Woche fiel erst auf, wenn sie da war.
+
+**Lieferschein.** Zu jedem Auftrag gibt es einen Bon de livraison zum Ausdrucken oder Verschicken: was geliefert wurde, wohin, ohne Preise — und zwei Zeilen zum Unterschreiben. Bei Montagen ist die Unterschrift zugleich das Abnahmeprotokoll.
+
+## Nachfassen, Mahnen, Newsletter
+
+Drei Stellen, an denen bisher Geld liegen blieb:
+
+**Mahnwesen.** An einer gestellten Rechnung steht im Büro „Erinnern / mahnen". Welche Stufe dran ist, ergibt sich aus dem, was schon draußen war — Zahlungserinnerung (freundlich, ohne Kosten, zehn Tage Frist), Mahnung (mit der gesetzlichen Pauschale von 40 € nach Art. L441-10 Code de commerce) und letzte Mahnung. Verschickt wird über das Postfach wie jedes andere Dokument; erst nach erfolgreichem Versand wird die Stufe hochgezählt. Die Rechnungsliste hat einen Filter „Überfällig", und einmal am Tag meldet das Büro die offenen Posten aufs Handy.
+
+**Angebote nachfassen.** Beim Verschicken merkt sich das Angebot den Tag. Bleibt es sieben Tage ohne Antwort, meldet sich das Büro — danach höchstens wöchentlich, damit die Meldung nicht zur Tapete wird. Läuft die Gültigkeit demnächst ab, steht das dabei.
+
+**Newsletter.** Anmeldung im Fuß jeder Seite, Bestätigung per Mail (Double-Opt-In — ohne den Klick geht nichts raus), Abmeldung mit einem Klick aus jeder Mail. Geschrieben und verschickt wird unter **Büro → Newsletter**: Vorlage aus einem News-Beitrag übernehmen, Testmail an sich selbst, dann an alle. Ein Newsletter lässt sich nicht zurückholen, deshalb die Zwischenschritte.
+
+**Kundenstimmen einholen.** Zwei Wochen nach dem Versand fragt eine Mail, ob die Kundschaft ein paar Sätze schreiben mag — genau einmal. Der Text landet zur Prüfung im Admin (Haken „Zur Prüfung eingegangen") und erscheint erst auf der Website, wenn jemand ihn freigibt. Die Seite dafür ist nur mit dem Schlüssel aus der Bestellung erreichbar: Hinter jeder Stimme steht damit eine echte Lieferung.
+
+## Elektronische Rechnung (Factur-X)
+
+Frankreich stellt die Rechnungsstellung auf elektronische Rechnungen um: Ab **1. September 2026** muss jedes französische Unternehmen E-Rechnungen **empfangen** können, das Ausstellen folgt gestaffelt (kleine Betriebe später). Eine E-Rechnung ist dabei kein PDF im Mailanhang, sondern ein strukturierter Datensatz.
+
+Die Ausgangsrechnungen aus dem Büro sind deshalb jetzt **Factur-X**: ein PDF/A-3, in dem dieselbe Rechnung zusätzlich als XML nach EN 16931 (Profil BASIC) steckt. Das Blatt sieht aus wie vorher, die Maschine liest die Daten.
+
+Damit das aufgeht, sind neue Angaben nötig:
+
+- **Website-Einstellungen → Firmen-/Steuerangaben**: SIRET, TVA-Nummer, **IBAN/BIC** und — falls gewählt — die Option „TVA d'après les débits" (der Pflichtvermerk erscheint dann automatisch auf jeder Rechnung).
+- **An der Rechnung**: SIRET/SIREN und TVA-Nummer des Kunden (bei Geschäftskunden Pflicht), Bestellnummer des Kunden, Liefer-/Leistungsdatum, Art des Geschäfts, bei Bedarf eine abweichende Lieferanschrift.
+
+Fehlt etwas davon, steht das als Hinweis an der Rechnung — das PDF entsteht trotzdem, eine Empfängerplattform würde es aber zurückweisen. Neben „PDF ansehen" gibt es „XML herunterladen", falls Steuerberater oder Plattform den Datensatz einzeln wollen.
+
+**Eingehende E-Rechnungen** liest das Büro ebenfalls: Wird ein Beleg als PDF hochgeladen, sucht das System zuerst nach einer eingebetteten Rechnungs-XML (Factur-X/ZUGFeRD ab 1.0, XRechnung im CII-Format). Ist eine da, kommen Lieferant, Nummer, Datum, Zahlungsziel und alle Beträge unverändert von dort — exakt, sofort und ohne KI. Erst wenn keine XML im PDF steckt (oder es ein Foto ist), schaut Claude sich den Beleg an. Damit ist auch die Empfangspflicht ab September 2026 abgedeckt.
+
+**Was hier nicht dabei ist:** die Anbindung an eine *Plateforme Agréée* (PA). Die Datei ist normgerecht, den Übertragungsweg dorthin muss der Betrieb wählen — das ist eine Vertrags-, keine Programmierfrage. Ebenso das **E-Reporting** der Shop-Umsätze an Privatkundschaft. Beides mit dem Expert-Comptable klären; die Angaben hier sind keine Steuerberatung.
+
+Technisch: `src/lib/facturx.ts` baut die XML, `src/lib/invoice.ts` bettet sie ein. Für PDF/A müssen die Schriften im Dokument stecken — deshalb liegen in `public/fonts/` zwei Liberation-Sans-Dateien (SIL Open Font License).
+
+## Rechtstexte für den Shop
+
+Wer an Verbraucher verkauft, braucht mehr als Impressum, Datenschutz und AGB. Unter **Rechtliches** im Admin stehen deshalb zusätzlich:
+
+- **Widerrufsbelehrung** — 14 Tage, Fristbeginn, Folgen. Entscheidend für die Werkstatt ist der zweite Teil: Bei einem nach Kundenvorgabe gefertigten Einzelstück besteht **kein** Widerrufsrecht. Das gilt aber nur, wenn es ausdrücklich dasteht.
+- **Muster-Widerrufsformular** — erscheint automatisch unter der Belehrung.
+- **Versand & Zahlung** — Lieferzeiten, Versandkosten, Zahlungsarten.
+
+Beide neuen Seiten sind über den Footer erreichbar (`/kontakt/widerruf`, `/kontakt/versand-zahlung`).
+
+Entwürfe in allen drei Sprachen lassen sich einspielen mit
+
+```bash
+pnpm rechtstexte                    # schreibt nur, wo noch nichts steht
+pnpm rechtstexte --ueberschreiben   # ersetzt vorhandene Texte
+```
+
+**Die Entwürfe sind keine Rechtsberatung.** Sie tragen am Ende einen Hinweis darauf und müssen vor dem Verkaufsstart geprüft und an die tatsächliche Praxis angepasst werden — besonders bei den Rücksendekosten für schwere Stahlmöbel.
+
+In der **Kasse** wird vor dem Absenden bestätigt: AGB und Widerrufsbelehrung gelesen, und — falls ein Stück nach Vorgabe entsteht — dass dafür kein Widerrufsrecht besteht. Beides wird mit Zeitpunkt an der Bestellung festgehalten. Der Bestellknopf heißt „Zahlungspflichtig bestellen"; der Hinweis auf die Weiterleitung zu Stripe bzw. PayPal steht darunter.
+
+## Sicherung (Büro → Sicherung)
+
+Jede Sicherung ist ein einzelnes Archiv mit **der gesamten Datenbank und allen Bildern** — beides gehört zusammen, denn die Datenbank verweist auf die Dateien. Daneben liegt im Archiv eine `LIESMICH.txt` mit den Schritten zum Zurückspielen; im Ernstfall liest niemand mehr Dokumentation.
+
+**Netzwerkspeicher (NAS) eintragen:** Admin → **Integrationen → Sicherung**. Zur Wahl stehen
+
+- **Samba/Windows (CIFS)** — der übliche Weg zur NAS: Server (IP oder Name), Freigabe, optional ein Unterordner (muss dort schon bestehen), Benutzer und Passwort.
+- **WebDAV** — für Nextcloud/ownCloud; dort ein App-Passwort verwenden.
+
+Darunter stehen die Uhrzeit des nächtlichen Laufs und wie viele Kopien auf dem Server bzw. auf der NAS aufgehoben werden. Ohne eingetragene NAS läuft die Sicherung trotzdem, bleibt dann aber auf derselben Maschine wie die Daten — das hilft gegen ein gelöschtes Feld, nicht gegen einen verlorenen Server.
+
+**Im Büro** unter *Sicherung*: Stand des letzten Laufs, alle vorhandenen Archive mit Größe, „Jetzt sichern", Herunterladen, einzeln auf die NAS schieben, Löschen. Der erste Lauf dauert am längsten.
+
+**Zurückspielen** (Kurzfassung, ausführlich in der `LIESMICH.txt` im Archiv):
+
+```sh
+tar -xzf vh-20260818-0330.tar.gz
+pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump
+# Inhalt von medien/ nach /app/media im Web-Container kopieren, dann Container neu starten
+```
+
+Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist eine Vermutung.
+
+## Wartungslauf (der Server taktet sich selbst)
+
+Es gibt **keinen Cron einzurichten**. Der Server läuft ohnehin durch und sieht jede Minute selbst nach, ob etwas ansteht (`src/instrumentation.ts`) — ein zweiter Container, der ihm auf die Schulter tippt, wäre ein bewegliches Teil mehr und eine Anleitungszeile, die jemand überliest, bis das Backup fehlt.
+
+Eingestellt wird das im Admin unter **Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
+
+Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet nichts, und die Arbeiten selbst laufen höchstens einmal am Tag. Der Wartungstakt bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei 60 um 04:00. Beim Postfach zahlt sich häufiger aus, weil IMAP sich nicht von allein meldet.
+
+Beides lässt sich zusätzlich von außen anstoßen — etwa aus Home Assistant, das ohnehin das Ausrollen auslöst. Dafür (und nur dafür) gibt es `CRON_SECRET`:
+
+```sh
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
+```
+
+Ohne gesetztes `CRON_SECRET` sind diese Endpunkte von außen geschlossen; der eigene Takt läuft trotzdem.
+
+Der Lauf entscheidet selbst, was ansteht:
+
+- **Nächtliche Sicherung** zur eingestellten Uhrzeit (einmal pro Tag, Riegel gegen Doppelläufe).
+- **Erinnerung an fällige Belege:** Steht auf einem Eingangsbeleg ein Zahlungsziel und der Beleg ist noch nicht auf „bezahlt", meldet sich das Büro **ab drei Tagen vor Fälligkeit jeden Tag** per Push — vorher bleibt es still. Das Zahlungsziel liest Claude beim Erfassen mit; steht dort nur „zahlbar innerhalb 30 Tagen", rechnet es die KI vom Rechnungsdatum aus.
+- **Aufräumen:** abgelaufene Anmeldecodes des Kundenportals und ein Mailprotokoll, das älter ist als eingestellt (Standard zwölf Monate).
+- **Stillstandsprüfung:** Meldet, wenn Sicherung oder Postfach-Abruf seit Stunden nichts mehr getan haben — sonst fällt ein toter Cron erst auf, wenn man ihn braucht.
+
+Ohne gesetztes `CRON_SECRET` ist der Endpunkt geschlossen.
+
+## Anmeldung, Passkeys und Geheimnisse
+
+**Wie lange eine Anmeldung gilt:** eine Woche — und sie verlängert sich, solange sie benutzt wird. Payloads Standard sind zwei Stunden; das ist für ein Redaktionssystem gedacht, nicht für ein Tablet in der Werkstatt, das den ganzen Tag am Auftrag hängt und bei jeder Anmeldung einen Code aus der Authenticator-App verlangt. Wer täglich arbeitet, bleibt angemeldet; ein Gerät, das eine Woche nicht angefasst wurde, ist es nicht mehr. Das ist sicherer als ein starres langes Fenster.
+
+**Eine Anmeldung überlebt ein Ausrollen.** Das Token ist mit `PAYLOAD_SECRET` signiert und die Sitzung liegt in der Datenbank — beides überdauert einen neuen Container. Nur wenn `PAYLOAD_SECRET` im Stack geändert wird, sind alle Anmeldungen weg. (Nachgestellt und geprüft: anmelden, Container neu starten, weiterarbeiten.)
+
+**Ein geändertes Passwort macht alle bestehenden Anmeldungen ungültig** — Passkey-Sitzungen eingeschlossen. Das ist der Weg, wenn ein Gerät abhandenkommt. Das Kundenportal gilt weiterhin 30 Tage.
+
+### Anmelden mit Face ID, Fingerabdruck oder Geräte-PIN (Passkeys)
+
+Statt langem Passwort plus sechsstelligem Code: ein Knopf, ein Blick aufs Gerät, drin. Der Schlüssel entsteht im Gerät und verlässt es nie; herausgegeben wird er erst nach Gesicht, Finger oder PIN. Er lässt sich nicht abtippen, nicht abfischen und nicht auf einer gefälschten Seite eingeben — der Browser gibt ihn nur an die Adresse heraus, für die er angelegt wurde.
+
+Eingerichtet wird das **je Benutzer**, genau wie die Zwei-Faktor-Anmeldung: im Admin unter **Mein Konto → „Dieses Gerät hinzufügen"**. Wichtig dabei:
+
+- Das muss an dem Gerät passieren, mit dem man sich später anmelden will. Ein iPhone reicht seinen Passkey über den Schlüsselbund an iPad und Mac weiter; für ein Android-Handy legt man einen eigenen an. Mehrere Geräte sind kein Problem, jedes bekommt einen eigenen Eintrag.
+- **Passkeys brauchen https.** Auf `http://localhost` geht es zum Ausprobieren, im Betrieb nur über die verschlüsselte Adresse.
+- Die Anmeldung mit Passwort bleibt bestehen — ein Gerät kann kaputtgehen. Der Passkey-Knopf steht auf beiden Anmeldeseiten (`/office/login` und `/admin`) und erscheint nur, wenn das Gerät ihn überhaupt kann.
+- **Kein zusätzlicher Zwei-Faktor-Code**: Ein Passkey ist bereits beides — das Gerät, das man hat, und das Gesicht (oder der Finger), das man ist.
+
+**Passwörter und Schlüssel** (SMTP, Postfächer, Stripe, PayPal, Anthropic, MCP, Facebook, NAS) stehen in der Verwaltung nicht mehr im Klartext: Sie sind verdeckt wie ein Passwortfeld, lassen sich mit einem Knopf aufdecken — und mit einem zweiten kopieren, ohne sie überhaupt sichtbar zu machen. Denn getippt werden solche Werte nie, sie werden von woanders hierher und wieder zurück kopiert.
+
+## Sicherheits-Kopfzeilen
+
+Die Anwendung schickt CSP, HSTS, `X-Frame-Options`, `Referrer-Policy` und `Permissions-Policy` mit (siehe `next.config.mjs`). Eine Sache ist dabei zu beachten: Wird im Admin eine **cookiefreie Besucherstatistik** hinterlegt, muss deren Herkunft zusätzlich in der Umgebungsvariable `CSP_EXTRA_SCRIPT` stehen (z.B. `https://plausible.io`) — sonst blockiert der Browser das Skript stillschweigend.
 
 ### Zugänge anlegen
 
@@ -251,7 +405,9 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
 - [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
-- [ ] Optional: Cron-Job auf `/api/office/post/pruefen` (mit `CRON_SECRET`), damit neue Post gemeldet wird
+- [ ] Unter Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
+- [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
+- [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
 - [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
 - [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit

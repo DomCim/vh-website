@@ -2,9 +2,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../components/Bild'
+
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
 import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
-import { mediaAlt, mediaUrl, payloadClient } from '../../../../lib/data'
+import { payloadClient } from '../../../../lib/data'
 import { formatDate, isLocale, t } from '../../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -80,12 +82,13 @@ export default async function NewsPage({
                 className="group border-line block h-full border bg-white transition-shadow hover:shadow-lg"
               >
                 <div className="bg-paper-soft relative aspect-[16/10] overflow-hidden">
-                  <img
-                    src={mediaUrl(n.coverImage, 'card')}
-                    alt={mediaAlt(n.coverImage, n.title)}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  <Bild
+                      media={n.coverImage as BildQuelle}
+                      alt={n.title}
+                      bevorzugt="card"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   {n.type === 'ratgeber' && (
                     <span className="bg-bronze tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-white uppercase">
                       {dict.news.guideBadge}

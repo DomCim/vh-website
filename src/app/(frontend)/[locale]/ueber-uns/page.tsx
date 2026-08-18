@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../components/Bild'
+
 import { ImageReveal } from '../../../../components/motion/ImageReveal'
 import { Parallax } from '../../../../components/motion/Parallax'
 import { Reveal } from '../../../../components/motion/Reveal'
 import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
-import { getAbout, mediaAlt, mediaUrl } from '../../../../lib/data'
+import { getAbout } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 
@@ -41,11 +43,13 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
     <div>
       {about?.heroImage ? (
         <div className="bg-dark relative h-72 overflow-hidden sm:h-96">
-          <img
-            src={mediaUrl(about.heroImage, 'large')}
-            alt={mediaAlt(about.heroImage, about?.title || '')}
-            className="h-full w-full object-cover opacity-80"
-          />
+          <Bild
+              media={about.heroImage as BildQuelle}
+              alt={about?.title || ''}
+              bevorzugt="large"
+              sizes="(min-width: 1024px) 66vw, 100vw"
+              className="h-full w-full object-cover opacity-80"
+            />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
       ) : null}
@@ -79,12 +83,13 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
                   )}
                   {station.image ? (
                     <ImageReveal className="bg-paper-soft mt-4 max-w-md">
-                      <img
-                        src={mediaUrl(station.image, 'card')}
-                        alt={mediaAlt(station.image, station.title)}
-                        className="w-full object-cover"
-                        loading="lazy"
-                      />
+                      <Bild
+                          media={station.image as BildQuelle}
+                          alt={station.title}
+                          bevorzugt="card"
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="w-full object-cover"
+                        />
                     </ImageReveal>
                   ) : null}
                 </Reveal>
@@ -100,12 +105,12 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             {gallery.map((img, i) => (
               <ImageReveal key={i} delay={(i % 4) * 0.06} className="bg-paper-soft aspect-square">
                 <Parallax amount={14} className="h-full w-full">
-                  <img
-                    src={mediaUrl(img, 'card')}
-                    alt={mediaAlt(img)}
-                    className="h-full w-full scale-110 object-cover"
-                    loading="lazy"
-                  />
+                  <Bild
+                      media={img as BildQuelle}
+                      bevorzugt="card"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="h-full w-full scale-110 object-cover"
+                    />
                 </Parallax>
               </ImageReveal>
             ))}

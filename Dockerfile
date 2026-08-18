@@ -31,6 +31,11 @@ ENV NODE_ENV=production \
 ARG GIT_SHA=unbekannt
 ENV APP_VERSION=$GIT_SHA
 
+# Für die Sicherung: pg_dump zieht die Datenbank, smbclient schiebt das fertige
+# Archiv auf die NAS. Beides läuft aus der App heraus, damit die Sicherung im
+# Büro sichtbar ist statt in einem stillen Nebencontainer.
+RUN apk add --no-cache postgresql17-client samba-client tar
+
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/.next ./.next
@@ -42,8 +47,10 @@ COPY --from=builder --chown=node:node /app/scripts ./scripts
 COPY --from=builder --chown=node:node /app/docker-entrypoint.sh ./docker-entrypoint.sh
 COPY --from=builder --chown=node:node /app/CHANGELOG.md ./CHANGELOG.md
 
-# Persistentes Upload-Verzeichnis (als Volume mounten!)
-RUN mkdir -p /app/media && chown node:node /app/media && chmod +x /app/docker-entrypoint.sh
+# Persistente Verzeichnisse (als Volumes mounten!)
+RUN mkdir -p /app/media /app/backups \
+    && chown node:node /app/media /app/backups \
+    && chmod +x /app/docker-entrypoint.sh
 
 USER node
 EXPOSE 3000

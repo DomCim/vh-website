@@ -19,6 +19,12 @@ export type RechnungWerte = {
   status?: string
   customerName?: string | null
   customerAddress?: string | null
+  customerSiret?: string | null
+  customerVatId?: string | null
+  deliveryAddress?: string | null
+  deliveryDate?: string | null
+  businessType?: string | null
+  buyerReference?: string | null
   issueDate?: string | null
   dueDate?: string | null
   paidDate?: string | null
@@ -145,6 +151,70 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           value={w.customerAddress ?? ''}
           onChange={(e) => setzen({ customerAddress: e.target.value })}
           placeholder={'Straße 1\n12345 Ort\nFrankreich'}
+        />
+      </label>
+
+      {/* Angaben für die elektronische Rechnung. Bei Privatkundschaft bleiben
+          sie leer — dort verlangt sie niemand. */}
+      <h2 style={{ marginTop: '1.5rem' }}>Elektronische Rechnung</h2>
+      <p className="buero-unterzeile" style={{ marginTop: '-.4rem' }}>
+        Bei Geschäftskunden gehört die Kennung des Empfängers dazu, sonst weist die Plattform die
+        Rechnung ab.
+      </p>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>SIRET/SIREN des Kunden</span>
+          <input
+            value={w.customerSiret ?? ''}
+            onChange={(e) => setzen({ customerSiret: e.target.value })}
+            placeholder="14-stellig"
+          />
+        </label>
+        <label className="buero-feld">
+          <span>TVA-Nummer des Kunden</span>
+          <input
+            value={w.customerVatId ?? ''}
+            onChange={(e) => setzen({ customerVatId: e.target.value })}
+            placeholder="FR…"
+          />
+        </label>
+      </div>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Bestellnummer des Kunden</span>
+          <input
+            value={w.buyerReference ?? ''}
+            onChange={(e) => setzen({ buyerReference: e.target.value })}
+            placeholder="Aktenzeichen, Vergabenummer …"
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Liefer-/Leistungsdatum</span>
+          <input
+            type="date"
+            value={nurTag(w.deliveryDate)}
+            onChange={(e) => setzen({ deliveryDate: e.target.value })}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Art des Geschäfts</span>
+          <select
+            value={w.businessType ?? 'lieferung'}
+            onChange={(e) => setzen({ businessType: e.target.value })}
+          >
+            <option value="lieferung">Lieferung von Waren</option>
+            <option value="dienstleistung">Dienstleistung</option>
+            <option value="gemischt">Beides gemischt</option>
+          </select>
+        </label>
+      </div>
+      <label className="buero-feld">
+        <span>Abweichende Lieferanschrift</span>
+        <textarea
+          rows={2}
+          value={w.deliveryAddress ?? ''}
+          onChange={(e) => setzen({ deliveryAddress: e.target.value })}
+          placeholder="nur wenn woandershin geliefert wurde"
         />
       </label>
 

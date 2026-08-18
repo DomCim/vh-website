@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../components/Bild'
+
 import { ImageReveal } from '../../../../components/motion/ImageReveal'
 import { Reveal } from '../../../../components/motion/Reveal'
 import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
-import { getProjects, mediaAlt, mediaUrl } from '../../../../lib/data'
+import { getProjects } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 
@@ -89,12 +91,13 @@ export default async function ProjectsPage({
               className="group border-line block border bg-white transition-shadow hover:shadow-lg"
             >
               <ImageReveal delay={(i % 3) * 0.08} className="bg-paper-soft aspect-[4/3]">
-                <img
-                  src={mediaUrl(p.images?.[0], 'card')}
-                  alt={mediaAlt(p.images?.[0], p.title)}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
+                <Bild
+                    media={p.images?.[0] as BildQuelle}
+                    alt={p.title}
+                    bevorzugt="card"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
               </ImageReveal>
               <div className="p-5">
                 <p className="text-ink-soft text-xs uppercase">

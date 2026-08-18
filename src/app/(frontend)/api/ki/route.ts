@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../lib/data'
+import { belegAusPdf } from '../../../../lib/facturxLesen'
 import { belegAuslesen, kiZugang, textVorschlagen, uebersetzen } from '../../../../lib/ki'
 
 export const dynamic = 'force-dynamic'
@@ -18,13 +19,16 @@ export async function POST(req: Request) {
     const { user } = await payload.auth({ headers: req.headers })
     if (!user) return NextResponse.json({ error: 'nicht angemeldet' }, { status: 401 })
 
-    const zugang = await kiZugang(payload)
-    if (!zugang) {
-      return NextResponse.json(
+    /**
+     * Den KI-Zugang erst holen, wenn er wirklich gebraucht wird: Eine
+     * elektronische Rechnung liest sich ohne Modell — und ohne Schlüssel.
+     */
+    const zugangHolen = async () => kiZugang(payload)
+    const ohneSchluessel = () =>
+      NextResponse.json(
         { error: 'kein-schluessel', hinweis: 'Anthropic-Schlüssel unter Integrationen hinterlegen.' },
         { status: 503 },
       )
-    }
 
     const body = (await req.json()) as {
       aktion?: 'beleg' | 'text' | 'uebersetzen'
@@ -55,6 +59,21 @@ export async function POST(req: Request) {
       const { join } = await import('path')
       const daten = await readFile(join(process.cwd(), 'media', medium.filename))
 
+      /**
+       * Steckt im PDF eine Rechnungs-XML, ist alles Nötige exakt vorhanden —
+       * Nummer, Datum, Beträge, Zahlungsziel. Dann braucht es kein Modell,
+       * das ein Bild deutet: Das wäre langsamer, teurer und ungenauer.
+       */
+      if (mimetype === 'application/pdf') {
+        const ausRechnung = belegAusPdf(daten)
+        if (ausRechnung) {
+          return NextResponse.json({ ok: true, beleg: ausRechnung, quelle: 'factur-x' })
+        }
+      }
+
+      const zugang = await zugangHolen()
+      if (!zugang) return ohneSchluessel()
+
       const { docs: lieferanten } = await payload.find({
         collection: 'contacts',
         where: { role: { in: ['lieferant', 'beides'] } },
@@ -76,6 +95,9 @@ export async function POST(req: Request) {
       if (!body.vorgabe?.trim()) {
         return NextResponse.json({ error: 'vorgabe-fehlt' }, { status: 400 })
       }
+      const zugang = await zugangHolen()
+      if (!zugang) return ohneSchluessel()
+
       const text = await textVorschlagen(zugang, {
         art: body.art ?? 'frei',
         vorgabe: body.vorgabe,
@@ -87,6 +109,9 @@ export async function POST(req: Request) {
     if (body.aktion === 'uebersetzen') {
       if (!body.text?.trim()) return NextResponse.json({ error: 'text-fehlt' }, { status: 400 })
       const ziel = body.ziel === 'en' ? 'en' : 'fr'
+      const zugang = await zugangHolen()
+      if (!zugang) return ohneSchluessel()
+
       const text = await uebersetzen(zugang, body.text, ziel)
       return NextResponse.json({ ok: true, text })
     }

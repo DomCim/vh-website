@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../components/Bild'
+
 import { CategoryTile } from '../../../../components/CategoryTile'
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
 import { ProductCard } from '../../../../components/ProductCard'
@@ -9,7 +11,6 @@ import {
   getCategoryBySlug,
   getChildCategories,
   getProductsByCategory,
-  mediaAlt,
   mediaUrl,
 } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
@@ -61,11 +62,13 @@ export default async function CategoryPage({
     <div>
       {headerImage ? (
         <div className="bg-dark relative h-64 overflow-hidden sm:h-80">
-          <img
-            src={mediaUrl(headerImage, 'large')}
-            alt={mediaAlt(headerImage, category.name)}
-            className="h-full w-full object-cover opacity-80"
-          />
+          <Bild
+              media={headerImage as BildQuelle}
+              alt={category.name}
+              bevorzugt="large"
+              sizes="(min-width: 1024px) 66vw, 100vw"
+              className="h-full w-full object-cover opacity-80"
+            />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
             <div className="mx-auto max-w-7xl">

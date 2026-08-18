@@ -22,6 +22,7 @@ import { Jobs } from './collections/Jobs'
 import { LoginCodes } from './collections/LoginCodes'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
+import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { Orders } from './collections/Orders'
 import { OutgoingInvoices } from './collections/OutgoingInvoices'
 import { Products } from './collections/Products'
@@ -29,6 +30,7 @@ import { Projects } from './collections/Projects'
 import { Promotions } from './collections/Promotions'
 import { Quotes } from './collections/Quotes'
 import { Stocktakes } from './collections/Stocktakes'
+import { SystemState } from './collections/SystemState'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
 import { About } from './globals/About'
@@ -58,7 +60,10 @@ export default buildConfig({
     components: {
       // Das Änderungsprotokoll steht im Büro unter /office/neuerungen — es
       // geht den Betrieb an, nicht die Redaktion.
-      beforeLogin: ['/components/admin/MfaLoginField#MfaLoginField'],
+      beforeLogin: [
+        '/components/admin/PasskeyLoginKnopf#PasskeyLoginKnopf',
+        '/components/admin/MfaLoginField#MfaLoginField',
+      ],
     },
   },
   collections: [
@@ -71,6 +76,7 @@ export default buildConfig({
     Orders,
     Inquiries,
     LoginCodes,
+    NewsletterSubscribers,
     // Büro: Geschäftszahlen, nur für die Inhaberrolle
     Contacts,
     Expenses,
@@ -80,6 +86,7 @@ export default buildConfig({
     InventoryItems,
     Stocktakes,
     Counters,
+    SystemState,
     MailLog,
     PushSubscriptions,
     Media,

@@ -227,6 +227,36 @@ export const Jobs: CollectionConfig = {
       defaultValue: false,
       admin: { hidden: true },
     },
+    {
+      name: 'runningSince',
+      label: 'Uhr läuft seit',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime' },
+        description: 'Gesetzt, solange die Stoppuhr im Büro läuft.',
+      },
+    },
+    {
+      name: 'timeEntries',
+      label: 'Arbeitszeit',
+      type: 'array',
+      admin: {
+        description:
+          'Ohne Stunden weiß niemand, ob der Preis den Aufwand deckt — Material und Dienstleister sind nur die halbe Rechnung.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'day', label: 'Tag', type: 'date' },
+            { name: 'minutes', label: 'Minuten', type: 'number', required: true, min: 1 },
+          ],
+        },
+        { name: 'note', label: 'Woran', type: 'text' },
+      ],
+    },
     { name: 'notes', label: 'Notizen zur Fertigung', type: 'textarea' },
     {
       name: 'order',

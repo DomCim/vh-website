@@ -231,6 +231,16 @@ export const Products: CollectionConfig = {
       ],
     },
     {
+      name: 'productionMinutes',
+      label: 'Arbeitszeit je Stück (Minuten)',
+      type: 'number',
+      min: 0,
+      admin: {
+        description:
+          'Reine Werkstattzeit. Zusammen mit dem Stundensatz ergibt sie den größten Teil der Kosten — ohne sie ist jede Nachkalkulation geschönt.',
+      },
+    },
+    {
       name: 'productionTime',
       label: 'Fertigungszeit',
       type: 'text',

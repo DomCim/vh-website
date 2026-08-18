@@ -1,6 +1,9 @@
 import type { Payload } from 'payload'
 
+import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
+import { lieferscheinPdf } from './lieferschein'
+import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
 import { firmenAngaben } from './settings'
 
 /**
@@ -21,9 +24,15 @@ export type Dokument = {
   an?: string | null
   /** Vorschlag für den Mailtext */
   text: string
+  /**
+   * Was nach dem erfolgreichen Verschicken festzuhalten ist — etwa die
+   * verschickte Mahnstufe. Bewusst erst danach: Beim Ansehen im Browser wird
+   * dasselbe Dokument erzeugt, und das darf nichts verändern.
+   */
+  nachSenden?: () => Promise<void>
 }
 
-export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung'
+export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
 const datum = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
@@ -79,6 +88,18 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
   return {
     datei,
     dateiname: `${a.quoteNumber}.pdf`,
+    // Ab wann nachgefasst wird, hängt daran — deshalb erst nach dem Versand
+    // setzen und nicht schon beim Ansehen im Browser.
+    nachSenden: a.sentAt
+      ? undefined
+      : async () => {
+          await payload.update({
+            collection: 'quotes',
+            id: a.id,
+            overrideAccess: true,
+            data: { sentAt: new Date().toISOString() },
+          })
+        },
     betreff: `Angebot ${a.quoteNumber}${fassung}${a.title ? ` — ${a.title}` : ''}`,
     an: await partnerMail(payload, a.customer),
     text:
@@ -90,6 +111,50 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
   }
 }
 
+/**
+ * Die Rechnung noch einmal als Datensatz — Grundlage der Factur-X-XML im PDF.
+ *
+ * Bewusst aus denselben Feldern wie das Blatt: Zwei getrennte Aufbereitungen
+ * laufen früher oder später auseinander, und dann steht im PDF eine andere
+ * Summe als in der XML. Genau das prüft jede Empfängerplattform zuerst.
+ */
+function facturxAusRechnung(
+  r: Record<string, any>,
+  firmenangaben: { vatRate?: number | null; iban?: string | null; bic?: string | null },
+): FacturXDaten {
+  return {
+    nummer: r.invoiceNumber,
+    datum: r.issueDate ? new Date(r.issueDate) : new Date(),
+    faelligAm: r.dueDate ? new Date(r.dueDate) : null,
+    kunde: {
+      name: r.customerName || '—',
+      anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+      kennung: r.customerSiret,
+      umsatzsteuerId: r.customerVatId,
+    },
+    lieferung: r.deliveryAddress
+      ? { name: r.customerName, anschrift: String(r.deliveryAddress).split('\n').filter(Boolean) }
+      : null,
+    lieferdatum: r.deliveryDate ? new Date(r.deliveryDate) : null,
+    bestellreferenz: r.buyerReference,
+    positionen: (r.items ?? []).map((p: Record<string, any>) => ({
+      bezeichnung: [p.description, p.unit && p.unit !== 'Stück' ? `(${p.unit})` : null]
+        .filter(Boolean)
+        .join(' '),
+      menge: p.quantity ?? 1,
+      einzelpreis: p.unitPrice ?? 0,
+      steuersatz: p.vatRate ?? firmenangaben.vatRate ?? 20,
+    })),
+    rabatt: r.discountTotal
+      ? { bezeichnung: r.discountReason || 'Nachlass', betrag: r.discountTotal }
+      : null,
+    reverseCharge: Boolean(r.reverseCharge),
+    iban: firmenangaben.iban,
+    bic: firmenangaben.bic,
+    hinweis: r.note,
+  }
+}
+
 export async function rechnungDokument(payload: Payload, id: string | number): Promise<Dokument> {
   const r = await payload.findByID({
     collection: 'outgoing-invoices',
@@ -98,6 +163,8 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
     overrideAccess: true,
   })
   if (!r?.invoiceNumber) throw new Error('entwurf')
+
+  const angaben = await firma(payload)
 
   const datei = await rechnungPdf(
     {
@@ -121,8 +188,9 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
         : null,
       hinweis: r.note,
       reverseCharge: Boolean(r.reverseCharge),
+      facturx: facturxAusRechnung(r, angaben),
     },
-    await firma(payload),
+    angaben,
   )
 
   return {
@@ -135,6 +203,110 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
       `anbei die Rechnung ${r.invoiceNumber} vom ${datum(r.issueDate)}.\n` +
       (r.dueDate ? `Zahlbar bis zum ${datum(r.dueDate)}.\n` : '') +
       `\nVielen Dank für die Zusammenarbeit.`,
+  }
+}
+
+/**
+ * Die reine XML einer Rechnung — für den Steuerberater oder die Plattform,
+ * die sie ohne das PDF drumherum haben will.
+ */
+export async function rechnungFacturX(
+  payload: Payload,
+  id: string | number,
+): Promise<{ xml: string; dateiname: string }> {
+  const r = (await payload.findByID({
+    collection: 'outgoing-invoices',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })) as Record<string, any>
+  if (!r?.invoiceNumber) throw new Error('entwurf')
+
+  const angaben = await firma(payload)
+  return {
+    xml: facturXml(facturxAusRechnung(r, angaben), angaben),
+    dateiname: `${r.invoiceNumber}-factur-x.xml`,
+  }
+}
+
+/**
+ * Die nächste Mahnstufe zu einer offenen Rechnung.
+ *
+ * Welche Stufe dran ist, ergibt sich aus dem, was schon verschickt wurde —
+ * niemand muss sich merken, ob die Erinnerung raus war. Die Frist ist bewusst
+ * kurz (zehn Tage bei der Erinnerung, sieben danach): Eine Mahnung ohne Datum
+ * ist eine Bitte.
+ */
+export async function mahnungDokument(
+  payload: Payload,
+  id: string | number,
+): Promise<Dokument> {
+  const r = await payload.findByID({
+    collection: 'outgoing-invoices',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })
+  if (!r?.invoiceNumber) throw new Error('entwurf')
+  if (r.status === 'bezahlt' || r.status === 'storniert') throw new Error('nicht-offen')
+
+  const bisher = (r.reminders ?? []).length
+  const stufe = Math.min(bisher + 1, 3) as Mahnstufe
+
+  const angaben = await firma(payload)
+  // Erst ab der zweiten Stufe: Die Pauschale steht dem Betrieb zwar ab Verzug
+  // zu, aber eine freundliche Erinnerung mit Gebühr ist keine freundliche
+  // Erinnerung mehr.
+  const pauschale = stufe >= 2 ? 40 : 0
+
+  const frist = new Date()
+  frist.setDate(frist.getDate() + (stufe === 1 ? 10 : 7))
+
+  const datei = await mahnungPdf(
+    {
+      stufe,
+      rechnungsnummer: r.invoiceNumber,
+      rechnungsdatum: r.issueDate,
+      faelligAm: r.dueDate,
+      betrag: r.total ?? 0,
+      pauschale,
+      fristBis: frist,
+      empfaenger: {
+        name: r.customerName,
+        anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+      },
+    },
+    angaben,
+  )
+
+  const titel = MAHN_TITEL[stufe]
+
+  return {
+    datei,
+    dateiname: `${titel.replace(/ /g, '-')}-${r.invoiceNumber}.pdf`,
+    betreff: `${titel} zur Rechnung ${r.invoiceNumber}`,
+    an: await partnerMail(payload, r.customer),
+    text:
+      `Guten Tag${r.customerName ? ` ${r.customerName}` : ''},\n\n` +
+      `anbei ${stufe === 1 ? 'eine Zahlungserinnerung' : 'unsere Mahnung'} zur Rechnung ` +
+      `${r.invoiceNumber} vom ${datum(r.issueDate)}.\n` +
+      `Wir bitten um Ausgleich bis zum ${datum(frist.toISOString())}.\n` +
+      (stufe === 1
+        ? `\nSollte sich die Zahlung überschnitten haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.`
+        : `\nBitte melden Sie sich, falls es Gründe für die Verzögerung gibt — eine Ratenzahlung lässt sich vereinbaren.`),
+    nachSenden: async () => {
+      await payload.update({
+        collection: 'outgoing-invoices',
+        id: r.id,
+        overrideAccess: true,
+        data: {
+          reminders: [
+            ...(r.reminders ?? []),
+            { level: stufe, sentAt: new Date().toISOString(), lateFee: pauschale || undefined },
+          ],
+        },
+      })
+    },
   }
 }
 
@@ -227,6 +399,72 @@ export async function bestaetigungDokument(
   }
 }
 
+/**
+ * Lieferschein zu einem Auftrag.
+ *
+ * Die Nummer ist die des Auftrags mit einem Zusatz — ein eigener Nummernkreis
+ * wäre eine Reihe mehr, die lückenlos sein müsste, ohne dass jemand etwas
+ * davon hätte.
+ */
+export async function lieferscheinDokument(
+  payload: Payload,
+  id: string | number,
+): Promise<Dokument> {
+  const auftrag = await payload.findByID({
+    collection: 'jobs',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })
+  if (!auftrag) throw new Error('nicht-gefunden')
+
+  // Anschrift aus der Shop-Bestellung, falls der Auftrag daher kommt
+  const bestellId = typeof auftrag.order === 'object' ? auftrag.order?.id : auftrag.order
+  const bestellung = bestellId
+    ? await payload
+        .findByID({ collection: 'orders', id: bestellId, depth: 0, overrideAccess: true })
+        .catch(() => null)
+    : null
+
+  const a = bestellung?.shippingAddress
+  const anschrift = a
+    ? [a.line1, a.line2, [a.postalCode, a.city].filter(Boolean).join(' '), a.country].filter(
+        (z): z is string => Boolean(z),
+      )
+    : []
+
+  const datei = await lieferscheinPdf(
+    {
+      nummer: `LS-${auftrag.jobNumber}`,
+      datum: new Date().toISOString(),
+      auftrag: auftrag.jobNumber,
+      bestellreferenz: auftrag.customerOrderRef ?? bestellung?.orderNumber,
+      empfaenger: {
+        name: auftrag.customerName ?? bestellung?.customer?.name,
+        anschrift,
+      },
+      positionen: (auftrag.positions ?? []).map((p) => ({
+        bezeichnung: p.description,
+        menge: p.quantity ?? 1,
+        einheit: 'Stück',
+      })),
+      hinweis: auftrag.notes,
+    },
+    await firma(payload),
+  )
+
+  return {
+    datei,
+    dateiname: `Lieferschein-${auftrag.jobNumber}.pdf`,
+    betreff: `Lieferschein zu ${auftrag.jobNumber}${auftrag.title ? ` — ${auftrag.title}` : ''}`,
+    an: await partnerMail(payload, auftrag.contact),
+    text:
+      `Guten Tag${auftrag.customerName ? ` ${auftrag.customerName}` : ''},\n\n` +
+      `anbei der Lieferschein zu ${auftrag.jobNumber}.\n` +
+      `\nBitte prüfen Sie die Lieferung auf sichtbare Schäden und bestätigen Sie den Empfang.`,
+  }
+}
+
 export async function dokument(
   payload: Payload,
   art: DokumentArt,
@@ -234,5 +472,7 @@ export async function dokument(
 ): Promise<Dokument> {
   if (art === 'angebot') return angebotDokument(payload, id)
   if (art === 'rechnung') return rechnungDokument(payload, id)
+  if (art === 'mahnung') return mahnungDokument(payload, id)
+  if (art === 'lieferschein') return lieferscheinDokument(payload, id)
   return bestaetigungDokument(payload, id)
 }

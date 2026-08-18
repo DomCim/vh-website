@@ -102,6 +102,25 @@ export const OutgoingInvoices: CollectionConfig = {
       ],
     },
     {
+      type: 'row',
+      fields: [
+        {
+          name: 'customerSiret',
+          label: 'SIRET/SIREN des Kunden',
+          type: 'text',
+          admin: {
+            description:
+              'Für die elektronische Rechnung Pflicht, wenn der Kunde ein Unternehmen ist. Bei Privatkundschaft leer lassen.',
+          },
+        },
+        {
+          name: 'customerVatId',
+          label: 'TVA-Nummer des Kunden',
+          type: 'text',
+        },
+      ],
+    },
+    {
       name: 'customerAddress',
       label: 'Rechnungsanschrift',
       type: 'textarea',
@@ -113,7 +132,51 @@ export const OutgoingInvoices: CollectionConfig = {
         { name: 'issueDate', label: 'Rechnungsdatum', type: 'date' },
         { name: 'dueDate', label: 'Fällig am', type: 'date' },
         { name: 'paidDate', label: 'Bezahlt am', type: 'date' },
+        {
+          name: 'deliveryDate',
+          label: 'Liefer-/Leistungsdatum',
+          type: 'date',
+          admin: {
+            description: 'Pflichtangabe, wenn es vom Rechnungsdatum abweicht.',
+          },
+        },
       ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'businessType',
+          label: 'Art des Geschäfts',
+          type: 'select',
+          defaultValue: 'lieferung',
+          options: [
+            { label: 'Lieferung von Waren', value: 'lieferung' },
+            { label: 'Dienstleistung', value: 'dienstleistung' },
+            { label: 'Beides gemischt', value: 'gemischt' },
+          ],
+          admin: {
+            description: 'Steht auf der E-Rechnung und entscheidet über den Zeitpunkt der Steuer.',
+          },
+        },
+        {
+          name: 'buyerReference',
+          label: 'Bestellnummer des Kunden',
+          type: 'text',
+          admin: {
+            description:
+              'Aktenzeichen, Bestell- oder Vergabenummer. Öffentliche Auftraggeber brauchen das, sonst bleibt die Rechnung liegen.',
+          },
+        },
+      ],
+    },
+    {
+      name: 'deliveryAddress',
+      label: 'Abweichende Lieferanschrift',
+      type: 'textarea',
+      admin: {
+        description: 'Nur ausfüllen, wenn woandershin geliefert wurde als abgerechnet wird.',
+      },
     },
     {
       name: 'items',
@@ -188,6 +251,25 @@ export const OutgoingInvoices: CollectionConfig = {
         },
         { name: 'vatTotal', label: 'Steuer gesamt', type: 'number', admin: { readOnly: true } },
         { name: 'total', label: 'Brutto gesamt', type: 'number', admin: { readOnly: true } },
+      ],
+    },
+    {
+      name: 'reminders',
+      label: 'Verschickte Mahnungen',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description:
+          'Wird beim Verschicken fortgeschrieben. Die nächste Stufe ergibt sich daraus von selbst.',
+      },
+      fields: [
+        {
+          name: 'level',
+          label: 'Stufe',
+          type: 'number',
+        },
+        { name: 'sentAt', label: 'Verschickt am', type: 'date' },
+        { name: 'lateFee', label: 'Pauschale (EUR)', type: 'number' },
       ],
     },
     {

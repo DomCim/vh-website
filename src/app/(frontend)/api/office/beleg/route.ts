@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       supplierName: b.supplierName || undefined,
       invoiceNumber: b.invoiceNumber || undefined,
       invoiceDate: b.invoiceDate,
+      dueDate: b.dueDate || null,
       netAmount: b.netAmount ?? undefined,
       vatRate: b.vatRate ?? undefined,
       vatAmount: b.vatAmount ?? undefined,

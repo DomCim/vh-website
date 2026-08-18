@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Bild, type BildQuelle } from '../../../../../components/Bild'
+
 import { MassanfertigungHinweis } from '../../../../../components/MassanfertigungHinweis'
 import { ImageReveal } from '../../../../../components/motion/ImageReveal'
 import { Reveal } from '../../../../../components/motion/Reveal'
@@ -95,11 +97,13 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
 
       {images[0] ? (
         <ImageReveal className="bg-paper-soft mb-6">
-          <img
-            src={mediaUrl(images[0], 'large')}
-            alt={mediaAlt(images[0], project.title)}
-            className="w-full object-cover"
-          />
+          <Bild
+              media={images[0] as BildQuelle}
+              alt={project.title}
+              bevorzugt="large"
+              sizes="(min-width: 1024px) 66vw, 100vw"
+              className="w-full object-cover"
+            />
         </ImageReveal>
       ) : null}
 
@@ -119,12 +123,13 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {images.slice(1).map((img, i) => (
             <ImageReveal key={i} delay={(i % 2) * 0.08} className="bg-paper-soft">
-              <img
-                src={mediaUrl(img, 'card')}
-                alt={mediaAlt(img, project.title)}
-                className="w-full object-cover"
-                loading="lazy"
-              />
+              <Bild
+                  media={img as BildQuelle}
+                  alt={project.title}
+                  bevorzugt="card"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="w-full object-cover"
+                />
             </ImageReveal>
           ))}
         </div>

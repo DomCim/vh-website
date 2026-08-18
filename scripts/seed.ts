@@ -14,6 +14,7 @@
 import config from '@payload-config'
 import { getPayload, type Payload } from 'payload'
 
+import { rechtstexteEinspielen } from '../src/lib/rechtstexte'
 import { richText } from '../src/lib/richtext'
 
 const ORIGIN = 'https://www.vincent-hellmann.com'
@@ -650,6 +651,10 @@ async function run() {
       ),
     },
   })
+
+  // Widerruf, Muster-Widerrufsformular sowie Versand & Zahlung als Entwurf in
+  // allen drei Sprachen — leere Rechtsseiten sind schlimmer als Entwürfe.
+  await rechtstexteEinspielen(payload)
 
   await seedExtras(payload)
 

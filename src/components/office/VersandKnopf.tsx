@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react'
 
-type Art = 'angebot' | 'rechnung' | 'bestaetigung'
+type Art = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
 const BESCHRIFTUNG: Record<Art, string> = {
   angebot: 'Angebot senden',
   rechnung: 'Rechnung senden',
   bestaetigung: 'Bestätigung senden',
+  mahnung: 'Erinnern / mahnen',
+  lieferschein: 'Lieferschein senden',
 }
 
 /**
@@ -41,7 +43,9 @@ export function VersandKnopf({
         setMeldung(
           j?.error === 'noch-entwurf'
             ? 'Das ist noch ein Entwurf — erst versenden, dann verschicken.'
-            : 'Der Vorschlag ließ sich nicht laden.',
+            : j?.error === 'nicht-offen'
+              ? 'Diese Rechnung ist bezahlt oder storniert — da gibt es nichts zu mahnen.'
+              : 'Der Vorschlag ließ sich nicht laden.',
         )
         setOffen(true)
         return

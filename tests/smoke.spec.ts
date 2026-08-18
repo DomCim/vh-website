@@ -18,6 +18,15 @@ test('Suche liefert eine Ergebnisseite', async ({ page }) => {
   await expect(page.getByRole('searchbox')).toHaveValue('stahl')
 })
 
+test('Rechtsseiten sind erreichbar', async ({ page }) => {
+  // Fehlt eine dieser Seiten, verlängert sich die Widerrufsfrist — das ist
+  // teurer als ein Test, der zehn Sekunden braucht.
+  for (const pfad of ['/de/kontakt/widerruf', '/de/kontakt/versand-zahlung', '/de/kontakt/agb']) {
+    const antwort = await page.goto(pfad)
+    expect(antwort?.status(), pfad).toBe(200)
+  }
+})
+
 test('MCP-Endpunkt verlangt einen Schlüssel', async ({ request }) => {
   const antwort = await request.post('/api/mcp', {
     data: { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} },

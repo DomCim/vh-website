@@ -57,6 +57,29 @@ export const Testimonials: CollectionConfig = {
       },
     },
     {
+      name: 'pending',
+      label: 'Zur Prüfung eingegangen',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Von der Kundschaft selbst eingereicht. Solange der Haken steht, erscheint die Stimme nicht auf der Website — erst lesen, dann freigeben.',
+      },
+    },
+    {
+      name: 'submittedEmail',
+      label: 'Eingereicht von',
+      type: 'text',
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      name: 'orderNumber',
+      label: 'Zur Bestellung',
+      type: 'text',
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
       name: 'featured',
       label: 'Auf Startseite zeigen',
       type: 'checkbox',

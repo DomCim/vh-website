@@ -47,6 +47,7 @@ export type BelegDaten = {
   lieferant: string | null
   rechnungsnummer: string | null
   rechnungsdatum: string | null
+  faelligkeit: string | null
   netto: number | null
   steuersatz: number | null
   steuer: number | null
@@ -69,6 +70,11 @@ const BELEG_WERKZEUG: Anthropic.Tool = {
       rechnungsdatum: {
         type: ['string', 'null'],
         description: 'Datum der Rechnung im Format JJJJ-MM-TT',
+      },
+      faelligkeit: {
+        type: ['string', 'null'],
+        description:
+          'Tag, bis zu dem gezahlt werden muss, im Format JJJJ-MM-TT. Steht statt eines Datums ein Zahlungsziel da ("zahlbar innerhalb 30 Tagen", "30 jours net"), rechne es vom Rechnungsdatum aus. Bei "sofort", "bei Erhalt" oder bereits beglichenen Belegen (Kassenbon, Karte) bleibt das Feld null.',
       },
       netto: { type: ['number', 'null'], description: 'Nettobetrag in Euro' },
       steuersatz: { type: ['number', 'null'], description: 'Steuersatz in Prozent, z.B. 20' },
@@ -96,6 +102,7 @@ const BELEG_WERKZEUG: Anthropic.Tool = {
       'lieferant',
       'rechnungsnummer',
       'rechnungsdatum',
+      'faelligkeit',
       'netto',
       'steuersatz',
       'steuer',
@@ -119,6 +126,8 @@ const BELEG_ANWEISUNG = [
   '- Datum immer als JJJJ-MM-TT.',
   '- Übliche Steuersätze in Frankreich sind 20, 10, 5,5 und 2,1 Prozent.',
   '- Ist nur der Bruttobetrag zu sehen, lass Netto und Steuer leer.',
+  '- Das Zahlungsziel ist wichtig: Danach erinnert das Büro an die Zahlung. Ein Kassenbon ist',
+  '  bereits bezahlt und hat keins.',
   '- Bei der Sicherheit ehrlich sein: Ein schlechtes Foto ist keine 95.',
 ].join('\n')
 

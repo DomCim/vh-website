@@ -76,6 +76,7 @@ export interface Config {
     orders: Order;
     inquiries: Inquiry;
     'login-codes': LoginCode;
+    'newsletter-subscribers': NewsletterSubscriber;
     contacts: Contact;
     expenses: Expense;
     quotes: Quote;
@@ -84,6 +85,7 @@ export interface Config {
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     counters: Counter;
+    'system-state': SystemState;
     'mail-log': MailLog;
     'push-subscriptions': PushSubscription;
     media: Media;
@@ -104,6 +106,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
+    'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
     contacts: ContactsSelect<false> | ContactsSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
     quotes: QuotesSelect<false> | QuotesSelect<true>;
@@ -112,6 +115,7 @@ export interface Config {
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
+    'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -252,6 +256,10 @@ export interface Product {
       }[]
     | null;
   /**
+   * Reine Werkstattzeit. Zusammen mit dem Stundensatz ergibt sie den größten Teil der Kosten — ohne sie ist jede Nachkalkulation geschönt.
+   */
+  productionMinutes?: number | null;
+  /**
    * z.B. „3–4 Wochen". Jedes Stück wird einzeln gefertigt — leer lassen übernimmt den Standardwert aus den Website-Einstellungen.
    */
   productionTime?: string | null;
@@ -315,6 +323,14 @@ export interface Media {
   focalX?: number | null;
   focalY?: number | null;
   sizes?: {
+    klein?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
     thumbnail?: {
       url?: string | null;
       width?: number | null;
@@ -332,6 +348,14 @@ export interface Media {
       filename?: string | null;
     };
     large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    xl?: {
       url?: string | null;
       width?: number | null;
       height?: number | null;
@@ -518,6 +542,12 @@ export interface Testimonial {
    * Wird dann auf der Produktseite angezeigt
    */
   product?: (number | null) | Product;
+  /**
+   * Von der Kundschaft selbst eingereicht. Solange der Haken steht, erscheint die Stimme nicht auf der Website — erst lesen, dann freigeben.
+   */
+  pending?: boolean | null;
+  submittedEmail?: string | null;
+  orderNumber?: string | null;
   featured?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -605,6 +635,15 @@ export interface Order {
   stripePaymentIntentId?: string | null;
   paypalOrderId?: string | null;
   paypalCaptureId?: string | null;
+  reviewRequestedAt?: string | null;
+  shippedAt?: string | null;
+  /**
+   * Wird beim Absenden der Kasse festgehalten. Im Streitfall zählt nicht, was auf der Seite stand, sondern was belegbar ist.
+   */
+  consent?: {
+    termsAt?: string | null;
+    waiver?: boolean | null;
+  };
   customerNote?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -660,6 +699,28 @@ export interface LoginCode {
   createdAt: string;
 }
 /**
+ * Nur bestätigte Adressen bekommen Post.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers".
+ */
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  status: 'offen' | 'bestaetigt' | 'abgemeldet';
+  locale?: ('de' | 'fr' | 'en') | null;
+  token?: string | null;
+  confirmedAt?: string | null;
+  unsubscribedAt?: string | null;
+  /**
+   * Wo die Anmeldung herkam — für den Nachweis.
+   */
+  source?: string | null;
+  lastMailAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -679,6 +740,10 @@ export interface Expense {
   supplierName?: string | null;
   invoiceNumber?: string | null;
   invoiceDate: string;
+  /**
+   * Steht ein Zahlungsziel auf dem Beleg, liest die KI es mit. Vorher bleibt es still; ab drei Tagen vor Fälligkeit meldet sich das Büro jeden Tag, bis der Beleg auf „bezahlt" steht.
+   */
+  dueDate?: string | null;
   netAmount?: number | null;
   vatRate?: number | null;
   vatAmount?: number | null;
@@ -697,6 +762,7 @@ export interface Expense {
     | 'sonstiges';
   paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
   paid?: boolean | null;
+  reminderSentAt?: string | null;
   /**
    * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
    */
@@ -725,6 +791,11 @@ export interface Quote {
   customer?: (number | null) | Contact;
   customerName?: string | null;
   customerAddress?: string | null;
+  /**
+   * Wird beim Versenden gesetzt und ist der Beginn des Nachfassens.
+   */
+  sentAt?: string | null;
+  lastFollowUpAt?: string | null;
   issueDate?: string | null;
   /**
    * Bei Stahlpreisen üblich: 30 Tage.
@@ -810,6 +881,21 @@ export interface Job {
       }[]
     | null;
   materialGebucht?: boolean | null;
+  /**
+   * Gesetzt, solange die Stoppuhr im Büro läuft.
+   */
+  runningSince?: string | null;
+  /**
+   * Ohne Stunden weiß niemand, ob der Preis den Aufwand deckt — Material und Dienstleister sind nur die halbe Rechnung.
+   */
+  timeEntries?:
+    | {
+        day?: string | null;
+        minutes: number;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   notes?: string | null;
   order?: (number | null) | Order;
   quote?: (number | null) | Quote;
@@ -850,12 +936,33 @@ export interface OutgoingInvoice {
   customer?: (number | null) | Contact;
   customerName?: string | null;
   /**
+   * Für die elektronische Rechnung Pflicht, wenn der Kunde ein Unternehmen ist. Bei Privatkundschaft leer lassen.
+   */
+  customerSiret?: string | null;
+  customerVatId?: string | null;
+  /**
    * Wird aus dem Geschäftspartner übernommen, wenn dort hinterlegt.
    */
   customerAddress?: string | null;
   issueDate?: string | null;
   dueDate?: string | null;
   paidDate?: string | null;
+  /**
+   * Pflichtangabe, wenn es vom Rechnungsdatum abweicht.
+   */
+  deliveryDate?: string | null;
+  /**
+   * Steht auf der E-Rechnung und entscheidet über den Zeitpunkt der Steuer.
+   */
+  businessType?: ('lieferung' | 'dienstleistung' | 'gemischt') | null;
+  /**
+   * Aktenzeichen, Bestell- oder Vergabenummer. Öffentliche Auftraggeber brauchen das, sonst bleibt die Rechnung liegen.
+   */
+  buyerReference?: string | null;
+  /**
+   * Nur ausfüllen, wenn woandershin geliefert wurde als abgerechnet wird.
+   */
+  deliveryAddress?: string | null;
   items?:
     | {
         description: string;
@@ -877,6 +984,17 @@ export interface OutgoingInvoice {
   subtotal?: number | null;
   vatTotal?: number | null;
   total?: number | null;
+  /**
+   * Wird beim Verschicken fortgeschrieben. Die nächste Stufe ergibt sich daraus von selbst.
+   */
+  reminders?:
+    | {
+        level?: number | null;
+        sentAt?: string | null;
+        lateFee?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Bei Geschäftskunden im EU-Ausland mit gültiger USt-IdNr. — dann alle Sätze auf 0 setzen; der Hinweis erscheint auf der Rechnung.
    */
@@ -936,6 +1054,19 @@ export interface Counter {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-state".
+ */
+export interface SystemState {
+  id: number;
+  key: string;
+  lastRun?: string | null;
+  ok?: boolean | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mail-log".
  */
 export interface MailLog {
@@ -987,6 +1118,17 @@ export interface User {
    * Wird über die Einrichtung unten aktiviert.
    */
   mfaEnabled?: boolean | null;
+  passkeys?:
+    | {
+        credentialId: string;
+        publicKey: string;
+        counter?: number | null;
+        transports?: string | null;
+        label?: string | null;
+        lastUsedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   mfaSecret?: string | null;
   mfaPendingSecret?: string | null;
   mfaBackupCodes?:
@@ -1075,6 +1217,10 @@ export interface PayloadLockedDocument {
         value: number | LoginCode;
       } | null)
     | ({
+        relationTo: 'newsletter-subscribers';
+        value: number | NewsletterSubscriber;
+      } | null)
+    | ({
         relationTo: 'contacts';
         value: number | Contact;
       } | null)
@@ -1105,6 +1251,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'counters';
         value: number | Counter;
+      } | null)
+    | ({
+        relationTo: 'system-state';
+        value: number | SystemState;
       } | null)
     | ({
         relationTo: 'mail-log';
@@ -1209,6 +1359,7 @@ export interface ProductsSelect<T extends boolean = true> {
         note?: T;
         id?: T;
       };
+  productionMinutes?: T;
   productionTime?: T;
   readyMade?: T;
   onRequestOnly?: T;
@@ -1282,6 +1433,9 @@ export interface TestimonialsSelect<T extends boolean = true> {
   author?: T;
   context?: T;
   product?: T;
+  pending?: T;
+  submittedEmail?: T;
+  orderNumber?: T;
   featured?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1355,6 +1509,14 @@ export interface OrdersSelect<T extends boolean = true> {
   stripePaymentIntentId?: T;
   paypalOrderId?: T;
   paypalCaptureId?: T;
+  reviewRequestedAt?: T;
+  shippedAt?: T;
+  consent?:
+    | T
+    | {
+        termsAt?: T;
+        waiver?: T;
+      };
   customerNote?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1403,6 +1565,22 @@ export interface LoginCodesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers_select".
+ */
+export interface NewsletterSubscribersSelect<T extends boolean = true> {
+  email?: T;
+  status?: T;
+  locale?: T;
+  token?: T;
+  confirmedAt?: T;
+  unsubscribedAt?: T;
+  source?: T;
+  lastMailAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "contacts_select".
  */
 export interface ContactsSelect<T extends boolean = true> {
@@ -1432,6 +1610,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   supplierName?: T;
   invoiceNumber?: T;
   invoiceDate?: T;
+  dueDate?: T;
   netAmount?: T;
   vatRate?: T;
   vatAmount?: T;
@@ -1439,6 +1618,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   category?: T;
   paymentMethod?: T;
   paid?: T;
+  reminderSentAt?: T;
   deductible?: T;
   notes?: T;
   extraction?:
@@ -1462,6 +1642,8 @@ export interface QuotesSelect<T extends boolean = true> {
   customer?: T;
   customerName?: T;
   customerAddress?: T;
+  sentAt?: T;
+  lastFollowUpAt?: T;
   issueDate?: T;
   validUntil?: T;
   items?:
@@ -1519,6 +1701,15 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  runningSince?: T;
+  timeEntries?:
+    | T
+    | {
+        day?: T;
+        minutes?: T;
+        note?: T;
+        id?: T;
+      };
   notes?: T;
   order?: T;
   quote?: T;
@@ -1540,10 +1731,16 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   status?: T;
   customer?: T;
   customerName?: T;
+  customerSiret?: T;
+  customerVatId?: T;
   customerAddress?: T;
   issueDate?: T;
   dueDate?: T;
   paidDate?: T;
+  deliveryDate?: T;
+  businessType?: T;
+  buyerReference?: T;
+  deliveryAddress?: T;
   items?:
     | T
     | {
@@ -1562,6 +1759,14 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   subtotal?: T;
   vatTotal?: T;
   total?: T;
+  reminders?:
+    | T
+    | {
+        level?: T;
+        sentAt?: T;
+        lateFee?: T;
+        id?: T;
+      };
   reverseCharge?: T;
   note?: T;
   project?: T;
@@ -1625,6 +1830,18 @@ export interface CountersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-state_select".
+ */
+export interface SystemStateSelect<T extends boolean = true> {
+  key?: T;
+  lastRun?: T;
+  ok?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mail-log_select".
  */
 export interface MailLogSelect<T extends boolean = true> {
@@ -1673,6 +1890,16 @@ export interface MediaSelect<T extends boolean = true> {
   sizes?:
     | T
     | {
+        klein?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
         thumbnail?:
           | T
           | {
@@ -1703,6 +1930,16 @@ export interface MediaSelect<T extends boolean = true> {
               filesize?: T;
               filename?: T;
             };
+        xl?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
       };
 }
 /**
@@ -1713,6 +1950,17 @@ export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   mfaEnabled?: T;
+  passkeys?:
+    | T
+    | {
+        credentialId?: T;
+        publicKey?: T;
+        counter?: T;
+        transports?: T;
+        label?: T;
+        lastUsedAt?: T;
+        id?: T;
+      };
   mfaSecret?: T;
   mfaPendingSecret?: T;
   mfaBackupCodes?:
@@ -1893,6 +2141,15 @@ export interface SiteSetting {
     vatId?: string | null;
     paymentTerms?: string | null;
     /**
+     * Steht auf der Rechnung und in der elektronischen Fassung — ohne Bankverbindung kann niemand überweisen.
+     */
+    iban?: string | null;
+    bic?: string | null;
+    /**
+     * Wer bei Dienstleistungen zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf jeder Rechnung vermerken. Der Hinweis erscheint dann automatisch.
+     */
+    vatOnDebits?: boolean | null;
+    /**
      * Bei Rechnungen an Geschäftskunden Pflicht. Vorschlag: „Bei Zahlungsverzug werden Verzugszinsen in Höhe des dreifachen gesetzlichen Zinssatzes sowie eine Pauschale für Beitreibungskosten von 40 € fällig." — Wortlaut mit dem Steuerberater abstimmen.
      */
     latePaymentNote?: string | null;
@@ -1913,6 +2170,14 @@ export interface SiteSetting {
      * Kündigt Abweichungen vor dem Kauf an — das ist der rechtlich saubere Weg.
      */
     notice?: string | null;
+    /**
+     * Grundlage der Nachkalkulation: Werkstattstunde inklusive Maschinen, Strom und Raum — nicht der eigene Lohn.
+     */
+    hourlyRate?: number | null;
+    /**
+     * Aufschlag auf den Einsatz, aus dem der Preisvorschlag am Artikel entsteht.
+     */
+    targetMargin?: number | null;
     /**
      * Gilt für alle Produkte ohne eigene Angabe, z.B. „3–4 Wochen".
      */
@@ -1979,6 +2244,60 @@ export interface Legal {
     [k: string]: unknown;
   } | null;
   agb?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Pflicht im Verkauf an Verbraucher: 14 Tage Widerrufsfrist, Fristbeginn, Folgen. Wichtig für die Werkstatt ist der zweite Teil — bei einem nach Kundenvorgabe gefertigten Einzelstück besteht kein Widerrufsrecht. Das muss hier ausdrücklich stehen, sonst gilt es doch.
+   */
+  widerruf?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Das Formular muss zur Verfügung stehen, auch wenn es kaum jemand benutzt. Es steht auf der Widerrufsseite unter der Belehrung.
+   */
+  widerrufsformular?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Lieferzeiten, Versandkosten, Liefergebiete, Zahlungsarten. Muss vor dem Bestellen erreichbar sein.
+   */
+  versandZahlung?: {
     root: {
       type: string;
       children: {
@@ -2133,6 +2452,54 @@ export interface Integration {
      */
     readonlyKey?: string | null;
   };
+  /**
+   * Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.
+   */
+  wartung?: {
+    /**
+     * Abschalten heißt: keine nächtliche Sicherung, keine Erinnerungen, keine Meldung über neue Post.
+     */
+    aktiv?: boolean | null;
+    /**
+     * Bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — 60 reicht ebenso. Die Arbeiten selbst laufen höchstens einmal am Tag.
+     */
+    intervalMinuten?: number | null;
+    /**
+     * Wie schnell neue Post gemeldet wird. IMAP meldet sich nicht von allein, hier zahlt sich häufiger aus.
+     */
+    postfachMinuten?: number | null;
+    /**
+     * Ältere Einträge räumt die Wartung weg. Nur Kopfdaten, kein Inhalt — aber auch die müssen nicht ewig liegen.
+     */
+    mailprotokollMonate?: number | null;
+  };
+  /**
+   * Jede Sicherung enthält die vollständige Datenbank und alle Bilder. Ohne zweiten Ort ist sie nur eine Schönwetter-Kopie — deshalb hier die NAS eintragen. Bedient wird das Ganze im Büro unter Sicherung.
+   */
+  sicherung?: {
+    protokoll?: ('smb' | 'webdav') | null;
+    smbServer?: string | null;
+    smbFreigabe?: string | null;
+    /**
+     * Optional, z.B. sicherungen/vh — der Ordner muss auf der NAS schon bestehen.
+     */
+    smbPfad?: string | null;
+    smbBenutzer?: string | null;
+    smbPasswort?: string | null;
+    webdavUrl?: string | null;
+    webdavBenutzer?: string | null;
+    /**
+     * Bei Nextcloud/ownCloud ein App-Passwort verwenden.
+     */
+    webdavPasswort?: string | null;
+    automatik?: boolean | null;
+    /**
+     * Format HH:MM, Zeitzone des Servers.
+     */
+    uhrzeit?: string | null;
+    behaltenLokal?: number | null;
+    behaltenNas?: number | null;
+  };
   facebook?: {
     pageId?: string | null;
     /**
@@ -2239,6 +2606,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         siret?: T;
         vatId?: T;
         paymentTerms?: T;
+        iban?: T;
+        bic?: T;
+        vatOnDebits?: T;
         latePaymentNote?: T;
         mediator?: T;
         vatRate?: T;
@@ -2247,6 +2617,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         notice?: T;
+        hourlyRate?: T;
+        targetMargin?: T;
         defaultProductionTime?: T;
       };
   analytics?:
@@ -2274,6 +2646,9 @@ export interface LegalSelect<T extends boolean = true> {
   impressum?: T;
   datenschutz?: T;
   agb?: T;
+  widerruf?: T;
+  widerrufsformular?: T;
+  versandZahlung?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2345,6 +2720,31 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         apiKey?: T;
         readonlyKey?: T;
+      };
+  wartung?:
+    | T
+    | {
+        aktiv?: T;
+        intervalMinuten?: T;
+        postfachMinuten?: T;
+        mailprotokollMonate?: T;
+      };
+  sicherung?:
+    | T
+    | {
+        protokoll?: T;
+        smbServer?: T;
+        smbFreigabe?: T;
+        smbPfad?: T;
+        smbBenutzer?: T;
+        smbPasswort?: T;
+        webdavUrl?: T;
+        webdavBenutzer?: T;
+        webdavPasswort?: T;
+        automatik?: T;
+        uhrzeit?: T;
+        behaltenLokal?: T;
+        behaltenNas?: T;
       };
   facebook?:
     | T

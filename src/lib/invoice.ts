@@ -1,9 +1,8 @@
-import fs from 'fs'
-import path from 'path'
-
 import PDFDocument from 'pdfkit'
 
-import { BRONZE, type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
+import { facturXml, type FacturXDaten } from './facturx'
+import type { CompanyInfo } from './mail'
+import { briefkopf, fusszeile, LINKS, RECHTS, schriftenDa, schriftenSetzen } from './pdfkopf'
 
 /**
  * Rechnungs-PDF.
@@ -43,6 +42,11 @@ export type RechnungsDaten = {
   fertigungszeit?: string | null
   /** Fassung eines nachverhandelten Angebots (1 = Erstfassung) */
   fassung?: number | null
+  /**
+   * Angaben für die elektronische Rechnung. Sind sie da, entsteht ein
+   * Factur-X-PDF: dasselbe Blatt, zusätzlich mit eingebetteter XML.
+   */
+  facturx?: FacturXDaten | null
 }
 
 const euro = (v: number) =>
@@ -73,8 +77,87 @@ function zerlege(betrag: number, satz: number, preiseSind: 'brutto' | 'netto') {
   return { netto, steuer: runden(betrag - netto) }
 }
 
+/**
+ * XMP-Kennzeichnung, an der ein Empfänger die eingebettete Rechnung erkennt.
+ * Ohne diesen Abschnitt ist die XML nur ein Anhang wie jeder andere.
+ */
+function facturxMetadaten(profil = 'BASIC'): string {
+  return `
+        <rdf:Description rdf:about="" xmlns:pdfaExtension="http://www.aiim.org/pdfa/ns/extension/" xmlns:pdfaSchema="http://www.aiim.org/pdfa/ns/schema#" xmlns:pdfaProperty="http://www.aiim.org/pdfa/ns/property#">
+          <pdfaExtension:schemas>
+            <rdf:Bag>
+              <rdf:li rdf:parseType="Resource">
+                <pdfaSchema:schema>Factur-X PDFA Extension Schema</pdfaSchema:schema>
+                <pdfaSchema:namespaceURI>urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#</pdfaSchema:namespaceURI>
+                <pdfaSchema:prefix>fx</pdfaSchema:prefix>
+                <pdfaSchema:property>
+                  <rdf:Seq>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>DocumentFileName</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Name des eingebetteten XML-Dokuments</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>DocumentType</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>INVOICE</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>Version</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Fassung des Factur-X-Standards</pdfaProperty:description>
+                    </rdf:li>
+                    <rdf:li rdf:parseType="Resource">
+                      <pdfaProperty:name>ConformanceLevel</pdfaProperty:name>
+                      <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                      <pdfaProperty:category>external</pdfaProperty:category>
+                      <pdfaProperty:description>Profil des eingebetteten Datensatzes</pdfaProperty:description>
+                    </rdf:li>
+                  </rdf:Seq>
+                </pdfaSchema:property>
+              </rdf:li>
+            </rdf:Bag>
+          </pdfaExtension:schemas>
+        </rdf:Description>
+        <rdf:Description rdf:about="" xmlns:fx="urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#">
+          <fx:DocumentType>INVOICE</fx:DocumentType>
+          <fx:DocumentFileName>factur-x.xml</fx:DocumentFileName>
+          <fx:Version>1.0</fx:Version>
+          <fx:ConformanceLevel>${profil}</fx:ConformanceLevel>
+        </rdf:Description>`
+}
+
 export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo): Promise<Buffer> {
-  const doc = new PDFDocument({ size: 'A4', margin: 50 })
+  // Eine elektronische Rechnung ist ein PDF/A-3 mit eingebetteter XML. Das
+  // geht nur mit echten Schriftdateien — fehlen sie, entsteht wie bisher ein
+  // gewöhnliches PDF, statt dass die Rechnung gar nicht erst herauskommt.
+  const elektronisch = Boolean(daten.facturx) && schriftenDa()
+
+  const doc = new PDFDocument({
+    size: 'A4',
+    margin: 50,
+    ...(elektronisch
+      ? {
+          subset: 'PDF/A-3b' as const,
+          pdfVersion: '1.7' as const,
+          tagged: true,
+          displayTitle: true,
+          info: {
+            Title: `Rechnung ${daten.nummer}`,
+            Author: company?.legalName || company?.name || 'Vincent Hellmann',
+            Subject: `Rechnung ${daten.nummer}`,
+            Keywords: 'Factur-X, EN 16931, Rechnung',
+            Creator: 'vincent-hellmann.com',
+            Producer: 'vincent-hellmann.com',
+          },
+        }
+      : {}),
+  })
+
+  schriftenSetzen(doc)
 
   // Einmal an der Quelle geradeziehen statt an jeder der dreißig Textstellen
   const textRoh = doc.text.bind(doc)
@@ -88,71 +171,13 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   doc.on('data', (t: Buffer) => teile.push(t))
   const fertig = new Promise<Buffer>((auf) => doc.on('end', () => auf(Buffer.concat(teile))))
 
-  const links = 50
-  const rechts = 545
+  const links = LINKS
+  const rechts = RECHTS
   const datum = daten.datum ? new Date(daten.datum) : new Date()
 
-  // ── Fußzeile auf jeder Seite ──────────────────────────────────────────────
-  // Firmierung, SIRET und TVA gehören auf jedes Blatt, das das Haus verlässt —
-  // nicht nur auf die erste Seite eines mehrseitigen Angebots.
-  const angaben = pflichtangaben(company).join(' · ')
-  const fussZeichnen = () => {
-    if (!angaben) return
-    const yAlt = doc.y
-    const untenAlt = doc.page.margins.bottom
-    doc.page.margins.bottom = 0
-    doc
-      .fontSize(7)
-      .fillColor('#999')
-      .text(angaben, links, doc.page.height - 38, { width: rechts - links, align: 'center' })
-    doc.page.margins.bottom = untenAlt
-    doc.fillColor('#000').fontSize(10)
-    doc.y = yAlt
-  }
-  doc.on('pageAdded', fussZeichnen)
+  const fussZeichnen = fusszeile(doc, company)
 
-  // ── Briefkopf ─────────────────────────────────────────────────────────────
-  // Das Logo als Bild statt gesperrter Schrift: Wer ein Angebot über mehrere
-  // tausend Euro bekommt, soll dieselbe Marke sehen wie auf der Website.
-  const logo = path.join(process.cwd(), 'public', 'logo.png')
-  let kopfhoehe = 0
-  try {
-    if (fs.existsSync(logo)) {
-      doc.image(logo, links, 48, { width: 190 })
-      // 1994 × 140 — daraus die Höhe bei 190 pt Breite
-      kopfhoehe = Math.round((190 * 140) / 1994)
-      doc.y = 48 + kopfhoehe + 10
-    }
-  } catch {
-    // Ohne Logo geht es auch weiter, nur eben mit Schriftzug
-  }
-  if (!kopfhoehe) {
-    doc.fontSize(16).text('VINCENT HELLMANN', { characterSpacing: 2 })
-    doc.moveDown(0.2)
-  }
-
-  /**
-   * Corten-Strich wie auf der Website: läuft nach rechts weich aus, je größer
-   * die Überschrift, desto länger der Strich. Im PDF als echter Verlauf —
-   * anders als in der Mail muss hier kein Outlook mitspielen.
-   */
-  const cortenStrich = (gross = false) => {
-    const breite = gross ? 112 : 40
-    const hoehe = gross ? 2.5 : 1.5
-    const y = doc.y + (gross ? 4 : 3)
-    const verlauf = doc.linearGradient(links, y, links + breite, y)
-    verlauf.stop(0, BRONZE).stop(0.3, BRONZE).stop(1, BRONZE, 0)
-    doc.rect(links, y, breite, hoehe).fill(verlauf)
-    doc.fillColor('#000')
-    doc.y = y + hoehe + (gross ? 10 : 7)
-  }
-
-  cortenStrich(true)
-
-  doc.fontSize(9).fillColor('#666')
-  const absender = [firmenzeile(company), company?.address].filter(Boolean).join(' · ')
-  if (absender) doc.text(absender, links, doc.y, { width: rechts - links })
-  doc.fillColor('#000')
+  const cortenStrich = briefkopf(doc, company)
 
   const istAngebot = daten.art === 'angebot'
   doc.moveDown(1.5)
@@ -313,12 +338,48 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.y,
     { width: rechts - links },
   )
+  if (!istAngebot && company?.iban) {
+    doc.moveDown(0.4)
+    doc.text(
+      `Bankverbindung: IBAN ${company.iban}${company.bic ? ` · BIC ${company.bic}` : ''}`,
+      links,
+      doc.y,
+      { width: rechts - links },
+    )
+  }
+  // Wer zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf
+  // jeder Rechnung vermerken — sonst fehlt eine Pflichtangabe.
+  if (!istAngebot && company?.vatOnDebits) {
+    doc.moveDown(0.4)
+    doc.fontSize(8).text("TVA acquittée d'après les débits.", links, doc.y, {
+      width: rechts - links,
+    })
+    doc.fontSize(9)
+  }
   if (!istAngebot && company?.latePaymentNote) {
     doc.moveDown(0.4)
     doc.fontSize(8).text(company.latePaymentNote, links, doc.y, { width: rechts - links })
   }
 
   fussZeichnen()
+
+  if (elektronisch && daten.facturx) {
+    const xml = facturXml(daten.facturx, company)
+    const zeitpunkt = daten.datum ? new Date(daten.datum) : new Date()
+    doc.file(Buffer.from(xml, 'utf8'), {
+      name: 'factur-x.xml',
+      type: 'text/xml',
+      description: 'Rechnungsdaten nach EN 16931 (Factur-X BASIC)',
+      creationDate: zeitpunkt,
+      modifiedDate: zeitpunkt,
+      // „Alternative": Die XML ist dieselbe Rechnung in maschinenlesbarer
+      // Form, kein zusätzliches Beiwerk — genau das schreibt Factur-X vor.
+      // PDFKit kann das, nur die mitgelieferten Typen kennen das Feld nicht.
+      relationship: 'Alternative',
+    } as PDFKit.Mixins.PDFAttachmentOptions & { relationship: string })
+    doc.appendXML(facturxMetadaten('BASIC'))
+  }
+
   doc.end()
   return fertig
 }
