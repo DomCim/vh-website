@@ -87,25 +87,10 @@ const server = createServer((anfrage, antwort) => {
 
 const wss = new WebSocketServer({ noServer: true })
 
-server.on('upgrade', (anfrage, socket, kopf) => {
-  let adresse
-  try {
-    adresse = new URL(anfrage.url, `http://${anfrage.headers.host}`)
-  } catch {
-    socket.destroy()
-    return
-  }
-
-  // Alles andere (z.B. Nexts eigener Entwicklungs-Kanal) geht Next an
-  if (adresse.pathname !== PFAD) return
-
-  const benutzerId = kartePruefen(adresse.searchParams.get('karte'))
-  if (!benutzerId) {
-    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
-    socket.destroy()
-    return
-  }
-
+/**
+ * Nimmt eine neue Verbindung an — nachdem die Eintrittskarte gestimmt hat.
+ */
+function verbindungAnnehmen(anfrage, socket, kopf, benutzerId) {
   wss.handleUpgrade(anfrage, socket, kopf, (draht) => {
     draht.benutzerId = benutzerId
     draht.lebt = true
@@ -119,7 +104,43 @@ server.on('upgrade', (anfrage, socket, kopf) => {
 
     draht.send(JSON.stringify({ bereich: 'verbunden', zeit: Date.now() }))
   })
-})
+}
+
+/**
+ * Warum das Ereignis abgefangen und nicht einfach behorcht wird:
+ *
+ * Next hängt sich in der Entwicklung selbst an `upgrade`, um seinen
+ * Nachlade-Kanal zu bedienen — und wirft dabei jede Verbindung weg, die es
+ * nicht kennt. Ein zweiter Zuhörer daneben hilft nicht: Node ruft beide auf,
+ * unsere Verbindung stand also, war eine Wimper später aber wieder zu
+ * (Schließcode 1006), ohne dass eine Seite einen Fehler gesehen hätte.
+ *
+ * Deshalb wird das Ereignis für genau unseren Pfad abgefangen, bevor es
+ * überhaupt verteilt wird. Alles andere geht unverändert an Next.
+ */
+const verteilen = server.emit.bind(server)
+server.emit = (name, ...rest) => {
+  if (name !== 'upgrade') return verteilen(name, ...rest)
+
+  const [anfrage, socket, kopf] = rest
+  let adresse
+  try {
+    adresse = new URL(anfrage.url, `http://${anfrage.headers.host}`)
+  } catch {
+    return verteilen(name, ...rest)
+  }
+  if (adresse.pathname !== PFAD) return verteilen(name, ...rest)
+
+  const benutzerId = kartePruefen(adresse.searchParams.get('karte'))
+  if (!benutzerId) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+    socket.destroy()
+    return true
+  }
+
+  verbindungAnnehmen(anfrage, socket, kopf, benutzerId)
+  return true
+}
 
 /**
  * Herzschlag alle 30 Sekunden: Ein Handy, das in der Tasche verschwindet,

@@ -48,6 +48,19 @@ const verwaltung = [
   "worker-src 'self' blob:",
 ].join('; ')
 
+/**
+ * Das Büro hält eine Live-Verbindung offen. `'self'` deckt nach der Norm auch
+ * `ws:`/`wss:` derselben Herkunft ab — nur haben das nicht alle Browser immer
+ * so gesehen, und das Büro läuft als App auf dem Handy. Ein blockierter
+ * Verbindungsaufbau wäre dort still: Die Seite bliebe stehen, ohne Fehler.
+ * Deshalb steht es hier ausdrücklich.
+ */
+const buero = [
+  ...gemeinsam,
+  `script-src 'self' 'unsafe-inline'${extraSkript ? ` ${extraSkript}` : ''}`,
+  "connect-src 'self' ws: wss:",
+].join('; ')
+
 const grundlegend = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -71,41 +84,52 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   /**
-   * Next übersetzt `instrumentation.ts` auch für die Edge-Laufzeit — selbst
-   * wenn dort nichts davon läuft (der Takt steigt bei `NEXT_RUNTIME !==
-   * 'nodejs'` sofort wieder aus). Übersetzt wird trotzdem, und dabei stolpert
-   * der Bündler über Node-Bausteine wie `crypto`, die es in der Edge-Laufzeit
-   * nicht gibt: In der Entwicklung antwortete daraufhin jede Seite mit 500.
+   * Next übersetzt `instrumentation.ts` auch für die Edge-Laufzeit — obwohl
+   * der Takt dort sofort wieder aussteigt (`NEXT_RUNTIME !== 'nodejs'`).
+   * Übersetzt wird trotzdem, und dabei zöge er Payload, den Mailversand und
+   * den Benachrichtigungsversand in ein Bündel, in dem es keine
+   * Node-Bausteine wie `crypto` oder `http` gibt: In der Entwicklung
+   * antwortete daraufhin jede Seite mit 500.
    *
-   * Für diesen einen Zweig genügt es, die Bausteine als „gibt es nicht" zu
-   * melden — aufgerufen werden sie dort ohnehin nie.
+   * Einzelne Bausteine nachzureichen wäre ein Spiel ohne Ende — jede neue
+   * Abhängigkeit bringt den nächsten mit. Stattdessen wird für diesen einen
+   * Zweig das Takt-Modul selbst durch eine leere Hülle ersetzt. Damit
+   * verschwindet der ganze Rattenschwanz aus dem Edge-Bündel.
    */
-  webpack: (config, { nextRuntime }) => {
+  webpack: (config, { nextRuntime, webpack }) => {
     if (nextRuntime === 'edge') {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        crypto: false,
-        fs: false,
-        net: false,
-        os: false,
-        path: false,
-        stream: false,
-        tls: false,
-        zlib: false,
-        child_process: false,
-      }
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^\.\/takt$/, (mittel) => {
+          mittel.request = './taktLeer'
+        }),
+      )
     }
     return config
   },
+  /**
+   * Reihenfolge ist hier entscheidend: Passen mehrere Regeln auf einen Pfad,
+   * setzt Next sie der Reihe nach — die spätere überschreibt die frühere.
+   * Deshalb steht der Auffangpfad oben und die Ausnahmen darunter. (Vorher
+   * war es andersherum, damit lag die gelockerte Richtlinie fürs Admin-Panel
+   * wirkungslos unter der allgemeinen.)
+   */
   async headers() {
     return [
+      {
+        source: '/:pfad*',
+        headers: [...grundlegend, { key: 'Content-Security-Policy', value: website }],
+      },
       {
         source: '/admin/:pfad*',
         headers: [...grundlegend, { key: 'Content-Security-Policy', value: verwaltung }],
       },
       {
-        source: '/:pfad*',
-        headers: [...grundlegend, { key: 'Content-Security-Policy', value: website }],
+        source: '/office',
+        headers: [...grundlegend, { key: 'Content-Security-Policy', value: buero }],
+      },
+      {
+        source: '/office/:pfad*',
+        headers: [...grundlegend, { key: 'Content-Security-Policy', value: buero }],
       },
     ]
   },

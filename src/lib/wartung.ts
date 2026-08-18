@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
 import { postfaecher, ungeleseneAnzahl } from './postfach'
 import { benachrichtige } from './push'
@@ -426,6 +427,9 @@ export async function postfachPruefen(
 
       const neu = ungelesen > zuletzt
       if (neu) {
+        // Auch an die offenen Büro-Seiten: Wer gerade im Postfach steht, soll
+        // die neue Nachricht sehen, ohne die Benachrichtigung anzutippen.
+        liveMelden('post', 'neu', fach.id)
         await benachrichtige(payload, {
           titel: `Neue Post für ${fach.label}`,
           text:
