@@ -66,6 +66,11 @@ export const Projects: CollectionConfig = {
       label: 'Kurzbeschreibung',
       type: 'textarea',
       localized: true,
+      admin: {
+        components: {
+          afterInput: ['/components/admin/KiTextHilfe#KiReferenzKurz'],
+        },
+      },
     },
     {
       name: 'description',

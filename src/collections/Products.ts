@@ -61,6 +61,11 @@ export const Products: CollectionConfig = {
       label: 'Kurzbeschreibung',
       type: 'textarea',
       localized: true,
+      admin: {
+        components: {
+          afterInput: ['/components/admin/KiTextHilfe#KiProduktKurz'],
+        },
+      },
     },
     {
       name: 'description',

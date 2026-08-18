@@ -23,6 +23,7 @@
     "seed": "payload run scripts/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "@payloadcms/db-postgres": "^3.49.0",
     "@payloadcms/email-nodemailer": "^3.49.0",
     "@payloadcms/next": "^3.49.0",

@@ -137,6 +137,32 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      name: 'anthropic',
+      label: 'KI-Funktionen (Claude)',
+      type: 'group',
+      admin: {
+        description:
+          'Schlüssel von console.anthropic.com. Damit liest die Verwaltung hochgeladene Belege aus und schlägt Texte und Übersetzungen vor. Ohne Schlüssel bleiben diese Knöpfe einfach aus.',
+      },
+      fields: [
+        {
+          name: 'apiKey',
+          label: 'Anthropic API-Schlüssel',
+          type: 'text',
+          admin: { description: 'Beginnt mit sk-ant-…' },
+        },
+        {
+          name: 'model',
+          label: 'Modell',
+          type: 'text',
+          defaultValue: 'claude-opus-5',
+          admin: {
+            description: 'Nur ändern, wenn es einen Grund gibt. Standard: claude-opus-5.',
+          },
+        },
+      ],
+    },
+    {
       name: 'mcp',
       label: 'KI-Assistent (MCP-Server)',
       type: 'group',

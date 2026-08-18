@@ -28,6 +28,10 @@ export type ResolvedIntegrations = {
     apiKey?: string
     readonlyKey?: string
   }
+  anthropic: {
+    apiKey?: string
+    model: string
+  }
 }
 
 const val = (dbValue: unknown, envValue: string | undefined): string | undefined => {
@@ -77,6 +81,10 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     mcp: {
       apiKey: val(doc?.mcp?.apiKey, process.env.MCP_API_KEY),
       readonlyKey: val(doc?.mcp?.readonlyKey, process.env.MCP_READONLY_API_KEY),
+    },
+    anthropic: {
+      apiKey: val(doc?.anthropic?.apiKey, process.env.ANTHROPIC_API_KEY),
+      model: val(doc?.anthropic?.model, process.env.ANTHROPIC_MODEL) || 'claude-opus-5',
     },
   }
 }
