@@ -67,21 +67,25 @@ jobs:
             exit 0
           fi
 
-          # Die Adresse selbst darf nicht ins Protokoll (sie ist der Schlüssel),
-          # Länge und Anfang reichen aber, um einen Tippfehler zu erkennen
-          echo "Adresse: ${#HA_DEPLOY_WEBHOOK} Zeichen, beginnt mit ${HA_DEPLOY_WEBHOOK%%/*}//${HA_DEPLOY_WEBHOOK#*//}" \
-            | cut -c1-40
-          case "$HA_DEPLOY_WEBHOOK" in
+          # Beim Einfügen in die GitHub-Oberfläche rutscht leicht ein
+          # Zeilenumbruch mit hinein; curl weist die Adresse dann rundheraus ab
+          ziel=$(printf '%s' "$HA_DEPLOY_WEBHOOK" | tr -d '[:space:]')
+          geheim=$(printf '%s' "$HA_DEPLOY_TOKEN" | tr -d '[:space:]')
+
+          # Die Adresse selbst gehört nicht ins Protokoll — sie ist der
+          # Schlüssel. Die Länge reicht, um einen Fehlgriff zu erkennen.
+          echo "Adresse: ${#ziel} Zeichen"
+          case "$ziel" in
             https://*) ;;
             *) echo "::error::Die Webhook-Adresse beginnt nicht mit https:// — vermutlich beim Kopieren verstümmelt."; exit 1 ;;
           esac
 
           antwort=$(mktemp)
           code=$(curl -sS -o "$antwort" -w '%{http_code}' --max-time 30 \
-            -X POST "$HA_DEPLOY_WEBHOOK" \
+            -X POST "$ziel" \
             -H 'Content-Type: application/json' \
-            -d "{\"token\":\"$HA_DEPLOY_TOKEN\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\"}") || {
-              echo "::error::curl kam nicht durch — Adresse prüfen (Zeilenumbruch oder fehlendes = am Ende?)."
+            -d "{\"token\":\"$geheim\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\"}") || {
+              echo "::error::curl kam nicht durch — Adresse prüfen."
               exit 1
             }
 
