@@ -27,9 +27,7 @@ import { KiNewsTeaser as KiNewsTeaser_e1b8e5a5267aebfe662bcfa2d122f8f8 } from '.
 import { KiReferenzKurz as KiReferenzKurz_e1b8e5a5267aebfe662bcfa2d122f8f8 } from '../../../components/admin/KiTextHilfe'
 import { MfaSetup as MfaSetup_2460e88e3a92857299a8b2428a52daf7 } from '../../../components/admin/MfaSetup'
 import { McpZugang as McpZugang_54fb5660baf3559f1124a113f4b3356c } from '../../../components/admin/McpZugang'
-import { default as default_943bd7e8fd8bf6d61701294d3fc6abad } from '../../../components/admin/ChangelogLink'
 import { MfaLoginField as MfaLoginField_8ec8b34b35adc8b6d4f4c0554cd4539d } from '../../../components/admin/MfaLoginField'
-import { default as default_6a0dc06ee9e6e47568869211628fe291 } from '../../../components/admin/ChangelogView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -63,8 +61,6 @@ export const importMap = {
   "/components/admin/KiTextHilfe#KiReferenzKurz": KiReferenzKurz_e1b8e5a5267aebfe662bcfa2d122f8f8,
   "/components/admin/MfaSetup#MfaSetup": MfaSetup_2460e88e3a92857299a8b2428a52daf7,
   "/components/admin/McpZugang#McpZugang": McpZugang_54fb5660baf3559f1124a113f4b3356c,
-  "/components/admin/ChangelogLink#default": default_943bd7e8fd8bf6d61701294d3fc6abad,
   "/components/admin/MfaLoginField#MfaLoginField": MfaLoginField_8ec8b34b35adc8b6d4f4c0554cd4539d,
-  "/components/admin/ChangelogView#default": default_6a0dc06ee9e6e47568869211628fe291,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

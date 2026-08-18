@@ -18,6 +18,7 @@ const PUNKTE = [
   { href: '/office/partner', label: 'Partner' },
   { href: '/office/steuer', label: 'Steuer' },
   { href: '/office/einstellungen', label: 'Einstellungen' },
+  { href: '/office/neuerungen', label: 'Neuerungen' },
 ]
 
 export function BueroNavigation() {

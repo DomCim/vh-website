@@ -1,6 +1,6 @@
 # Changelog
 
-Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll ist im Admin unter **Changelog** einsehbar.
+Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
 ## 18.08.2026 — Das Büro: Betrieb, Postfach und Meldungen aufs Handy
 

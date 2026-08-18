@@ -56,15 +56,9 @@ export default buildConfig({
       ],
     },
     components: {
-      // Änderungsprotokoll für den Betreiber: /admin/changelog + Link in der Seitenleiste
-      afterNavLinks: ['/components/admin/ChangelogLink'],
+      // Das Änderungsprotokoll steht im Büro unter /office/neuerungen — es
+      // geht den Betrieb an, nicht die Redaktion.
       beforeLogin: ['/components/admin/MfaLoginField#MfaLoginField'],
-      views: {
-        changelog: {
-          Component: '/components/admin/ChangelogView',
-          path: '/changelog',
-        },
-      },
     },
   },
   collections: [
