@@ -29,6 +29,7 @@ import { Projects } from './collections/Projects'
 import { Promotions } from './collections/Promotions'
 import { Quotes } from './collections/Quotes'
 import { Stocktakes } from './collections/Stocktakes'
+import { SystemState } from './collections/SystemState'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
 import { About } from './globals/About'
@@ -80,6 +81,7 @@ export default buildConfig({
     InventoryItems,
     Stocktakes,
     Counters,
+    SystemState,
     MailLog,
     PushSubscriptions,
     Media,

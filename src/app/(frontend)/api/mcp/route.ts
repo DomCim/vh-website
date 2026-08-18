@@ -13,6 +13,7 @@ import { registerProdukte } from '../../../../lib/mcp/produkte'
 import { registerReferenzen } from '../../../../lib/mcp/referenzen'
 import { registerSeiten } from '../../../../lib/mcp/seiten'
 import { payloadClient } from '../../../../lib/data'
+import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import { type McpServer, nurLesenderServer } from '../../../../lib/mcp/helpers'
 import { getIntegrations } from '../../../../lib/settings'
 
@@ -120,6 +121,12 @@ const guarded = async (req: Request) => {
 
   if (vollzugriff && gleich(angeboten, vollzugriff)) return handler(req)
   if (nurLesen && gleich(angeboten, nurLesen)) return nurLeseHandler(req)
+
+  // Erst beim falschen Schlüssel bremsen: Ein gültiger Zugang soll beliebig
+  // oft arbeiten dürfen, ein Ratender kommt auf zehn Versuche je Viertelstunde.
+  if (zuVieleAnfragen(`mcp:${ipAus(req)}`, 10, 15 * 60_000)) {
+    return new Response('Too Many Requests', { status: 429 })
+  }
   return new Response('Unauthorized', { status: 401 })
 }
 

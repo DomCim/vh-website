@@ -17,8 +17,15 @@ export default async function BueroUebersicht() {
   const jahr = new Date().getFullYear()
   const { von, bis } = jahresZeitraum(jahr)
 
-  const [shop, rechnungen, ausgaben, offeneRechnungen, offeneAnfragen, inventar] =
-    await Promise.all([
+  const [
+    shop,
+    rechnungen,
+    ausgaben,
+    offeneRechnungen,
+    offeneAnfragen,
+    inventar,
+    faelligeBelege,
+  ] = await Promise.all([
       payload.find({
         collection: 'orders',
         where: {
@@ -72,6 +79,16 @@ export default async function BueroUebersicht() {
         overrideAccess: true,
       }),
       payload.find({ collection: 'inventory-items', limit: 500, depth: 0, overrideAccess: true }),
+      // Unbezahlte Belege mit Zahlungsziel — die Erinnerung aufs Handy kommt
+      // vom Wartungslauf, hier steht sie zusätzlich vor Augen.
+      payload.find({
+        collection: 'expenses',
+        where: { and: [{ paid: { equals: false } }, { dueDate: { exists: true } }] },
+        sort: 'dueDate',
+        limit: 20,
+        depth: 0,
+        overrideAccess: true,
+      }),
     ])
 
   const runden = (n: number) => Math.round(n * 100) / 100
@@ -90,6 +107,12 @@ export default async function BueroUebersicht() {
   const ueberfaellig = offeneRechnungen.docs.filter(
     (r) => r.dueDate && new Date(r.dueDate).getTime() < heute,
   )
+  // Alles, was in den nächsten drei Tagen fällig wird oder es schon war —
+  // derselbe Zeitraum, in dem auch die Erinnerung aufs Handy geht.
+  const zuZahlen = faelligeBelege.docs.filter(
+    (b) => b.dueDate && new Date(b.dueDate).getTime() < heute + 3 * 86400_000,
+  )
+  const laengstFaellig = zuZahlen[0]
 
   return (
     <>
@@ -125,10 +148,40 @@ export default async function BueroUebersicht() {
         </div>
       </div>
 
-      {(ohneBeleg > 0 || ungeprueft > 0 || ueberfaellig.length > 0 || knapp.length > 0) && (
+      {(ohneBeleg > 0 ||
+        ungeprueft > 0 ||
+        ueberfaellig.length > 0 ||
+        zuZahlen.length > 0 ||
+        knapp.length > 0) && (
         <>
           <h2>Kümmern</h2>
           <div className="buero-liste">
+            {zuZahlen.length > 0 && (
+              <Link href="/office/belege?filter=offen" className="buero-zeile">
+                <div className="buero-zeile-haupt">
+                  <div className="buero-zeile-titel">
+                    {zuZahlen.length} Beleg{zuZahlen.length === 1 ? '' : 'e'} zu zahlen
+                  </div>
+                  <div className="buero-zeile-neben">
+                    {euro(runden(zuZahlen.reduce((s, b) => s + (b.grossAmount ?? 0), 0)))} ·
+                    {' nächster: '}
+                    {laengstFaellig?.supplierName || laengstFaellig?.title || 'Beleg'} bis{' '}
+                    {datum(laengstFaellig?.dueDate)}
+                  </div>
+                </div>
+                <span
+                  className={`buero-marker ${
+                    laengstFaellig?.dueDate && new Date(laengstFaellig.dueDate).getTime() < heute
+                      ? 'warn'
+                      : 'offen'
+                  }`}
+                >
+                  {laengstFaellig?.dueDate && new Date(laengstFaellig.dueDate).getTime() < heute
+                    ? 'überfällig'
+                    : 'bald fällig'}
+                </span>
+              </Link>
+            )}
             {ueberfaellig.length > 0 && (
               <Link href="/office/rechnungen" className="buero-zeile">
                 <div className="buero-zeile-haupt">

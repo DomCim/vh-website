@@ -447,6 +447,37 @@
   color: var(--buero-tinte-leise);
 }
 
+/* Zweitrangige Aktionen an einer Listenzeile — schmal genug, dass drei davon
+   nebeneinander auf ein Handy passen */
+.buero-knopf.schmal,
+.buero a.buero-knopf.schmal {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: var(--buero-tinte);
+  border: 1px solid var(--buero-linie);
+}
+
+.buero-knopf.schmal:hover,
+.buero a.buero-knopf.schmal:hover {
+  background: var(--buero-bronze);
+  border-color: var(--buero-bronze);
+  color: #fff;
+}
+
+.buero-knopf.gefahr,
+.buero a.buero-knopf.gefahr {
+  color: var(--buero-rot);
+  border-color: color-mix(in srgb, var(--buero-rot) 40%, transparent);
+}
+
+.buero-knopf.gefahr:hover,
+.buero a.buero-knopf.gefahr:hover {
+  background: var(--buero-rot);
+  border-color: var(--buero-rot);
+  color: #fff;
+}
+
 .buero-knopf.leise {
   background: transparent;
   color: var(--buero-tinte);
@@ -564,6 +595,13 @@
   padding: 0.75rem 0.9rem;
   font-size: 0.85rem;
   margin-bottom: 1rem;
+}
+
+/* Dasselbe in Rot, wenn etwas schiefging — z.B. eine Sicherung, die es nicht
+   auf die NAS geschafft hat */
+.buero-hinweis.warn {
+  background: color-mix(in srgb, var(--buero-rot) 10%, transparent);
+  border-color: color-mix(in srgb, var(--buero-rot) 35%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {

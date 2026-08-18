@@ -11,6 +11,7 @@ export type BelegWerte = {
   supplierName?: string | null
   invoiceNumber?: string | null
   invoiceDate?: string | null
+  dueDate?: string | null
   netAmount?: number | null
   vatRate?: number | null
   vatAmount?: number | null
@@ -107,6 +108,7 @@ export function BelegFormular({
         supplierName: b.lieferant ?? w.supplierName,
         invoiceNumber: b.rechnungsnummer ?? w.invoiceNumber,
         invoiceDate: b.rechnungsdatum ?? w.invoiceDate,
+        dueDate: b.faelligkeit ?? w.dueDate,
         netAmount: b.netto ?? w.netAmount,
         vatRate: b.steuersatz ?? w.vatRate,
         vatAmount: b.steuer ?? w.vatAmount,
@@ -239,6 +241,14 @@ export function BelegFormular({
             type="date"
             value={nurTag(w.invoiceDate)}
             onChange={(e) => setzen({ invoiceDate: e.target.value })}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Zahlbar bis</span>
+          <input
+            type="date"
+            value={nurTag(w.dueDate)}
+            onChange={(e) => setzen({ dueDate: e.target.value })}
           />
         </label>
       </div>

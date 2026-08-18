@@ -100,6 +100,15 @@ export const Expenses: CollectionConfig = {
       fields: [
         { name: 'invoiceNumber', label: 'Rechnungsnummer', type: 'text' },
         { name: 'invoiceDate', label: 'Rechnungsdatum', type: 'date', required: true },
+        {
+          name: 'dueDate',
+          label: 'Zahlbar bis',
+          type: 'date',
+          admin: {
+            description:
+              'Steht ein Zahlungsziel auf dem Beleg, liest die KI es mit. Vorher bleibt es still; ab drei Tagen vor Fälligkeit meldet sich das Büro jeden Tag, bis der Beleg auf „bezahlt" steht.',
+          },
+        },
       ],
     },
     {
@@ -139,6 +148,14 @@ export const Expenses: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: { position: 'sidebar' },
+    },
+    {
+      // Damit die tägliche Erinnerung wirklich täglich kommt und nicht bei
+      // jedem Lauf des Wartungs-Cron. Wird ausschließlich vom Cron gesetzt.
+      name: 'reminderSentAt',
+      label: 'Zuletzt erinnert am',
+      type: 'date',
+      admin: { readOnly: true, hidden: true },
     },
     {
       name: 'deductible',

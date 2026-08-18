@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import QRCode from 'qrcode'
 
 import { payloadClient } from '../../../../lib/data'
+import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import {
   codePruefen,
   ersatzcodesErzeugen,
@@ -21,6 +22,12 @@ type Aktion = 'start' | 'aktivieren' | 'deaktivieren' | 'ersatzcodes'
  */
 export async function POST(req: Request) {
   try {
+    // Hier werden Einmalcodes geprüft — sechsstellig und damit ratbar, wenn
+    // man beliebig oft darf.
+    if (zuVieleAnfragen(`mfa:${ipAus(req)}`, 20, 10 * 60_000)) {
+      return NextResponse.json({ error: 'zu-viele-versuche' }, { status: 429 })
+    }
+
     const payload = await payloadClient()
     const { user } = await payload.auth({ headers: req.headers })
     if (!user) return NextResponse.json({ error: 'nicht angemeldet' }, { status: 401 })

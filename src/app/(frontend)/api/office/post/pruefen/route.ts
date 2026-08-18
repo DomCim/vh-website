@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../../lib/data'
 import { postfaecher, ungeleseneAnzahl } from '../../../../../../lib/postfach'
 import { benachrichtige } from '../../../../../../lib/push'
+import { zustandMerken } from '../../../../../../lib/sicherung'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -34,6 +35,10 @@ export async function GET(req: Request) {
 
   const faecher = await postfaecher(payload)
   if (!faecher.length) return NextResponse.json({ ok: true, faecher: 0 })
+
+  // Lebenszeichen: Bleibt es aus, meldet der Wartungslauf, dass hier seit
+  // Stunden niemand mehr nachgesehen hat.
+  await zustandMerken(payload, 'postfach', { ok: true }).catch(() => {})
 
   const ergebnis: { fach: string; ungelesen: number; gemeldet: boolean }[] = []
 

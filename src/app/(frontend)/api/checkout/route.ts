@@ -10,6 +10,7 @@ import {
 import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
+import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import { stripeClient } from '../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +38,12 @@ type CheckoutBody = {
 
 export async function POST(req: Request) {
   try {
+    // Jede Kasse legt eine Bestellung an und ruft Stripe bzw. PayPal — ohne
+    // Bremse ließe sich damit die Nummernreihe zumüllen.
+    if (zuVieleAnfragen(`kasse:${ipAus(req)}`, 20, 10 * 60_000)) {
+      return NextResponse.json({ error: 'too-many-requests' }, { status: 429 })
+    }
+
     const body = (await req.json()) as CheckoutBody
     const locale: Locale = body.locale && isLocale(body.locale) ? body.locale : 'de'
 

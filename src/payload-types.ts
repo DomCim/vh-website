@@ -84,6 +84,7 @@ export interface Config {
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     counters: Counter;
+    'system-state': SystemState;
     'mail-log': MailLog;
     'push-subscriptions': PushSubscription;
     media: Media;
@@ -112,6 +113,7 @@ export interface Config {
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
+    'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -679,6 +681,10 @@ export interface Expense {
   supplierName?: string | null;
   invoiceNumber?: string | null;
   invoiceDate: string;
+  /**
+   * Steht ein Zahlungsziel auf dem Beleg, liest die KI es mit. Vorher bleibt es still; ab drei Tagen vor Fälligkeit meldet sich das Büro jeden Tag, bis der Beleg auf „bezahlt" steht.
+   */
+  dueDate?: string | null;
   netAmount?: number | null;
   vatRate?: number | null;
   vatAmount?: number | null;
@@ -697,6 +703,7 @@ export interface Expense {
     | 'sonstiges';
   paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
   paid?: boolean | null;
+  reminderSentAt?: string | null;
   /**
    * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
    */
@@ -936,6 +943,19 @@ export interface Counter {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-state".
+ */
+export interface SystemState {
+  id: number;
+  key: string;
+  lastRun?: string | null;
+  ok?: boolean | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mail-log".
  */
 export interface MailLog {
@@ -1105,6 +1125,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'counters';
         value: number | Counter;
+      } | null)
+    | ({
+        relationTo: 'system-state';
+        value: number | SystemState;
       } | null)
     | ({
         relationTo: 'mail-log';
@@ -1432,6 +1456,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   supplierName?: T;
   invoiceNumber?: T;
   invoiceDate?: T;
+  dueDate?: T;
   netAmount?: T;
   vatRate?: T;
   vatAmount?: T;
@@ -1439,6 +1464,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   category?: T;
   paymentMethod?: T;
   paid?: T;
+  reminderSentAt?: T;
   deductible?: T;
   notes?: T;
   extraction?:
@@ -1620,6 +1646,18 @@ export interface StocktakesSelect<T extends boolean = true> {
 export interface CountersSelect<T extends boolean = true> {
   key?: T;
   lastNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-state_select".
+ */
+export interface SystemStateSelect<T extends boolean = true> {
+  key?: T;
+  lastRun?: T;
+  ok?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2133,6 +2171,33 @@ export interface Integration {
      */
     readonlyKey?: string | null;
   };
+  /**
+   * Jede Sicherung enthält die vollständige Datenbank und alle Bilder. Ohne zweiten Ort ist sie nur eine Schönwetter-Kopie — deshalb hier die NAS eintragen. Bedient wird das Ganze im Büro unter Sicherung.
+   */
+  sicherung?: {
+    protokoll?: ('smb' | 'webdav') | null;
+    smbServer?: string | null;
+    smbFreigabe?: string | null;
+    /**
+     * Optional, z.B. sicherungen/vh — der Ordner muss auf der NAS schon bestehen.
+     */
+    smbPfad?: string | null;
+    smbBenutzer?: string | null;
+    smbPasswort?: string | null;
+    webdavUrl?: string | null;
+    webdavBenutzer?: string | null;
+    /**
+     * Bei Nextcloud/ownCloud ein App-Passwort verwenden.
+     */
+    webdavPasswort?: string | null;
+    automatik?: boolean | null;
+    /**
+     * Format HH:MM, Zeitzone des Servers.
+     */
+    uhrzeit?: string | null;
+    behaltenLokal?: number | null;
+    behaltenNas?: number | null;
+  };
   facebook?: {
     pageId?: string | null;
     /**
@@ -2345,6 +2410,23 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         apiKey?: T;
         readonlyKey?: T;
+      };
+  sicherung?:
+    | T
+    | {
+        protokoll?: T;
+        smbServer?: T;
+        smbFreigabe?: T;
+        smbPfad?: T;
+        smbBenutzer?: T;
+        smbPasswort?: T;
+        webdavUrl?: T;
+        webdavBenutzer?: T;
+        webdavPasswort?: T;
+        automatik?: T;
+        uhrzeit?: T;
+        behaltenLokal?: T;
+        behaltenNas?: T;
       };
   facebook?:
     | T

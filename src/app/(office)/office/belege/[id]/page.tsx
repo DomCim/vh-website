@@ -37,6 +37,7 @@ export default async function BelegBearbeiten({
           supplierName: beleg.supplierName,
           invoiceNumber: beleg.invoiceNumber,
           invoiceDate: beleg.invoiceDate,
+          dueDate: beleg.dueDate,
           netAmount: beleg.netAmount,
           vatRate: beleg.vatRate,
           vatAmount: beleg.vatAmount,

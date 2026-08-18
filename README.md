@@ -16,7 +16,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 - **Aktionen**: Prozent-/Festrabatte mit Zeitraum, auf alles/Kategorien/Produkte, optional mit Gutscheincode; automatische Anwendung im Warenkorb + Banner auf der Startseite
 - **SEO**: Sitemap, robots.txt, hreflang, Open Graph, schema.org-Produktdaten (Google Rich Results)
 - **Kontaktformular** mit Mailversand
-- **Betrieb**: `/api/healthz` für Monitoring, tägliche DB-Backups (pg_dump-Sidecar, letzte 14 Dumps im Volume `backups`)
+- **Betrieb**: `/api/healthz` für Monitoring, **nächtliche Komplettsicherung** (Datenbank + Bilder in einem Archiv, auf die NAS geschoben, bedienbar im Büro), Sicherheits-Kopfzeilen inkl. CSP, Erinnerung an fällige Belege
 
 ## Lokale Entwicklung
 
@@ -46,7 +46,7 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 4. **NPM-Weiterleitung**: `vh.dominikdill.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vh.dominikdill.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`).
 5. **Erster Login**: `https://vh.dominikdill.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
 
-**Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`. Beide überleben Updates — für Backups diese beiden Volumes sichern (DB z.B. per `pg_dump`).
+**Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`, die fertigen Sicherungen im Volume `backups` (`/app/backups`). Alle drei überleben Updates. Gesichert wird nicht von Hand, sondern über **Büro → Sicherung** (siehe unten).
 
 **Update:** Neues Image wird bei Push auf `main` gebaut → in Portainer „Re-pull image & redeploy". Migrationen laufen automatisch beim Start.
 
@@ -143,6 +143,50 @@ Unter **Büro → Einstellungen** lässt sich jedes Gerät einzeln anmelden. Gem
 Auf dem iPhone kommen Meldungen erst an, wenn das Büro als App auf dem Home-Bildschirm liegt — das ist eine Vorgabe von iOS, kein Fehler.
 
 Neue Post meldet sich nicht von allein: IMAP hat keinen Rückkanal. Dafür gibt es `GET /api/office/post/pruefen`, gedacht für einen Cron-Job im Minutentakt. Absichern über die Umgebungsvariable `CRON_SECRET` und den Kopf `Authorization: Bearer <CRON_SECRET>`.
+
+## Sicherung (Büro → Sicherung)
+
+Jede Sicherung ist ein einzelnes Archiv mit **der gesamten Datenbank und allen Bildern** — beides gehört zusammen, denn die Datenbank verweist auf die Dateien. Daneben liegt im Archiv eine `LIESMICH.txt` mit den Schritten zum Zurückspielen; im Ernstfall liest niemand mehr Dokumentation.
+
+**Netzwerkspeicher (NAS) eintragen:** Admin → **Integrationen → Sicherung**. Zur Wahl stehen
+
+- **Samba/Windows (CIFS)** — der übliche Weg zur NAS: Server (IP oder Name), Freigabe, optional ein Unterordner (muss dort schon bestehen), Benutzer und Passwort.
+- **WebDAV** — für Nextcloud/ownCloud; dort ein App-Passwort verwenden.
+
+Darunter stehen die Uhrzeit des nächtlichen Laufs und wie viele Kopien auf dem Server bzw. auf der NAS aufgehoben werden. Ohne eingetragene NAS läuft die Sicherung trotzdem, bleibt dann aber auf derselben Maschine wie die Daten — das hilft gegen ein gelöschtes Feld, nicht gegen einen verlorenen Server.
+
+**Im Büro** unter *Sicherung*: Stand des letzten Laufs, alle vorhandenen Archive mit Größe, „Jetzt sichern", Herunterladen, einzeln auf die NAS schieben, Löschen. Der erste Lauf dauert am längsten.
+
+**Zurückspielen** (Kurzfassung, ausführlich in der `LIESMICH.txt` im Archiv):
+
+```sh
+tar -xzf vh-20260818-0330.tar.gz
+pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump
+# Inhalt von medien/ nach /app/media im Web-Container kopieren, dann Container neu starten
+```
+
+Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist eine Vermutung.
+
+## Wartungslauf (Cron)
+
+Ein einziger Aufruf im Viertelstundentakt erledigt alles Zeitgesteuerte:
+
+```sh
+*/15 * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
+```
+
+Der Lauf entscheidet selbst, was ansteht:
+
+- **Nächtliche Sicherung** zur eingestellten Uhrzeit (einmal pro Tag, Riegel gegen Doppelläufe).
+- **Erinnerung an fällige Belege:** Steht auf einem Eingangsbeleg ein Zahlungsziel und der Beleg ist noch nicht auf „bezahlt", meldet sich das Büro **ab drei Tagen vor Fälligkeit jeden Tag** per Push — vorher bleibt es still. Das Zahlungsziel liest Claude beim Erfassen mit; steht dort nur „zahlbar innerhalb 30 Tagen", rechnet es die KI vom Rechnungsdatum aus.
+- **Aufräumen:** abgelaufene Anmeldecodes des Kundenportals, Mailprotokoll älter als zwölf Monate (`MAILLOG_MONATE`).
+- **Stillstandsprüfung:** Meldet, wenn Sicherung oder Postfach-Abruf seit Stunden nichts mehr getan haben — sonst fällt ein toter Cron erst auf, wenn man ihn braucht.
+
+Ohne gesetztes `CRON_SECRET` ist der Endpunkt geschlossen.
+
+## Sicherheits-Kopfzeilen
+
+Die Anwendung schickt CSP, HSTS, `X-Frame-Options`, `Referrer-Policy` und `Permissions-Policy` mit (siehe `next.config.mjs`). Eine Sache ist dabei zu beachten: Wird im Admin eine **cookiefreie Besucherstatistik** hinterlegt, muss deren Herkunft zusätzlich in der Umgebungsvariable `CSP_EXTRA_SCRIPT` stehen (z.B. `https://plausible.io`) — sonst blockiert der Browser das Skript stillschweigend.
 
 ### Zugänge anlegen
 
@@ -252,6 +296,9 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
 - [ ] Optional: Cron-Job auf `/api/office/post/pruefen` (mit `CRON_SECRET`), damit neue Post gemeldet wird
+- [ ] Cron-Job auf `/api/wartung` (alle 15 Min) — Sicherung, Beleg-Erinnerungen, Aufräumen
+- [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
+- [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
 - [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
 - [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit

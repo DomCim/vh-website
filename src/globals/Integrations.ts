@@ -354,6 +354,105 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      name: 'sicherung',
+      label: 'Sicherung (Netzwerkspeicher)',
+      type: 'group',
+      admin: {
+        description:
+          'Jede Sicherung enthält die vollständige Datenbank und alle Bilder. Ohne zweiten Ort ist sie nur eine Schönwetter-Kopie — deshalb hier die NAS eintragen. Bedient wird das Ganze im Büro unter Sicherung.',
+      },
+      fields: [
+        {
+          name: 'protokoll',
+          label: 'Übertragungsweg',
+          type: 'select',
+          defaultValue: 'smb',
+          options: [
+            { label: 'Samba/Windows (CIFS) — für die NAS', value: 'smb' },
+            { label: 'WebDAV (Nextcloud/ownCloud)', value: 'webdav' },
+          ],
+        },
+        {
+          type: 'row',
+          admin: { condition: (_, gesch) => gesch?.protokoll !== 'webdav' },
+          fields: [
+            { name: 'smbServer', label: 'Server (IP oder Name)', type: 'text' },
+            { name: 'smbFreigabe', label: 'Freigabe', type: 'text' },
+          ],
+        },
+        {
+          name: 'smbPfad',
+          label: 'Unterordner in der Freigabe',
+          type: 'text',
+          admin: {
+            condition: (_, gesch) => gesch?.protokoll !== 'webdav',
+            description: 'Optional, z.B. sicherungen/vh — der Ordner muss auf der NAS schon bestehen.',
+          },
+        },
+        {
+          type: 'row',
+          admin: { condition: (_, gesch) => gesch?.protokoll !== 'webdav' },
+          fields: [
+            { name: 'smbBenutzer', label: 'Benutzer', type: 'text' },
+            { name: 'smbPasswort', label: 'Passwort', type: 'text' },
+          ],
+        },
+        {
+          name: 'webdavUrl',
+          label: 'WebDAV-Ordner-Adresse',
+          type: 'text',
+          admin: { condition: (_, gesch) => gesch?.protokoll === 'webdav' },
+        },
+        {
+          type: 'row',
+          admin: { condition: (_, gesch) => gesch?.protokoll === 'webdav' },
+          fields: [
+            { name: 'webdavBenutzer', label: 'Benutzer', type: 'text' },
+            {
+              name: 'webdavPasswort',
+              label: 'Passwort',
+              type: 'text',
+              admin: { description: 'Bei Nextcloud/ownCloud ein App-Passwort verwenden.' },
+            },
+          ],
+        },
+        {
+          name: 'automatik',
+          label: 'Jede Nacht automatisch sichern',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'uhrzeit',
+              label: 'Uhrzeit',
+              type: 'text',
+              defaultValue: '03:30',
+              admin: { description: 'Format HH:MM, Zeitzone des Servers.' },
+            },
+            {
+              name: 'behaltenLokal',
+              label: 'Kopien auf dem Server behalten',
+              type: 'number',
+              defaultValue: 7,
+              min: 1,
+              max: 50,
+            },
+            {
+              name: 'behaltenNas',
+              label: 'Kopien auf der NAS behalten',
+              type: 'number',
+              defaultValue: 30,
+              min: 1,
+              max: 365,
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'facebook',
       label: 'Facebook & Instagram (News-Autopost)',
       type: 'group',
