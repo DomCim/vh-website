@@ -50,6 +50,22 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 
 **Update:** Neues Image wird bei Push auf `main` gebaut → in Portainer „Re-pull image & redeploy". Migrationen laufen automatisch beim Start.
 
+**Automatisch ausrollen (optional):** Portainer bietet je Stack einen Webhook an, der genau das auslöst — er ist aber nur im Heimnetz erreichbar, GitHub kommt also nicht heran. Dazwischen steht Home Assistant, das über Nabu Casa von außen ansprechbar ist:
+
+1. In Home Assistant eine Automatisierung mit **Webhook-Auslöser** anlegen (`local_only: false`) und dafür einen **Cloudhook** erzeugen — die Adresse lautet dann `https://hooks.nabu.casa/…`.
+2. Als Aktion einen `shell_command` aufrufen, der den Portainer-Webhook intern anstößt:
+
+   ```yaml
+   shell_command:
+     vh_website_ausrollen: >-
+       curl -fsS -k -X POST --max-time 60
+       "https://<portainer-ip>:9443/api/stacks/webhooks/<stack-webhook-id>"
+   ```
+
+   `-k`, weil Portainer auf der IP ein selbstsigniertes Zertifikat ausliefert.
+3. In der Automatisierung eine Bedingung auf ein vereinbartes Token im Rumpf setzen — sonst würde eine durchgesickerte Webhook-Adresse allein zum Ausrollen reichen.
+4. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** anlegen: `HA_DEPLOY_WEBHOOK` (die Cloudhook-Adresse) und `HA_DEPLOY_TOKEN` (dasselbe Token). Der letzte Schritt in `.github/workflows/docker.yml` ruft den Webhook nach jedem erfolgreichen `latest`-Build auf; ohne hinterlegte Secrets überspringt er sich stillschweigend.
+
 ## Stripe einrichten
 
 1. [Stripe-Konto](https://dashboard.stripe.com) → API-Keys → `STRIPE_SECRET_KEY` setzen (erst Test-, später Live-Key).
