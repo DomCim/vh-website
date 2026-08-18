@@ -33,6 +33,8 @@
     "@payloadcms/richtext-lexical": "^3.49.0",
     "@payloadcms/translations": "^3.88.0",
     "@payloadcms/ui": "3.88.0",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.2",
     "imapflow": "^1.7.1",
     "lenis": "^1.3.26",
     "mailparser": "^3.9.15",

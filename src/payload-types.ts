@@ -1118,6 +1118,17 @@ export interface User {
    * Wird über die Einrichtung unten aktiviert.
    */
   mfaEnabled?: boolean | null;
+  passkeys?:
+    | {
+        credentialId: string;
+        publicKey: string;
+        counter?: number | null;
+        transports?: string | null;
+        label?: string | null;
+        lastUsedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   mfaSecret?: string | null;
   mfaPendingSecret?: string | null;
   mfaBackupCodes?:
@@ -1939,6 +1950,17 @@ export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   mfaEnabled?: T;
+  passkeys?:
+    | T
+    | {
+        credentialId?: T;
+        publicKey?: T;
+        counter?: T;
+        transports?: T;
+        label?: T;
+        lastUsedAt?: T;
+        id?: T;
+      };
   mfaSecret?: T;
   mfaPendingSecret?: T;
   mfaBackupCodes?:

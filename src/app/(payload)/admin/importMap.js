@@ -26,8 +26,10 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { KiNewsTeaser as KiNewsTeaser_e1b8e5a5267aebfe662bcfa2d122f8f8 } from '../../../components/admin/KiTextHilfe'
 import { KiReferenzKurz as KiReferenzKurz_e1b8e5a5267aebfe662bcfa2d122f8f8 } from '../../../components/admin/KiTextHilfe'
 import { MfaSetup as MfaSetup_2460e88e3a92857299a8b2428a52daf7 } from '../../../components/admin/MfaSetup'
+import { PasskeyVerwaltung as PasskeyVerwaltung_67aa93c02ff4dee12f4f9535ffacd7b0 } from '../../../components/admin/PasskeyVerwaltung'
 import { GeheimFeld as GeheimFeld_4cf5d07717a4713d98a027a50101e5ce } from '../../../components/admin/GeheimFeld'
 import { McpZugang as McpZugang_54fb5660baf3559f1124a113f4b3356c } from '../../../components/admin/McpZugang'
+import { PasskeyLoginKnopf as PasskeyLoginKnopf_2df1e8357d178428c726587952693214 } from '../../../components/admin/PasskeyLoginKnopf'
 import { MfaLoginField as MfaLoginField_8ec8b34b35adc8b6d4f4c0554cd4539d } from '../../../components/admin/MfaLoginField'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -61,8 +63,10 @@ export const importMap = {
   "/components/admin/KiTextHilfe#KiNewsTeaser": KiNewsTeaser_e1b8e5a5267aebfe662bcfa2d122f8f8,
   "/components/admin/KiTextHilfe#KiReferenzKurz": KiReferenzKurz_e1b8e5a5267aebfe662bcfa2d122f8f8,
   "/components/admin/MfaSetup#MfaSetup": MfaSetup_2460e88e3a92857299a8b2428a52daf7,
+  "/components/admin/PasskeyVerwaltung#PasskeyVerwaltung": PasskeyVerwaltung_67aa93c02ff4dee12f4f9535ffacd7b0,
   "/components/admin/GeheimFeld#GeheimFeld": GeheimFeld_4cf5d07717a4713d98a027a50101e5ce,
   "/components/admin/McpZugang#McpZugang": McpZugang_54fb5660baf3559f1124a113f4b3356c,
+  "/components/admin/PasskeyLoginKnopf#PasskeyLoginKnopf": PasskeyLoginKnopf_2df1e8357d178428c726587952693214,
   "/components/admin/MfaLoginField#MfaLoginField": MfaLoginField_8ec8b34b35adc8b6d4f4c0554cd4539d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

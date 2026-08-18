@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { PasskeyAnmeldung } from './PasskeyAnmeldung'
+
 /**
  * Anmeldung fürs Büro.
  *
@@ -104,6 +106,16 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
       <button type="submit" className="buero-knopf" disabled={laeuft}>
         {laeuft ? 'meldet an …' : 'Anmelden'}
       </button>
+
+      {/* Der schnelle Weg steht unter dem gewohnten — wer ihn eingerichtet
+          hat, findet ihn; wer nicht, wird nicht damit behelligt. */}
+      <PasskeyAnmeldung
+        ziel={ziel}
+        aufErfolg={() => {
+          router.push(ziel)
+          router.refresh()
+        }}
+      />
 
       <p style={{ fontSize: '.8rem', color: 'var(--buero-tinte-leise)', marginBottom: 0 }}>
         Dieselbe Anmeldung gilt auch für die Website-Verwaltung.

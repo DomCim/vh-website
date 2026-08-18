@@ -60,7 +60,10 @@ export default buildConfig({
     components: {
       // Das Änderungsprotokoll steht im Büro unter /office/neuerungen — es
       // geht den Betrieb an, nicht die Redaktion.
-      beforeLogin: ['/components/admin/MfaLoginField#MfaLoginField'],
+      beforeLogin: [
+        '/components/admin/PasskeyLoginKnopf#PasskeyLoginKnopf',
+        '/components/admin/MfaLoginField#MfaLoginField',
+      ],
     },
   },
   collections: [

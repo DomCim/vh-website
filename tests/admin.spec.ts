@@ -25,7 +25,8 @@ test.describe('Verwaltung', () => {
     await page.goto('/admin/login')
     await page.fill('#field-email', EMAIL)
     await page.fill('#field-password', PASSWORT!)
-    await page.getByRole('button', { name: /anmelden|login/i }).click()
+    // Der Passkey-Knopf steht daneben — hier ist das Anmeldeformular gemeint
+    await page.locator('form.login__form button[type="submit"], form button[type="submit"]').first().click()
     await page.waitForTimeout(4000)
   })
 

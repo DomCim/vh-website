@@ -17,6 +17,7 @@ import * as migration_20260818_193349_werkstatt from './20260818_193349_werkstat
 import * as migration_20260818_194322_bilder from './20260818_194322_bilder';
 import * as migration_20260818_201010_takt from './20260818_201010_takt';
 import * as migration_20260818_201729_takt_aufbewahrung from './20260818_201729_takt_aufbewahrung';
+import * as migration_20260818_211055_passkeys from './20260818_211055_passkeys';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20260818_201729_takt_aufbewahrung.up,
     down: migration_20260818_201729_takt_aufbewahrung.down,
-    name: '20260818_201729_takt_aufbewahrung'
+    name: '20260818_201729_takt_aufbewahrung',
+  },
+  {
+    up: migration_20260818_211055_passkeys.up,
+    down: migration_20260818_211055_passkeys.down,
+    name: '20260818_211055_passkeys'
   },
 ];

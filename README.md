@@ -273,9 +273,24 @@ Der Lauf entscheidet selbst, was ansteht:
 
 Ohne gesetztes `CRON_SECRET` ist der Endpunkt geschlossen.
 
-## Anmeldung und Geheimnisse
+## Anmeldung, Passkeys und Geheimnisse
 
-**Wie lange eine Anmeldung gilt:** 30 Tage. Payloads Standard sind zwei Stunden — gedacht für ein Redaktionssystem, an dem jemand eine Stunde arbeitet, nicht für ein Tablet in der Werkstatt, das den ganzen Tag am Auftrag hängt und bei jeder Anmeldung einen Code aus der Authenticator-App verlangt. Vertretbar ist die längere Frist, weil davor eine Sperre nach zehn Fehlversuchen steht, der zweite Faktor beim Anmelden gilt und ins Büro nur die Inhaberrolle kommt. **Ein geändertes Passwort macht alle bestehenden Anmeldungen ungültig** — das ist der Weg, wenn ein Gerät abhandenkommt. Das Kundenportal gilt ebenfalls 30 Tage.
+**Wie lange eine Anmeldung gilt:** eine Woche — und sie verlängert sich, solange sie benutzt wird. Payloads Standard sind zwei Stunden; das ist für ein Redaktionssystem gedacht, nicht für ein Tablet in der Werkstatt, das den ganzen Tag am Auftrag hängt und bei jeder Anmeldung einen Code aus der Authenticator-App verlangt. Wer täglich arbeitet, bleibt angemeldet; ein Gerät, das eine Woche nicht angefasst wurde, ist es nicht mehr. Das ist sicherer als ein starres langes Fenster.
+
+**Eine Anmeldung überlebt ein Ausrollen.** Das Token ist mit `PAYLOAD_SECRET` signiert und die Sitzung liegt in der Datenbank — beides überdauert einen neuen Container. Nur wenn `PAYLOAD_SECRET` im Stack geändert wird, sind alle Anmeldungen weg. (Nachgestellt und geprüft: anmelden, Container neu starten, weiterarbeiten.)
+
+**Ein geändertes Passwort macht alle bestehenden Anmeldungen ungültig** — Passkey-Sitzungen eingeschlossen. Das ist der Weg, wenn ein Gerät abhandenkommt. Das Kundenportal gilt weiterhin 30 Tage.
+
+### Anmelden mit Face ID, Fingerabdruck oder Geräte-PIN (Passkeys)
+
+Statt langem Passwort plus sechsstelligem Code: ein Knopf, ein Blick aufs Gerät, drin. Der Schlüssel entsteht im Gerät und verlässt es nie; herausgegeben wird er erst nach Gesicht, Finger oder PIN. Er lässt sich nicht abtippen, nicht abfischen und nicht auf einer gefälschten Seite eingeben — der Browser gibt ihn nur an die Adresse heraus, für die er angelegt wurde.
+
+Eingerichtet wird das **je Benutzer**, genau wie die Zwei-Faktor-Anmeldung: im Admin unter **Mein Konto → „Dieses Gerät hinzufügen"**. Wichtig dabei:
+
+- Das muss an dem Gerät passieren, mit dem man sich später anmelden will. Ein iPhone reicht seinen Passkey über den Schlüsselbund an iPad und Mac weiter; für ein Android-Handy legt man einen eigenen an. Mehrere Geräte sind kein Problem, jedes bekommt einen eigenen Eintrag.
+- **Passkeys brauchen https.** Auf `http://localhost` geht es zum Ausprobieren, im Betrieb nur über die verschlüsselte Adresse.
+- Die Anmeldung mit Passwort bleibt bestehen — ein Gerät kann kaputtgehen. Der Passkey-Knopf steht auf beiden Anmeldeseiten (`/office/login` und `/admin`) und erscheint nur, wenn das Gerät ihn überhaupt kann.
+- **Kein zusätzlicher Zwei-Faktor-Code**: Ein Passkey ist bereits beides — das Gerät, das man hat, und das Gesicht (oder der Finger), das man ist.
 
 **Passwörter und Schlüssel** (SMTP, Postfächer, Stripe, PayPal, Anthropic, MCP, Facebook, NAS) stehen in der Verwaltung nicht mehr im Klartext: Sie sind verdeckt wie ein Passwortfeld, lassen sich mit einem Knopf aufdecken — und mit einem zweiten kopieren, ohne sie überhaupt sichtbar zu machen. Denn getippt werden solche Werte nie, sie werden von woanders hierher und wieder zurück kopiert.
 
