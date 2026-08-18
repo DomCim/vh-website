@@ -34,5 +34,5 @@ if [ "$TRANSLATE_EN" = "true" ]; then
   node_modules/.bin/payload run scripts/translate-en.ts || echo "EN-Übersetzung fehlgeschlagen."
 fi
 
-echo "Starte Next.js …"
-exec node_modules/.bin/next start -p "${PORT:-3000}"
+echo "Starte Server …"
+exec node server.mjs

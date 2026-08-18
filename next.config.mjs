@@ -70,6 +70,33 @@ const nextConfig = {
     remotePatterns: [],
     formats: ['image/avif', 'image/webp'],
   },
+  /**
+   * Next übersetzt `instrumentation.ts` auch für die Edge-Laufzeit — selbst
+   * wenn dort nichts davon läuft (der Takt steigt bei `NEXT_RUNTIME !==
+   * 'nodejs'` sofort wieder aus). Übersetzt wird trotzdem, und dabei stolpert
+   * der Bündler über Node-Bausteine wie `crypto`, die es in der Edge-Laufzeit
+   * nicht gibt: In der Entwicklung antwortete daraufhin jede Seite mit 500.
+   *
+   * Für diesen einen Zweig genügt es, die Bausteine als „gibt es nicht" zu
+   * melden — aufgerufen werden sie dort ohnehin nie.
+   */
+  webpack: (config, { nextRuntime }) => {
+    if (nextRuntime === 'edge') {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+        fs: false,
+        net: false,
+        os: false,
+        path: false,
+        stream: false,
+        tls: false,
+        zlib: false,
+        child_process: false,
+      }
+    }
+    return config
+  },
   async headers() {
     return [
       {
