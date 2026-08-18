@@ -26,6 +26,11 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000
 
+# Wird vom Workflow mitgegeben; /api/healthz meldet ihn zurück, damit nach
+# einem Ausrollen erkennbar ist, welcher Stand wirklich läuft
+ARG GIT_SHA=unbekannt
+ENV APP_VERSION=$GIT_SHA
+
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/.next ./.next

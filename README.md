@@ -64,7 +64,9 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 
    `-k`, weil Portainer auf der IP ein selbstsigniertes Zertifikat ausliefert.
 3. In der Automatisierung eine Bedingung auf ein vereinbartes Token im Rumpf setzen — sonst würde eine durchgesickerte Webhook-Adresse allein zum Ausrollen reichen.
-4. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** anlegen: `HA_DEPLOY_WEBHOOK` (die Cloudhook-Adresse) und `HA_DEPLOY_TOKEN` (dasselbe Token). Der letzte Schritt in `.github/workflows/docker.yml` ruft den Webhook nach jedem erfolgreichen `latest`-Build auf; ohne hinterlegte Secrets überspringt er sich stillschweigend.
+4. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** anlegen: `HA_DEPLOY_WEBHOOK` (die Webhook-Adresse) und `HA_DEPLOY_TOKEN` (dasselbe Token). Der letzte Schritt in `.github/workflows/docker.yml` ruft den Webhook nach jedem erfolgreichen `latest`-Build auf; ohne hinterlegte Secrets überspringt er sich stillschweigend.
+
+Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
 
 ## Stripe einrichten
 
