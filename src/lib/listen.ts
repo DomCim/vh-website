@@ -20,3 +20,10 @@ export const AUSGABEN_KATEGORIEN = [
   { label: 'Gebühren & Bankkosten', value: 'gebuehren' },
   { label: 'Sonstiges', value: 'sonstiges' },
 ] as const
+
+/** Wie die drei Stufen des Mahnwesens heißen. */
+export const MAHN_TITEL: Record<1 | 2 | 3, string> = {
+  1: 'Zahlungserinnerung',
+  2: 'Mahnung',
+  3: 'Letzte Mahnung',
+}

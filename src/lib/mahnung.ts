@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit'
 
 import type { CompanyInfo } from './mail'
+import { MAHN_TITEL } from './listen'
 import { briefkopf, fusszeile, LINKS, RECHTS, schriftenSetzen } from './pdfkopf'
 
 /**
@@ -41,11 +42,7 @@ const euro = (v: number) =>
 const tag = (v?: string | null | Date) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
 
-export const MAHN_TITEL: Record<Mahnstufe, string> = {
-  1: 'Zahlungserinnerung',
-  2: 'Mahnung',
-  3: 'Letzte Mahnung',
-}
+export { MAHN_TITEL } from './listen'
 
 /** Tage zwischen Fälligkeit und heute — für den Satz „seit X Tagen überfällig" */
 export function tageUeberfaellig(faelligAm?: string | null): number {

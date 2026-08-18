@@ -1,12 +1,11 @@
+'use client'
+
 import React from 'react'
 
 import { RechnungFormular } from '../../../../../components/office/RechnungFormular'
-import { bueroBenutzer } from '../../../../../lib/office'
 
-export const dynamic = 'force-dynamic'
-
-export default async function NeueRechnung() {
-  await bueroBenutzer()
+/** Neue Rechnung — braucht nichts vom Server. */
+export default function NeueRechnungSeite() {
   return (
     <>
       <h1>Rechnung schreiben</h1>

@@ -8,7 +8,7 @@ import {
   istBereich,
 } from '../../../../../lib/bereiche'
 import { payloadClient } from '../../../../../lib/data'
-import { getIntegrations } from '../../../../../lib/settings'
+import { firmenAngaben, getIntegrations } from '../../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +48,11 @@ type BereichsAntwort = {
  * bliebe bei einem ausgegrauten Knopf stehen, ohne zu sagen warum.
  */
 async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
-  const rahmen = { kiVerfuegbar: false, stundensatz: 65 }
+  const rahmen = {
+    kiVerfuegbar: false,
+    stundensatz: 65,
+    firma: { siret: '', vatId: '', iban: '' },
+  }
   try {
     const integrationen = await getIntegrations(payload)
     rahmen.kiVerfuegbar = Boolean(integrationen.anthropic.apiKey)
@@ -60,6 +64,12 @@ async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
       craft?: { hourlyRate?: number | null } | null
     }
     rahmen.stundensatz = einstellungen?.craft?.hourlyRate ?? 65
+    const angaben = firmenAngaben(einstellungen)
+    rahmen.firma = {
+      siret: angaben.siret ?? '',
+      vatId: angaben.vatId ?? '',
+      iban: angaben.iban ?? '',
+    }
   } catch {
     // Voreinstellung genügt
   }
