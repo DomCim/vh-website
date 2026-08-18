@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Inventur — der gezählte Bestand zu einem Stichtag.
@@ -30,6 +31,8 @@ export const Stocktakes: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    // Offene Büro-Seiten über Änderungen unterrichten
+    afterDelete: liveHooks('inventur').afterDelete,
     beforeChange: [
       ({ data, originalDoc }) => {
         if (originalDoc?.status === 'abgeschlossen' && data.status === 'abgeschlossen') {
@@ -65,6 +68,7 @@ export const Stocktakes: CollectionConfig = {
         req.payload.logger.info(`Inventur "${doc.title}" abgeschlossen`)
         return doc
       },
+      ...liveHooks('inventur').afterChange,
     ],
   },
   fields: [

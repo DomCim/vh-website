@@ -85,6 +85,7 @@ export interface Config {
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     counters: Counter;
+    deletions: Deletion;
     'system-state': SystemState;
     'mail-log': MailLog;
     'push-subscriptions': PushSubscription;
@@ -115,6 +116,7 @@ export interface Config {
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
+    deletions: DeletionsSelect<false> | DeletionsSelect<true>;
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
@@ -1054,6 +1056,17 @@ export interface Counter {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deletions".
+ */
+export interface Deletion {
+  id: number;
+  bereich: string;
+  datensatz: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "system-state".
  */
 export interface SystemState {
@@ -1251,6 +1264,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'counters';
         value: number | Counter;
+      } | null)
+    | ({
+        relationTo: 'deletions';
+        value: number | Deletion;
       } | null)
     | ({
         relationTo: 'system-state';
@@ -1825,6 +1842,16 @@ export interface StocktakesSelect<T extends boolean = true> {
 export interface CountersSelect<T extends boolean = true> {
   key?: T;
   lastNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deletions_select".
+ */
+export interface DeletionsSelect<T extends boolean = true> {
+  bereich?: T;
+  datensatz?: T;
   updatedAt?: T;
   createdAt?: T;
 }

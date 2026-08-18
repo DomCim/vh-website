@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 
+import type { LiveBereich } from './bereiche'
+
 /**
  * Live-Aktualisierung im Büro.
  *
@@ -20,18 +22,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
  * Node-Prozess, der Server legt die Sammelstelle an, bevor Next startet.
  */
 
-export type LiveBereich =
-  | 'anfragen'
-  | 'angebote'
-  | 'auftraege'
-  | 'belege'
-  | 'bestellungen'
-  | 'inventar'
-  | 'kundenstimmen'
-  | 'newsletter'
-  | 'partner'
-  | 'post'
-  | 'rechnungen'
+export type { LiveBereich } from './bereiche'
 
 export type LiveEreignis = {
   bereich: LiveBereich
