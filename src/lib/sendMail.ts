@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 import nodemailer from 'nodemailer'
 import type { Payload } from 'payload'
 
@@ -95,6 +98,14 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
     auth: email.smtpUser ? { user: email.smtpUser, pass: email.smtpPass } : undefined,
   })
 
+  // Das Logo reist als Anhang mit — nachgeladene Bilder blockieren die
+  // meisten Mailprogramme, und dann stünde die Mail ohne Kopf da
+  const logoDatei = path.join(process.cwd(), 'public', 'logo.png')
+  const logoAnhang =
+    mail.html.includes('cid:vh-logo') && fs.existsSync(logoDatei)
+      ? [{ filename: 'logo.png', path: logoDatei, cid: 'vh-logo' }]
+      : []
+
   try {
     await transport.sendMail({
       from: `"${email.fromName}" <${email.fromAddress}>`,
@@ -102,7 +113,7 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
       replyTo: mail.replyTo,
       subject: mail.subject,
       html: mail.html,
-      attachments: mail.attachments,
+      attachments: [...logoAnhang, ...(mail.attachments ?? [])],
     })
     await protokollieren(payload, mail, absender, 'gesendet')
   } catch (err) {

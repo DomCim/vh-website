@@ -3,7 +3,7 @@ import path from 'path'
 
 import PDFDocument from 'pdfkit'
 
-import { type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
+import { BRONZE, type CompanyInfo, firmenzeile, pflichtangaben } from './mail'
 
 /**
  * Rechnungs-PDF.
@@ -131,15 +131,23 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     doc.moveDown(0.2)
   }
 
-  // Corten-Strich wie auf der Website — ein Akzent, mehr nicht
-  doc
-    .moveTo(links, doc.y)
-    .lineTo(links + 64, doc.y)
-    .lineWidth(1.5)
-    .strokeColor('#a86b3d')
-    .stroke()
-  doc.lineWidth(1)
-  doc.moveDown(0.6)
+  /**
+   * Corten-Strich wie auf der Website: läuft nach rechts weich aus, je größer
+   * die Überschrift, desto länger der Strich. Im PDF als echter Verlauf —
+   * anders als in der Mail muss hier kein Outlook mitspielen.
+   */
+  const cortenStrich = (gross = false) => {
+    const breite = gross ? 112 : 40
+    const hoehe = gross ? 2.5 : 1.5
+    const y = doc.y + (gross ? 4 : 3)
+    const verlauf = doc.linearGradient(links, y, links + breite, y)
+    verlauf.stop(0, BRONZE).stop(0.3, BRONZE).stop(1, BRONZE, 0)
+    doc.rect(links, y, breite, hoehe).fill(verlauf)
+    doc.fillColor('#000')
+    doc.y = y + hoehe + (gross ? 10 : 7)
+  }
+
+  cortenStrich(true)
 
   doc.fontSize(9).fillColor('#666')
   const absender = [firmenzeile(company), company?.address].filter(Boolean).join(' · ')
@@ -149,6 +157,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   const istAngebot = daten.art === 'angebot'
   doc.moveDown(1.5)
   doc.fontSize(14).text(istAngebot ? 'Angebot' : 'Rechnung')
+  cortenStrich()
   doc.fontSize(10)
   doc.text(`${istAngebot ? 'Angebotsnummer' : 'Rechnungsnummer'}: ${daten.nummer}`)
   doc.text(`${istAngebot ? 'Angebotsdatum' : 'Rechnungsdatum'}: ${datum.toLocaleDateString('de-DE')}`)
@@ -168,7 +177,8 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
 
   // ── Empfänger ─────────────────────────────────────────────────────────────
   doc.moveDown(1)
-  doc.fontSize(10).text(istAngebot ? 'Angebot für' : 'Rechnungsempfänger', { underline: true })
+  doc.fontSize(10).text(istAngebot ? 'Angebot für' : 'Rechnungsempfänger')
+  cortenStrich()
   if (daten.empfaenger.name) doc.text(daten.empfaenger.name)
   for (const zeile of daten.empfaenger.anschrift ?? []) if (zeile) doc.text(zeile)
   if (daten.empfaenger.email) doc.text(daten.empfaenger.email)

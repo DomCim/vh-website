@@ -94,6 +94,48 @@ function companyFooter(company?: CompanyInfo): string {
   return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`
 }
 
+/** Corten-Ton der Website */
+export const BRONZE = '#a5622d'
+
+/**
+ * Corten-Strich unter einer Überschrift — dieselbe Form wie auf der Website:
+ * 112 × 3 px bei großen, 40 × 2 px bei kleinen Überschriften, nach rechts
+ * auslaufend.
+ *
+ * Der Verlauf liegt als `background-image` über einer einfarbigen Fläche:
+ * Outlook kann keine Verläufe und zeigt dann den vollen Strich — richtig
+ * aussehen tut es in beiden Fällen.
+ */
+export function cortenStrich(gross = false): string {
+  const breite = gross ? 112 : 40
+  const hoehe = gross ? 3 : 2
+  const oben = gross ? 12 : 7
+  const unten = gross ? 20 : 12
+  return `<div style="width:${breite}px;height:${hoehe}px;border-radius:9999px;background-color:${BRONZE};background-image:linear-gradient(to right,${BRONZE} 0%,${BRONZE} 30%,rgba(165,98,45,0) 100%);margin:${oben}px 0 ${unten}px"></div>`
+}
+
+/** Überschrift mit Corten-Strich darunter */
+export function ueberschrift(text: string, gross = false): string {
+  const groesse = gross ? 17 : 14
+  return `<h2 style="font-size:${groesse}px;font-weight:600;margin:26px 0 0">${text}</h2>${cortenStrich(gross)}`
+}
+
+/**
+ * Briefbogen für alle Mails — die der Website wie die aus dem Büro.
+ *
+ * Das Logo wird über `cid:vh-logo` eingebunden und als Anhang mitgeschickt;
+ * ein aus dem Netz nachgeladenes Bild blockieren die meisten Mailprogramme,
+ * und dann stünde die Mail ohne Kopf da.
+ */
+export function briefbogen(inhalt: string, company?: CompanyInfo, mitFuss = true): string {
+  return `<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px;font-size:14px;line-height:1.55">
+  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:18px;display:block;border:0" />
+  ${cortenStrich(true)}
+  ${inhalt}
+  ${mitFuss ? companyFooter(company) : ''}
+</div>`
+}
+
 function orderTable(order: OrderLike, company?: CompanyInfo): string {
   const rows = (order.items ?? [])
     .map((item) => {
@@ -167,20 +209,20 @@ export function orderConfirmationEmail(
   return {
     to: order.customer?.email ?? '',
     subject: `Bestellbestätigung ${order.orderNumber} – Vincent Hellmann`,
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-        <p>Guten Tag ${order.customer?.name ?? ''},</p>
+    html: briefbogen(
+      `<p>Guten Tag ${order.customer?.name ?? ''},</p>
         <p>vielen Dank für Ihre Bestellung <strong>${order.orderNumber}</strong>.
         Ihre Zahlung ist bei uns eingegangen. Ihr Stück wird jetzt für Sie gefertigt — wir melden uns,
         sobald es in die Werkstatt geht.</p>
         ${fertigungsHinweis(order, craftNotice)}
+        ${ueberschrift('Ihre Bestellung')}
         ${orderTable(order, company)}
-        <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
+        ${ueberschrift(order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse')}
+        <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
-        ${companyFooter(company)}
-      </div>`,
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+      company,
+    ),
   }
 }
 
@@ -188,14 +230,16 @@ export function orderNotificationEmail(order: OrderLike, to: string, company?: C
   return {
     to,
     subject: `Neue Bestellung ${order.orderNumber} (${euro(order.total)})`,
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h2>Neue bezahlte Bestellung ${order.orderNumber}</h2>
+    html: briefbogen(
+      `${ueberschrift(`Neue bezahlte Bestellung ${order.orderNumber}`, true)}
         <p>Kunde: ${order.customer?.name ?? ''} (${order.customer?.email ?? ''})</p>
         ${orderTable(order, company)}
-        <p style="margin-top:20px"><strong>${order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse'}</strong><br>${addressBlock(order)}</p>
-        <p>Details im Admin-Panel unter „Bestellungen".</p>
-      </div>`,
+        ${ueberschrift(order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse')}
+        <p>${addressBlock(order)}</p>
+        <p>Der Vorgang steht im Büro unter „Bestellungen".</p>`,
+      company,
+      false,
+    ),
   }
 }
 
@@ -203,16 +247,14 @@ export function orderInProductionEmail(order: OrderLike, craftNotice?: string | 
   return {
     to: order.customer?.email ?? '',
     subject: `Ihre Bestellung ${order.orderNumber} ist in Fertigung – Vincent Hellmann`,
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-        <p>Guten Tag ${order.customer?.name ?? ''},</p>
+    html: briefbogen(
+      `<p>Guten Tag ${order.customer?.name ?? ''},</p>
         <p>Ihre Bestellung <strong>${order.orderNumber}</strong> ist in der Werkstatt und wird jetzt
         gefertigt. Sobald sie unterwegs ist, bekommen Sie die Sendungsnummer von uns.</p>
         ${fertigungsHinweis(order, craftNotice)}
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
-      </div>`,
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+    ),
   }
 }
 
@@ -227,16 +269,15 @@ export function orderShippedEmail(order: OrderLike) {
   return {
     to: order.customer?.email ?? '',
     subject: `Ihre Bestellung ${order.orderNumber} ist unterwegs – Vincent Hellmann`,
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-        <p>Guten Tag ${order.customer?.name ?? ''},</p>
+    html: briefbogen(
+      `<p>Guten Tag ${order.customer?.name ?? ''},</p>
         <p>gute Nachrichten: Ihre Bestellung <strong>${order.orderNumber}</strong> wurde soeben versendet.</p>
         ${tracking}
-        <p style="margin-top:20px"><strong>Lieferadresse</strong><br>${addressBlock(order)}</p>
+        ${ueberschrift('Lieferadresse')}
+        <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>
-      </div>`,
+        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+    ),
   }
 }
 
@@ -258,9 +299,11 @@ export function contactEmail(
     subject: isProductInquiry
       ? `Produktanfrage: ${data.productTitle} (von ${data.name})`
       : `Kontaktanfrage von ${data.name}`,
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px">
-        <h2>${isProductInquiry ? 'Neue Produktanfrage über die Website' : 'Neue Kontaktanfrage über die Website'}</h2>
+    html: briefbogen(
+      `${ueberschrift(
+        isProductInquiry ? 'Neue Produktanfrage über die Website' : 'Neue Kontaktanfrage über die Website',
+        true,
+      )}
         ${
           isProductInquiry
             ? `<p><strong>Produkt:</strong> ${data.productTitle}${data.productUrl ? ` — <a href="${data.productUrl}">${data.productUrl}</a>` : ''}</p>`
@@ -269,7 +312,9 @@ export function contactEmail(
         <p><strong>Name:</strong> ${data.name}<br>
         <strong>E-Mail:</strong> ${data.email}<br>
         ${data.phone ? `<strong>Telefon:</strong> ${data.phone}<br>` : ''}</p>
-        <p style="white-space:pre-line;border-left:3px solid #ddd;padding-left:12px">${data.message}</p>
-      </div>`,
+        <p style="white-space:pre-line;border-left:3px solid ${BRONZE};padding-left:12px">${data.message}</p>`,
+      undefined,
+      false,
+    ),
   }
 }

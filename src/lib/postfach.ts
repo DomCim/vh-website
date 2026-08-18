@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer'
 import MailComposer from 'nodemailer/lib/mail-composer'
 import type { Payload } from 'payload'
 
-import { pflichtangaben } from './mail'
+import { briefbogen as briefbogenVorlage, pflichtangaben, type CompanyInfo } from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
 
@@ -287,28 +287,15 @@ const sicher = (s: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
-/**
- * Briefbogen für Mails aus dem Büro.
- *
- * Dasselbe Bild wie auf der Website und auf dem PDF: Logo, Corten-Strich,
- * ruhiger Satz. Das Logo hängt als Anhang mit drin und wird über `cid`
- * eingebunden — ein aus dem Netz nachgeladenes Bild blocken die meisten
- * Mailprogramme, und dann stünde die Mail ohne Kopf da.
- */
-function briefbogen(rumpf: string, signatur: string, angaben: string[]): string {
-  return `<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px;font-size:14px;line-height:1.55">
-  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:18px;display:block" />
-  <div style="width:64px;height:2px;background:#a86b3d;margin:10px 0 22px"></div>
-  <div style="white-space:pre-wrap">${sicher(rumpf)}</div>
-  ${signatur ? `<div style="margin-top:24px;white-space:pre-wrap;color:#444">${sicher(signatur)}</div>` : ''}
-  ${
-    angaben.length
-      ? `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${sicher(
-          angaben.join(' · '),
-        )}</p>`
-      : ''
-  }
-</div>`
+/** Getippter Text auf dem gemeinsamen Briefbogen — derselbe wie bei den Website-Mails */
+export function briefbogen(rumpf: string, signatur: string, firma?: CompanyInfo): string {
+  return briefbogenVorlage(
+    `<div style="white-space:pre-wrap">${sicher(rumpf)}</div>` +
+      (signatur
+        ? `<div style="margin-top:24px;white-space:pre-wrap;color:#444">${sicher(signatur)}</div>`
+        : ''),
+    firma,
+  )
 }
 
 /** Signatur aus dem Postfach, sonst aus Absendername und Kontaktdaten */
@@ -376,7 +363,7 @@ export async function nachrichtSenden(
     subject: eingabe.betreff,
     // Nur-Text-Fassung bleibt dabei: Manche lesen so, und Spamfilter mögen es
     text: [eingabe.text, signatur, angaben.join(' · ')].filter(Boolean).join('\n\n--\n'),
-    html: briefbogen(eingabe.text, signatur, angaben),
+    html: briefbogen(eingabe.text, signatur, firma),
     inReplyTo: eingabe.antwortAufMessageId,
     references: eingabe.antwortAufMessageId,
     attachments: [
