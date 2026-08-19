@@ -87,6 +87,25 @@ const grundlegend = [
 const nextConfig = {
   // Verrät nicht mehr, womit die Seite gebaut ist
   poweredByHeader: false,
+  /**
+   * Im Büro-Abbild liegen die Skripte und Stile unter `/office/_next/…`.
+   *
+   * Seit Website und Büro getrennt gebaut werden, hat jedes seine eigenen
+   * Dateien mit eigenen Prüfsummen im Namen. Beide boten sie aber unter
+   * derselben Adresse an — `/_next/static/…` —, und die schickt Traefik zur
+   * Website, weil in der Büro-Regel nur `/office`, `/api/office` und
+   * `/ws/buero` stehen. Das Büro verlangte damit seine eigenen Dateien beim
+   * falschen Container, bekam 404 auf jede einzelne und stand nackt da:
+   * Überschriften, blaue Links, keine Stile.
+   *
+   * Mit dem Vorsatz liegen sie unter einem Pfad, der ohnehin ans Büro geht.
+   * Next liefert sie dort auch aus — nachgemessen, es braucht kein
+   * Abschneiden in Traefik.
+   *
+   * Nur im getrennten Bau: Läuft alles in einem Prozess (Entwicklung,
+   * Prüfung), gibt es nichts zu unterscheiden.
+   */
+  assetPrefix: process.env.ROLLE === 'buero' ? '/office' : undefined,
   images: {
     // Bilder liegen im eigenen Medien-Volume; fremde Adressen braucht niemand.
     remotePatterns: [],

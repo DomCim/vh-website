@@ -122,13 +122,24 @@ async function ablegen(cache, pfad) {
    * sich erst im Browser auf — ohne ihr Skript steht dort nichts.)
    */
   const zubehoer = new Set([
-    ...[...text.matchAll(/["'](\/_next\/static\/[^"'\s\\]+)/g)].map((t) => t[1]),
-    ...[...text.matchAll(/["'](static\/(?:chunks|css|media)\/[^"'\s\\]+)/g)].map(
-      (t) => `/_next/${t[1]}`,
-    ),
+    ...[...text.matchAll(/["'](\/(?:office\/)?_next\/static\/[^"'\s\\]+)/g)].map((t) => t[1]),
+    /*
+     * Die relative Schreibweise verrät ihren Vorsatz nicht.
+     *
+     * In Nexts Ladedaten stehen nachgeladene Teile als `static/chunks/…`, ohne
+     * führenden Pfad — den setzt der Browser zur Laufzeit davor. Welcher es
+     * ist, hängt davon ab, ob das Büro getrennt gebaut wurde. Statt das zu
+     * erraten, werden beide Adressen versucht; die falsche scheitert still.
+     */
+    ...[...text.matchAll(/["'](static\/(?:chunks|css|media)\/[^"'\s\\]+)/g)].flatMap((t) => [
+      `/_next/${t[1]}`,
+      `/office/_next/${t[1]}`,
+    ]),
     // Schriften und Bilder aus `url(…)` in eingebetteten Stilen; hier ist die
     // schließende Klammer tatsächlich das Ende
-    ...[...text.matchAll(/url\(\s*["']?(\/_next\/static\/[^"')\s\\]+)/g)].map((t) => t[1]),
+    ...[...text.matchAll(/url\(\s*["']?(\/(?:office\/)?_next\/static\/[^"')\s\\]+)/g)].map(
+      (t) => t[1],
+    ),
   ])
   await Promise.allSettled(
     [...zubehoer].map(async (adresse) => {
@@ -209,6 +220,8 @@ function schluessel(adresse) {
 
 const istGeruest = (url) =>
   url.pathname.startsWith('/_next/static/') ||
+  // Im getrennten Bau liegen die Büro-Dateien unter eigenem Vorsatz
+  url.pathname.startsWith('/office/_next/static/') ||
   url.pathname.startsWith('/fonts/') ||
   url.pathname.endsWith('.webmanifest') ||
   /\/(office|admin)-icon-\d+\.png$/.test(url.pathname)
