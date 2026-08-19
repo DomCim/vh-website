@@ -2,6 +2,14 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Wareneingang mit Lieferschein
+
+- **Eine Lieferung ist mehr als „dazubekommen".** Sie hat einen Lieferanten, ein Datum, mehrere Posten und ein Papier, das man später wiederfindet — beim Prüfen der Rechnung, bei einer Reklamation, bei der Frage „wann kam das eigentlich?". Als fünf einzelne Bestandskorrekturen gebucht, hängt der Lieferschein an keiner davon.
+- **Neu unter Werkstatt → Wareneingang**: Lieferant, Datum, Lieferscheinnummer, die gelieferten Posten mit Mengen — und der **Lieferschein als Foto oder PDF**. Der Zettel im Karton ist in zwei Wochen weg; gebraucht wird er genau dann, wenn die Rechnung kommt und die Mengen nicht stimmen. Fotografiert wird beim Auspacken, und weil das in der Werkstatt passiert, geht das Bild über dieselbe Warteschlange wie das Belegfoto — ohne Netz bleibt es im Gerät und geht später von selbst raus.
+- **Der Weg von der Nachbestellliste ist durchgehend**: Bei „Unterwegs" führt ein Knopf direkt zum Wareneingang, vorbelegt mit Lieferant und den Posten, die dort als bestellt vermerkt sind. Gebucht wird in einem Zug: Bestand rauf, Bewegung im Verlauf (mit Nummer, Lieferant und Lieferschein), Merker „nachbestellt" weg.
+- **Gebucht wird genau einmal.** Wer später die Lieferscheinnummer nachträgt, erhöht den Bestand nicht ein zweites Mal. Eine falsch gebuchte Menge wird am Posten korrigiert — dann steht im Verlauf, dass korrigiert wurde, statt dass eine Zahl still eine andere wird.
+- Die schnelle Korrektur am Posten („verbraucht", „dazubekommen") bleibt, wofür sie gedacht ist: Berichtigungen, nicht Lieferungen.
+
 ## 19.08.2026 — Nachbestellen: vom Mindestbestand zur Anfrage
 
 - **Der Mindestbestand wurde bisher nur angezeigt.** Der Schritt danach fing wieder bei null an: Wer liefert das, wie war die Artikelnummer, wie viel nehmen wir? Neu unter **Werkstatt → Nachbestellen**: alles Knappe, nach Lieferant sortiert, mit Bestand, Mindestbestand, Fehlmenge und einem Vorschlag für die Bestellmenge.

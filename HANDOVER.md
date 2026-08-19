@@ -131,6 +131,14 @@ Bestellposition trägt dafür `variantId`; die Bezeichnung ist übersetzt und
 änderbar und taugt nur als Rückfallweg für Bestellungen von vorher. Dieselbe
 Regel gilt für Arbeitszeit und Fremdleistung der Variante.
 
+**Wareneingang ist ein Vorgang, keine Korrektur.** Eigene Sammlung
+(`goods-receipts`) mit Lieferant, Datum, Lieferscheinnummer, Papier und Zeilen.
+Gebucht wird im `afterChange`-Auslöser der Sammlung und nicht in der
+Schnittstelle — so greift es auch aus dem Admin-Panel und über den KI-Zugang;
+der Haken `booked` sorgt dafür, dass es genau einmal passiert. Zeilen eines
+gebuchten Wareneingangs werden nicht mehr geändert: Korrigiert wird am Posten,
+damit die Änderung im Verlauf steht.
+
 **Nachbestellen fragt an, es bestellt nicht.** Die Mail an den Lieferanten
 bittet um Preis und Liefertermin; verbindlich bestellt wird danach von Hand.
 `reorderedAt` am Posten hält fest, dass etwas unterwegs ist — sonst stünde

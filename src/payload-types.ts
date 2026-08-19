@@ -84,6 +84,7 @@ export interface Config {
     'outgoing-invoices': OutgoingInvoice;
     'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
+    'goods-receipts': GoodsReceipt;
     stocktakes: Stocktake;
     'follow-ups': FollowUp;
     'workshop-weeks': WorkshopWeek;
@@ -120,6 +121,7 @@ export interface Config {
     'outgoing-invoices': OutgoingInvoicesSelect<false> | OutgoingInvoicesSelect<true>;
     'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
+    'goods-receipts': GoodsReceiptsSelect<false> | GoodsReceiptsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     'follow-ups': FollowUpsSelect<false> | FollowUpsSelect<true>;
     'workshop-weeks': WorkshopWeeksSelect<false> | WorkshopWeeksSelect<true>;
@@ -1195,6 +1197,41 @@ export interface BankTransaction {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "goods-receipts".
+ */
+export interface GoodsReceipt {
+  id: number;
+  receiptNumber?: string | null;
+  receivedAt: string;
+  /**
+   * Steht auf dem Papier des Lieferanten.
+   */
+  deliveryNote?: string | null;
+  supplier?: (number | null) | Contact;
+  supplierName?: string | null;
+  /**
+   * Foto oder PDF — beim Auspacken abfotografiert genügt.
+   */
+  document?: (number | null) | Media;
+  lines?:
+    | {
+        item: number | InventoryItem;
+        quantity: number;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  booked?: boolean | null;
+  /**
+   * Die Rechnung zur Lieferung, sobald sie da ist — dann liegen Papier und Zahlen beieinander.
+   */
+  expense?: (number | null) | Expense;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stocktakes".
  */
 export interface Stocktake {
@@ -1552,6 +1589,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'inventory-items';
         value: number | InventoryItem;
+      } | null)
+    | ({
+        relationTo: 'goods-receipts';
+        value: number | GoodsReceipt;
       } | null)
     | ({
         relationTo: 'stocktakes';
@@ -2199,6 +2240,31 @@ export interface InventoryItemsSelect<T extends boolean = true> {
       };
   photo?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "goods-receipts_select".
+ */
+export interface GoodsReceiptsSelect<T extends boolean = true> {
+  receiptNumber?: T;
+  receivedAt?: T;
+  deliveryNote?: T;
+  supplier?: T;
+  supplierName?: T;
+  document?: T;
+  lines?:
+    | T
+    | {
+        item?: T;
+        quantity?: T;
+        note?: T;
+        id?: T;
+      };
+  booked?: T;
+  expense?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }

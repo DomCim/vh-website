@@ -38,6 +38,7 @@ import * as migration_20260819_182142_werkstattwochen from './20260819_182142_we
 import * as migration_20260819_193745_variantenstueckliste from './20260819_193745_variantenstueckliste';
 import * as migration_20260819_201353_variantendienste_bestandsverlauf from './20260819_201353_variantendienste_bestandsverlauf';
 import * as migration_20260819_202917_nachbestellung from './20260819_202917_nachbestellung';
+import * as migration_20260819_204824_wareneingang from './20260819_204824_wareneingang';
 
 export const migrations = [
   {
@@ -238,6 +239,11 @@ export const migrations = [
   {
     up: migration_20260819_202917_nachbestellung.up,
     down: migration_20260819_202917_nachbestellung.down,
-    name: '20260819_202917_nachbestellung'
+    name: '20260819_202917_nachbestellung',
+  },
+  {
+    up: migration_20260819_204824_wareneingang.up,
+    down: migration_20260819_204824_wareneingang.down,
+    name: '20260819_204824_wareneingang'
   },
 ];

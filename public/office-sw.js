@@ -63,6 +63,11 @@ const BEREICHE = [
 
 const MIT_NEU = ['angebote', 'auftraege', 'belege', 'inventar', 'inventur', 'partner', 'rechnungen']
 
+// Der Wareneingang steht in beiden Listen: als Übersicht, als Einzelseite und
+// mit seinem Formular — in der Werkstatt wird er gebucht, und dort ist das
+// Netz am dünnsten.
+const WARENEINGANG = ['/office/wareneingang', '/office/wareneingang/_', '/office/wareneingang/neu']
+
 const VORRAT = [
   GERUEST,
   AUSKUNFT,
@@ -75,6 +80,7 @@ const VORRAT = [
   ...BEREICHE.map((b) => `/office/${b}`),
   ...BEREICHE.map((b) => `/office/${b}/_`),
   ...MIT_NEU.map((b) => `/office/${b}/neu`),
+  ...WARENEINGANG,
 ]
 
 /**

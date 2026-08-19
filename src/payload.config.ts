@@ -21,6 +21,7 @@ import { MailLog } from './collections/MailLog'
 import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
 import { FollowUps } from './collections/FollowUps'
+import { GoodsReceipts } from './collections/GoodsReceipts'
 import { Inquiries } from './collections/Inquiries'
 import { InventoryItems } from './collections/InventoryItems'
 import { Jobs } from './collections/Jobs'
@@ -91,6 +92,7 @@ export default buildConfig({
     OutgoingInvoices,
     BankTransactions,
     InventoryItems,
+    GoodsReceipts,
     Stocktakes,
     FollowUps,
     WorkshopWeeks,

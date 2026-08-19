@@ -55,7 +55,9 @@ export function NachbestellenAnsicht() {
     .map((b) => ({ ...b, zeilen: b.zeilen.filter((z) => !z.bestelltAm) }))
     .filter((b) => b.zeilen.length > 0)
   const unterwegs = bloecke.flatMap((b) =>
-    b.zeilen.filter((z) => z.bestelltAm).map((z) => ({ ...z, lieferant: b.name })),
+    b.zeilen
+      .filter((z) => z.bestelltAm)
+      .map((z) => ({ ...z, lieferant: b.name, lieferantId: b.lieferant })),
   )
 
   async function schicken(
@@ -220,8 +222,8 @@ export function NachbestellenAnsicht() {
         <>
           <h2>Unterwegs</h2>
           <p className="buero-unterzeile">
-            Bestellt, aber noch nicht da. Sobald die Lieferung eintrifft, am Posten „Dazubekommen“
-            buchen — dann verschwindet der Eintrag hier.
+            Bestellt, aber noch nicht da. Wenn die Lieferung kommt: Wareneingang buchen — dann sind
+            Bestand, Lieferschein und diese Liste in einem Zug erledigt.
           </p>
           <div className="buero-liste">
             {unterwegs.map((z) => (
@@ -234,6 +236,15 @@ export function NachbestellenAnsicht() {
                     bestellt am {datum(z.bestelltAm)} · Bestand {z.bestand} {z.einheit}
                   </div>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                <Link
+                  href={`/office/wareneingang/neu${
+                    z.lieferantId ? `?lieferant=${z.lieferantId}` : ''
+                  }`}
+                  className="buero-knopf schmal"
+                >
+                  Lieferung buchen
+                </Link>
                 <button
                   type="button"
                   className="buero-knopf leise schmal"
@@ -248,6 +259,7 @@ export function NachbestellenAnsicht() {
                 >
                   doch nicht bestellt
                 </button>
+                </div>
               </div>
             ))}
           </div>

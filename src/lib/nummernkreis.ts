@@ -98,3 +98,10 @@ export async function naechsteAuftragsnummer(payload: Payload): Promise<string> 
   const nummer = await naechsteNummer(payload, `auftrag-${jahr}`)
   return `AU-${jahr}-${String(nummer).padStart(4, '0')}`
 }
+
+/** Wareneingangsnummer, z.B. WE-2026-0007 */
+export async function naechsteWareneingangsnummer(payload: Payload): Promise<string> {
+  const jahr = new Date().getFullYear()
+  const nummer = await naechsteNummer(payload, `wareneingang-${jahr}`)
+  return `WE-${jahr}-${String(nummer).padStart(4, '0')}`
+}
