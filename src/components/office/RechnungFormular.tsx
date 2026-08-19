@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type Position = {
   description: string
@@ -47,11 +49,15 @@ const euro = (v: number) =>
  */
 export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
   const router = useRouter()
-  const [w, setW] = useState<RechnungWerte>({
+  const [anfang] = useState<RechnungWerte>(() => ({
     status: 'entwurf',
     items: [{ description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 }],
     ...werte,
-  })
+  }))
+  const [w, setW] = useState<RechnungWerte>(anfang)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`rechnungen:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -94,6 +100,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         koerper: { ...w, status: neuerStatus ?? w.status },
       })
       // Ohne Netz bekommt eine neue Rechnung nur eine vorläufige Kennung
+      entwurf.erledigt()
       if (sofort) router.push(`/office/rechnungen/${id}`)
       else setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
@@ -105,6 +112,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {festgeschrieben && (
         <p className="buero-hinweis">
           Rechnung <strong>{w.invoiceNumber}</strong> ist gestellt. Positionen und Beträge sollten

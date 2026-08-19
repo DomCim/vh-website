@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type Kategorie = { label: string; value: string }
 
@@ -45,12 +47,16 @@ export function BelegFormular({
   kiVerfuegbar: boolean
 }) {
   const router = useRouter()
-  const [w, setW] = useState<BelegWerte>({
+  const [anfang] = useState<BelegWerte>(() => ({
     category: 'sonstiges',
     paid: true,
     deductible: true,
     ...werte,
-  })
+  }))
+  const [w, setW] = useState<BelegWerte>(anfang)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`belege:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState<null | 'upload' | 'lesen' | 'speichern' | 'loeschen'>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -170,6 +176,7 @@ export function BelegFormular({
           extraction: w.extraction ? { ...w.extraction, status: 'bestaetigt' } : undefined,
         },
       })
+      entwurf.erledigt()
       if (sofort) router.push(`/office/belege/${id}`)
       else setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
@@ -181,6 +188,14 @@ export function BelegFormular({
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {!w.documentId ? (
         <label className="buero-feld">
           <span>Beleg fotografieren oder auswählen</span>

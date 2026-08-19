@@ -19,6 +19,7 @@ import * as migration_20260818_201010_takt from './20260818_201010_takt';
 import * as migration_20260818_201729_takt_aufbewahrung from './20260818_201729_takt_aufbewahrung';
 import * as migration_20260818_211055_passkeys from './20260818_211055_passkeys';
 import * as migration_20260818_230824_grabsteine from './20260818_230824_grabsteine';
+import * as migration_20260819_092633_entwuerfe from './20260819_092633_entwuerfe';
 
 export const migrations = [
   {
@@ -124,6 +125,11 @@ export const migrations = [
   {
     up: migration_20260818_230824_grabsteine.up,
     down: migration_20260818_230824_grabsteine.down,
-    name: '20260818_230824_grabsteine'
+    name: '20260818_230824_grabsteine',
+  },
+  {
+    up: migration_20260819_092633_entwuerfe.up,
+    down: migration_20260819_092633_entwuerfe.down,
+    name: '20260819_092633_entwuerfe'
   },
 ];

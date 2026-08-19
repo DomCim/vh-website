@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type AuftragPosition = {
   description: string
@@ -62,12 +64,16 @@ export function AuftragFormular({
   posten: PostenAuswahl[]
 }) {
   const router = useRouter()
-  const [w, setW] = useState<AuftragWerte>({
+  const [anfang] = useState<AuftragWerte>(() => ({
     status: 'geplant',
     positions: [{ description: '', quantity: 1 }],
     material: [],
     ...werte,
-  })
+  }))
+  const [w, setW] = useState<AuftragWerte>(anfang)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`auftraege:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -96,6 +102,7 @@ export function AuftragFormular({
         bereich: 'auftraege',
         koerper: { ...w, status: neuerStatus ?? w.status },
       })
+      entwurf.erledigt()
       if (!w.id && sofort) router.push(`/office/auftraege/${id}`)
       else {
         setzen({ status: neuerStatus ?? w.status })
@@ -110,6 +117,14 @@ export function AuftragFormular({
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {meldung && <p className="buero-hinweis">{meldung}</p>}
       {knapp.length > 0 && (
         <p className="buero-hinweis">

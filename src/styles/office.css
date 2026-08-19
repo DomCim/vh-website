@@ -633,6 +633,44 @@
   text-align: center;
 }
 
+/* ── Angefangenes ───────────────────────────────────────────────────────── */
+/* Steht über einem Formular, wenn dazu ein Entwurf gefunden wurde. Sieht
+ * bewusst aus wie ein Hinweis und nicht wie ein Fehler: Es ist nichts kaputt,
+ * es liegt nur etwas bereit. */
+.buero-entwurf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--buero-bronze) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--buero-bronze) 25%, transparent);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.buero-entwurf-knoepfe {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.buero-entwurf button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--buero-linie);
+  background: var(--buero-flaeche);
+  color: var(--buero-tinte);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.buero-entwurf button.buero-leise {
+  background: transparent;
+  color: var(--buero-tinte-leise);
+}
+
 .buero-hinweis {
   background: color-mix(in srgb, var(--buero-bronze) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--buero-bronze) 25%, transparent);

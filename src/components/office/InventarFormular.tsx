@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type InventarWerte = {
   id?: number | string
@@ -38,12 +40,16 @@ export function InventarFormular({
   lieferanten: { id: number; name: string }[]
 }) {
   const router = useRouter()
-  const [w, setW] = useState<InventarWerte>({
+  const [anfang] = useState<InventarWerte>(() => ({
     type: 'material',
     unit: 'Stück',
     quantity: 0,
     ...werte,
-  })
+  }))
+  const [w, setW] = useState<InventarWerte>(anfang)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`inventar:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -62,6 +68,7 @@ export function InventarFormular({
         bereich: 'inventar',
         koerper: { ...w },
       })
+      entwurf.erledigt()
       if (!w.id && sofort) router.push(`/office/inventar/${id}`)
       else setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
@@ -73,6 +80,14 @@ export function InventarFormular({
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
       <label className="buero-feld">

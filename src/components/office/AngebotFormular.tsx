@@ -5,7 +5,9 @@ import React, { useMemo, useState } from 'react'
 
 import { betraege } from '../../lib/betraege'
 import { VersandKnopf } from './VersandKnopf'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type AngebotPosition = {
   description: string
@@ -45,11 +47,15 @@ const euro = (v: number) =>
  */
 export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
   const router = useRouter()
-  const [w, setW] = useState<AngebotWerte>({
+  const [anfang] = useState<AngebotWerte>(() => ({
     status: 'entwurf',
     items: [{ description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 }],
     ...werte,
-  })
+  }))
+  const [w, setW] = useState<AngebotWerte>(anfang)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`angebote:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
 
@@ -76,6 +82,7 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         bereich: 'angebote',
         koerper: rumpf,
       })
+      entwurf.erledigt()
       if (!sofort) setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
       // Die Antwort mitgeben: Aus einem angenommenen Angebot entstehen Auftrag
       // und Rechnung, und deren Kennungen vergibt nur der Server.
@@ -100,6 +107,14 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {versendet && (
         <p className="buero-hinweis">
           Angebot <strong>{w.quoteNumber}</strong> ist versendet

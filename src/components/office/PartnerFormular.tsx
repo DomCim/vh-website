@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { EntwurfLeiste } from './EntwurfLeiste'
 
 export type PartnerWerte = {
   id?: number | string
@@ -36,9 +38,17 @@ export function PartnerFormular({
   kategorien: { wert: string; text: string }[]
 }) {
   const router = useRouter()
-  const [w, setW] = useState<PartnerWerte>({ role: 'beides', country: 'Frankreich', ...werte })
+  const [anfang] = useState<PartnerWerte>(() => ({
+    role: 'beides',
+    country: 'Frankreich',
+    ...werte,
+  }))
+  const [w, setW] = useState<PartnerWerte>(anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+
+  // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  const entwurf = useEntwurf(`partner:${werte.id ?? 'neu'}`, w, anfang)
 
   const setzen = (teil: Partial<PartnerWerte>) => setW((v) => ({ ...v, ...teil }))
 
@@ -60,6 +70,7 @@ export function PartnerFormular({
       })
       // Ohne Netz bekommt ein neuer Datensatz nur eine vorläufige Kennung —
       // auf eine solche Adresse zu springen brächte niemanden weiter.
+      entwurf.erledigt()
       if (!w.id && sofort) router.push(`/office/partner/${id}`)
       else setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
@@ -71,6 +82,14 @@ export function PartnerFormular({
 
   return (
     <div className="buero-karte">
+      <EntwurfLeiste
+        angebot={entwurf.angebot}
+        aufWeitermachen={() => {
+          const stand = entwurf.uebernehmen()
+          if (stand) setW(stand)
+        }}
+        aufVerwerfen={entwurf.verwerfen}
+      />
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
       <div className="buero-reihe">
