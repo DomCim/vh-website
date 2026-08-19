@@ -2,6 +2,22 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Sechs Lücken im Büro geschlossen
+
+- **Zahlungseingänge kommen aus dem Kontoauszug** (Geld → Zahlungseingänge). Datei aus dem Onlinebanking wählen — CSV oder CAMT.053 —, und zu jeder Zahlung steht ein Vorschlag da: Rechnungsnummer im Verwendungszweck ist der sichere Fall (dafür schreibt der GiroCode sie hinein), sonst entscheiden Betrag und Name. Gibt es zwei offene Rechnungen über denselben Betrag, wird **nicht geraten** — lieber einmal von Hand zuordnen als einmal die falsche Rechnung abhaken. Ein Klick setzt die Rechnung auf bezahlt, und was daran hängt, läuft von selbst weiter. Dieselbe Datei zweimal einzulesen schadet nichts.
+- **Stornieren ist ein Knopf.** An der gestellten Rechnung steht „Stornieren"; das legt die Gegenrechnung an — dieselben Positionen mit umgedrehtem Vorzeichen, Verweis aufs Original, beide zeigen aufeinander. Im Factur-X trägt sie den Typcode 381, sonst käme sie bei der Plattform als zweite Forderung an. Vorher musste die Gegenrechnung von Hand getippt werden, obwohl das Formular selbst auf sie verwies.
+- **Auslastung je Woche** (Werkstatt → Auslastung): zugesagte Fertigungsstunden gegen die Werkstattzeit, sechzehn Wochen weit. Oben die Frage vom Telefon als Feld — „wie viele Stunden braucht das neue Stück?" — und darunter die erste Woche, in der so viel frei ist. Die Zeit kommt aus der Fertigungszeit der Artikel und steht am Auftrag.
+- **Nachkalkulation** (Geld → Nachkalkulation): abgeschlossene Aufträge mit Wert, Einsatz und Deckung, dazu die Artikel sortiert nach Abweichung. Oben steht das Stück, das regelmäßig mehr Stunden frisst als kalkuliert. Aufträge ohne erfasste Zeit zählen nicht mit und werden genannt — sonst wäre die Auswertung geschönt.
+- **Wiedervorlagen** (Kundschaft → Wiedervorlagen, dazu am Partner und am Auftrag): „Herrn Müller im Oktober wegen des zweiten Kübels anrufen." Am fälligen Tag meldet sich das Büro aufs Handy, mit dem Wortlaut statt mit einer Zahl.
+- **Angebote im Kundenportal**: ansehen als PDF und annehmen. Wer ein Angebot bekommen hat, kommt jetzt auch ins Portal — vorher zählte das nicht als Vorgang und der Anmeldecode blieb aus. Die Annahme wird mit Zeitpunkt, Name und Weg festgehalten; ein Auftrag entsteht bewusst nicht von selbst, den Termin sagt die Werkstatt zu.
+- **Plateforme Agréée** steht jetzt in den Einstellungen, mit Stand der Anmeldung. Bis sie auf „angemeldet" steht, erinnert die Übersicht daran: Ab dem 1. September 2026 müssen E-Rechnungen über eine zugelassene Plattform ankommen. Lesen und Schreiben kann das Büro längst — die Anmeldung ist eine Unterschrift und kein Programm.
+
+## 19.08.2026 — Drei Mails ohne Briefbogen
+
+- **Die Eingangsbestätigung beim Kauf auf Rechnung und die beiden Code-Mails** (Kasse, Kundenportal) bauten ihr HTML von Hand: ohne Logo, ohne Corten-Strich, ohne die Pflichtangaben im Fuß. Jetzt laufen alle drei über denselben Briefbogen wie die Bestellbestätigung.
+- **Die Eingangsbestätigung trägt jetzt Zahlen**: Positionen, Summe mit enthaltener Steuer, Lieferadresse, Link auf den Bestellstand. Vorher stand dort ein Satz, und wer wissen wollte, worüber die angekündigte Rechnung lauten würde, musste auf sie warten.
+- **Die Code-Mails kommen in der Sprache an**, in der die Kundschaft gerade auf der Seite steht. Dasselbe gilt für den Link auf den Bestellstand — der zeigte bisher immer auf die deutsche Seite.
+
 ## 19.08.2026 — Rechnungsversand braucht kein Postfach mehr
 
 - **Ohne eingerichtetes Postfach blockierte der Versand** — die erste echte Rechnung blieb an „Es ist kein Postfach eingerichtet" hängen. Jetzt fällt der Versand auf den normalen Mailweg zurück (SMTP, dieselbe Absenderadresse wie Bestellbestätigungen). Ist ein Postfach eingerichtet, läuft es weiter darüber — dann liegt die Rechnung als Kopie in „Gesendet", und Antworten landen dort, wo sie gelesen werden. Das Versandfenster zeigt in beiden Fällen, mit welchem Absender die Mail rausgeht.

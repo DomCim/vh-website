@@ -2816,6 +2816,25 @@ export interface Integration {
     platzFreigebenNachTagen?: number | null;
   };
   /**
+   * Ab 1. September 2026 müssen elektronische Rechnungen über eine zugelassene Plattform empfangen werden können. Technisch ist alles da — hier steht, ob die Anmeldung erledigt ist.
+   */
+  erechnung?: {
+    /**
+     * Solange das nicht auf „angemeldet" steht, erinnert die Übersicht im Büro daran.
+     */
+    stand?: ('offen' | 'beauftragt' | 'registriert') | null;
+    /**
+     * Name der Plateforme Agréée, über die zugestellt wird.
+     */
+    plattform?: string | null;
+    /**
+     * Die Adresse, unter der der Betrieb dort erreichbar ist — gehört auf die Rechnung an Geschäftskunden.
+     */
+    kennung?: string | null;
+    registriertAm?: string | null;
+    notiz?: string | null;
+  };
+  /**
    * Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.
    */
   wartung?: {
@@ -3086,6 +3105,15 @@ export interface IntegrationsSelect<T extends boolean = true> {
         zwischenTage?: T;
         schlussTage?: T;
         platzFreigebenNachTagen?: T;
+      };
+  erechnung?:
+    | T
+    | {
+        stand?: T;
+        plattform?: T;
+        kennung?: T;
+        registriertAm?: T;
+        notiz?: T;
       };
   wartung?:
     | T

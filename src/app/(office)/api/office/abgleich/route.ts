@@ -65,6 +65,9 @@ async function rahmen(
     wochenstunden: 30,
     firma: { siret: '', vatId: '', iban: '' },
     platzFreigebenNachTagen: 21,
+    // Ob die Anmeldung bei der Plattform erledigt ist — die Übersicht
+    // erinnert daran, solange sie es nicht ist
+    erechnungStand: 'offen',
     /*
      * Die Rechte kommen mit ins Gerät, damit die Navigation auch ohne Netz
      * weiß, was sie zeigen darf. Sie sind kein Schutz — der sitzt an den
@@ -80,8 +83,10 @@ async function rahmen(
     // die Frist mit ins Gerät, sonst steht sie ohne Netz auf der Voreinstellung
     const ziele = (await payload.findGlobal({ slug: 'integrations', depth: 0 })) as {
       zahlungsziele?: { platzFreigebenNachTagen?: number | null } | null
+      erechnung?: { stand?: string | null } | null
     }
     rahmen.platzFreigebenNachTagen = ziele?.zahlungsziele?.platzFreigebenNachTagen ?? 21
+    rahmen.erechnungStand = ziele?.erechnung?.stand ?? 'offen'
   } catch {
     // Ohne KI läuft das Büro auch
   }

@@ -74,13 +74,60 @@ Auftrag vom Artikel und wird nicht nachgeführt. Kern: `lib/rechnungsstufen.ts`.
 
 ---
 
+## Dritter Durchgang: sechs Lücken im Büro
+
+Branch `claude/office-gaps-payment-workflows-o0lynv`, aufbauend auf dem Stand
+oben. Was dazugekommen ist, im Einzelnen im Changelog; hier nur die
+Entscheidungen, die man nicht am Code abliest:
+
+**Der Zahlungsabgleich schlägt vor, er bucht nicht.** Drei Stufen (Nummer im
+Verwendungszweck / Betrag und Name / einziger Betragstreffer), und bei zwei
+gleichen Beträgen gar keinen Vorschlag. Eine irrtümlich abgehakte Rechnung
+fällt erst auf, wenn gemahnt wird — und dann beim Kunden. Die Buchungen
+bleiben mit einem Fingerabdruck aus Tag, Betrag, Gegenpartei und Zweck
+liegen; Auszüge werden mit Überschneidung heruntergeladen, und beiseite
+Gelegtes soll nicht wiederkommen.
+
+**Die Stornorechnung bekommt eine Nummer aus der laufenden Reihe, keine
+Stufennummer.** Als Stufe gezählt verschöbe sie den Nenner (`-1/3`) aller
+anderen Rechnungen desselben Auftrags — und die liegen längst beim Kunden.
+Dafür rechnet `betraege()` jetzt im Vorzeichen der Positionen; vorher stand
+ein Storno mit Nachlass bei netto null.
+
+**Die geplante Fertigungszeit steht am Auftrag, nicht am Artikel.** Aus einer
+Shop-Bestellung wird sie beim Anlegen abgeschrieben. Kennt auch nur ein
+Artikel im Korb seine Zeit nicht, bleibt das Feld **leer statt zu klein** —
+eine zu kleine Zahl täuscht in der Auslastung eine freie Woche vor. Aufträge
+ohne Schätzung stehen dort in einer eigenen Liste.
+
+**Die Nachkalkulation ändert nichts.** Kein Preisvorschlag, keine Automatik.
+Aufträge ohne erfasste Zeit zählen im Zeitvergleich nicht mit und werden
+ausgewiesen; sonst sähe die Deckung besser aus, als sie ist.
+
+**Die Portal-Annahme legt keinen Auftrag an.** Der Auftrag ist die Zusage der
+Werkstatt, nicht die des Kunden — Termin, Material und Werkstattplatz
+entscheidet der Betrieb. Das Büro bekommt die Annahme per Push.
+
+**Die Zahlungseingänge-Seite ist die einzige Büro-Seite ohne Offline-Betrieb.**
+Sie fragt den Server, weil die Zuordnung über Geld entscheidet und überall
+dieselbe sein soll — auch dann, wenn im Gerät der Bestand von gestern liegt.
+Sie steht deshalb nicht im Vorrat des Service Workers.
+
+---
+
 ## Offen
 
-1. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
+1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit
+   Datum — **1. September 2026**. Technisch ist alles da: Rechnungen entstehen
+   als Factur-X, eingehende werden aus dem PDF gelesen. Offen ist der Vertrag
+   mit einer zugelassenen Plattform. Der Stand steht jetzt im Büro unter
+   Einstellungen → Elektronische Rechnung; bis er auf „angemeldet" steht,
+   erinnert die Übersicht daran. **Das erledigt kein Code.**
+2. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
    („Den Stand Ihres Auftrags sehen Sie unter …/konto"). Vorgeschlagen, noch
    nicht entschieden.
-2. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
-3. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
+3. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
+4. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
    Volumes gehören dem falschen Benutzer (`chown 1000:1000`), `SEED=true`
    steht noch im Stack, `MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe
    Wert, übriggebliebener Container `vincent-hellmann-backup-1`.

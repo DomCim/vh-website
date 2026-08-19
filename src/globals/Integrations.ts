@@ -410,6 +410,68 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      /*
+       * Die Plateforme Agréée — der Teil der französischen E-Rechnungspflicht,
+       * den kein Code erledigt.
+       *
+       * Technisch ist das Haus fertig: Rechnungen entstehen als Factur-X
+       * (lib/facturx.ts), und eingehende werden aus dem PDF gelesen
+       * (lib/facturxLesen.ts). Damit ist die Empfangspflicht ab dem
+       * 1. September 2026 technisch erfüllt.
+       *
+       * Offen ist die Vertragsseite: Zugestellt wird ab dann über eine
+       * zugelassene Plattform (PDP), und dort muss der Betrieb angemeldet
+       * sein. Das ist eine Unterschrift, kein Programm — und genau deshalb
+       * steht es hier: Was nirgends steht, geht unter, und der Termin fällt
+       * erst auf, wenn die erste Rechnung nicht ankommt.
+       */
+      name: 'erechnung',
+      label: 'Elektronische Rechnung (Plateforme Agréée)',
+      type: 'group',
+      admin: {
+        description:
+          'Ab 1. September 2026 müssen elektronische Rechnungen über eine zugelassene Plattform empfangen werden können. Technisch ist alles da — hier steht, ob die Anmeldung erledigt ist.',
+      },
+      fields: [
+        {
+          name: 'stand',
+          label: 'Stand der Anmeldung',
+          type: 'select',
+          defaultValue: 'offen',
+          options: [
+            { label: 'Noch nichts veranlasst', value: 'offen' },
+            { label: 'Anbieter ausgewählt, Vertrag läuft', value: 'beauftragt' },
+            { label: 'Angemeldet und einsatzbereit', value: 'registriert' },
+          ],
+          admin: {
+            description:
+              'Solange das nicht auf „angemeldet" steht, erinnert die Übersicht im Büro daran.',
+          },
+        },
+        {
+          name: 'plattform',
+          label: 'Plattform / Anbieter',
+          type: 'text',
+          admin: { description: 'Name der Plateforme Agréée, über die zugestellt wird.' },
+        },
+        {
+          name: 'kennung',
+          label: 'Eigene Kennung auf der Plattform',
+          type: 'text',
+          admin: {
+            description:
+              'Die Adresse, unter der der Betrieb dort erreichbar ist — gehört auf die Rechnung an Geschäftskunden.',
+          },
+        },
+        {
+          name: 'registriertAm',
+          label: 'Angemeldet am',
+          type: 'date',
+        },
+        { name: 'notiz', label: 'Notiz', type: 'textarea' },
+      ],
+    },
+    {
       name: 'wartung',
       label: 'Takt (Automatik)',
       type: 'group',

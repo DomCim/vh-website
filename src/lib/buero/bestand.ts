@@ -51,6 +51,8 @@ export type Rahmen = {
   firma: { siret: string; vatId: string; iban: string }
   /** Ab wie vielen Tagen offener Anzahlung nach dem Werkstattplatz gefragt wird */
   platzFreigebenNachTagen: number
+  /** Anmeldung bei der Plateforme Agréée: offen, beauftragt oder registriert */
+  erechnungStand: string
   /** Was der angemeldete Mensch darf — die Navigation richtet sich danach */
   rechte: string[]
 }
@@ -63,6 +65,7 @@ const RAHMEN_LEER: Rahmen = {
   wochenstunden: 30,
   firma: { siret: '', vatId: '', iban: '' },
   platzFreigebenNachTagen: 21,
+  erechnungStand: 'offen',
   rechte: [],
 }
 let rahmen: Rahmen = RAHMEN_LEER

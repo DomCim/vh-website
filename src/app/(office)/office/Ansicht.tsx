@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import React, { useMemo } from 'react'
 
-import { useBestand } from '../../../lib/buero/bestand'
+import { useBestand, useRahmen } from '../../../lib/buero/bestand'
 import { useDarf } from '../../../lib/buero/rechte'
 import { datum, euro } from '../../../lib/format'
 
@@ -60,6 +60,7 @@ export function UebersichtAnsicht() {
   const inventar = useBestand<Posten>('inventar')
   const anfragen = useBestand<Anfrage>('anfragen')
   const wiedervorlagen = useBestand<Wiedervorlage>('wiedervorlagen')
+  const { erechnungStand } = useRahmen()
   const darf = useDarf()
 
   const jahr = new Date().getFullYear()
@@ -120,6 +121,18 @@ export function UebersichtAnsicht() {
   const laengstFaellig = zuZahlen[0]
   const offeneAnfragen = anfragen.filter((a) => a.status === 'neu').length
 
+  /*
+   * Die Frist, die kein Programm erledigt.
+   *
+   * Ab dem 1. September 2026 müssen elektronische Rechnungen über eine
+   * zugelassene Plattform empfangen werden können. Technisch ist alles da —
+   * offen ist die Anmeldung, und die ist eine Unterschrift. Erinnert wird ab
+   * zwei Monaten davor und danach dauerhaft: Was nirgends steht, fällt erst
+   * auf, wenn die erste Rechnung nicht ankommt.
+   */
+  const erechnungOffen =
+    erechnungStand !== 'registriert' && Date.now() >= new Date('2026-07-01').getTime()
+
   // Selbst gestellte Erinnerungen, deren Tag da ist. Sie stehen hier zwischen
   // dem, was das Büro von allein gefunden hat — der Zettel am Monitor gehört
   // auf dieselbe Liste wie die überfällige Rechnung.
@@ -178,7 +191,8 @@ export function UebersichtAnsicht() {
       {/* Die Überschrift nur, wenn darunter auch etwas steht: Wer die Rechte
           für Belege und Rechnungen nicht hat, sah sonst „Kümmern" über einer
           leeren Fläche und suchte nach dem, was fehlt. */}
-      {(faelligeZettel.length > 0 ||
+      {((erechnungOffen && darf('einstellungen.aendern')) ||
+        faelligeZettel.length > 0 ||
         (zahlen.ohneBeleg > 0 && darf('belege.erfassen')) ||
         (zahlen.ungeprueft > 0 && darf('belege.erfassen')) ||
         (ueberfaellig.length > 0 && darf('rechnungen.schreiben')) ||
@@ -188,6 +202,22 @@ export function UebersichtAnsicht() {
         <>
           <h2>Kümmern</h2>
           <div className="buero-liste">
+            {erechnungOffen && darf('einstellungen.aendern') && (
+              <Link href="/office/einstellungen" className="buero-zeile">
+                <div className="buero-zeile-haupt">
+                  <div className="buero-zeile-titel">
+                    Plateforme Agréée: Anmeldung
+                    {erechnungStand === 'beauftragt' ? ' läuft noch' : ' fehlt'}
+                  </div>
+                  <div className="buero-zeile-neben">
+                    Ab 1. September 2026 müssen E-Rechnungen über eine zugelassene Plattform
+                    ankommen. Lesen und Schreiben kann das Büro längst — die Anmeldung ist eine
+                    Unterschrift.
+                  </div>
+                </div>
+                <span className="buero-marker warn">erledigen</span>
+              </Link>
+            )}
             {faelligeZettel.length > 0 && (
               <Link href="/office/wiedervorlagen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
