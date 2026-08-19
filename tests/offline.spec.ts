@@ -8,10 +8,12 @@ import { expect, test } from '@playwright/test'
  * Zahlen von vorhin zeigen. Dazu gehört auch, dass sie *sagt*, dass es die von
  * vorhin sind.
  *
- * Der letzte Teil ist der feinste: Eine Detailseite, die vorher nie geöffnet
- * wurde, muss sich ebenfalls öffnen lassen. Das geht, weil der Service Worker
- * Kennungen in der Adresse ersetzt — alle Belege teilen sich eine Hülle, und
- * ihren Inhalt holt sich die Seite aus dem Bestand im Gerät.
+ * Der letzte Teil ist der feinste: Wer *eine* Detailseite geöffnet hat, kann
+ * offline jede öffnen — alle teilen sich dieselbe Hülle, und ihren Inhalt holt
+ * sich die Seite aus dem Bestand im Gerät. Was dagegen noch nie offen war,
+ * gibt es nicht, und dann sagt das Büro genau das. Eine fremde Seite unter der
+ * angeforderten Adresse auszuliefern wäre schlimmer: Wer einen Beleg aufruft
+ * und die Belegliste sieht, hält sie für den Beleg.
  *
  * Zugangsdaten kommen aus der Umgebung; ohne sie überspringt der Test.
  */
@@ -51,7 +53,13 @@ test.describe('Büro ohne Netz', () => {
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
 
-    // Einmal die Partnerliste öffnen — damit liegt ihre Hülle im Zwischenspeicher
+    // Liste und *eine* Detailseite öffnen — damit liegen beide Hüllen im
+    // Zwischenspeicher. Mehr braucht es nicht: Alle Detailseiten eines
+    // Bereichs teilen sich eine Hülle.
+    await page.goto('/office/partner')
+    await expect(page.getByText(name)).toBeVisible({ timeout: 30_000 })
+    await page.locator('.buero-zeile').first().click()
+    await page.waitForLoadState('networkidle')
     await page.goto('/office/partner')
     await expect(page.getByText(name)).toBeVisible({ timeout: 30_000 })
 
@@ -71,7 +79,7 @@ test.describe('Büro ohne Netz', () => {
     await expect(page.locator('.buero-abgleich'), 'und es steht dran, dass sie alt sind')
       .toContainText('Ohne Netz', { timeout: 20_000 })
 
-    // Eine Detailseite, die vorher nie geöffnet wurde
+    // Eine zweite Detailseite, deren Hülle nie eigens geholt wurde
     const kennung = await page.evaluate(
       (gesucht) =>
         new Promise<number | null>((fertig) => {
@@ -95,8 +103,14 @@ test.describe('Büro ohne Netz', () => {
     expect(kennung).toBeTruthy()
 
     await page.goto(`/office/partner/${kennung}`, { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('h1'), 'nie geöffnete Detailseite geht trotzdem auf').toContainText(
-      name,
+    await expect(page.locator('h1'), 'zweite Detailseite geht trotzdem auf').toContainText(name, {
+      timeout: 20_000,
+    })
+
+    // Und ein Bereich, der nie offen war, sagt das — statt eine fremde Seite zu zeigen
+    await page.goto('/office/steuer', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('h1'), 'ehrliche Auskunft statt falscher Seite').toContainText(
+      'noch nicht offen',
       { timeout: 20_000 },
     )
   })

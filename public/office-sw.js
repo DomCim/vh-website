@@ -22,11 +22,29 @@ const CACHE = 'vh-buero-geruest'
 /** Ohne das hier käme man nach dem Schließen der App nicht mehr hinein. */
 const GERUEST = '/office'
 
+/**
+ * Auskunftsseite für Ansichten, die noch nie offen waren.
+ *
+ * Ersatzweise die übergeordnete Liste auszuliefern war ein Fehlgriff: Sie
+ * erschien unter der Adresse der Detailseite, und wer einen Beleg aufrief,
+ * bekam die Belegliste zu sehen — ohne Hinweis, dass es nicht sein Beleg ist.
+ * Eine schlichte Auskunft ist ehrlicher als die falsche Seite.
+ */
+const AUSKUNFT = '/office-nicht-geladen.html'
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.add(GERUEST))
+      /*
+       * Jeden Eintrag einzeln, und Fehlschläge einzeln verzeihen.
+       *
+       * `addAll` bricht beim ersten Fehlschlag ab und legt gar nichts ab. Beim
+       * Installieren steht man meist auf der Anmeldeseite, und was dort nicht
+       * abrufbar ist, riss bisher die Auskunftsseite mit — ausgerechnet die,
+       * die später erklären soll, warum etwas fehlt.
+       */
+      .then((cache) => Promise.allSettled([GERUEST, AUSKUNFT].map((pfad) => cache.add(pfad))))
       .catch(() => undefined)
       .then(() => self.skipWaiting()),
   )
@@ -120,24 +138,16 @@ self.addEventListener('fetch', (event) => {
         const cache = await caches.open(CACHE)
 
         /*
-         * Der Reihe nach: die Seite selbst, dann ihr übergeordneter Bereich,
-         * zuletzt die Übersicht. Eine Hülle vom falschen Bereich auszuliefern
-         * wäre schlimmer als nichts — Next hydriert dann eine Seite, die zur
-         * Adresse nicht passt, und die Anwendung bleibt tot stehen. Der Weg
-         * über die Eltern trifft dagegen fast immer: `/office/belege/xyz`
-         * landet bei `/office/belege`, und das ist die Liste, die ohnehin
-         * gemeint war.
+         * Nur die Seite selbst — oder eine ehrliche Auskunft.
+         *
+         * Kennungen sind im Schlüssel bereits ersetzt: Wer einen Beleg
+         * geöffnet hat, kann offline jeden öffnen, weil sich alle dieselbe
+         * Hülle teilen. Was noch nie offen war, gibt es aber nicht, und dann
+         * ist die Auskunft besser als eine fremde Seite unter dieser Adresse.
          */
-        const url = new URL(anfrage.url)
-        const teile = url.pathname.split('/').filter(Boolean)
-        while (teile.length) {
-          const versuch = await cache.match(schluessel(`${self.location.origin}/${teile.join('/')}`))
-          if (versuch) return versuch
-          teile.pop()
-        }
-
         return (
-          (await cache.match(GERUEST)) ||
+          (await cache.match(schluessel(anfrage.url))) ||
+          (await cache.match(AUSKUNFT)) ||
           new Response('Ohne Netz und ohne gespeicherte Fassung dieser Seite.', {
             status: 503,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
