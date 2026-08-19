@@ -121,6 +121,10 @@ async function ablegen(cache, pfad) {
    * Rechnungen und Kalender: Sie bringen nichts Fertiges mit, sondern bauen
    * sich erst im Browser auf — ohne ihr Skript steht dort nichts.)
    */
+  // Getrennt gebaut liegen die Büro-Dateien unter `/office/_next/…`, sonst
+  // unter `/_next/…`. Die Seite sagt es selbst.
+  const vorsatz = text.includes('/office/_next/static/') ? '/office' : ''
+
   const zubehoer = new Set([
     ...[...text.matchAll(/["'](\/(?:office\/)?_next\/static\/[^"'\s\\]+)/g)].map((t) => t[1]),
     /*
@@ -128,13 +132,17 @@ async function ablegen(cache, pfad) {
      *
      * In Nexts Ladedaten stehen nachgeladene Teile als `static/chunks/…`, ohne
      * führenden Pfad — den setzt der Browser zur Laufzeit davor. Welcher es
-     * ist, hängt davon ab, ob das Büro getrennt gebaut wurde. Statt das zu
-     * erraten, werden beide Adressen versucht; die falsche scheitert still.
+     * ist, hängt davon ab, ob das Büro getrennt gebaut wurde; die Seite selbst
+     * verrät es aber in ihren übrigen Adressen.
+     *
+     * Kurzzeitig wurden hier beide Schreibweisen geholt und die falsche
+     * scheitern gelassen. Das verdoppelte die Anfragen beim Einbau, und auf
+     * einem langsamen Gerät war der Worker dann noch nicht bereit, wenn ihn
+     * jemand brauchte.
      */
-    ...[...text.matchAll(/["'](static\/(?:chunks|css|media)\/[^"'\s\\]+)/g)].flatMap((t) => [
-      `/_next/${t[1]}`,
-      `/office/_next/${t[1]}`,
-    ]),
+    ...[...text.matchAll(/["'](static\/(?:chunks|css|media)\/[^"'\s\\]+)/g)].map(
+      (t) => `${vorsatz}/_next/${t[1]}`,
+    ),
     // Schriften und Bilder aus `url(…)` in eingebetteten Stilen; hier ist die
     // schließende Klammer tatsächlich das Ende
     ...[...text.matchAll(/url\(\s*["']?(\/(?:office\/)?_next\/static\/[^"')\s\\]+)/g)].map(

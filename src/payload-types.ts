@@ -86,6 +86,7 @@ export interface Config {
     stocktakes: Stocktake;
     counters: Counter;
     deletions: Deletion;
+    drafts: Draft;
     'system-state': SystemState;
     'mail-log': MailLog;
     'push-subscriptions': PushSubscription;
@@ -117,6 +118,7 @@ export interface Config {
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
     deletions: DeletionsSelect<false> | DeletionsSelect<true>;
+    drafts: DraftsSelect<false> | DraftsSelect<true>;
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
@@ -1067,52 +1069,22 @@ export interface Deletion {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "system-state".
+ * via the `definition` "drafts".
  */
-export interface SystemState {
+export interface Draft {
   id: number;
-  key: string;
-  lastRun?: string | null;
-  ok?: boolean | null;
-  note?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "mail-log".
- */
-export interface MailLog {
-  id: number;
-  to: string;
-  from?: string | null;
-  subject: string;
-  status: 'gesendet' | 'fehler' | 'ohneVersand';
-  kind?: ('bestellung' | 'fertigung' | 'versand' | 'anfrage' | 'zugangscode' | 'postfach' | 'sonstiges') | null;
-  /**
-   * Antwort des Mailservers, wenn der Versand nicht geklappt hat.
-   */
-  error?: string | null;
-  /**
-   * Dateinamen, durch Komma getrennt.
-   */
-  attachments?: string | null;
-  order?: (number | null) | Order;
-  inquiry?: (number | null) | Inquiry;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "push-subscriptions".
- */
-export interface PushSubscription {
-  id: number;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  label?: string | null;
-  user?: (number | null) | User;
+  benutzer: number | User;
+  schluessel: string;
+  stand:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  geraet?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1168,6 +1140,57 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-state".
+ */
+export interface SystemState {
+  id: number;
+  key: string;
+  lastRun?: string | null;
+  ok?: boolean | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mail-log".
+ */
+export interface MailLog {
+  id: number;
+  to: string;
+  from?: string | null;
+  subject: string;
+  status: 'gesendet' | 'fehler' | 'ohneVersand';
+  kind?: ('bestellung' | 'fertigung' | 'versand' | 'anfrage' | 'zugangscode' | 'postfach' | 'sonstiges') | null;
+  /**
+   * Antwort des Mailservers, wenn der Versand nicht geklappt hat.
+   */
+  error?: string | null;
+  /**
+   * Dateinamen, durch Komma getrennt.
+   */
+  attachments?: string | null;
+  order?: (number | null) | Order;
+  inquiry?: (number | null) | Inquiry;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "push-subscriptions".
+ */
+export interface PushSubscription {
+  id: number;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  label?: string | null;
+  user?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1268,6 +1291,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'deletions';
         value: number | Deletion;
+      } | null)
+    | ({
+        relationTo: 'drafts';
+        value: number | Draft;
       } | null)
     | ({
         relationTo: 'system-state';
@@ -1852,6 +1879,18 @@ export interface CountersSelect<T extends boolean = true> {
 export interface DeletionsSelect<T extends boolean = true> {
   bereich?: T;
   datensatz?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "drafts_select".
+ */
+export interface DraftsSelect<T extends boolean = true> {
+  benutzer?: T;
+  schluessel?: T;
+  stand?: T;
+  geraet?: T;
   updatedAt?: T;
   createdAt?: T;
 }

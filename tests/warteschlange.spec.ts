@@ -33,6 +33,22 @@ test.describe('Schreiben ohne Netz', () => {
     await page.goto('/office/partner/neu')
     await page.waitForLoadState('networkidle')
 
+    /*
+     * Erst wenn der Service Worker steht, darf das Netz weg.
+     *
+     * Ohne ihn bedient niemand die Seite, und die Probe scheitert mit
+     * `ERR_INTERNET_DISCONNECTED` an einer Stelle, die mit der Warteschlange
+     * gar nichts zu tun hat. Einbau und Aktivierung brauchen auf einem
+     * ausgelasteten Prüfläufer länger als hier.
+     */
+    await page
+      .waitForFunction(
+        () => navigator.serviceWorker.getRegistration('/office').then((r) => Boolean(r?.active)),
+        null,
+        { timeout: 60_000, polling: 500 },
+      )
+      .catch(() => undefined)
+
     // ── Netz weg ──
     await context.setOffline(true)
 

@@ -62,6 +62,21 @@ test.describe('Büro ohne Netz', () => {
     await page.goto('/office/partner')
     await expect(page.getByText(name)).toBeVisible({ timeout: 30_000 })
 
+    /*
+     * Auf den Worker warten, nicht nach ihm schauen.
+     *
+     * Einbau und Aktivierung brauchen ihre Zeit — auf einem ausgelasteten
+     * Prüfläufer mehr als hier. Eine Momentaufnahme direkt nach dem Laden
+     * meldete deshalb „nicht bereit", obwohl er eine Sekunde später stand.
+     */
+    await page
+      .waitForFunction(
+        () => navigator.serviceWorker.getRegistration('/office').then((r) => Boolean(r?.active)),
+        null,
+        { timeout: 60_000, polling: 500 },
+      )
+      .catch(() => undefined)
+
     const worker = await page.evaluate(() =>
       navigator.serviceWorker.getRegistration('/office').then((r) => Boolean(r?.active)),
     )

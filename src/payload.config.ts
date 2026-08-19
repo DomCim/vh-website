@@ -14,6 +14,7 @@ import { Categories } from './collections/Categories'
 import { Contacts } from './collections/Contacts'
 import { Counters } from './collections/Counters'
 import { Deletions } from './collections/Deletions'
+import { Drafts } from './collections/Drafts'
 import { MailLog } from './collections/MailLog'
 import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
@@ -88,6 +89,7 @@ export default buildConfig({
     Stocktakes,
     Counters,
     Deletions,
+    Drafts,
     SystemState,
     MailLog,
     PushSubscriptions,
