@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 
 import { istBereich } from '../../lib/bereiche'
 import { abgleichen, bestandLaden, netzZustandSetzen } from '../../lib/buero/bestand'
+import { abarbeiten, warteschlangeLaden } from '../../lib/buero/warteschlange'
 
 /**
  * Hält den Bestand im Gerät aktuell.
@@ -39,7 +40,11 @@ export function BestandAnbieter() {
   useEffect(() => {
     beendet.current = false
 
-    void bestandLaden().then(() => abgleichen())
+    void bestandLaden().then(() => {
+      void warteschlangeLaden()
+      void abarbeiten()
+      return abgleichen()
+    })
 
     /** Gesammelte Meldungen abarbeiten. */
     const nachziehen = () => {
@@ -98,6 +103,7 @@ export function BestandAnbieter() {
         versuche.current = 0
         // Zwischen dem letzten Abgleich und dieser Verbindung kann einiges
         // passiert sein — etwa die Anmeldung selbst.
+        void abarbeiten()
         void abgleichen()
       }
 
@@ -120,6 +126,7 @@ export function BestandAnbieter() {
 
     const beiSichtbarkeit = () => {
       if (document.visibilityState === 'visible') {
+        void abarbeiten()
         void abgleichen()
         void verbinden()
       } else {
@@ -129,6 +136,8 @@ export function BestandAnbieter() {
 
     const beiOnline = () => {
       netzZustandSetzen(true)
+      // Zuerst das Eigene loswerden, dann nachsehen was fremd dazugekommen ist
+      void abarbeiten()
       void abgleichen()
       void verbinden()
     }
@@ -148,7 +157,9 @@ export function BestandAnbieter() {
     void verbinden()
 
     const uhr = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void abgleichen()
+      if (document.visibilityState !== 'visible') return
+      void abarbeiten()
+      void abgleichen()
     }, RUECKFALL_MS)
 
     document.addEventListener('visibilitychange', beiSichtbarkeit)

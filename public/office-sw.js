@@ -118,8 +118,25 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(async () => {
         const cache = await caches.open(CACHE)
+
+        /*
+         * Der Reihe nach: die Seite selbst, dann ihr übergeordneter Bereich,
+         * zuletzt die Übersicht. Eine Hülle vom falschen Bereich auszuliefern
+         * wäre schlimmer als nichts — Next hydriert dann eine Seite, die zur
+         * Adresse nicht passt, und die Anwendung bleibt tot stehen. Der Weg
+         * über die Eltern trifft dagegen fast immer: `/office/belege/xyz`
+         * landet bei `/office/belege`, und das ist die Liste, die ohnehin
+         * gemeint war.
+         */
+        const url = new URL(anfrage.url)
+        const teile = url.pathname.split('/').filter(Boolean)
+        while (teile.length) {
+          const versuch = await cache.match(schluessel(`${self.location.origin}/${teile.join('/')}`))
+          if (versuch) return versuch
+          teile.pop()
+        }
+
         return (
-          (await cache.match(schluessel(anfrage.url))) ||
           (await cache.match(GERUEST)) ||
           new Response('Ohne Netz und ohne gespeicherte Fassung dieser Seite.', {
             status: 503,

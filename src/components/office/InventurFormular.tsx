@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
+import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 
 export type InventurZeile = {
   item: number
@@ -65,11 +66,10 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/inventur', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/inventur',
+        bereich: 'inventur',
+        koerper: {
           id: w.id,
           title: w.title,
           date: w.date,
@@ -82,21 +82,25 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
             unitValue: z.unitValue,
             note: z.note,
           })),
-        }),
+        },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung(j?.error === 'abgeschlossen' ? 'Der Lauf ist bereits abgeschlossen.' : 'Das hat nicht geklappt.')
-        return
-      }
-      if (!w.id) router.push(`/office/inventur/${j.id}`)
+      if (!w.id && sofort) router.push(`/office/inventur/${id}`)
       else {
         setzen({ status: neuerStatus ?? w.status })
-        setMeldung(neuerStatus === 'abgeschlossen' ? 'Abgeschlossen.' : 'Gespeichert.')
+        setMeldung(
+          !sofort
+            ? 'Gemerkt — geht raus, sobald wieder Netz da ist.'
+            : neuerStatus === 'abgeschlossen'
+              ? 'Abgeschlossen.'
+              : 'Gespeichert.',
+        )
       }
-      router.refresh()
-    } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+    } catch (err) {
+      if (err instanceof AbsendeFehler && err.daten?.error === 'abgeschlossen') {
+        setMeldung('Der Lauf ist bereits abgeschlossen.')
+        return
+      }
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

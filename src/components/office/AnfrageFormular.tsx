@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type AnfrageWerte = {
   id: number | string
@@ -18,7 +18,6 @@ const STATUS = [
 
 /** Stand und Notiz zu einer Anfrage — die Antwort selbst geht übers Postfach. */
 export function AnfrageFormular({ werte }: { werte: AnfrageWerte }) {
-  const router = useRouter()
   const [w, setW] = useState<AnfrageWerte>(werte)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
@@ -27,21 +26,15 @@ export function AnfrageFormular({ werte }: { werte: AnfrageWerte }) {
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/anfrage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ...w, status: neuerStatus ?? w.status }),
+      const { sofort } = await absenden({
+        pfad: '/api/office/anfrage',
+        bereich: 'anfragen',
+        koerper: { ...w, status: neuerStatus ?? w.status },
       })
-      if (!res.ok) {
-        setMeldung('Das hat nicht geklappt.')
-        return
-      }
       if (neuerStatus) setW((v) => ({ ...v, status: neuerStatus }))
-      setMeldung('Gespeichert.')
-      router.refresh()
+      setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

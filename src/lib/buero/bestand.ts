@@ -284,6 +284,42 @@ export async function bestandVergessen(): Promise<void> {
   }
 }
 
+// ── Örtliche Änderungen ─────────────────────────────────────────────────────
+
+/**
+ * Legt einen Datensatz sofort in den Bestand — bevor der Server ihn kennt.
+ *
+ * Das ist die Hälfte, die eine Eingabe ohne Netz brauchbar macht: Wer in der
+ * Werkstatt einen Beleg erfasst, sieht ihn augenblicklich in der Liste. Die
+ * andere Hälfte ist die Warteschlange, die ihn später abschickt.
+ */
+export async function oertlichMerken(bereich: Bereich, datensatz: Datensatz): Promise<void> {
+  const vorher = bestand.get(bereich) ?? []
+  const nachher = new Map(vorher.map((d) => [String(d.id), d]))
+  const alt = nachher.get(String(datensatz.id))
+  nachher.set(String(datensatz.id), { ...alt, ...datensatz })
+  bestand.set(bereich, [...nachher.values()])
+  melden(bereich)
+
+  if (speicherVerfuegbar()) {
+    await schreiben(bereich, [{ ...alt, ...datensatz }]).catch(() => undefined)
+  }
+}
+
+/** Nimmt einen Datensatz wieder heraus — etwa eine vorläufige Kennung. */
+export async function oertlichEntfernen(
+  bereich: Bereich,
+  id: string | number,
+): Promise<void> {
+  const vorher = bestand.get(bereich) ?? []
+  bestand.set(
+    bereich,
+    vorher.filter((d) => String(d.id) !== String(id)),
+  )
+  melden(bereich)
+  if (speicherVerfuegbar()) await entfernen(bereich, [id]).catch(() => undefined)
+}
+
 // ── Zugriff aus den Seiten ──────────────────────────────────────────────────
 
 function abonnieren(bereich: Bereich) {

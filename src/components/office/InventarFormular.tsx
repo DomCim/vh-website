@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type InventarWerte = {
   id?: number | string
@@ -56,22 +57,15 @@ export function InventarFormular({
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/inventar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(w),
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/inventar',
+        bereich: 'inventar',
+        koerper: { ...w },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Das hat nicht geklappt.')
-        return
-      }
-      if (!w.id) router.push(`/office/inventar/${j.id}`)
-      else setMeldung('Gespeichert.')
-      router.refresh()
+      if (!w.id && sofort) router.push(`/office/inventar/${id}`)
+      else setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

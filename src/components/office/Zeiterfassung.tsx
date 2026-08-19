@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type Zeitbuchung = { day?: string | null; minutes?: number | null; note?: string | null }
 
@@ -36,7 +36,6 @@ export function Zeiterfassung({
   auftragswert?: number | null
   materialkosten?: number
 }) {
-  const router = useRouter()
   const [laeuft, setLaeuft] = useState<string | null>(laeuftSeit ?? null)
   const [jetzt, setJetzt] = useState(() => Date.now())
   const [nachtrag, setNachtrag] = useState('')
@@ -58,20 +57,39 @@ export function Zeiterfassung({
   async function rufen(aktion: string, extra: Record<string, unknown> = {}) {
     setBusy(true)
     try {
-      const res = await fetch('/api/office/zeit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: auftragId, aktion, notiz: notiz || undefined, ...extra }),
-      })
-      const j = await res.json()
-      if (res.ok) {
-        if (aktion === 'start') setLaeuft(j.laeuftSeit)
-        if (aktion === 'stop') setLaeuft(null)
-        setNotiz('')
-        setNachtrag('')
-        router.refresh()
+      // Der Zeitpunkt kommt von hier: In der Werkstatt läuft die Uhr auch ohne
+      // Netz, und die Buchung erreicht den Server dann erst später.
+      const zeitpunkt = new Date().toISOString()
+
+      // So soll der Auftrag im Bestand aussehen, bevor der Server geantwortet hat
+      const vorschau: Record<string, unknown> = { id: auftragId }
+      if (aktion === 'start') vorschau.runningSince = zeitpunkt
+      if (aktion === 'stop') {
+        vorschau.runningSince = null
+        const minuten = laeuft
+          ? Math.max(1, Math.round((Date.now() - new Date(laeuft).getTime()) / 60000))
+          : 0
+        if (minuten) {
+          vorschau.timeEntries = [
+            ...buchungen,
+            { day: zeitpunkt, minutes: minuten, note: notiz || undefined },
+          ]
+        }
       }
+
+      await absenden({
+        pfad: '/api/office/zeit',
+        bereich: 'auftraege',
+        koerper: { id: auftragId, aktion, notiz: notiz || undefined, zeitpunkt, ...extra },
+        vorschau,
+      })
+
+      if (aktion === 'start') setLaeuft(zeitpunkt)
+      if (aktion === 'stop') setLaeuft(null)
+      setNotiz('')
+      setNachtrag('')
+    } catch {
+      // Die Eingabe liegt im Gerät; mehr lässt sich hier nicht tun
     } finally {
       setBusy(false)
     }

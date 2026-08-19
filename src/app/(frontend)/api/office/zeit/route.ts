@@ -11,6 +11,11 @@ export const dynamic = 'force-dynamic'
  * arbeitet an einem Stück, nicht an dreien gleichzeitig. Beim Stoppen wird
  * die Zeit auf volle Minuten gerundet und als Buchung abgelegt — die Uhr
  * selbst hält nichts fest, sie merkt sich nur den Beginn.
+ *
+ * Die Zeit kommt vom Gerät und nicht von hier: In der Werkstatt wird die Uhr
+ * auch ohne Netz gestartet und gestoppt, und die Buchung erreicht den Server
+ * dann erst später. Mit der Serverzeit stünde dort die Stunde, in der das Netz
+ * wiederkam — nicht die, in der gearbeitet wurde.
  */
 export async function POST(req: Request) {
   try {
@@ -26,8 +31,16 @@ export async function POST(req: Request) {
       minuten?: number
       notiz?: string
       index?: number
+      zeitpunkt?: string
     }
     if (!b.id || !b.aktion) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+
+    // Angabe des Geräts, sofern brauchbar — sonst die eigene Uhr
+    const gemeldet = b.zeitpunkt ? new Date(b.zeitpunkt) : null
+    const jetzt =
+      gemeldet && !Number.isNaN(gemeldet.getTime()) && gemeldet.getTime() < Date.now() + 60_000
+        ? gemeldet
+        : new Date()
 
     const auftrag = (await payload.findByID({
       collection: 'jobs',
@@ -51,19 +64,19 @@ export async function POST(req: Request) {
         collection: 'jobs',
         id: b.id,
         overrideAccess: true,
-        data: { runningSince: new Date().toISOString() },
+        data: { runningSince: jetzt.toISOString() },
       })
-      return NextResponse.json({ ok: true, laeuftSeit: new Date().toISOString() })
+      return NextResponse.json({ ok: true, laeuftSeit: jetzt.toISOString() })
     }
 
     if (b.aktion === 'stop') {
       if (!auftrag.runningSince) return NextResponse.json({ error: 'laeuft-nicht' }, { status: 409 })
       const minuten = Math.max(
         1,
-        Math.round((Date.now() - new Date(auftrag.runningSince).getTime()) / 60000),
+        Math.round((jetzt.getTime() - new Date(auftrag.runningSince).getTime()) / 60000),
       )
       buchungen.push({
-        day: new Date().toISOString(),
+        day: jetzt.toISOString(),
         minutes: minuten,
         note: b.notiz?.trim() || undefined,
       })
@@ -80,7 +93,7 @@ export async function POST(req: Request) {
       const minuten = Math.round(Number(b.minuten) || 0)
       if (minuten < 1) return NextResponse.json({ error: 'keine-zeit' }, { status: 400 })
       buchungen.push({
-        day: new Date().toISOString(),
+        day: jetzt.toISOString(),
         minutes: minuten,
         note: b.notiz?.trim() || undefined,
       })

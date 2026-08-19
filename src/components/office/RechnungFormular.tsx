@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type Position = {
   description: string
@@ -87,19 +88,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/rechnung', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ...w, status: neuerStatus ?? w.status }),
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/rechnung',
+        bereich: 'rechnungen',
+        koerper: { ...w, status: neuerStatus ?? w.status },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Speichern fehlgeschlagen.')
-        return
-      }
-      router.push(`/office/rechnungen/${j.id}`)
-      router.refresh()
+      // Ohne Netz bekommt eine neue Rechnung nur eine vorläufige Kennung
+      if (sofort) router.push(`/office/rechnungen/${id}`)
+      else setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
       setMeldung('Speichern fehlgeschlagen.')
     } finally {

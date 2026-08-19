@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -47,7 +47,6 @@ export function ArtikelFormular({
   stundensatz: number
   wunschaufschlag: number
 }) {
-  const router = useRouter()
   const [zeilen, setZeilen] = useState<StuecklistenZeile[]>(stueckliste)
   const [dienste, setDienste] = useState<DienstleisterZeile[]>(dienstleister)
   const [minuten, setMinuten] = useState<number>(arbeitsminuten ?? 0)
@@ -81,21 +80,26 @@ export function ArtikelFormular({
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/stueckliste', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+      const { sofort } = await absenden({
+        pfad: '/api/office/stueckliste',
+        bereich: 'artikel',
+        koerper: {
           produktId,
           zeilen: zeilen.filter((z) => z.item && z.quantity),
           dienstleister: dienste.filter((d) => d.contact && d.service?.trim()),
           arbeitsminuten: minuten || 0,
-        }),
+        },
+        // Der Schlüssel heißt hier produktId — der Bestand kennt nur `id`
+        vorschau: {
+          id: produktId,
+          billOfMaterials: zeilen.filter((z) => z.item && z.quantity),
+          serviceProviders: dienste.filter((d) => d.contact && d.service?.trim()),
+          productionMinutes: minuten || 0,
+        },
       })
-      setMeldung(res.ok ? 'Gespeichert.' : 'Das hat nicht geklappt.')
-      if (res.ok) router.refresh()
+      setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

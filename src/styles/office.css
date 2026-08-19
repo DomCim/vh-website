@@ -724,3 +724,8 @@
   color: var(--buero-auf-tinte);
   background: var(--buero-bronze);
 }
+
+/* Etwas ist dauerhaft abgelehnt worden — das muss jemand ansehen */
+.buero-abgleich.streng {
+  background: var(--buero-rot);
+}
