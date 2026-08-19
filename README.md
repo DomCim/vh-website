@@ -8,7 +8,7 @@ Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moder
 
 - **1:1-Design** angelehnt an die bestehende Website (Logo, Navigation, Hero-Slider, dunkler Footer), veredelt mit dezenten Scroll-Animationen; der Header übernimmt auf der Startseite automatisch den Farbton des aktiven Hero-Bildes (berechnet aus dem oberen Bildstreifen, Schrift/Logo wechseln je nach Helligkeit)
 - **Dreisprachig** Deutsch/Französisch/Englisch — alle Inhalte im Backend übersetzbar (Fallback: Deutsch)
-- **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout über **PayPal** (auch ohne PayPal-Konto mit Karte oder Lastschrift, immer der volle Betrag in einem Schritt); Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
+- **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout über **PayPal** (auch ohne PayPal-Konto mit Karte oder Lastschrift; der Betrag kommt immer als ganzer an, eine Ratenzahlung vereinbart die Kundschaft mit PayPal); Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
 - **Bestellverwaltung** im Büro (offen → bezahlt → in Fertigung → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet“, Bestätigungs-Mail an Kunden + Benachrichtigung an euch
 - **Büro unter `/office`**: CRM und Warenwirtschaft mit einer Anmeldung — Angebote, Fertigungsaufträge, Stücklisten mit Dienstleistern, Belege per Foto (von Claude ausgelesen), Inventar mit Inventur, Steuer-Export, **Postfach für mehrere IMAP-Konten** und Push-Benachrichtigungen; als App installierbar
 - **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
@@ -172,9 +172,14 @@ Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurüc
 
 ## PayPal einrichten
 
-PayPal ist die einzige Zahlart im Shop. Bezahlt wird immer der **volle Betrag in
-einem Schritt** — Anzahlungen und Teilzahlungen laufen ausschließlich über
-Rechnungen aus dem Büro (per Überweisung, mit GiroCode auf dem Papier).
+PayPal ist die einzige Zahlart im Shop. Beim Betrieb kommt immer der **volle
+Betrag in einem Schritt** an; ob die Kundschaft ihn später oder in Raten zahlt,
+vereinbart sie mit PayPal und nicht mit uns. Genau deshalb reicht diese eine
+Zahlart: Teilzahlung ist möglich, ohne dass der Betrieb sie finanzieren muss.
+
+Gestufte Zahlung im Projektgeschäft — Anzahlung, Zwischen-, Schlussrechnung —
+läuft davon unabhängig über Rechnungen aus dem Büro (per Überweisung, mit
+GiroCode auf dem Papier).
 
 1. [PayPal Developer](https://developer.paypal.com) → REST-App erstellen (Business-Konto nötig) → Client-ID + Secret.
 2. Im Admin unter **Verwaltung → Integrationen → PayPal** eintragen; zum Testen Sandbox-Zugangsdaten + Haken „Sandbox-Modus".

@@ -71,7 +71,7 @@ const de = {
     paymentMethod: 'Zahlungsart',
     optionPaypal: 'PayPal',
     paypalNote:
-      'Bezahlt wird der volle Betrag in einem Schritt — mit PayPal-Konto, Karte oder Lastschrift. Ein PayPal-Konto ist dafür nicht nötig.',
+      'Mit PayPal-Konto, Karte oder Lastschrift — ein PayPal-Konto ist dafür nicht nötig. Ob Sie den Betrag auf einmal zahlen, später oder in Raten, vereinbaren Sie direkt mit PayPal.',
     shipping: 'Versand',
     contactData: 'Ihre Kontaktdaten',
     name: 'Vor- und Nachname',
@@ -342,7 +342,7 @@ const fr: Dictionary = {
     paymentMethod: 'Moyen de paiement',
     optionPaypal: 'PayPal',
     paypalNote:
-      "Le montant total est réglé en une seule fois — avec un compte PayPal, une carte ou un prélèvement. Un compte PayPal n'est pas nécessaire.",
+      "Avec un compte PayPal, une carte ou un prélèvement — un compte PayPal n'est pas nécessaire. Payer en une fois, plus tard ou en plusieurs fois : cela se règle directement avec PayPal.",
     shipping: 'Livraison',
     contactData: 'Vos coordonnées',
     name: 'Nom et prénom',
@@ -610,7 +610,7 @@ const en: Dictionary = {
     paymentMethod: 'Payment method',
     optionPaypal: 'PayPal',
     paypalNote:
-      'The full amount is paid in one go — with a PayPal account, a card or direct debit. A PayPal account is not required.',
+      'With a PayPal account, a card or direct debit — a PayPal account is not required. Whether you pay in one go, later or in instalments is something you arrange directly with PayPal.',
     shipping: 'Delivery',
     contactData: 'Your contact details',
     name: 'First and last name',

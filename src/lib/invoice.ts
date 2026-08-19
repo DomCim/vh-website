@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit'
 
 import { facturXml, type FacturXDaten } from './facturx'
+import { giroBild } from './girocode'
 import type { CompanyInfo } from './mail'
 import { briefkopf, fusszeile, LINKS, RECHTS, schriftenDa, schriftenSetzen } from './pdfkopf'
 
@@ -346,6 +347,47 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
       doc.y,
       { width: rechts - links },
     )
+
+    /*
+     * Der GiroCode neben der Bankverbindung.
+     *
+     * Eine IBAN auf Papier heißt für die Kundschaft: 22 Zeichen abtippen, und
+     * jede falsche Ziffer wird zu einer Rückfrage bei uns. Derselbe Betrag als
+     * QR-Code heißt: Kamera drauf, bestätigen. Bei einer Anzahlung, die vor
+     * dem Fertigungsbeginn eingehen soll, ist das der Unterschied zwischen
+     * „heute Abend" und „nächste Woche".
+     *
+     * Fehlt eine Angabe oder passt der Betrag nicht ins Format, liefert
+     * `giroBild` nichts — dann steht hier eben nur die Bankverbindung. Ein
+     * QR-Code mit falschem Betrag wäre schlimmer als keiner: Er sieht
+     * vertrauenswürdig aus und führt zu einer Zahlung, die niemand erwartet.
+     */
+    const bild = await giroBild({
+      empfaenger: company.legalName || company.name || 'Vincent Hellmann',
+      iban: company.iban,
+      bic: company.bic,
+      betrag: runden(nettoGesamt + steuerGesamt),
+      zweck: `Rechnung ${daten.nummer}`,
+    })
+
+    if (bild) {
+      doc.moveDown(0.6)
+      const oben = doc.y
+      const kante = 96
+      doc.image(bild, links, oben, { width: kante, height: kante })
+      doc
+        .fontSize(8)
+        .fillColor('#444')
+        .text(
+          'Zahlen ohne Abtippen: Diesen Code mit der Banking-App abfotografieren — Empfänger, Betrag und Verwendungszweck stehen dann fertig da.',
+          links + kante + 12,
+          oben + 4,
+          { width: rechts - links - kante - 12 },
+        )
+      doc.fontSize(9)
+      // Unter dem Bild weiterschreiben, nicht neben ihm
+      doc.y = Math.max(doc.y, oben + kante)
+    }
   }
   // Wer zur Besteuerung nach vereinbarten Entgelten optiert hat, muss das auf
   // jeder Rechnung vermerken — sonst fehlt eine Pflichtangabe.

@@ -2,6 +2,11 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Der QR-Code auf der Rechnung
+
+- **Zahlen ohne Abtippen.** Unter der Bankverbindung steht jetzt ein GiroCode: Kamera drauf, die Banking-App schlägt Empfänger, Betrag und Verwendungszweck fertig vor. 22 Zeichen IBAN abzutippen bedeutet sonst, dass eine falsche Ziffer als Rückfrage zurückkommt — und bei einer Anzahlung, die vor dem Fertigungsbeginn eingehen soll, ist das der Unterschied zwischen „heute Abend" und „nächste Woche".
+- **Lieber keiner als ein falscher.** Fehlt die IBAN oder passt sie nicht ins Format, erscheint schlicht kein Code. Ein QR-Code mit falschen Daten sieht vertrauenswürdig aus und führt zu einer Zahlung, die niemand erwartet hat. Auf Angeboten steht ohnehin keiner — dort ist noch nichts fällig.
+
 ## 19.08.2026 — Rechnungen entstehen von selbst, verschickt werden sie von Hand
 
 - **Drei Auslöser, drei Entwürfe.** Wer in Stufen zahlt, bekommt die Rechnungen nicht mehr abgetippt: Die Anzahlung entsteht mit dem Auftrag, die Zwischenrechnung, sobald am Meilenstein ein Datum steht, die Schlussrechnung, wenn der Auftrag auf „Fertig" springt. Jede davon liegt als **Entwurf** in der Liste, mit einer Meldung aufs Handy — abgeschickt wird sie von Hand. Ein versehentlich gesetzter Status kostet damit einen Entwurf und keine Rechnung beim Kunden.
@@ -11,7 +16,7 @@ Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Ein
 
 ## 19.08.2026 — Bezahlt wird über PayPal
 
-- **Stripe ist raus.** Karte, Apple Pay und Klarna liefen bisher über Stripe, PayPal stand als zweite Zahlart daneben. Geblieben ist PayPal — und darüber lässt sich ebenfalls mit Karte oder Lastschrift zahlen, auch ohne PayPal-Konto. Die Kasse fragt deshalb nicht mehr nach der Zahlungsart: Es gibt nur noch einen Weg, und der Betrag geht in einem Schritt raus. Der Webhook-Endpunkt entfällt ersatzlos — die Zahlung wird beim Rücksprung auf die Danke-Seite eingezogen, das braucht keinen Rückruf von außen.
+- **Stripe ist raus.** Karte, Apple Pay und Klarna liefen bisher über Stripe, PayPal stand als zweite Zahlart daneben. Geblieben ist PayPal — und darüber lässt sich ebenfalls mit Karte oder Lastschrift zahlen, auch ohne PayPal-Konto. Die Kasse fragt deshalb nicht mehr nach der Zahlungsart: Es gibt nur noch einen Weg. **Wer nicht alles auf einmal zahlen will, vereinbart das mit PayPal** — späteres Zahlungsziel oder Raten; beim Betrieb kommt der Betrag trotzdem als ganzer an. Die Teilzahlung finanziert damit PayPal und nicht die Werkstatt. Der Webhook-Endpunkt entfällt ersatzlos — die Zahlung wird beim Rücksprung auf die Danke-Seite eingezogen, das braucht keinen Rückruf von außen.
 - **Bestellungen aus der Stripe-Zeit bleiben, wie sie sind.** Anbieter, Session- und Zahlungsnummer stehen weiter an der Bestellung; sie sind der Beleg dafür, welche Zahlung damals wozu gehörte. Nur die Zugangsdaten fallen aus der Datenbank — Schlüssel zu einem Konto, das niemand mehr benutzt, gehören dort nicht herum.
 - **Wenn die Bezahlung nicht eingerichtet ist, sagt die Kasse das jetzt.** Vorher führte der Bestellknopf ins Leere und meldete „bitte versuchen Sie es erneut" — was nicht half, weil ein zweiter Versuch genauso scheitert. Jetzt steht der Hinweis schon bei der Zahlungsart, und der Knopf lässt sich gar nicht erst drücken.
 

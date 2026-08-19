@@ -78,3 +78,55 @@ test.describe('GiroCode', () => {
     expect(ohne[6], 'und alles darunter bleibt an seinem Platz').toBe('DE02120300000000202051')
   })
 })
+
+/**
+ * Und derselbe Code auf dem Blatt.
+ *
+ * Geprüft wird nicht das Aussehen, sondern das, was schiefgehen kann: dass der
+ * Code überhaupt aufs Papier kommt, wenn eine IBAN da ist — und dass bei einer
+ * unbrauchbaren IBAN eben keiner erscheint. Ein QR-Code mit falschen Daten
+ * sieht vertrauenswürdig aus und führt zu einer Zahlung, die niemand erwartet.
+ */
+test.describe('GiroCode auf der Rechnung', () => {
+  const blatt = {
+    art: 'rechnung' as const,
+    nummer: 'RE-2026-0042-3/3',
+    datum: '2026-08-19',
+    preiseSind: 'netto' as const,
+    empfaenger: { name: 'Gemeinde Musterhausen', anschrift: ['Rathausplatz 1'] },
+    positionen: [{ bezeichnung: 'Sitzbank', menge: 1, einzelpreis: 1000, steuersatz: 20 }],
+  }
+  const firma = { legalName: 'Vincent Hellmann EI', vatRate: 20 }
+  const bilder = (pdf: Buffer) => (pdf.toString('latin1').match(/\/Subtype\s*\/Image/g) ?? []).length
+
+  test('mit IBAN steht ein Bild mehr auf dem Blatt', async () => {
+    const { rechnungPdf } = await import('../src/lib/invoice')
+    const ohne = await rechnungPdf(blatt, firma)
+    const mit = await rechnungPdf(blatt, {
+      ...firma,
+      iban: 'FR7630006000011234567890189',
+      bic: 'AGRIFRPP',
+    })
+    expect(bilder(mit)).toBeGreaterThan(bilder(ohne))
+  })
+
+  test('bei unbrauchbarer IBAN bleibt das Blatt, wie es war', async () => {
+    const { rechnungPdf } = await import('../src/lib/invoice')
+    const ohne = await rechnungPdf(blatt, firma)
+    const kaputt = await rechnungPdf(blatt, { ...firma, iban: 'keine-gueltige-iban' })
+    expect(bilder(kaputt)).toBe(bilder(ohne))
+  })
+
+  test('auf dem Angebot steht kein Zahlcode — dort ist noch nichts fällig', async () => {
+    const { rechnungPdf } = await import('../src/lib/invoice')
+    const angebot = await rechnungPdf(
+      { ...blatt, art: 'angebot', nummer: 'AN-2026-0042' },
+      { ...firma, iban: 'FR7630006000011234567890189' },
+    )
+    const rechnung = await rechnungPdf(blatt, {
+      ...firma,
+      iban: 'FR7630006000011234567890189',
+    })
+    expect(bilder(angebot)).toBeLessThan(bilder(rechnung))
+  })
+})
