@@ -43,12 +43,14 @@ export type Datensatz = Record<string, unknown> & { id: number | string }
 export type Rahmen = {
   kiVerfuegbar: boolean
   stundensatz: number
+  wunschaufschlag: number
   firma: { siret: string; vatId: string; iban: string }
 }
 
 const RAHMEN_LEER: Rahmen = {
   kiVerfuegbar: false,
   stundensatz: 65,
+  wunschaufschlag: 40,
   firma: { siret: '', vatId: '', iban: '' },
 }
 let rahmen: Rahmen = RAHMEN_LEER

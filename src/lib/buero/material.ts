@@ -54,3 +54,41 @@ export function bestandsPruefung(
     })
     .sort((a, b) => b.fehlt - a.fehlt || a.name.localeCompare(b.name))
 }
+
+export type Artikel = {
+  id: number | string
+  billOfMaterials?: { item?: unknown; quantity?: number | null }[] | null
+}
+
+/**
+ * Materialbedarf einer Bestellung — über die Stücklisten der bestellten
+ * Artikel. Auch das rechnet die Seite im Gerät; früher waren es zwei
+ * Abfragen, jetzt sind es zwei Listen, die ohnehin schon dastehen.
+ */
+export function bedarfFuerBestellung(
+  bestellung: { items?: { product?: unknown; quantity?: number | null }[] | null },
+  artikel: Artikel[],
+  posten: Posten[],
+): Bedarfsposten[] {
+  const bedarf = new Map<number, number>()
+
+  for (const zeile of bestellung.items ?? []) {
+    const produktId = Number(
+      typeof zeile.product === 'object' ? (zeile.product as { id?: number })?.id : zeile.product,
+    )
+    if (!Number.isFinite(produktId)) continue
+    const produkt = artikel.find((a) => Number(a.id) === produktId)
+    for (const material of produkt?.billOfMaterials ?? []) {
+      const id = Number(
+        typeof material.item === 'object' ? (material.item as { id?: number })?.id : material.item,
+      )
+      if (!Number.isFinite(id) || !material.quantity) continue
+      bedarf.set(id, runden((bedarf.get(id) ?? 0) + material.quantity * (zeile.quantity ?? 1)))
+    }
+  }
+
+  return bestandsPruefung(
+    [...bedarf.entries()].map(([item, quantity]) => ({ item, quantity })),
+    posten,
+  )
+}

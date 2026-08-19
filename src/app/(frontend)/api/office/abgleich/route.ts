@@ -51,6 +51,7 @@ async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
   const rahmen = {
     kiVerfuegbar: false,
     stundensatz: 65,
+    wunschaufschlag: 40,
     firma: { siret: '', vatId: '', iban: '' },
   }
   try {
@@ -61,9 +62,10 @@ async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
   }
   try {
     const einstellungen = (await payload.findGlobal({ slug: 'site-settings', depth: 0 })) as {
-      craft?: { hourlyRate?: number | null } | null
+      craft?: { hourlyRate?: number | null; targetMargin?: number | null } | null
     }
     rahmen.stundensatz = einstellungen?.craft?.hourlyRate ?? 65
+    rahmen.wunschaufschlag = einstellungen?.craft?.targetMargin ?? 40
     const angaben = firmenAngaben(einstellungen)
     rahmen.firma = {
       siret: angaben.siret ?? '',
