@@ -78,7 +78,14 @@ services:
       - traefik.http.routers.vhweb.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       # Niedrigere Priorität als das Büro: Bei zwei passenden Regeln gewinnt
       # die höhere, und /office soll ausdrücklich beim Büro landen.
-      - traefik.http.routers.vhweb.priority=1
+      #
+      # Warum die Zahl so groß ist: Ohne Angabe vergibt Traefik die Priorität
+      # nach der *Länge der Regel*. `Host(`vh.dominikdill.com`)` allein kommt
+      # damit auf 26. Wer hier 1 und 10 einträgt, stellt seine beiden Router
+      # also hinter jeden anderen, der keine Angabe macht — etwa einen
+      # übriggebliebenen Container aus dem vorigen Stack. Der bediente dann
+      # weiter alles, auch /office, und man sieht den alten Stand.
+      - traefik.http.routers.vhweb.priority=100
       - traefik.http.services.vhweb.loadbalancer.server.port=3000
 
   # ── Büro ────────────────────────────────────────────────────────────────
@@ -145,7 +152,8 @@ services:
       # Das Büro, seine eigenen Schnittstellen und die Live-Verbindung
       - traefik.http.routers.vhbuero.rule=Host(`${DOMAIN:-vh.dominikdill.com}`) && (PathPrefix(`/office`) || PathPrefix(`/api/office`) || PathPrefix(`/ws/buero`))
       - traefik.http.routers.vhbuero.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
-      - traefik.http.routers.vhbuero.priority=10
+      # Höher als die Website — siehe die Erklärung dort
+      - traefik.http.routers.vhbuero.priority=200
       - traefik.http.services.vhbuero.loadbalancer.server.port=3000
 
   db:

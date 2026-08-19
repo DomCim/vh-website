@@ -85,6 +85,8 @@ Der Grund ist nüchtern: Vorher teilten sie sich einen Prozess, und ein Fehler i
 
 Was sich dadurch **nicht** ändert: dieselbe Adresse, dieselbe Anmeldung, dieselben Passkeys, dieselbe Datenbank, dasselbe Volume für die Mediathek. Wer wohin geleitet wird, entscheidet Traefik über die Pfade — der Router `vhbuero` hat die höhere Priorität und greift die Büro-Pfade ab, alles andere fällt an `vhweb`.
 
+**Beim Umstellen wichtig:** Der alte Einzelcontainer muss weg. Bleibt er mit seinen Traefik-Labels am Netz `edge` hängen, bedient er weiter dieselbe Adresse — und man sieht den alten Stand, obwohl die neuen Container laufen. In Portainer den alten Stack entfernen (oder ersetzen), nicht danebenstellen.
+
 Die Rolle steuert nur zweierlei:
 
 - **Was es genau einmal geben darf**, macht `web`: Datenbank-Migrationen und Startdaten beim Hochfahren, danach der Takt (nächtliche Sicherung, Erinnerungen, Postfach-Abruf). Liefe das in beiden, gäbe es jede Sicherung doppelt und jede Erinnerung zweimal aufs Handy.
