@@ -369,6 +369,72 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      /*
+       * Zahlungsziele je Stufe.
+       *
+       * Sie stehen hier und nicht am Artikel, weil sie nichts mit dem Stück zu
+       * tun haben, sondern mit der Art, wie der Betrieb Geld einzieht. Bei der
+       * einzelnen Rechnung lässt sich das Datum weiterhin ändern — für den
+       * Kunden, mit dem man etwas anderes vereinbart hat.
+       */
+      name: 'zahlungsziele',
+      label: 'Zahlungsziele',
+      type: 'group',
+      admin: {
+        description:
+          'Wie viele Tage nach Rechnungsstellung fällig wird. Gilt als Vorgabe; an der einzelnen Rechnung änderbar.',
+      },
+      fields: [
+        {
+          name: 'anzahlungTage',
+          label: 'Anzahlung (Tage)',
+          type: 'number',
+          min: 1,
+          defaultValue: 7,
+          admin: {
+            description:
+              'Kurz gehalten: Die Anzahlung hält den Werkstattplatz, und lange offen bringt niemandem etwas.',
+          },
+        },
+        {
+          name: 'zwischenTage',
+          label: 'Zwischenrechnung (Tage)',
+          type: 'number',
+          min: 1,
+          defaultValue: 14,
+        },
+        {
+          name: 'schlussTage',
+          label: 'Schlussrechnung (Tage)',
+          type: 'number',
+          min: 1,
+          defaultValue: 14,
+          admin: {
+            description: 'Geliefert wird ohnehin erst nach Zahlungseingang.',
+          },
+        },
+        {
+          /*
+           * Ab wann das Büro fragt, ob der Werkstattplatz wieder frei wird.
+           *
+           * Bei einer offenen Anzahlung wird nicht gemahnt — es ist noch nichts
+           * geleistet, und wer nur noch überlegt, bekommt keine Mahngebühr.
+           * Irgendwann muss aber die Entscheidung fallen, sonst blockiert ein
+           * Auftrag, den es vielleicht gar nicht gibt, einen Platz in der Reihe.
+           */
+          name: 'platzFreigebenNachTagen',
+          label: 'Nach wie vielen Tagen nach dem Werkstattplatz fragen?',
+          type: 'number',
+          min: 1,
+          defaultValue: 21,
+          admin: {
+            description:
+              'Bleibt die Anzahlung so lange offen, meldet das Büro: Werkstattplatz freigeben? Gemahnt wird dabei nicht.',
+          },
+        },
+      ],
+    },
+    {
       name: 'wartung',
       label: 'Takt (Automatik)',
       type: 'group',

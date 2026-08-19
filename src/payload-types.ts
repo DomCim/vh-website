@@ -2633,6 +2633,24 @@ export interface Integration {
     readonlyKey?: string | null;
   };
   /**
+   * Wie viele Tage nach Rechnungsstellung fällig wird. Gilt als Vorgabe; an der einzelnen Rechnung änderbar.
+   */
+  zahlungsziele?: {
+    /**
+     * Kurz gehalten: Die Anzahlung hält den Werkstattplatz, und lange offen bringt niemandem etwas.
+     */
+    anzahlungTage?: number | null;
+    zwischenTage?: number | null;
+    /**
+     * Geliefert wird ohnehin erst nach Zahlungseingang.
+     */
+    schlussTage?: number | null;
+    /**
+     * Bleibt die Anzahlung so lange offen, meldet das Büro: Werkstattplatz freigeben? Gemahnt wird dabei nicht.
+     */
+    platzFreigebenNachTagen?: number | null;
+  };
+  /**
    * Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.
    */
   wartung?: {
@@ -2900,6 +2918,14 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         apiKey?: T;
         readonlyKey?: T;
+      };
+  zahlungsziele?:
+    | T
+    | {
+        anzahlungTage?: T;
+        zwischenTage?: T;
+        schlussTage?: T;
+        platzFreigebenNachTagen?: T;
       };
   wartung?:
     | T
