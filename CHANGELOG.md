@@ -2,6 +2,10 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Rechnungsversand braucht kein Postfach mehr
+
+- **Ohne eingerichtetes Postfach blockierte der Versand** — die erste echte Rechnung blieb an „Es ist kein Postfach eingerichtet" hängen. Jetzt fällt der Versand auf den normalen Mailweg zurück (SMTP, dieselbe Absenderadresse wie Bestellbestätigungen). Ist ein Postfach eingerichtet, läuft es weiter darüber — dann liegt die Rechnung als Kopie in „Gesendet", und Antworten landen dort, wo sie gelesen werden. Das Versandfenster zeigt in beiden Fällen, mit welchem Absender die Mail rausgeht.
+
 ## 19.08.2026 — Kauf auf Rechnung im Shop
 
 - **Die Kasse bietet jetzt zwei Wege**: PayPal (sobald eingerichtet) und **Kauf auf Rechnung per Überweisung** — der funktioniert ohne jeden Zahlungsdienst. Der Kunde bekommt die Rechnung per E-Mail, mit GiroCode zum Scannen; gefertigt wird nach Zahlungseingang.

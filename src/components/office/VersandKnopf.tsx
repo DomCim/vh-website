@@ -84,7 +84,7 @@ export function VersandKnopf({
       if (!res.ok) {
         setMeldung(
           j?.error === 'kein-postfach'
-            ? 'Es ist kein Postfach eingerichtet — ohne das geht kein Versand.'
+            ? 'Es ist kein Postfach eingerichtet — ohne das geht kein Versand.' // kommt nur noch von alten Serverständen
             : 'Die Mail ging nicht raus.',
         )
         return

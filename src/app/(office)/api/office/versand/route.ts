@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../lib/data'
 import { dokument, type DokumentArt } from '../../../../../lib/dokumente'
 import { nachrichtSenden, postfachFinden } from '../../../../../lib/postfach'
+import { sendMail } from '../../../../../lib/sendMail'
+import { getIntegrations } from '../../../../../lib/settings'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +19,13 @@ export const maxDuration = 120
  *
  * Ohne `an` wird die hinterlegte Adresse des Geschäftspartners genommen;
  * ohne Text der Vorschlag aus dem Dokument.
+ *
+ * Verschickt wird bevorzugt über ein Postfach — dann liegt die Rechnung als
+ * Kopie in „Gesendet", und die Antwort des Kunden landet dort, wo sie
+ * gelesen wird. Ist keines eingerichtet, geht die Mail über den normalen
+ * Versandweg (SMTP, dieselbe Absenderadresse wie Bestellbestätigungen)
+ * hinaus, statt den Versand zu blockieren: Vorher stand hier „ohne Postfach
+ * kein Versand", und die erste echte Rechnung blieb daran hängen.
  */
 export async function POST(req: Request) {
   try {
@@ -37,9 +46,6 @@ export async function POST(req: Request) {
     if (!b.art || !b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
 
     const fach = await postfachFinden(payload, b.fach)
-    if (!fach) {
-      return NextResponse.json({ error: 'kein-postfach' }, { status: 409 })
-    }
 
     let unterlage
     try {
@@ -62,14 +68,32 @@ export async function POST(req: Request) {
     const an = (b.an || unterlage.an || '').trim()
     if (!an) return NextResponse.json({ error: 'empfaenger-fehlt' }, { status: 400 })
 
-    await nachrichtSenden(payload, fach, {
-      an,
-      betreff: b.betreff?.trim() || unterlage.betreff,
-      text: b.text?.trim() || unterlage.text,
-      dateien: [
-        { name: unterlage.dateiname, inhalt: unterlage.datei, typ: 'application/pdf' },
-      ],
-    })
+    const betreff = b.betreff?.trim() || unterlage.betreff
+    const text = b.text?.trim() || unterlage.text
+
+    if (fach) {
+      await nachrichtSenden(payload, fach, {
+        an,
+        betreff,
+        text,
+        dateien: [
+          { name: unterlage.dateiname, inhalt: unterlage.datei, typ: 'application/pdf' },
+        ],
+      })
+    } else {
+      await sendMail(payload, {
+        to: an,
+        subject: betreff,
+        html: text
+          .split('\n')
+          .map((zeile) => zeile || '&nbsp;')
+          .join('<br>'),
+        attachments: [
+          { filename: unterlage.dateiname, content: unterlage.datei, contentType: 'application/pdf' },
+        ],
+        art: 'bestellung',
+      })
+    }
 
     // Erst jetzt festhalten, was verschickt wurde — vorher hätte ein
     // gescheiterter Versand die Mahnstufe hochgezählt.
@@ -101,13 +125,16 @@ export async function GET(req: Request) {
 
   try {
     const unterlage = await dokument(payload, art, id)
+    // Ohne Postfach zeigt das Fenster die System-Absenderadresse — dieselbe,
+    // über die dann auch wirklich verschickt wird.
     const fach = await postfachFinden(payload, null)
+    const { email } = await getIntegrations(payload)
     return NextResponse.json({
       an: unterlage.an ?? '',
       betreff: unterlage.betreff,
       text: unterlage.text,
       dateiname: unterlage.dateiname,
-      absender: fach?.address ?? null,
+      absender: fach?.address ?? email.fromAddress ?? null,
     })
   } catch (err) {
     const grund = err instanceof Error ? err.message : 'fehler'
