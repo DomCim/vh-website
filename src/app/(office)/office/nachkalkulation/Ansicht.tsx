@@ -67,7 +67,9 @@ export function NachkalkulationAnsicht() {
           <div className="buero-kachel-titel">Auftragswert</div>
           <div className="buero-kachel-wert">{euro(a.summe.wert)}</div>
           <div className="buero-kachel-fuss">
-            {a.summe.anzahl} abgeschlossene {a.summe.anzahl === 1 ? 'Auftrag' : 'Aufträge'}
+            {a.summe.anzahl === 1
+              ? '1 abgeschlossener Auftrag'
+              : `${a.summe.anzahl} abgeschlossene Aufträge`}
           </div>
         </div>
         <div className="buero-kachel">

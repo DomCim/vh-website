@@ -120,7 +120,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         }}
         aufVerwerfen={entwurf.verwerfen}
       />
-      {festgeschrieben && (
+      {/* Der Satz nur, solange es die Rechnung noch gibt: Auf einer bereits
+          stornierten steht oben kein „Stornieren" mehr, und ein Hinweis auf
+          einen Knopf, den es nicht gibt, schickt Leute suchen. */}
+      {festgeschrieben && w.status !== 'storniert' && (
         <p className="buero-hinweis">
           Rechnung <strong>{w.invoiceNumber}</strong> ist gestellt. Positionen und Beträge sollten
           jetzt nicht mehr geändert werden — für Korrekturen oben auf „Stornieren“ tippen; das legt
