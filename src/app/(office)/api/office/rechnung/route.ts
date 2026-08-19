@@ -15,6 +15,28 @@ export async function POST(req: Request) {
     }
 
     const b = (await req.json()) as Record<string, any>
+
+    /*
+     * „Zahlung eingegangen" ist ein eigener, enger Weg.
+     *
+     * Alles darunter baut den vollständigen Datensatz und schreibt ihn. Wer
+     * von einer Liste aus nur `{ id, status }` schickte, träfe damit auch
+     * `items: []` — und löschte sämtliche Positionen der Rechnung. Ein Klick,
+     * und eine festgeschriebene Rechnung ist leer.
+     *
+     * Deshalb hier oben abgefangen: Es wird genau das gesetzt, worum es geht.
+     */
+    if (b.aktion === 'bezahlt') {
+      if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      const doc = await payload.update({
+        collection: 'outgoing-invoices',
+        id: b.id,
+        overrideAccess: true,
+        data: { status: 'bezahlt', paidDate: b.paidDate || new Date().toISOString() },
+      })
+      return NextResponse.json({ ok: true, id: doc.id })
+    }
+
     const daten = {
       status: b.status || 'entwurf',
       customerName: b.customerName || undefined,
