@@ -27,6 +27,7 @@ pnpm-debug.log*
 
 # payload
 /media
+/backups
 
 # typescript
 *.tsbuildinfo

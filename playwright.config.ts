@@ -9,7 +9,17 @@ const BASIS = process.env.TEST_BASE_URL ?? 'http://localhost:3000'
  */
 export default defineConfig({
   testDir: './tests',
-  timeout: 30_000,
+  /*
+   * Zwei Minuten je Prüfung statt dreißig Sekunden.
+   *
+   * Die Büro-Prüfungen sind länger geworden: anmelden, Bestand abwarten, Netz
+   * abschalten, Eingabe machen, Netz wieder an, warten bis die Warteschlange
+   * durch ist. Das dauert im gebauten Stand eine halbe Minute und in der
+   * Entwicklung ein Vielfaches. Mit dem alten Wert scheiterten sie an der Uhr
+   * statt an der Sache — und ein Test, der aus Zeitgründen rot wird, sagt
+   * nichts aus.
+   */
+  timeout: 120_000,
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { GRABSTEIN_TAGE } from './bereiche'
+import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
 import { postfaecher, ungeleseneAnzahl } from './postfach'
 import { benachrichtige } from './push'
@@ -125,6 +127,20 @@ export async function datenAufraeumen(payload: Payload): Promise<Record<string, 
     ergebnis.mailprotokoll = weg.docs?.length ?? 0
   } catch {
     ergebnis.mailprotokoll = 0
+  }
+
+  // Grabsteine: Merkzettel über Gelöschtes für Geräte, die offline waren.
+  // Nach der Frist holt sich ein Gerät seinen Bestand ohnehin von vorn.
+  const grabsteinStichtag = new Date(Date.now() - GRABSTEIN_TAGE * 24 * 3600 * 1000)
+  try {
+    const weg = await payload.delete({
+      collection: 'deletions',
+      where: { createdAt: { less_than: grabsteinStichtag.toISOString() } },
+      overrideAccess: true,
+    })
+    ergebnis.grabsteine = weg.docs?.length ?? 0
+  } catch {
+    ergebnis.grabsteine = 0
   }
 
   return ergebnis
@@ -426,6 +442,9 @@ export async function postfachPruefen(
 
       const neu = ungelesen > zuletzt
       if (neu) {
+        // Auch an die offenen Büro-Seiten: Wer gerade im Postfach steht, soll
+        // die neue Nachricht sehen, ohne die Benachrichtigung anzutippen.
+        liveMelden(payload, 'post', 'neu', fach.id)
         await benachrichtige(payload, {
           titel: `Neue Post für ${fach.label}`,
           text:

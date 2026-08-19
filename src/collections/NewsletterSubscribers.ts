@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Empfänger des Newsletters.
@@ -20,6 +21,8 @@ export const NewsletterSubscribers: CollectionConfig = {
     singular: 'Newsletter-Anmeldung',
     plural: 'Newsletter',
   },
+  // Offene Büro-Seiten über Änderungen unterrichten
+  hooks: liveHooks('newsletter'),
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'status', 'locale', 'confirmedAt'],

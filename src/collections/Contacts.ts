@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Geschäftspartner — Lieferanten für Belege, Kunden für Ausgangsrechnungen.
@@ -12,6 +13,8 @@ export const Contacts: CollectionConfig = {
     singular: 'Geschäftspartner',
     plural: 'Geschäftspartner',
   },
+  // Offene Büro-Seiten über Änderungen unterrichten
+  hooks: liveHooks('partner'),
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'city'],

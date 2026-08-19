@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
 import React from 'react'
 
+import { AbgleichLeiste } from '../../components/office/AbgleichLeiste'
 import { Abmelden } from '../../components/office/Abmelden'
+import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import '../../styles/office.css'
@@ -40,6 +42,8 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
     <html lang="de">
       <body className="buero">
         <SitzungVerlaengern />
+        <BestandAnbieter />
+        <AbgleichLeiste />
         <header className="buero-kopf">
           <Link href="/office" className="buero-marke">
             {/* Auf schmalen Geräten reicht das Kürzel — der volle Name

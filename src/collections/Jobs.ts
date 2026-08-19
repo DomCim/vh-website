@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -35,6 +36,7 @@ export const Jobs: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    afterDelete: liveHooks('auftraege').afterDelete,
     beforeChange: [
       async ({ data, req, operation }) => {
         if (operation === 'create' && !data.jobNumber) {
@@ -117,6 +119,7 @@ export const Jobs: CollectionConfig = {
 
         return doc
       },
+      ...liveHooks('auftraege').afterChange,
     ],
   },
   fields: [

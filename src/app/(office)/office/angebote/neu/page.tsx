@@ -1,12 +1,16 @@
+'use client'
+
 import React from 'react'
 
 import { AngebotFormular } from '../../../../../components/office/AngebotFormular'
-import { bueroBenutzer } from '../../../../../lib/office'
 
-export const dynamic = 'force-dynamic'
-
-export default async function NeuesAngebot() {
-  await bueroBenutzer()
+/**
+ * Neues Angebot — braucht nichts vom Server.
+ *
+ * Die beiden Daten entstehen im Browser; die Nummer vergibt ohnehin erst der
+ * Server beim Versenden.
+ */
+export default function NeuesAngebotSeite() {
   const heute = new Date()
   const in30Tagen = new Date(heute.getTime() + 30 * 24 * 60 * 60 * 1000)
 

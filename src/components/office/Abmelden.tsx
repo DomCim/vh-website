@@ -3,7 +3,15 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-/** Meldet aus Büro und Website-Verwaltung gleichzeitig ab. */
+import { bestandVergessen } from '../../lib/buero/bestand'
+
+/**
+ * Meldet aus Büro und Website-Verwaltung gleichzeitig ab.
+ *
+ * Und wirft den Bestand aus dem Gerät. Das ist kein Beiwerk: Seit das Büro
+ * offline arbeitet, liegen Umsätze, Belege und Kundendaten im Browser. Ohne
+ * diesen Handgriff blieben sie dort liegen, obwohl niemand mehr angemeldet ist.
+ */
 export function Abmelden() {
   const router = useRouter()
   const [laeuft, setLaeuft] = useState(false)
@@ -19,6 +27,7 @@ export function Abmelden() {
         try {
           await fetch('/api/users/logout', { method: 'POST', credentials: 'include' })
         } finally {
+          await bestandVergessen().catch(() => undefined)
           router.push('/office/login')
           router.refresh()
         }

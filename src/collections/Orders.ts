@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
 import { notifyOnProduction, notifyOnShipped } from '../lib/orderHooks'
+import { liveHooks } from '../lib/liveHooks'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
@@ -18,7 +19,8 @@ export const Orders: CollectionConfig = {
     hidden: true,
   },
   hooks: {
-    afterChange: [notifyOnProduction, notifyOnShipped],
+    afterDelete: liveHooks('bestellungen').afterDelete,
+    afterChange: [notifyOnProduction, notifyOnShipped, ...liveHooks('bestellungen').afterChange],
   },
   access: {
     // Bestellungen sind nur im Backend sichtbar; angelegt werden sie server-seitig (Local API)

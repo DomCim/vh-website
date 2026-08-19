@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 export const Testimonials: CollectionConfig = {
   slug: 'testimonials',
@@ -8,6 +9,8 @@ export const Testimonials: CollectionConfig = {
     singular: 'Kundenstimme',
     plural: 'Kundenstimmen',
   },
+  // Offene Büro-Seiten über Änderungen unterrichten
+  hooks: liveHooks('kundenstimmen'),
   admin: {
     useAsTitle: 'author',
     defaultColumns: ['author', 'context', 'featured'],

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 
 export type Kategorie = { label: string; value: string }
 
@@ -60,24 +61,38 @@ export function BelegFormular({
     setLaeuft('upload')
     setMeldung(null)
     try {
-      const daten = new FormData()
-      daten.append('datei', datei)
-      const res = await fetch('/api/office/beleg-upload', {
-        method: 'POST',
-        body: daten,
-        credentials: 'include',
+      // Ohne Netz bleibt das Foto im Gerät und geht später raus. Genau dafür
+      // ist die Werkstatt der Anlass: Dort wird fotografiert, nicht am Schreibtisch.
+      // Solange der Server das Bild nicht hat, zeigt die Seite es aus dem Gerät
+      const ausDemGeraet = URL.createObjectURL(datei)
+
+      const { id, sofort, antwort } = await absenden({
+        pfad: '/api/office/beleg-upload',
+        bereich: 'medien',
+        koerper: {},
+        datei: { name: datei.name, blob: datei },
+        vorschau: { url: ausDemGeraet },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung(j.error === 'zu-gross' ? 'Die Datei ist zu groß (max. 25 MB).' : 'Upload fehlgeschlagen.')
+
+      setzen({
+        documentId: id as number,
+        documentUrl: (antwort?.url as string) ?? ausDemGeraet,
+      })
+
+      if (!sofort) {
+        setMeldung('Beleg liegt im Gerät — er geht raus, sobald wieder Netz da ist.')
         return
       }
-      setzen({ documentId: j.id, documentUrl: j.url })
+
       // Immer versuchen: Eine elektronische Rechnung liest sich auch ohne
       // hinterlegten KI-Schlüssel, weil die Daten im PDF stehen.
-      await auslesen(j.id)
-    } catch {
-      setMeldung('Upload fehlgeschlagen.')
+      await auslesen(id as number)
+    } catch (err) {
+      setMeldung(
+        err instanceof AbsendeFehler && err.daten?.error === 'zu-gross'
+          ? 'Die Datei ist zu groß (max. 25 MB).'
+          : 'Upload fehlgeschlagen.',
+      )
     } finally {
       setLaeuft(null)
     }
@@ -142,22 +157,21 @@ export function BelegFormular({
     setLaeuft('speichern')
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/beleg', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/beleg',
+        bereich: 'belege',
+        koerper: {
           ...w,
           extraction: w.extraction ? { ...w.extraction, status: 'bestaetigt' } : undefined,
-        }),
+        },
+        vorschau: {
+          ...w,
+          document: w.documentId ?? null,
+          extraction: w.extraction ? { ...w.extraction, status: 'bestaetigt' } : undefined,
+        },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Speichern fehlgeschlagen.')
-        return
-      }
-      router.push(`/office/belege/${j.id}`)
-      router.refresh()
+      if (sofort) router.push(`/office/belege/${id}`)
+      else setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
       setMeldung('Speichern fehlgeschlagen.')
     } finally {

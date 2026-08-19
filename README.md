@@ -72,6 +72,104 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 
 Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
 
+### Zwei Container: Website und Büro
+
+Beide entstehen aus **demselben Quelltext**, aber als **zwei Abbilder**:
+
+| Dienst  | Abbild                        | bedient                                  |
+| ------- | ----------------------------- | ---------------------------------------- |
+| `web`   | `ghcr.io/domcim/vh-website`   | Website, Shop, Admin-Panel, alles Übrige |
+| `buero` | `ghcr.io/domcim/vh-buero`     | `/office`, `/api/office`, `/ws/buero`    |
+
+Getrennt wird vor dem Bauen: Beim Bau-Argument `ROLLE=web` verschwindet `src/app/(office)`, bei `ROLLE=buero` verschwinden `(frontend)` und `(payload)`. Ohne Angabe entsteht wie bisher ein Abbild mit beidem — so laufen Entwicklung und Prüfung mit einem einzigen Start.
+
+Der Grund ist nicht Speicherplatz, sondern das Ausrollen: **Gebaut wird nur, was sich geändert hat.**
+
+| Geändert | Neu gebaut |
+| --- | --- |
+| `src/app/(office)/…`, `src/components/office/…` | nur `vh-buero` |
+| `src/app/(frontend)/…`, `(payload)/…` | nur `vh-website` |
+| `src/lib`, `src/collections`, `Dockerfile`, `package.json` … | beide |
+| README, Tests, `docker-compose.yml` | keines |
+
+Eine reine Büro-Änderung erzeugt damit gar kein neues Website-Abbild — der Shop-Container hat beim Ausrollen nichts zu tun und läuft ohne Unterbrechung weiter. Beide Container können deshalb auf `latest` bleiben, und das automatische Ausrollen funktioniert unverändert.
+
+Der Grund ist nüchtern: Vorher teilten sie sich einen Prozess, und ein Fehler im Büro riss den Shop mit. Getrennt kann das Büro abstürzen, neu starten oder ausgerollt werden, ohne dass ein Kunde etwas merkt.
+
+Was sich dadurch **nicht** ändert: dieselbe Adresse, dieselbe Anmeldung, dieselben Passkeys, dieselbe Datenbank, dasselbe Volume für die Mediathek. Wer wohin geleitet wird, entscheidet Traefik über die Pfade — der Router `vhbuero` hat die höhere Priorität und greift die Büro-Pfade ab, alles andere fällt an `vhweb`.
+
+**Beim Umstellen wichtig:** Der alte Einzelcontainer muss weg. Bleibt er mit seinen Traefik-Labels am Netz `edge` hängen, bedient er weiter dieselbe Adresse — und man sieht den alten Stand, obwohl die neuen Container laufen. In Portainer den alten Stack entfernen (oder ersetzen), nicht danebenstellen.
+
+Die Rolle steuert nur zweierlei:
+
+- **Was es genau einmal geben darf**, macht `web`: Datenbank-Migrationen und Startdaten beim Hochfahren, danach der Takt (nächtliche Sicherung, Erinnerungen, Postfach-Abruf). Liefe das in beiden, gäbe es jede Sicherung doppelt und jede Erinnerung zweimal aufs Handy.
+- **Offene Drähte hält `buero`.** Eine Änderung entsteht aber oft im Web-Container — eine bezahlte Bestellung legt dort einen Auftrag an. Weitergereicht wird sie über die Datenbank (`LISTEN`/`NOTIFY`); das kann Postgres von Haus aus, es braucht weder einen Nachrichtendienst noch eine Verbindung zwischen den Containern.
+
+Ohne gesetzte `ROLLE` macht ein Prozess alles — so laufen Entwicklung und Prüfung weiterhin mit einem einzigen Start.
+
+**Welcher Stand läuft wo?** Jeder Container hat seine eigene Auskunft, und die muss man getrennt fragen — sonst antwortet immer nur die Website:
+
+```
+curl https://vh.dominikdill.com/api/healthz         → Web-Container
+curl https://vh.dominikdill.com/api/office/healthz  → Büro-Container
+```
+
+Beide melden unter `version` den Commit, mit dem ihr Abbild gebaut wurde. Stehen dort zwei verschiedene Nummern, ist beim Ausrollen nur einer der beiden getauscht worden. Sieht die Büro-Oberfläche alt aus, ist das die erste Frage — nicht die letzte.
+
+**Update:** Beide Container ziehen dasselbe Abbild. In Portainer „Re-pull image & redeploy" auf den Stack anwenden, dann starten sie gemeinsam neu; die Migrationen laufen dabei nur im Web-Container.
+
+### Welche Fassung der Stack fährt
+
+Es gibt zwei Wege, und sie unterscheiden sich genau in einem Punkt — ob es von selbst passiert:
+
+| | Push auf `main` | Tag `v1.2.3` |
+| --- | --- | --- |
+| Gebaute Abbilder | `latest`, `sha-…` | `1.2.3`, `sha-…` |
+| Rollt sich selbst aus | ja (Webhook) | nein |
+| Zu tun | nichts | `VH_FASSUNG` setzen und neu ausrollen |
+
+Der Stack zieht `ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}`. Ohne die Variable also `latest` — den Stand von `main`, der sich nach jedem Push von selbst ausrollt.
+
+Wer einen bestimmten Stand fahren will, bevor er auf `main` geht, hat zwei Möglichkeiten:
+
+- **Tag setzen:** `git tag v1.2.3 && git push origin v1.2.3`
+- **Von Hand anstoßen:** Im Repository unter **Actions → „Docker-Image bauen & veröffentlichen" → Run workflow**, den gewünschten Branch wählen. Gebaut wird dann die Nummer, die in `package.json` steht — dasselbe Ergebnis ohne Tag.
+
+Danach im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
+
+### Nur eines von beiden ausrollen
+
+Im Normalfall braucht es das gar nicht: Beide bleiben auf `latest`, und weil nur das geänderte Abbild neu gebaut wird, startet ohnehin nur der betroffene Container neu.
+
+Wer trotzdem eine Hälfte einfrieren will — etwa den Shop, während im Büro etwas ausprobiert wird —, kann das: `VH_FASSUNG` setzt beide, `VH_FASSUNG_WEB` und `VH_FASSUNG_BUERO` überstimmen sie einzeln:
+
+```
+VH_FASSUNG=1.1.0            # beide
+VH_FASSUNG_BUERO=1.1.1      # nur das Büro, Website bleibt auf 1.1.0
+```
+
+Zwei Dinge, die man dabei wissen muss:
+
+- **Migrationen wendet der Web-Container an.** Bringt eine Fassung eine Datenbank-Änderung mit, gehört sie auf beide — sonst läuft das neue Büro gegen ein altes Schema. Reine Oberflächen- oder Rechenänderungen im Büro sind davon nicht betroffen.
+- **Sie teilen sich die Datenbank.** Zwei Fassungen weit auseinander laufen zu lassen ist kein Dauerzustand, sondern etwas für den Nachmittag, an dem man eine Änderung im Büro ausprobiert.
+
+Was die zwei Abbilder **nicht** trennen, und warum das so ist:
+
+- **Die Anmeldung** liegt im Website-Abbild — Payloads eigene Schnittstelle (`/api/users/…`) gehört zum Admin-Zweig. Wer sich im Büro *neu* anmeldet, braucht also den Web-Container; einmal angemeldet, prüft das Büro das Sitzungs-Cookie im eigenen Prozess und ist unabhängig. Dasselbe gilt für Passkey, Zwei-Faktor und die KI-Texthilfe.
+- **Der Unterbau** liegt in beiden: Datenmodell, Collections, Payload, `src/lib`. Das ist keine Nachlässigkeit, sondern die Geschäftslogik selbst — beide Hälften arbeiten mit denselben Rechnungen, Aufträgen und Beständen.
+- **`src/components/office`** bleibt auch im Website-Abbild liegen: Der Passkey-Knopf im Admin-Panel benutzt die Anmeldung des Büros.
+
+### Bauen, ohne auszurollen
+
+Manchmal soll der neue Stand ins Regal, aber noch nicht in den Betrieb. Dafür gibt es zwei Bremsen, je nachdem, wie der Lauf ausgelöst wurde:
+
+- **Von Hand:** Beim „Run workflow" steht ein Auswahlfeld *Nach dem Bauen ausrollen?* — auf `nein` stellen.
+- **Beim Merge nach `main`:** Dort lässt sich nichts mitgeben, also steht die Bremse im Text des Commits. Wer **`[kein-ausrollen]`** in die Merge-Nachricht schreibt, baut `latest`, ohne dass es gleich live geht.
+
+In beiden Fällen liegt das Abbild danach in der Registry und wartet. Ausgerollt wird es, wenn du im Portainer-Stack „Re-pull image & redeploy" drückst.
+
+Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurückzugehen, nachdem eine neue die Datenbank verändert hat, geht nur über das Einspielen einer Sicherung.
+
 ## Stripe einrichten
 
 1. [Stripe-Konto](https://dashboard.stripe.com) → API-Keys → `STRIPE_SECRET_KEY` setzen (erst Test-, später Live-Key).
@@ -111,8 +209,8 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 
 Zwei getrennte Oberflächen mit einer gemeinsamen Anmeldung:
 
-- **`/admin` ist die öffentliche Verwaltung** — Artikel, News, Referenzen, Kundenstimmen, Seitentexte, Mediathek, Einstellungen. Alles, was auf der Website landet. Für die Artikel ist es die Wahrheit: Titel, Preis, Bilder, Texte stehen nur hier.
-- **`/office` ist der Betrieb** — Aufträge, Angebote, Belege, Inventar, Postfach, Steuern. Alles, was niemand von außen sieht.
+- **`/admin` ist die öffentliche Verwaltung** — Artikel, News, Referenzen, Kundenstimmen, Seitentexte, Mediathek. Alles, was auf der Website landet. Für die Artikel ist es die Wahrheit: Titel, Preis, Bilder, Texte stehen nur hier.
+- **`/office` ist der Betrieb** — Aufträge, Angebote, Belege, Inventar, Postfach, Steuern, Einstellungen und Benutzer. Alles, was niemand von außen sieht.
 
 So hat jede Sache genau einen Platz. Die Büro-Daten sind im Admin bewusst ausgeblendet.
 
@@ -133,11 +231,27 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
 | **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
-| **Einstellungen** | Benachrichtigungen dieses Geräts, Übersicht der Postfächer. |
+| **Einstellungen** | Fünf Blätter: Benachrichtigungen dieses Geräts, das eigene Konto (Zwei-Faktor, angemeldete Geräte), Benutzerverwaltung, Betrieb (Firmenangaben, Preise) und Integrationen (SMTP, Postfächer, Stripe, PayPal, KI, Takt, Sicherung). |
+
+### Ohne Netz arbeiten
+
+Das Büro führt seinen Bestand im Gerät mit — Belege, Rechnungen, Angebote, Aufträge, Bestellungen, Anfragen, Inventar, Partner, Artikel, Inventur. Daraus folgt dreierlei:
+
+- **Die Seiten rechnen im Browser.** Filter wechseln, Monate blättern, Summen bilden: alles ohne Anfrage an den Server. In der Werkstatt öffnet sich das Büro auch dann, wenn kein Netz da ist.
+- **Eine Leiste über den Seiten sagt, von wann der Stand ist**, sobald er nicht mehr von jetzt ist. Ein alter Stand ist brauchbar — ein alter Stand, der sich für den aktuellen ausgibt, ist gefährlich.
+- **Eingaben gehen nicht verloren.** Beleg fotografieren, Uhr starten, Inventur zählen: Das steht sofort da und geht raus, sobald wieder Netz ist. In der Leiste steht, wie viel noch wartet. Abgeschickt wird der Reihe nach — ein Beleg kann auf einen Lieferanten verweisen, den es beim Server noch gar nicht gibt.
+
+Aktuell gehalten wird das über eine offene Verbindung (`/ws/buero`): Was einer ändert, sehen die anderen ohne Nachladen. Fällt sie aus, gleicht das Gerät alle paar Minuten von selbst ab.
+
+**Beim Abmelden wird alles gelöscht** — Daten wie zwischengespeicherte Seiten. Ein Tablet in der Werkstatt soll keine Umsätze mit sich herumtragen, nachdem sich jemand abgemeldet hat.
+
+Drei Seiten arbeiten bewusst nicht offline, weil sie es ohnehin nicht könnten: Postfach, Steuer-Export und Sicherung. Die Einstellungen ebenfalls — Zugangsdaten im Gerät zwischenzuspeichern wäre falsch, und ein Zugangsdatum, das man ohne Netz ändert, wäre eine Falle.
+
+Der Server startet über `server.mjs` statt über `next start` — er hält damit die offene Verbindung. Seit dem Umbau läuft er zweimal: einmal für die Website, einmal fürs Büro (siehe **Zwei Container** oben).
 
 ### Postfächer einrichten
 
-Im Admin unter **Integrationen → Postfächer** je Konto Bezeichnung, Adresse, IMAP-Server, Benutzername und Passwort eintragen; die Ordnernamen für „Gesendet" und „Papierkorb" heißen je nach Anbieter unterschiedlich (z.B. `Sent`, `INBOX.Sent`, `Gesendete Objekte`). Verschickt wird über den SMTP-Server aus demselben Bereich, sofern beim Postfach nichts Eigenes hinterlegt ist.
+Im Büro unter **Einstellungen → Integrationen → Postfächer** je Konto Bezeichnung, Adresse, IMAP-Server, Benutzername und Passwort eintragen; die Ordnernamen für „Gesendet" und „Papierkorb" heißen je nach Anbieter unterschiedlich (z.B. `Sent`, `INBOX.Sent`, `Gesendete Objekte`). Verschickt wird über den SMTP-Server aus demselben Bereich, sofern beim Postfach nichts Eigenes hinterlegt ist.
 
 Die Absenderadresse der Website (`noreply@…`) steht getrennt davon unter **Integrationen → E-Mail-Versand** und muss hier nicht eingetragen werden — dorthin antwortet ohnehin niemand.
 
@@ -252,7 +366,7 @@ Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist e
 
 Es gibt **keinen Cron einzurichten**. Der Server läuft ohnehin durch und sieht jede Minute selbst nach, ob etwas ansteht (`src/instrumentation.ts`) — ein zweiter Container, der ihm auf die Schulter tippt, wäre ein bewegliches Teil mehr und eine Anleitungszeile, die jemand überliest, bis das Backup fehlt.
 
-Eingestellt wird das im Admin unter **Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
+Eingestellt wird das im Büro unter **Einstellungen → Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
 
 Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet nichts, und die Arbeiten selbst laufen höchstens einmal am Tag. Der Wartungstakt bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei 60 um 04:00. Beim Postfach zahlt sich häufiger aus, weil IMAP sich nicht von allein meldet.
 
@@ -303,6 +417,8 @@ Die Anwendung schickt CSP, HSTS, `X-Frame-Options`, `Referrer-Policy` und `Permi
 ```bash
 pnpm benutzer
 ```
+
+Das braucht man nur einmal, für den allerersten Zugang — danach werden Konten im Büro unter **Einstellungen → Benutzer** angelegt und verwaltet.
 
 Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **Inhaber** an. Die Passwörter kommen aus `VH_PASSWORT` und `ADMIN_PASSWORT`; fehlen sie, würfelt das Skript je eines und gibt es **einmal** auf der Konsole aus. Ein zweiter Aufruf ändert an vorhandenen Konten nichts.
 
@@ -401,16 +517,16 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] **Zwei-Faktor-Anmeldung** einrichten und die Ersatzcodes sicher ablegen
 - [ ] **Demo-Preise** der Produkte durch echte Preise ersetzen (Seed enthält Platzhalterwerte!)
 - [ ] Impressum, Datenschutzerklärung und AGB einpflegen (aktuell Platzhalter)
-- [ ] SMTP-Zugangsdaten eintragen (Admin → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
+- [ ] SMTP-Zugangsdaten eintragen (Büro → Einstellungen → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
 - [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
-- [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
+- [ ] Postfächer eintragen (Büro → Einstellungen → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
-- [ ] Unter Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
+- [ ] Unter Büro → Einstellungen → Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
 - [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
 - [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
-- [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
-- [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
+- [ ] Claude-Schlüssel eintragen (Büro → Einstellungen → Integrationen), damit Belege ausgelesen werden können
+- [ ] Stripe-Keys + Webhook eintragen (Büro → Einstellungen → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit
-- [ ] Optional: Facebook-Token eintragen (Admin → Integrationen)
-- [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Admin → Integrationen)
+- [ ] Optional: Facebook-Token eintragen (Büro → Einstellungen → Integrationen)
+- [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Büro → Einstellungen → Integrationen)
 - [ ] Optional: cookiefreie Besucherstatistik hinterlegen (Admin → Website-Einstellungen) und einen Satz dazu in die Datenschutzerklärung aufnehmen

@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 
 export type BestellungWerte = {
   id: number | string
@@ -26,7 +26,6 @@ const STATUS = [
  * Hinweis dabei, was gleich rausgeht.
  */
 export function BestellungFormular({ werte }: { werte: BestellungWerte }) {
-  const router = useRouter()
   const [w, setW] = useState<BestellungWerte>(werte)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
@@ -37,25 +36,18 @@ export function BestellungFormular({ werte }: { werte: BestellungWerte }) {
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/bestellung', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(w),
+      const { sofort } = await absenden({
+        pfad: '/api/office/bestellung',
+        bereich: 'bestellungen',
+        koerper: { ...w },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung(
-          j?.error === 'sendungsnummer-fehlt'
-            ? 'Für „Versendet" wird eine Sendungsnummer gebraucht — sonst steht die Mail ohne Verfolgung da.'
-            : 'Das hat nicht geklappt.',
-        )
-        return
-      }
-      setMeldung('Gespeichert.')
-      router.refresh()
-    } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
+    } catch (err) {
+      setMeldung(
+        err instanceof AbsendeFehler && err.daten?.error === 'sendungsnummer-fehlt'
+          ? 'Für „Versendet" wird eine Sendungsnummer gebraucht — sonst steht die Mail ohne Verfolgung da.'
+          : 'Das hat nicht geklappt.',
+      )
     } finally {
       setLaeuft(false)
     }

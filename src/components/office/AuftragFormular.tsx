@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type AuftragPosition = {
   description: string
@@ -90,25 +91,18 @@ export function AuftragFormular({
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/auftrag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ...w, status: neuerStatus ?? w.status }),
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/auftrag',
+        bereich: 'auftraege',
+        koerper: { ...w, status: neuerStatus ?? w.status },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Das hat nicht geklappt.')
-        return
-      }
-      if (!w.id) router.push(`/office/auftraege/${j.id}`)
+      if (!w.id && sofort) router.push(`/office/auftraege/${id}`)
       else {
         setzen({ status: neuerStatus ?? w.status })
-        setMeldung('Gespeichert.')
+        setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
       }
-      router.refresh()
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

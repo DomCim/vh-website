@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
+import { liveHooks } from '../lib/liveHooks'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -11,6 +12,8 @@ export const Media: CollectionConfig = {
   admin: {
     group: 'Verwaltung',
   },
+  // Offene Büro-Seiten über Änderungen unterrichten
+  hooks: liveHooks('medien'),
   access: {
     read: anyone,
     create: admins,

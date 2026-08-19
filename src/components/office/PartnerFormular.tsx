@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type PartnerWerte = {
   id?: number | string
@@ -49,22 +50,20 @@ export function PartnerFormular({
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/partner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(w),
+      // Geht in den Bestand im Gerät und in die Warteschlange — ob gerade Netz
+      // da ist, spielt für die Eingabe keine Rolle mehr.
+      const { id, sofort } = await absenden({
+        pfad: '/api/office/partner',
+        bereich: 'partner',
+        koerper: { ...w },
+        vorschau: { ...w, role: w.role || 'beides', country: w.country || 'Frankreich' },
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Das hat nicht geklappt.')
-        return
-      }
-      if (!w.id) router.push(`/office/partner/${j.id}`)
-      else setMeldung('Gespeichert.')
-      router.refresh()
+      // Ohne Netz bekommt ein neuer Datensatz nur eine vorläufige Kennung —
+      // auf eine solche Adresse zu springen brächte niemanden weiter.
+      if (!w.id && sofort) router.push(`/office/partner/${id}`)
+      else setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
     } finally {
       setLaeuft(false)
     }

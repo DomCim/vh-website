@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react'
 
 import { betraege } from '../../lib/betraege'
 import { VersandKnopf } from './VersandKnopf'
+import { absenden } from '../../lib/buero/warteschlange'
 
 export type AngebotPosition = {
   description: string
@@ -70,20 +71,17 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
     setLaeuft(true)
     setMeldung(null)
     try {
-      const res = await fetch('/api/office/angebot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(rumpf),
+      const { id, sofort, antwort } = await absenden({
+        pfad: '/api/office/angebot',
+        bereich: 'angebote',
+        koerper: rumpf,
       })
-      const j = await res.json()
-      if (!res.ok) {
-        setMeldung('Das hat nicht geklappt.')
-        return null
-      }
-      return j
+      if (!sofort) setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
+      // Die Antwort mitgeben: Aus einem angenommenen Angebot entstehen Auftrag
+      // und Rechnung, und deren Kennungen vergibt nur der Server.
+      return { ...(antwort ?? {}), id } as { id: string | number } & Record<string, unknown>
     } catch {
-      setMeldung('Verbindung fehlgeschlagen.')
+      setMeldung('Das hat nicht geklappt.')
       return null
     } finally {
       setLaeuft(false)
@@ -96,10 +94,8 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       return
     }
     const j = await senden({ ...w, status: neuerStatus ?? w.status })
-    if (j?.id) {
-      router.push(`/office/angebote/${j.id}`)
-      router.refresh()
-    }
+    // Ohne Netz ist die Kennung nur vorläufig — dann bleibt man, wo man ist
+    if (j?.id && !String(j.id).startsWith('neu:')) router.push(`/office/angebote/${j.id}`)
   }
 
   return (

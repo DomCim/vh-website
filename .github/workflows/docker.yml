@@ -5,44 +5,160 @@ on:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      ausrollen:
+        description: 'Nach dem Bauen ausrollen? (greift nur auf main)'
+        type: choice
+        options: ['ja', 'nein']
+        default: 'ja'
+      alslatest:
+        description: 'Auch als latest veröffentlichen? (sonst nur die Nummer)'
+        type: choice
+        options: ['nein', 'ja']
+        default: 'nein'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  # ── Was hat sich überhaupt geändert? ───────────────────────────────────────
+  #
+  # Der Sinn der zwei Abbilder ist, dass eine Büro-Änderung den Shop nicht neu
+  # startet. Das trägt aber nur, wenn dabei auch wirklich kein neues
+  # Website-Abbild entsteht: Ein zweites `latest` mit neuer Prüfsumme reicht
+  # schon, damit Docker den Container austauscht — selbst wenn inhaltlich
+  # nichts anders wäre.
+  #
+  # Also wird vorher nachgesehen, welche Hälfte betroffen ist. Was beide
+  # angeht (Datenmodell, Payload, `src/lib`, das Abbild selbst), baut beide.
+  # Was keine von beiden angeht (Doku, Prüfungen, die Stack-Datei), baut
+  # nichts.
+  aenderungen:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.pruefen.outputs.web }}
+      buero: ${{ steps.pruefen.outputs.buero }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Betroffene Hälften ermitteln
+        id: pruefen
+        run: |
+          set -e
+          vorher='${{ github.event.before }}'
+          # Tags, Läufe von Hand und der allererste Push haben nichts zum
+          # Vergleichen — dann wird beides gebaut.
+          if [ "${{ github.event_name }}" != "push" ] || [ -z "$vorher" ] \
+             || [ "$vorher" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$vorher^{commit}" 2>/dev/null; then
+            echo "Kein Vergleichspunkt — beide Abbilder werden gebaut."
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            echo "buero=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          web=false
+          buero=false
+          geaendert=$(git diff --name-only "$vorher" "${{ github.sha }}")
+          echo "Geänderte Dateien:"; echo "$geaendert" | sed 's/^/  /'
+
+          while IFS= read -r datei; do
+            [ -n "$datei" ] || continue
+            case "$datei" in
+              "src/app/(office)/"*|src/components/office/*)
+                buero=true ;;
+              "src/app/(frontend)/"*|"src/app/(payload)/"*|src/app/robots.ts|src/app/sitemap.ts)
+                web=true ;;
+              tests/*|playwright.config.ts|.github/workflows/ci.yml|*.md|docker-compose.yml|.env.example)
+                # Ändert nichts an dem, was im Abbild landet
+                ;;
+              *)
+                # Alles Übrige ist gemeinsamer Unterbau — im Zweifel beide
+                web=true; buero=true ;;
+            esac
+          done <<< "$geaendert"
+
+          echo "Website: $web, Büro: $buero"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+          echo "buero=$buero" >> "$GITHUB_OUTPUT"
+
+  bauen:
+    needs: aenderungen
+    if: needs.aenderungen.outputs.web == 'true' || needs.aenderungen.outputs.buero == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      # Scheitert eine Hälfte, soll die andere trotzdem fertig werden — sonst
+      # steht am Ende gar nichts Neues im Regal.
+      fail-fast: false
+      matrix:
+        include:
+          - rolle: web
+            abbild: vh-website
+          - rolle: buero
+            abbild: vh-buero
 
     steps:
+      - name: Übersprungen?
+        id: dran
+        run: |
+          if [ "${{ matrix.rolle }}" = "web" ]; then
+            noetig='${{ needs.aenderungen.outputs.web }}'
+          else
+            noetig='${{ needs.aenderungen.outputs.buero }}'
+          fi
+          echo "noetig=$noetig" >> "$GITHUB_OUTPUT"
+          [ "$noetig" = "true" ] || echo "Nichts geändert — ${{ matrix.abbild }} bleibt, wie es ist."
+
       - name: Checkout
+        if: steps.dran.outputs.noetig == 'true'
         uses: actions/checkout@v4
 
       - name: Docker Buildx einrichten
+        if: steps.dran.outputs.noetig == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Bei GitHub Container Registry anmelden
+        if: steps.dran.outputs.noetig == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Von Hand angestoßen wird die Fassung gebaut, die in package.json steht.
+      # Damit lässt sich ein bestimmter Stand veröffentlichen, ohne ihn vorher
+      # auf main zu bringen und ohne einen Tag zu setzen — was etwa dann zählt,
+      # wenn die Nummer nachher in den Portainer-Stack getippt wird.
+      - name: Fassung aus package.json lesen
+        if: steps.dran.outputs.noetig == 'true'
+        id: fassung
+        run: echo "nummer=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Image-Metadaten (Tags & Labels)
+        if: steps.dran.outputs.noetig == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.abbild }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            # Von Hand nur, wenn ausdrücklich gewollt: `latest` ist der Stand,
+            # den der Stack zieht — ein Versuchsbau darf ihn nicht überschreiben.
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && inputs.alslatest == 'ja' }}
             type=ref,event=branch
             type=semver,pattern={{version}}
+            type=raw,value=${{ steps.fassung.outputs.nummer }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=sha,format=short
 
       - name: Bauen & pushen
+        if: steps.dran.outputs.noetig == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -51,15 +167,37 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_SHA=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ROLLE=${{ matrix.rolle }}
+          cache-from: type=gha,scope=${{ matrix.rolle }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.rolle }}
 
-      # Der Portainer-Webhook ist nur im Heimnetz erreichbar. GitHub ruft
-      # deshalb einen Cloud-Webhook von Home Assistant auf; der löst drinnen
-      # das Neu-Ausrollen aus. Ohne hinterlegte Secrets wird der Schritt
-      # übersprungen, der Build bleibt also auch ohne sie grün.
+  # ── Ausrollen ──────────────────────────────────────────────────────────────
+  #
+  # Ein eigener Auftrag, weil er genau einmal laufen darf. In der Matrix oben
+  # liefe er je Hälfte einmal — zwei Webhooks für ein Ausrollen, und das Ganze
+  # ohne Not zweimal.
+  #
+  # `success` deckt auch den Fall ab, dass nur eine Hälfte gebaut und die
+  # andere übersprungen wurde. Wurde gar nichts gebaut — etwa weil nur
+  # Dokumentation geändert wurde —, steht dort `skipped`, und dann gibt es
+  # auch nichts auszurollen.
+  ausrollen:
+    needs: bauen
+    if: >-
+      needs.bauen.result == 'success'
+      && github.ref == 'refs/heads/main'
+      && inputs.ausrollen != 'nein'
+      && !contains(github.event.head_commit.message, '[kein-ausrollen]')
+    runs-on: ubuntu-latest
+    steps:
+      # Zwei Bremsen, weil es zwei Fälle gibt.
+      #
+      # Von Hand angestoßen: das Auswahlfeld oben. Beim Merge nach main lässt
+      # sich dagegen nichts mitgeben — dort steht die Bremse im Text des
+      # Commits. Wer `[kein-ausrollen]` in die Merge-Nachricht schreibt, baut
+      # `latest`, ohne dass es gleich live geht; ausgerollt wird dann später
+      # von Hand über den Portainer-Stack.
       - name: Ausrollen anstoßen (über Home Assistant)
-        if: github.ref == 'refs/heads/main'
         env:
           HA_DEPLOY_WEBHOOK: ${{ secrets.HA_DEPLOY_WEBHOOK }}
           HA_DEPLOY_TOKEN: ${{ secrets.HA_DEPLOY_TOKEN }}

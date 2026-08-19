@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
 import { benachrichtige } from '../lib/push'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Kontakt-, Produkt- und Maßanfertigungs-Anfragen.
@@ -31,6 +32,7 @@ export const Inquiries: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    afterDelete: liveHooks('anfragen').afterDelete,
     afterChange: [
       async ({ doc, operation, req }) => {
         if (operation !== 'create') return doc
@@ -43,6 +45,7 @@ export const Inquiries: CollectionConfig = {
         }).catch(() => undefined)
         return doc
       },
+      ...liveHooks('anfragen').afterChange,
     ],
   },
   fields: [

@@ -128,6 +128,51 @@
   color: var(--buero-auf-tinte);
 }
 
+/* ── Reiter innerhalb einer Seite ───────────────────────────────────────── */
+/* Sieht aus wie die Hauptnavigation, ist aber etwas anderes: Diese Reiter
+ * schalten *innerhalb* einer Seite um — Belege nach Status, Rechnungen nach
+ * Jahr, die Einstellungen zwischen ihren Abschnitten.
+ *
+ * Sie brauchen deshalb eine eigene Klasse. Vorher lieh sich das die Klasse
+ * der Hauptnavigation, und die wird am Handy ausgeblendet, weil dort die
+ * Leiste am unteren Rand ihre Aufgabe übernimmt. Für Reiter tut sie das
+ * nicht: Am Telefon verschwanden damit die Filter bei den Belegen, die
+ * Jahresauswahl beim Steuer-Export und sämtliche Abschnitte der
+ * Einstellungen — die Seite zeigte nur noch ihren ersten. */
+.buero-reiter {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  background: var(--buero-flaeche);
+}
+
+.buero-reiter::-webkit-scrollbar {
+  display: none;
+}
+
+.buero-reiter a {
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-reiter a:hover {
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
+}
+
+.buero-reiter a[aria-current='page'] {
+  background: var(--buero-tinte);
+  color: var(--buero-auf-tinte);
+}
+
 /* ── Tableiste am unteren Rand (nur Handy) ──────────────────────────────── */
 /* Dreizehn Punkte in einer seitlich scrollenden Leiste findet am Handy
    niemand. Unten liegen die fünf, die man täglich braucht; der Rest steht
@@ -711,4 +756,21 @@
   .buero a.buero-kalender-eintrag span {
     display: none;
   }
+}
+
+/* Hinweis, wenn die Zahlen nicht von jetzt sind — sonst steht hier nichts */
+.buero-abgleich {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--buero-auf-tinte);
+  background: var(--buero-bronze);
+}
+
+/* Etwas ist dauerhaft abgelehnt worden — das muss jemand ansehen */
+.buero-abgleich.streng {
+  background: var(--buero-rot);
 }

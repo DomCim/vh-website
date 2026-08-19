@@ -1,31 +1,28 @@
-import React from 'react'
+'use client'
+
+import React, { useMemo } from 'react'
 
 import { InventarFormular } from '../../../../../components/office/InventarFormular'
-import { payloadClient } from '../../../../../lib/data'
-import { bueroBenutzer } from '../../../../../lib/office'
+import { useBestand } from '../../../../../lib/buero/bestand'
 
-export const dynamic = 'force-dynamic'
+/** Neuer Posten — die Lieferantenliste kommt aus dem Bestand im Gerät. */
+type Partner = { id: number | string; name?: string | null }
 
-export default async function NeuerPosten() {
-  await bueroBenutzer()
-  const payload = await payloadClient()
-
-  const { docs: lieferanten } = await payload.find({
-    collection: 'contacts',
-    sort: 'name',
-    limit: 300,
-    depth: 0,
-    overrideAccess: true,
-  })
+export default function NeuerPostenSeite() {
+  const partner = useBestand<Partner>('partner')
+  const lieferanten = useMemo(
+    () =>
+      [...partner]
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'de'))
+        .map((l) => ({ id: Number(l.id), name: l.name ?? '' })),
+    [partner],
+  )
 
   return (
     <>
       <h1>Neuer Posten</h1>
       <p className="buero-unterzeile">Material, Werkzeug oder Maschine — alles, was im Haus ist.</p>
-      <InventarFormular
-        werte={{}}
-        lieferanten={lieferanten.map((l) => ({ id: l.id, name: l.name }))}
-      />
+      <InventarFormular werte={{}} lieferanten={lieferanten} />
     </>
   )
 }

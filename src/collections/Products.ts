@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
 import { autoSlug } from '../lib/slug'
+import { liveHooks } from '../lib/liveHooks'
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -22,6 +23,9 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
+    // Offene Büro-Seiten über Änderungen unterrichten
+    afterChange: liveHooks('artikel').afterChange,
+    afterDelete: liveHooks('artikel').afterDelete,
   },
   fields: [
     {

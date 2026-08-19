@@ -75,5 +75,20 @@ async function main() {
   console.log('Zwei-Faktor bitte gleich im Admin unter „Mein Konto" einrichten.')
 }
 
-await main()
-process.exit(0)
+/*
+ * Scheitert etwas, soll es laut scheitern.
+ *
+ * Ohne diesen Rahmen endete das Skript still — der Aufrufer sah einen
+ * Erfolg, die Zugänge fehlten trotzdem, und der Fehler tauchte erst viel
+ * später als abgewiesene Anmeldung wieder auf.
+ */
+try {
+  await main()
+} catch (err) {
+  console.error('Zugänge konnten nicht angelegt werden:', err)
+  process.exitCode = 1
+}
+
+// Ausgaben auf eine Pipe schreibt Node verzögert; erst leeren, dann beenden
+await new Promise<void>((fertig) => process.stdout.write('', () => fertig()))
+process.exit(process.exitCode ?? 0)

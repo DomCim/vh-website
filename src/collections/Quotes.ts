@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { office } from '../access'
 import { betraege } from '../lib/betraege'
 import { naechsteAngebotsnummer } from '../lib/nummernkreis'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Angebote fürs Projektgeschäft.
@@ -35,6 +36,8 @@ export const Quotes: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    afterDelete: liveHooks('angebote').afterDelete,
+    afterChange: liveHooks('angebote').afterChange,
     beforeChange: [
       async ({ data, originalDoc, req, operation }) => {
         const summen = betraege(data.items ?? [], {

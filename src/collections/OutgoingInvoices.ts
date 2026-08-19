@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { office } from '../access'
 import { betraege } from '../lib/betraege'
 import { naechsteRechnungsnummer } from '../lib/nummernkreis'
+import { liveHooks } from '../lib/liveHooks'
 
 /**
  * Ausgangsrechnungen fürs Projektgeschäft — alles, was nicht über den Shop
@@ -34,6 +35,8 @@ export const OutgoingInvoices: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    afterDelete: liveHooks('rechnungen').afterDelete,
+    afterChange: liveHooks('rechnungen').afterChange,
     beforeChange: [
       async ({ data, originalDoc, req, operation }) => {
         // Summen immer neu rechnen — nie dem übergebenen Wert vertrauen

@@ -68,12 +68,25 @@ jobs:
       - name: Bauen
         run: pnpm build
 
+      # NODE_ENV wie im Container: Ohne das steht der Postgres-Adapter auf
+      # `push` — er gleicht das Schema dann selbst ab und überspringt die
+      # Migrationen wortlos. Die Tabellen entstanden bisher nur beiläufig
+      # beim Anlegen der Zugänge; wer die Migrationen prüfen will, prüfte
+      # in Wahrheit gar nichts.
       - name: Datenbank migrieren
         run: pnpm migrate
+        env:
+          NODE_ENV: production
 
       - name: Browser für die Rauchtests
         run: pnpm exec playwright install --with-deps chromium
 
+      # Hier bewusst *ohne* NODE_ENV=production, anders als beim Migrieren:
+      # `payload run` braucht die Entwicklungswerkzeuge, um das TypeScript-
+      # Skript überhaupt zu übersetzen. In Produktionsstellung endete der
+      # Schritt nach zwei Sekunden ohne Ausgabe und ohne Zugänge. Dass das
+      # Schema dabei zusätzlich abgeglichen wird, ist folgenlos — die
+      # Migrationen sind einen Schritt vorher schon durchgelaufen.
       - name: Zugang für die Oberflächen-Prüfung anlegen
         run: pnpm benutzer
         env:
@@ -84,6 +97,23 @@ jobs:
         run: |
           pnpm start &
           npx --yes wait-on http://localhost:3000/api/healthz --timeout 90000
+
+      # Nachsehen, ob der Zugang wirklich steht. Ohne diese Probe scheitern
+      # später alle Büro-Prüfungen an derselben Stelle, und im Protokoll
+      # steht nur „Received: false" — die Ursache liegt dann Schritte vorher.
+      - name: Prüfzugang nachmessen
+        run: |
+          code=$(curl -s -o /tmp/anmeldung.json -w '%{http_code}' \
+            -X POST http://localhost:3000/api/users/login \
+            -H 'Content-Type: application/json' \
+            -H 'Origin: http://localhost:3000' \
+            -d '{"email":"admin@vincent-hellmann.com","password":"pruef-geheim-123"}')
+          if [ "$code" != "200" ]; then
+            echo "::error::Der Prüfzugang meldet sich nicht an ($code) — siehe Schritt 'Zugang ... anlegen'."
+            cat /tmp/anmeldung.json
+            exit 1
+          fi
+          echo "Prüfzugang steht."
 
       - name: Rauchtests
         run: pnpm test

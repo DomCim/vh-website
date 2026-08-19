@@ -1,21 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { AUSGABEN_KATEGORIEN } from '../lib/listen'
+import { liveHooks } from '../lib/liveHooks'
 
-/** Ausgaben-Kategorien — bewusst grob, so wie der Steuerberater sie erwartet */
-export const AUSGABEN_KATEGORIEN = [
-  { label: 'Material & Rohstoffe', value: 'material' },
-  { label: 'Werkzeug & Maschinen', value: 'werkzeug' },
-  { label: 'Fremdleistungen', value: 'fremdleistung' },
-  { label: 'Fahrzeug & Kraftstoff', value: 'fahrzeug' },
-  { label: 'Miete & Nebenkosten', value: 'miete' },
-  { label: 'Versicherungen & Beiträge', value: 'versicherung' },
-  { label: 'Büro, Software & Telefon', value: 'buero' },
-  { label: 'Werbung & Messen', value: 'werbung' },
-  { label: 'Reise & Bewirtung', value: 'reise' },
-  { label: 'Gebühren & Bankkosten', value: 'gebuehren' },
-  { label: 'Sonstiges', value: 'sonstiges' },
-] as const
+export { AUSGABEN_KATEGORIEN }
+
 
 /**
  * Eingangsrechnungen und Belege.
@@ -45,6 +35,8 @@ export const Expenses: CollectionConfig = {
     delete: office,
   },
   hooks: {
+    afterDelete: liveHooks('belege').afterDelete,
+    afterChange: liveHooks('belege').afterChange,
     beforeValidate: [
       ({ data }) => {
         if (!data) return data
