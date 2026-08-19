@@ -79,6 +79,8 @@ export async function POST(req: Request) {
               description: p.description,
               quantity: p.quantity,
               price: p.unitPrice,
+              // Nur für das Bild auf den Papieren — siehe Quotes.items.product
+              product: (p.product as number) ?? undefined,
             })),
           },
         })
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
             unit: p.unit ?? 'Stück',
             unitPrice: p.unitPrice,
             vatRate: p.vatRate,
+            product: (p.product as number) ?? undefined,
           })),
           note: angebot.note ?? undefined,
           // Der zugesagte Nachlass gilt auch auf der Rechnung — sonst stünde
@@ -132,6 +135,7 @@ export async function POST(req: Request) {
           unit: p.unit || 'Stück',
           unitPrice: Number(p.unitPrice) || 0,
           vatRate: Number(p.vatRate) || 0,
+          product: Number(p.product) || undefined,
         })),
       note: b.note || undefined,
       /*

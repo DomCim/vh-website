@@ -168,12 +168,26 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
   const kontakt = await partnerZurBestellung(payload, bestellung)
   const plan = await zahlplanAusBestellung(payload, bestellung)
 
-  const positionen: { description: string; quantity: number; price: number }[] = (
-    bestellung.items ?? []
-  ).map((p) => ({
+  /*
+   * Der Artikelbezug wandert mit.
+   *
+   * Er trägt keine Zahl und keinen Text — nur das Bild, das später auf
+   * Auftragsbestätigung, Lieferschein und Rechnung steht. Wer packt oder baut,
+   * sieht damit sofort, worum es geht, statt eine Zeile zu lesen.
+   */
+  const positionen: {
+    description: string
+    quantity: number
+    price: number
+    product?: number
+  }[] = (bestellung.items ?? []).map((p) => ({
     description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
     quantity: p.quantity,
     price: netto(p.unitPrice, satz),
+    product:
+      typeof p.product === 'object' && p.product
+        ? Number((p.product as { id?: number }).id)
+        : (Number(p.product) || undefined),
   }))
 
   if ((bestellung.shippingTotal ?? 0) > 0) {
@@ -221,6 +235,7 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
           unit: 'Stück',
           unitPrice: p.price,
           vatRate: satz,
+          product: p.product,
         })),
         note: `Kauf auf Rechnung zur Bestellung ${bestellung.orderNumber}.`,
       },

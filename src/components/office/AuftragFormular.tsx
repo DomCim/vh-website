@@ -8,11 +8,14 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { ArtikelBezug } from './ArtikelBezug'
 
 export type AuftragPosition = {
   description: string
   quantity: number
   price?: number | null
+  /** Nur für das Bild auf dem Papier — ändert an keiner Zahl etwas */
+  product?: number | '' | null
 }
 
 export type AuftragMaterial = {
@@ -304,6 +307,16 @@ export function AuftragFormular({
               }
             />
           </label>
+          <ArtikelBezug
+            wert={p.product ?? ''}
+            aendern={(id) =>
+              setzen({
+                positions: (w.positions ?? []).map((x, idx) =>
+                  idx === i ? { ...x, product: id || undefined } : x,
+                ),
+              })
+            }
+          />
           <label className="buero-feld">
             <span>Menge</span>
             <input

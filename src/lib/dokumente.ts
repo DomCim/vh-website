@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { artikelBildPfad } from './artikelbild'
 import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
 import { lieferscheinPdf } from './lieferschein'
@@ -69,13 +70,16 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
         name: a.customerName,
         anschrift: (a.customerAddress ?? '').split('\n').filter(Boolean),
       },
-      positionen: (a.items ?? []).map((p) => ({
-        bezeichnung: p.description,
-        zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-        menge: p.quantity,
-        einzelpreis: p.unitPrice,
-        steuersatz: p.vatRate,
-      })),
+      positionen: await Promise.all(
+        (a.items ?? []).map(async (p) => ({
+          bezeichnung: p.description,
+          zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
+          menge: p.quantity,
+          einzelpreis: p.unitPrice,
+          steuersatz: p.vatRate,
+          bild: await artikelBildPfad(payload, p.product),
+        })),
+      ),
       rabatt: a.discountTotal
         ? { bezeichnung: a.discountReason || 'Nachlass', betrag: a.discountTotal }
         : null,
@@ -208,13 +212,16 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
         name: r.customerName,
         anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
       },
-      positionen: (r.items ?? []).map((p) => ({
-        bezeichnung: p.description,
-        zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-        menge: p.quantity,
-        einzelpreis: p.unitPrice,
-        steuersatz: p.vatRate,
-      })),
+      positionen: await Promise.all(
+        (r.items ?? []).map(async (p) => ({
+          bezeichnung: p.description,
+          zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
+          menge: p.quantity,
+          einzelpreis: p.unitPrice,
+          steuersatz: p.vatRate,
+          bild: await artikelBildPfad(payload, p.product),
+        })),
+      ),
       rabatt: r.discountTotal
         ? { bezeichnung: r.discountReason || 'Nachlass', betrag: r.discountTotal }
         : null,
@@ -378,20 +385,26 @@ export async function bestaetigungDokument(
     : null
 
   const positionen = angebot?.items?.length
-    ? angebot.items.map((p) => ({
-        bezeichnung: p.description,
-        zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-        menge: p.quantity,
-        einzelpreis: p.unitPrice,
-        steuersatz: p.vatRate,
-      }))
-    : (auftrag.positions ?? []).map((p) => ({
-        bezeichnung: p.description,
-        zusatz: null,
-        menge: p.quantity ?? 1,
-        einzelpreis: p.price ?? 0,
-        steuersatz: 20,
-      }))
+    ? await Promise.all(
+        angebot.items.map(async (p) => ({
+          bezeichnung: p.description,
+          zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
+          menge: p.quantity,
+          einzelpreis: p.unitPrice,
+          steuersatz: p.vatRate,
+          bild: await artikelBildPfad(payload, p.product),
+        })),
+      )
+    : await Promise.all(
+        (auftrag.positions ?? []).map(async (p) => ({
+          bezeichnung: p.description,
+          zusatz: null,
+          menge: p.quantity ?? 1,
+          einzelpreis: p.price ?? 0,
+          steuersatz: 20,
+          bild: await artikelBildPfad(payload, p.product),
+        })),
+      )
 
   const bezug = [
     angebot?.quoteNumber ? `Unser Angebot ${angebot.quoteNumber}` : null,
@@ -491,11 +504,14 @@ export async function lieferscheinDokument(
         name: auftrag.customerName ?? bestellung?.customer?.name,
         anschrift,
       },
-      positionen: (auftrag.positions ?? []).map((p) => ({
-        bezeichnung: p.description,
-        menge: p.quantity ?? 1,
-        einheit: 'Stück',
-      })),
+      positionen: await Promise.all(
+        (auftrag.positions ?? []).map(async (p) => ({
+          bezeichnung: p.description,
+          menge: p.quantity ?? 1,
+          einheit: 'Stück',
+          bild: await artikelBildPfad(payload, p.product),
+        })),
+      ),
       hinweis: auftrag.notes,
     },
     await firma(payload),

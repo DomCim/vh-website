@@ -85,6 +85,7 @@ export interface Config {
     'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
     'goods-receipts': GoodsReceipt;
+    'product-files': ProductFile;
     stocktakes: Stocktake;
     'follow-ups': FollowUp;
     'workshop-weeks': WorkshopWeek;
@@ -122,6 +123,7 @@ export interface Config {
     'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     'goods-receipts': GoodsReceiptsSelect<false> | GoodsReceiptsSelect<true>;
+    'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     'follow-ups': FollowUpsSelect<false> | FollowUpsSelect<true>;
     'workshop-weeks': WorkshopWeeksSelect<false> | WorkshopWeeksSelect<true>;
@@ -242,6 +244,13 @@ export interface Product {
    * Fällig, wenn der Meilenstein am Auftrag erreicht ist. 0 = keine.
    */
   zwischenProzent?: number | null;
+  fileFolders?:
+    | {
+        variantId?: string | null;
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * z.B. Größen oder Ausführungen mit eigenem Preis
    */
@@ -889,6 +898,7 @@ export interface Quote {
   items?:
     | {
         description: string;
+        product?: (number | null) | Product;
         quantity: number;
         unit?: string | null;
         unitPrice: number;
@@ -979,6 +989,7 @@ export interface Job {
   positions?:
     | {
         description: string;
+        product?: (number | null) | Product;
         quantity?: number | null;
         /**
          * Bei Shop-Bestellungen der Preis von der Website.
@@ -1103,6 +1114,7 @@ export interface OutgoingInvoice {
   items?:
     | {
         description: string;
+        product?: (number | null) | Product;
         quantity: number;
         unit?: string | null;
         unitPrice: number;
@@ -1229,6 +1241,36 @@ export interface GoodsReceipt {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-files".
+ */
+export interface ProductFile {
+  id: number;
+  product: number | Product;
+  variantId?: string | null;
+  /**
+   * Nur zur Anzeige — maßgeblich ist die Kennung.
+   */
+  variantTitle?: string | null;
+  folder?: string | null;
+  /**
+   * Wie die Datei im Büro heißt. Leer = Dateiname.
+   */
+  label?: string | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1595,6 +1637,10 @@ export interface PayloadLockedDocument {
         value: number | GoodsReceipt;
       } | null)
     | ({
+        relationTo: 'product-files';
+        value: number | ProductFile;
+      } | null)
+    | ({
         relationTo: 'stocktakes';
         value: number | Stocktake;
       } | null)
@@ -1699,6 +1745,13 @@ export interface ProductsSelect<T extends boolean = true> {
   shippingCost?: T;
   anzahlungProzent?: T;
   zwischenProzent?: T;
+  fileFolders?:
+    | T
+    | {
+        variantId?: T;
+        name?: T;
+        id?: T;
+      };
   variants?:
     | T
     | {
@@ -2042,6 +2095,7 @@ export interface QuotesSelect<T extends boolean = true> {
     | T
     | {
         description?: T;
+        product?: T;
         quantity?: T;
         unit?: T;
         unitPrice?: T;
@@ -2096,6 +2150,7 @@ export interface JobsSelect<T extends boolean = true> {
     | T
     | {
         description?: T;
+        product?: T;
         quantity?: T;
         price?: T;
         id?: T;
@@ -2157,6 +2212,7 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
     | T
     | {
         description?: T;
+        product?: T;
         quantity?: T;
         unit?: T;
         unitPrice?: T;
@@ -2267,6 +2323,29 @@ export interface GoodsReceiptsSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-files_select".
+ */
+export interface ProductFilesSelect<T extends boolean = true> {
+  product?: T;
+  variantId?: T;
+  variantTitle?: T;
+  folder?: T;
+  label?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -24,6 +24,7 @@ export const BEREICHE = {
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',
   wareneingaenge: 'goods-receipts',
+  werkstattdateien: 'product-files',
   werkstattwochen: 'workshop-weeks',
   wiedervorlagen: 'follow-ups',
 } as const

@@ -8,6 +8,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { ArtikelBezug } from './ArtikelBezug'
 
 export type Position = {
   description: string
@@ -15,6 +16,8 @@ export type Position = {
   unit: string
   unitPrice: number
   vatRate: number
+  /** Nur für das Bild auf dem Papier — ändert an keiner Zahl etwas */
+  product?: number | '' | null
 }
 
 export type RechnungWerte = {
@@ -253,6 +256,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
               placeholder="z.B. Sitzbank Cortenstahl, 2,00 m, nach Zeichnung"
             />
           </label>
+          <ArtikelBezug
+            wert={p.product ?? ''}
+            aendern={(id) => setzePosition(i, { product: id || undefined })}
+          />
           <div className="buero-reihe">
             <label className="buero-feld">
               <span>Menge</span>

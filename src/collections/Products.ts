@@ -135,6 +135,38 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      /*
+       * Die Ordner für die Werkstattdateien — Fräsen, Laser, Zusammenbau, NC.
+       *
+       * Sie stehen am Artikel und nicht an der Datei, damit ein **leerer**
+       * Ordner existieren kann: Man legt die Struktur an und füllt sie
+       * danach. Läge der Ordner nur an der Datei, wäre ein Ordner ohne Datei
+       * beim nächsten Laden wieder weg — und niemand könnte eine Struktur
+       * vorbereiten.
+       *
+       * Eine flache Liste für Artikel und Varianten zusammen: `variantId`
+       * leer heißt „Grundlage", genau wie bei der Stückliste. Ein
+       * verschachteltes Feld in jeder Variante wäre dasselbe in umständlich.
+       */
+      name: 'fileFolders',
+      label: 'Ordner für Werkstattdateien',
+      type: 'array',
+      labels: { singular: 'Ordner', plural: 'Ordner' },
+      admin: {
+        // Gepflegt wird das im Büro unter /office/artikel
+        hidden: true,
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'variantId', label: 'Variante (Kennung)', type: 'text' },
+            { name: 'name', label: 'Name', type: 'text', required: true },
+          ],
+        },
+      ],
+    },
+    {
       name: 'variants',
       label: 'Varianten',
       type: 'array',

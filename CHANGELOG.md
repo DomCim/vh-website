@@ -2,6 +2,16 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 20.08.2026 — Bauunterlagen an der Variante, Bilder auf den Papieren, Zeichen in der Leiste
+
+- **Jede Artikelvariante trägt ihre Bauunterlagen bei sich.** Laserdatei, Fräsprogramm, Zusammenbauzeichnung, NC-Code — was zum Bauen gebraucht wird, lag bisher in einem Ordner auf einem Rechner, den einer kennt. Jetzt hängt es an der Variante, die es betrifft: Ein Kübel in 100 × 50 hat eine andere Laserdatei als derselbe in 60 × 30, und wo beide zusammenliegen, wird irgendwann das falsche Blech geschnitten.
+- **Mit echten Ordnern**, die man selbst anlegt und umbenennt — Fräsen, Laser, Zusammenbau, NC stehen als Vorschlag bereit, ein Tipp legt sie an. Ein Ordner bleibt auch leer bestehen, damit man die Struktur vorbereiten und danach füllen kann. Beim Umbenennen ziehen die Dateien mit; ein Ordner mit Inhalt lässt sich nicht löschen.
+- **Die Werkstatt kommt unter Werkstatt → Unterlagen an die Dateien**, ohne Preise ändern zu dürfen: Artikel suchen, Variante wählen, herunterladen. Heruntergeladen wird unter dem Namen, unter dem die Datei hereinkam.
+- **Die Dateien liegen nicht offen im Netz.** Anders als die Bilder der Website sind sie nur nach Anmeldung im Büro erreichbar — eine Laserdatei unter einer ratbaren Adresse ist die Arbeit von Wochen, frei zum Mitnehmen. Abgelegt werden sie neben den Bildern, damit die nächtliche Sicherung sie mitnimmt.
+- **Auf Angebot, Auftragsbestätigung, Lieferschein und Rechnung steht jetzt ein kleines Bild neben der Position.** Wer packt oder baut, sieht sofort, worum es geht, statt eine Textzeile zu entziffern. Dafür trägt jede Position einen freiwilligen Artikelbezug — aus einer Shop-Bestellung kommt er von selbst, von Hand geschriebene Positionen können ihn wählen. An Beschreibung und Beträgen ändert er nichts; die Beschreibung bleibt, was auf dem Papier steht.
+- **Im Büro steht das Bild in der Artikelliste und an jeder Position.** „Kübel groß" und „Kübel klein" unterscheiden sich sonst durch ein Wort.
+- **Jeder Navigationspunkt hat sein eigenes Zeichen, und die Farbe kommt vom Arbeitsbereich**: Blau ist Kundschaft, Bronze ist Werkstatt, Grün ist Geld, Violett der Rest. Nach ein paar Tagen greift man nach dem Fleck, ohne zu lesen. Farbe allein wäre zu grob, Form allein bei achtzehn Punkten zu fein — zusammen genügt beides sich.
+
 ## 19.08.2026 — Neues Erscheinungsbild, dunkles Thema, Bedienung am Daumen
 
 - **Knöpfe sahen nicht nach Knöpfen aus.** Von fünf Varianten war genau eine als Bedienelement erkennbar; „leise" und „schmal" trugen denselben feinen Strich wie eine Tabellenlinie — 1,3:1 Kontrast, und das Auge las sie als Beschriftung. Jetzt gibt es drei Stufen, die man aus zwei Metern Abstand unterscheidet: **primär** gefüllt in Bronze (genau eine je Seite — die Haupthandlung), **sekundär** mit eigener Fläche und kräftigem Rahmen, **beiläufig** als unterstrichener Text. Rot bleibt dem Wegnehmen vorbehalten und wird nie zur gefüllten Hauptfläche, damit „löschen" nie wie der Vorschlag aussieht.

@@ -106,6 +106,7 @@ export async function POST(req: Request) {
             unit: p.unit,
             unitPrice: -(Number(p.unitPrice) || 0),
             vatRate: p.vatRate,
+            product: (p.product as number) ?? undefined,
           })),
           discountKind: original.discountKind,
           discountValue: original.discountValue,
@@ -160,6 +161,8 @@ export async function POST(req: Request) {
           unit: p.unit || 'Stück',
           unitPrice: Number(p.unitPrice) || 0,
           vatRate: Number(p.vatRate) || 0,
+          // Nur für das Bild auf dem Papier — siehe OutgoingInvoices.items
+          product: Number(p.product) || undefined,
         })),
       reverseCharge: Boolean(b.reverseCharge),
       note: b.note || undefined,

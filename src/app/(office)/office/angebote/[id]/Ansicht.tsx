@@ -21,6 +21,7 @@ type Posten = {
   unit?: string | null
   unitPrice?: number | null
   vatRate?: number | null
+  product?: unknown
 }
 
 type Angebot = {
@@ -110,6 +111,7 @@ export function AngebotAnsicht() {
             unit: p.unit ?? 'Stück',
             unitPrice: p.unitPrice ?? 0,
             vatRate: p.vatRate ?? 0,
+            product: (p.product as number) ?? '',
           })),
           note: a.note as string,
           discountKind: a.discountKind as string,

@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
+import { Werkstattdateien } from './Werkstattdateien'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -596,6 +597,21 @@ export function ArtikelFormular({
             </div>
           )}
       </div>
+
+      {/*
+       * Die Bauunterlagen stehen unter derselben Variantenwahl wie Stückliste
+       * und Fremdleistung — es ist dieselbe Frage: Was gilt für welche Größe?
+       *
+       * Sie speichern sich selbst und hängen deshalb nicht am Knopf unten:
+       * Eine Datei, die erst beim Speichern des ganzen Artikels hochgeht,
+       * wäre nach einem Fehler an ganz anderer Stelle weg.
+       */}
+      <Werkstattdateien
+        produktId={produktId}
+        variantId={gewaehlt}
+        variantTitle={variante?.titel}
+        darfAendern
+      />
 
       <Fussleiste>
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>

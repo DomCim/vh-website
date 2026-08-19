@@ -30,6 +30,20 @@
    * die Karte. Sonst werden aus den Markern im Dunkeln Pastellaufkleber. */
   --buero-marker-grund: #ffffff;
 
+  /* Eine Farbe je Arbeitsbereich.
+   *
+   * Vier Farben und achtzehn Formen: Die Farbe sagt, in welchem Bereich man
+   * ist, die Form, welcher Punkt es ist. Nach ein paar Tagen greift man nach
+   * dem Fleck, ohne zu lesen — Farbe allein wäre zu grob (vier Töne
+   * verwechselt man), Form allein zu fein (achtzehn Umrisse sind zu viele).
+   *
+   * Gewählt sind sie so, dass sie neben dem Bronze des Hauses bestehen und
+   * sich auch bei Sonne auf dem Display noch auseinanderhalten lassen. */
+  --bereich-kundschaft: #3f6f9c;
+  --bereich-werkstatt: #a86b3d;
+  --bereich-geld: #2f6b46;
+  --bereich-sonstiges: #6a5a8c;
+
   /* Tiefe kommt im Hellen vom Schatten. Im Dunkeln gibt es keinen Schatten,
    * dort übernimmt das eine hellere Fläche mit heller Oberkante. */
   --buero-schatten:
@@ -233,6 +247,9 @@
 }
 
 .buero-nav-menue a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.45rem 0.7rem;
   border-radius: 0.5rem;
   font-size: 0.85rem;
@@ -241,6 +258,32 @@
 .buero-nav-menue a:hover {
   background: var(--buero-papier);
   color: var(--buero-tinte);
+}
+
+/* Jeder Bereich setzt seine Farbe; alles darin liest sie aus `--bereich`. */
+.bereich-kundschaft {
+  --bereich: var(--bereich-kundschaft);
+}
+.bereich-werkstatt {
+  --bereich: var(--bereich-werkstatt);
+}
+.bereich-geld {
+  --bereich: var(--bereich-geld);
+}
+.bereich-sonstiges {
+  --bereich: var(--bereich-sonstiges);
+}
+
+/* Das Zeichen vor einem Navigationspunkt */
+.buero-punkt-zeichen {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--bereich, currentColor);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ── Reiter innerhalb einer Seite ───────────────────────────────────────── */
@@ -345,12 +388,18 @@
   stroke-linejoin: round;
 }
 
-/* Farbe allein trägt nicht: Bei Sonne aufs Display sieht man den Unterschied
-   zwischen Grau und Bronze kaum. Der Strich an der Oberkante schon. */
+/* Das Zeichen trägt immer die Bereichsfarbe — daran lernt man die Leiste.
+   Ausgewählt ist der Reiter, dessen Beschriftung mitfärbt und der oben einen
+   Strich bekommt: Farbe allein trägt nicht, bei Sonne aufs Display sieht man
+   den Unterschied zwischen Grau und Farbe kaum. */
+.buero-tab svg {
+  stroke: var(--bereich, currentColor);
+}
+
 .buero-tab[aria-current='page'],
 .buero-tab.offen {
-  color: var(--buero-bronze);
-  box-shadow: inset 0 2px 0 var(--buero-bronze);
+  color: var(--bereich, var(--buero-bronze));
+  box-shadow: inset 0 2px 0 var(--bereich, var(--buero-bronze));
 }
 
 .buero-tab:focus-visible {
@@ -424,6 +473,7 @@
 .buero-blatt-punkte a {
   display: flex;
   align-items: center;
+  gap: 0.6rem;
   min-height: 48px;
   padding: 0.7rem 0.85rem;
   border: 1.5px solid var(--buero-rahmen);
@@ -438,9 +488,14 @@
 }
 
 .buero-blatt-punkte a[aria-current='page'] {
-  background: var(--buero-bronze);
-  color: var(--buero-auf-bronze);
-  border-color: var(--buero-bronze);
+  background: var(--bereich, var(--buero-bronze));
+  color: #fff;
+  border-color: var(--bereich, var(--buero-bronze));
+}
+
+/* Auf gefülltem Grund trägt das Zeichen die Schriftfarbe mit */
+.buero-blatt-punkte a[aria-current='page'] .buero-punkt-zeichen {
+  stroke: currentColor;
 }
 
 @media (max-width: 719px) {
@@ -1064,6 +1119,12 @@ html.tastatur-offen .buero-inhalt {
     --buero-gruen: #77cc96;
     --buero-rot: #ef8579;
     --buero-marker-grund: var(--buero-flaeche);
+    /* Im Dunkeln aufgehellt — dieselben Farben, nur so hell, dass sie noch
+       als Farbe ankommen und nicht als Fleck */
+    --bereich-kundschaft: #7fb0d8;
+    --bereich-werkstatt: #d9975c;
+    --bereich-geld: #77cc96;
+    --bereich-sonstiges: #a89ad0;
     --buero-schatten:
       inset 0 1px 0 rgb(255 255 255 / 5%),
       0 2px 10px rgb(0 0 0 / 40%);

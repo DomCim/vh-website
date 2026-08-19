@@ -332,6 +332,24 @@ export const Jobs: CollectionConfig = {
       fields: [
         { name: 'description', label: 'Beschreibung', type: 'text', required: true },
         {
+          /*
+           * Welcher Artikel gemeint ist — freiwillig.
+           *
+           * Die Beschreibung bleibt der maßgebliche Text: Sie steht auf dem
+           * Papier, sie ist verhandelt, und sie darf von der Artikelbezeichnung
+           * abweichen. Der Bezug hängt nur daran, damit im Büro und auf dem
+           * Papier das Bild dazu erscheint — man sieht dann auf einen Blick,
+           * worum es geht, statt eine Zeile Text zu lesen.
+           *
+           * Aus einer Shop-Bestellung wird er von selbst gesetzt. Wer eine
+           * Position von Hand schreibt, kann ihn wählen oder leer lassen.
+           */
+          name: 'product',
+          label: 'Artikel (für das Bild)',
+          type: 'relationship',
+          relationTo: 'products',
+        },
+        {
           type: 'row',
           fields: [
             { name: 'quantity', label: 'Menge', type: 'number', defaultValue: 1 },

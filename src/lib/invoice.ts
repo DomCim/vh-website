@@ -21,6 +21,14 @@ export type RechnungsPosition = {
   /** Einzelpreis — je nach `preiseSind` brutto oder netto */
   einzelpreis: number
   steuersatz: number
+  /**
+   * Pfad zu einem kleinen Bild des Artikels — optional.
+   *
+   * Wer die Rechnung liest, sieht dann, worum es geht, ohne die Zeile zu
+   * entziffern; in der Werkstatt erspart das die Rückfrage, welches Teil
+   * gemeint ist. Fehlt es, sieht die Zeile aus wie immer.
+   */
+  bild?: string | null
 }
 
 export type RechnungsDaten = {
@@ -259,16 +267,31 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
     nachSatz.set(satz, { netto: runden(bisher.netto + netto), steuer: runden(bisher.steuer + steuer) })
   }
 
+  /** Kantenlänge des Vorschaubildes in Punkten — knapp zwei Zeilen hoch */
+  const BILD = 30
+
   const zeile = (
     bezeichnung: string,
     menge: number | null,
     einzelNetto: number | null,
     satz: number,
     netto: number,
+    bild?: string | null,
   ) => {
     const y = doc.y
-    doc.fontSize(9).text(bezeichnung, links, y, { width: spalten.menge - links - 8 })
-    const ende = doc.y
+    let textLinks = links
+    if (bild) {
+      try {
+        doc.image(bild, links, y, { fit: [BILD, BILD] })
+        textLinks = links + BILD + 8
+      } catch (err) {
+        // Ein fehlendes oder kaputtes Bild darf keine Rechnung aufhalten —
+        // aber stillschweigend verschwinden soll es auch nicht.
+        console.warn('Artikelbild nicht eingebettet:', err)
+      }
+    }
+    doc.fontSize(9).text(bezeichnung, textLinks, y, { width: spalten.menge - textLinks - 8 })
+    const ende = bild ? Math.max(doc.y, y + BILD) : doc.y
     if (menge !== null) doc.text(String(menge), spalten.menge, y, { width: 40, align: 'right' })
     if (einzelNetto !== null) {
       doc.text(euro(einzelNetto), spalten.einzel, y, { width: 68, align: 'right' })
@@ -291,6 +314,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
       einzel,
       satz,
       netto,
+      p.bild,
     )
   }
 

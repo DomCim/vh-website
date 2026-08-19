@@ -39,6 +39,7 @@ import * as migration_20260819_193745_variantenstueckliste from './20260819_1937
 import * as migration_20260819_201353_variantendienste_bestandsverlauf from './20260819_201353_variantendienste_bestandsverlauf';
 import * as migration_20260819_202917_nachbestellung from './20260819_202917_nachbestellung';
 import * as migration_20260819_204824_wareneingang from './20260819_204824_wareneingang';
+import * as migration_20260819_233212_werkstattdateien from './20260819_233212_werkstattdateien';
 
 export const migrations = [
   {
@@ -244,6 +245,11 @@ export const migrations = [
   {
     up: migration_20260819_204824_wareneingang.up,
     down: migration_20260819_204824_wareneingang.down,
-    name: '20260819_204824_wareneingang'
+    name: '20260819_204824_wareneingang',
+  },
+  {
+    up: migration_20260819_233212_werkstattdateien.up,
+    down: migration_20260819_233212_werkstattdateien.down,
+    name: '20260819_233212_werkstattdateien'
   },
 ];

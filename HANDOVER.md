@@ -239,6 +239,55 @@ auf und es passierte das Falsche. `tests/bueroleiste.spec.ts` hält das fest.
 
 ---
 
+## Fünfter Durchgang: Bauunterlagen und Bilder
+
+### Werkstattdateien (`product-files`)
+
+Eigene Sammlung, **nicht** die Mediathek: Die ist öffentlich lesbar, weil sie
+die Bilder der Website ausliefert. Eine Laserdatei dort abzulegen hieße, sie
+ins Netz zu stellen. `access.read` ist deshalb `office`, und
+`/api/office/werkstattdatei/[id]` prüft die Anmeldung, bevor es die Datei
+ausliefert — mit `Content-Disposition` auf den Originalnamen, denn auf der
+Platte steht ein Zeitstempel davor (zwei Varianten hätten sonst dieselbe
+`zuschnitt.dxf`).
+
+Abgelegt wird unter `media/werkstattdateien`, also **im vorhandenen
+media-Volume**. Ein eigenes Volume wäre die sauberere Schublade, verlöre aber
+beim ersten Ausrollen ohne angepassten Stack alle Dateien; hier ist es
+persistent und die nächtliche Sicherung nimmt es mit.
+
+**Die Ordner stehen am Artikel** (`products.fileFolders`), nicht an der Datei:
+Nur so kann ein Ordner leer bestehen, und genau das braucht man, wenn man
+eine Struktur vorbereitet. Eine flache Liste für Artikel und Varianten
+zusammen; `variantId` leer heißt „Grundlage", dieselbe Lesart wie bei der
+Stückliste. Beim Umbenennen zieht die Schnittstelle die Dateien nach — sie
+tragen den Ordner als Namen, nicht als Verweis.
+
+### Artikelbild auf den Papieren
+
+Positionen in `quotes.items`, `outgoing-invoices.items` und `jobs.positions`
+haben ein freiwilliges `product`. Es trägt keine Zahl und keinen Text, nur das
+Bild. Aus einer Shop-Bestellung wird es gesetzt, durch Angebot → Auftrag →
+Rechnung wandert es mit.
+
+**Die Falle dabei: PDFKit kann nur PNG und JPEG.** Die Größenstaffelung der
+Mediathek liefert WebP — gut für die Website, für ein PDF unbrauchbar.
+`doc.image()` wirft dann, der Auffangblock schluckt es, und im Dokument fehlt
+das Bild, ohne dass jemand etwas merkt. `lib/artikelbild.ts` sucht deshalb die
+kleinste Fassung, die PDFKit auch lesen kann; in aller Regel ist das die
+hochgeladene Originaldatei. Wer dort etwas ändert: mit einem echten Bild
+prüfen, nicht mit dem 1×1-Pixel aus den Startdaten — bei dem sieht man am
+Dateiumfang keinen Unterschied.
+
+### Zeichen und Bereichsfarben
+
+`PUNKT_ZEICHEN` in `BueroNavigation` hält je einen Umriss pro Ziel, die Farbe
+kommt über `--bereich` aus der Bereichsklasse (`bereich-werkstatt` usw.). Wer
+einen Navigationspunkt ergänzt, ergänzt dort auch sein Zeichen — fehlt es,
+bleibt die Stelle einfach leer, es bricht nichts.
+
+---
+
 ## Offen
 
 1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit
@@ -259,6 +308,14 @@ auf und es passierte das Falsche. `tests/bueroleiste.spec.ts` hält das fest.
 ---
 
 ## Fallen, die in diesem Durchgang Zeit gekostet haben
+
+**Payload weist `127.0.0.1` als fremde Herkunft ab.** `serverURL` steht auf
+`http://localhost:3000`; ein Browser, der die Anwendung unter `127.0.0.1`
+aufruft, bekommt bei jedem angemeldeten Aufruf 403 — die Anmeldung klappt,
+aber der Abgleich bleibt leer, und das Büro sieht aus, als hätte es keine
+Daten. Beim Prüfen mit Playwright also `localhost` verwenden (so macht es auch
+`TEST_BASE_URL`).
+
 
 **Das Projekt hat keine Prettier-Konfiguration.** `npx prettier --write` läuft
 deshalb mit den Voreinstellungen (doppelte Anführungszeichen, 80 Zeichen) und

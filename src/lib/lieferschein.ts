@@ -22,7 +22,13 @@ export type LieferscheinDaten = {
   auftrag?: string | null
   bestellreferenz?: string | null
   empfaenger: { name?: string | null; anschrift?: string[] }
-  positionen: { bezeichnung: string; menge: number; einheit?: string | null }[]
+  positionen: {
+    bezeichnung: string
+    menge: number
+    einheit?: string | null
+    /** Pfad zu einem kleinen Artikelbild — wer packt, sieht dann, was gemeint ist */
+    bild?: string | null
+  }[]
   hinweis?: string | null
 }
 
@@ -70,10 +76,23 @@ export async function lieferscheinPdf(
   doc.moveTo(LINKS, doc.y).lineTo(RECHTS, doc.y).strokeColor('#ddd').stroke()
   doc.moveDown(0.5)
 
+  const BILD = 30
+
   for (const p of daten.positionen) {
     const y = doc.y
-    doc.fontSize(10).text(p.bezeichnung, LINKS, y, { width: mengeSpalte - LINKS - 8 })
-    const ende = doc.y
+    let textLinks = LINKS
+    if (p.bild) {
+      try {
+        doc.image(p.bild, LINKS, y, { fit: [BILD, BILD] })
+        textLinks = LINKS + BILD + 8
+      } catch (err) {
+        // Ein fehlendes Bild hält keinen Lieferschein auf — aber es soll
+        // im Protokoll stehen.
+        console.warn('Artikelbild nicht eingebettet:', err)
+      }
+    }
+    doc.fontSize(10).text(p.bezeichnung, textLinks, y, { width: mengeSpalte - textLinks - 8 })
+    const ende = p.bild ? Math.max(doc.y, y + BILD) : doc.y
     doc.text(`${p.menge}${p.einheit ? ` ${p.einheit}` : ''}`, mengeSpalte, y, {
       width: RECHTS - mengeSpalte,
       align: 'right',

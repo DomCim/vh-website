@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import React, { useMemo } from 'react'
 
+import { bildUrl } from '../../../../components/office/ArtikelBezug'
 import { useBestand } from '../../../../lib/buero/bestand'
 
 /** Artikel — hier hängen Stückliste und Dienstleister dran. */
@@ -10,12 +11,54 @@ import { useBestand } from '../../../../lib/buero/bestand'
 type Artikel = {
   id: number | string
   title?: string | null
+  images?: unknown[] | null
   billOfMaterials?: unknown[] | null
   serviceProviders?: unknown[] | null
 }
 
+type Medium = {
+  id: number | string
+  url?: string | null
+  sizes?: Record<string, { url?: string | null } | undefined> | null
+}
+
+/*
+ * Das Bild vom Shop, klein.
+ *
+ * „Kübel groß" und „Kübel klein" unterscheiden sich in der Liste sonst durch
+ * ein Wort. Mit dem Bild greift man nach dem richtigen, ohne zu lesen — und
+ * es ist ohnehin da, es steht auf der Website.
+ */
+function Vorschau({ artikel, medien }: { artikel: Artikel; medien: Medium[] }) {
+  const url = bildUrl(artikel, medien)
+  return (
+    <span
+      style={{
+        width: 44,
+        height: 44,
+        flex: '0 0 auto',
+        marginRight: '.85rem',
+        borderRadius: 8,
+        border: '1px solid var(--buero-linie)',
+        background: 'var(--buero-papier)',
+        overflow: 'hidden',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {url ? (
+        <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        <span style={{ fontSize: '.7rem', color: 'var(--buero-tinte-leise)' }}>—</span>
+      )}
+    </span>
+  )
+}
+
 export function ArtikelAnsicht() {
   const alle = useBestand<Artikel>('artikel')
+  const medien = useBestand<Medium>('medien')
   const artikel = useMemo(
     () => [...alle].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '', 'de')),
     [alle],
@@ -51,7 +94,8 @@ export function ArtikelAnsicht() {
             const dienste = (p.serviceProviders ?? []).length
             return (
               <Link key={p.id} href={`/office/artikel/${p.id}`} className="buero-zeile">
-                <div className="buero-zeile-haupt">
+                <Vorschau artikel={p} medien={medien} />
+                <div className="buero-zeile-haupt" style={{ flex: 1 }}>
                   <div className="buero-zeile-titel">{p.title}</div>
                   <div className="buero-zeile-neben">
                     {zeilen === 0 ? 'keine Stückliste' : `${zeilen} Materialposten`}

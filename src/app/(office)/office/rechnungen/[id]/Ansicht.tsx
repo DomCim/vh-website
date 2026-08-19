@@ -25,6 +25,7 @@ type Posten = {
   unit?: string | null
   unitPrice?: number | null
   vatRate?: number | null
+  product?: unknown
 }
 
 type Mahnung = { level?: number | null; sentAt?: string | null }
@@ -159,6 +160,7 @@ export function RechnungAnsicht() {
             unit: p.unit ?? 'Stück',
             unitPrice: p.unitPrice ?? 0,
             vatRate: p.vatRate ?? 0,
+            product: (p.product as number) ?? '',
           })),
           reverseCharge: Boolean(r.reverseCharge),
           note: r.note as string,

@@ -9,6 +9,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { ArtikelBezug } from './ArtikelBezug'
 
 export type AngebotPosition = {
   description: string
@@ -16,6 +17,8 @@ export type AngebotPosition = {
   unit: string
   unitPrice: number
   vatRate: number
+  /** Nur für das Bild auf dem Papier — ändert an keiner Zahl etwas */
+  product?: number | '' | null
 }
 
 export type AngebotWerte = {
@@ -198,6 +201,10 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
               onChange={(e) => setzePosition(i, { description: e.target.value })}
             />
           </label>
+          <ArtikelBezug
+            wert={p.product ?? ''}
+            aendern={(id) => setzePosition(i, { product: id || undefined })}
+          />
           <div className="buero-reihe">
             <label className="buero-feld">
               <span>Menge</span>

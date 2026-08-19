@@ -74,6 +74,7 @@ const VORRAT = [
   '/office/kalender',
   '/office/auslastung',
   '/office/nachbestellen',
+  '/office/unterlagen',
   '/office/nachkalkulation',
   '/office/wiedervorlagen',
   '/office/einstellungen',

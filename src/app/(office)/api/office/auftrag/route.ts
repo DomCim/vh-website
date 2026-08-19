@@ -57,6 +57,8 @@ export async function POST(req: Request) {
           description: p.description,
           quantity: Number(p.quantity) || 1,
           price: p.price ?? undefined,
+          // Nur für das Bild auf den Papieren — siehe Jobs.positions.product
+          product: Number(p.product) || undefined,
         })),
       material: (b.material ?? [])
         .filter((m: { item?: number }) => m.item)
