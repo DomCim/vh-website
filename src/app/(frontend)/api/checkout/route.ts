@@ -243,6 +243,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error('Checkout fehlgeschlagen:', err)
+
+    /*
+     * „Bitte versuchen Sie es erneut" ist die falsche Auskunft, wenn Wiederholen
+     * gar nicht helfen kann. Ist die Bezahlung nicht eingerichtet, scheitert
+     * jeder weitere Versuch genauso — und die Kundschaft probiert es dreimal,
+     * gibt auf und schreibt keine Mail.
+     *
+     * Was sie sieht, bleibt trotzdem allgemein: Wie der Betrieb seine Zahlungen
+     * abwickelt und was davon fehlt, geht Fremde nichts an. Der Grund steht im
+     * Protokoll, dort gehört er hin.
+     */
+    const text = err instanceof Error ? err.message : ''
+    if (/nicht konfiguriert|not configured/i.test(text)) {
+      return NextResponse.json({ error: 'zahlung-nicht-eingerichtet' }, { status: 503 })
+    }
+
     return NextResponse.json({ error: 'checkout-failed' }, { status: 500 })
   }
 }

@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
 
-import { locales, type Locale } from '../../lib/i18n'
+import type { Locale } from '../../lib/i18n'
 import { CartLink } from '../shop/CartLink'
+import { SprachWahl } from './SprachWahl'
 
 type Category = {
   id: number | string
@@ -25,6 +26,7 @@ type Dict = {
     custom: string
     search: string
     menu: string
+    language: string
   }
 }
 
@@ -99,19 +101,7 @@ export function Header({
         </nav>
 
         <div className="flex items-center gap-4">
-          <div className="tracking-nav text-ink-soft flex items-center gap-2 text-xs uppercase">
-            {locales.map((code, i) => (
-              <React.Fragment key={code}>
-                {i > 0 && <span className="text-line">|</span>}
-                <Link
-                  href={pathFor(code)}
-                  className={code === locale ? 'text-ink font-semibold' : 'hover:text-ink'}
-                >
-                  {code.toUpperCase()}
-                </Link>
-              </React.Fragment>
-            ))}
-          </div>
+          <SprachWahl locale={locale} pfadFuer={pathFor} label={dict.nav.language} />
 
           <Link
             href={`/${locale}/suche`}

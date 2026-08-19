@@ -17,6 +17,7 @@ const de = {
     custom: 'Maßanfertigung',
     search: 'Suche',
     menu: 'Menü',
+    language: 'Sprache',
   },
   home: {
     categoriesTitle: 'Unsere Produktwelten',
@@ -97,6 +98,8 @@ const de = {
     vatIncluded: 'inkl. {rate} % MwSt.',
     backToCart: 'Zurück zum Warenkorb',
     error: 'Die Bestellung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.',
+    errorNoPayment:
+      'Die Bezahlung ist derzeit nicht möglich. Bitte nehmen Sie kurz Kontakt mit uns auf — wir schließen Ihre Bestellung dann persönlich ab.',
   },
   thanks: {
     title: 'Vielen Dank für Ihre Bestellung!',
@@ -287,6 +290,7 @@ const fr: Dictionary = {
     custom: 'Sur mesure',
     search: 'Recherche',
     menu: 'Menu',
+    language: 'Langue',
   },
   home: {
     categoriesTitle: 'Nos univers de produits',
@@ -367,6 +371,8 @@ const fr: Dictionary = {
     vatIncluded: 'TVA de {rate} % incluse',
     backToCart: 'Retour au panier',
     error: "La commande n'a pas pu être lancée. Veuillez réessayer.",
+    errorNoPayment:
+      "Le paiement n'est pas possible pour le moment. Contactez-nous brièvement — nous finaliserons votre commande personnellement.",
   },
   thanks: {
     title: 'Merci pour votre commande !',
@@ -554,6 +560,7 @@ const en: Dictionary = {
     custom: 'Made to measure',
     search: 'Search',
     menu: 'Menu',
+    language: 'Language',
   },
   home: {
     categoriesTitle: 'Our product worlds',
@@ -634,6 +641,8 @@ const en: Dictionary = {
     vatIncluded: 'incl. {rate} % VAT',
     backToCart: 'Back to cart',
     error: 'The order could not be started. Please try again.',
+    errorNoPayment:
+      'Payment is currently unavailable. Please get in touch — we will complete your order personally.',
   },
   thanks: {
     title: 'Thank you for your order!',
