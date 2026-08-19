@@ -264,10 +264,16 @@ export const Orders: CollectionConfig = {
       name: 'paymentProvider',
       label: 'Zahlungsanbieter',
       type: 'select',
-      defaultValue: 'stripe',
+      defaultValue: 'paypal',
+      /*
+       * „Stripe" steht hier weiter zur Auswahl, obwohl darüber nichts mehr
+       * hereinkommt: Bestellungen aus der Stripe-Zeit tragen den Wert, und ein
+       * Datensatz, dessen Zahlungsart nicht mehr benannt werden kann, ist im
+       * Zweifel bei einer Prüfung nichts wert.
+       */
       options: [
-        { label: 'Stripe', value: 'stripe' },
         { label: 'PayPal', value: 'paypal' },
+        { label: 'Stripe (nicht mehr in Gebrauch)', value: 'stripe' },
       ],
       admin: {
         position: 'sidebar',
@@ -282,6 +288,8 @@ export const Orders: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
+        // Nur noch an alten Bestellungen — an neuen wäre es eine leere Zeile
+        condition: (data) => Boolean(data?.stripeSessionId),
       },
     },
     {
@@ -291,6 +299,7 @@ export const Orders: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
+        condition: (data) => Boolean(data?.stripePaymentIntentId),
       },
     },
     {

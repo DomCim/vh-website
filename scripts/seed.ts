@@ -644,7 +644,7 @@ async function run() {
         'Platzhalter: Bitte hier das vollständige Impressum einfügen (Firmenname, Anschrift, Vertretungsberechtigte, Registernummer, USt-ID, Kontakt). Die Inhalte der bisherigen Website können im Admin-Panel unter „Rechtliches" eingepflegt werden.',
       ),
       datenschutz: richText(
-        'Platzhalter: Bitte hier die Datenschutzerklärung einfügen. Hinweis: Durch Shop (Stripe) und Kontaktformular verarbeitet die Website personenbezogene Daten — die Erklärung sollte Stripe als Zahlungsdienstleister und den E-Mail-Versand erwähnen.',
+        'Platzhalter: Bitte hier die Datenschutzerklärung einfügen. Hinweis: Durch Shop (PayPal) und Kontaktformular verarbeitet die Website personenbezogene Daten — die Erklärung sollte PayPal als Zahlungsdienstleister und den E-Mail-Versand erwähnen.',
       ),
       agb: richText(
         'Platzhalter: Bitte hier die Allgemeinen Geschäftsbedingungen für den Online-Shop einfügen (Vertragsschluss, Preise, Lieferung, Widerrufsrecht, Gewährleistung).',

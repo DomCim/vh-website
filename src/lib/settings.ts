@@ -36,10 +36,6 @@ export type ResolvedIntegrations = {
     notificationEmail?: string
   }
   mailboxes: MailboxKonfiguration[]
-  stripe: {
-    secretKey?: string
-    webhookSecret?: string
-  }
   paypal: {
     clientId?: string
     clientSecret?: string
@@ -110,10 +106,6 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
         smtpUser: m.smtpUser || undefined,
         smtpPass: m.smtpPass || undefined,
       })),
-    stripe: {
-      secretKey: val(doc?.stripe?.secretKey, process.env.STRIPE_SECRET_KEY),
-      webhookSecret: val(doc?.stripe?.webhookSecret, process.env.STRIPE_WEBHOOK_SECRET),
-    },
     paypal: {
       clientId: val(doc?.paypal?.clientId, process.env.PAYPAL_CLIENT_ID),
       clientSecret: val(doc?.paypal?.clientSecret, process.env.PAYPAL_CLIENT_SECRET),

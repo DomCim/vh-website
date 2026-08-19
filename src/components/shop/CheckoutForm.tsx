@@ -12,10 +12,8 @@ type CheckoutDict = {
   optionPickup: string
   pickupNote: string
   paymentMethod: string
-  optionCard: string
   optionPaypal: string
-  payNowStripe: string
-  payNowPaypal: string
+  paypalNote: string
   redirectNotePaypal: string
   paypalAddressNote: string
   differentAddress: string
@@ -36,9 +34,9 @@ type CheckoutDict = {
   consentTerms: string
   consentWaiver: string
   consentMissing: string
-  redirectNote: string
   backToCart: string
   error: string
+  errorNoPayment: string
 }
 
 type CartDict = {
@@ -103,18 +101,17 @@ export function CheckoutForm({
 }) {
   const { items, subtotal, clear } = useCart()
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(false)
+  // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an"
+  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung'>(null)
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe')
   const [differentAddress, setDifferentAddress] = useState(false)
   const [zustimmung, setZustimmung] = useState(false)
   const [verzicht, setVerzicht] = useState(false)
   const [fehlendeZustimmung, setFehlendeZustimmung] = useState(false)
 
-  // Bei PayPal + Lieferung kommt die Adresse aus dem PayPal-Konto,
-  // außer der Kunde will explizit eine abweichende angeben
-  const showAddressForm =
-    deliveryMethod === 'shipping' && (paymentMethod !== 'paypal' || differentAddress)
+  // Die Lieferadresse kommt aus dem PayPal-Konto, außer der Kunde will
+  // ausdrücklich eine abweichende angeben
+  const showAddressForm = deliveryMethod === 'shipping' && differentAddress
 
   // Nur wenn wir sicher wissen, dass ein Stück nach Vorgabe entsteht, wird der
   // Verzicht abgefragt — sonst spräche die Kasse jemandem ein Recht ab, das er hat.
@@ -146,7 +143,7 @@ export function CheckoutForm({
       return
     }
     setSubmitting(true)
-    setError(false)
+    setError(null)
     setFehlendeZustimmung(false)
     const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>
 
@@ -158,7 +155,6 @@ export function CheckoutForm({
           locale,
           promoCode: initialCode,
           deliveryMethod,
-          paymentMethod,
           items: items.map((i) => ({
             productId: i.productId,
             variantTitle: i.variantTitle,
@@ -183,14 +179,20 @@ export function CheckoutForm({
           consent: { terms: true, waiver: einzelanfertigung ? verzicht : undefined },
         }),
       })
-      const result = (await res.json()) as { url?: string }
-      if (!res.ok || !result.url) throw new Error('checkout failed')
+      const result = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok || !result.url) {
+        // 503 heißt: Die Bezahlung ist gar nicht eingerichtet. Ein zweiter
+        // Versuch scheitert genauso — das muss dranstehen.
+        setError(res.status === 503 ? 'keine-zahlung' : 'allgemein')
+        setSubmitting(false)
+        return
+      }
 
-      // Warenkorb leeren und zu Stripe weiterleiten
+      // Warenkorb leeren und zu PayPal weiterleiten
       clear()
       window.location.href = result.url
     } catch {
-      setError(true)
+      setError('allgemein')
       setSubmitting(false)
     }
   }
@@ -238,32 +240,22 @@ export function CheckoutForm({
           <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
             {dict.paymentMethod}
           </h2>
-          <div className="space-y-2">
-            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="stripe"
-                checked={paymentMethod === 'stripe'}
-                onChange={() => setPaymentMethod('stripe')}
-                className="accent-ink"
-              />
-              {dict.optionCard}
-            </label>
-            {paypalAvailable && (
-              <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="paypal"
-                  checked={paymentMethod === 'paypal'}
-                  onChange={() => setPaymentMethod('paypal')}
-                  className="accent-ink"
-                />
-                {dict.optionPaypal}
-              </label>
-            )}
-          </div>
+          {paypalAvailable ? (
+            <div className="border-line bg-paper-soft border px-4 py-3 text-sm">
+              <p className="text-ink font-semibold">{dict.optionPaypal}</p>
+              <p className="text-ink-soft mt-1 text-xs">{dict.paypalNote}</p>
+            </div>
+          ) : (
+            /*
+             * Ohne eingerichtete Zahlung führt der Bestellknopf ins Leere. Dann
+             * lieber gleich hier sagen, dass es persönlich weitergeht — sonst
+             * füllt jemand das ganze Formular aus und bekommt am Ende nur einen
+             * Fehler.
+             */
+            <p className="border-accent bg-paper-soft text-ink border px-4 py-3 text-sm">
+              {dict.errorNoPayment}
+            </p>
+          )}
         </div>
 
         <div>
@@ -277,7 +269,7 @@ export function CheckoutForm({
           </div>
         </div>
 
-        {deliveryMethod === 'shipping' && paymentMethod === 'paypal' && (
+        {deliveryMethod === 'shipping' && (
           <div className="border-line bg-paper-soft border p-4 text-sm">
             <p className="text-ink-soft">{dict.paypalAddressNote}</p>
             <label className="text-ink mt-2 flex cursor-pointer items-center gap-2">
@@ -317,7 +309,11 @@ export function CheckoutForm({
 
         <textarea name="note" rows={3} placeholder={dict.note} className={inputClass} />
 
-        {error && <p className="text-accent text-sm">{dict.error}</p>}
+        {error && (
+          <p className="text-accent text-sm">
+            {error === 'keine-zahlung' ? dict.errorNoPayment : dict.error}
+          </p>
+        )}
 
         <div className="border-line space-y-3 border-t pt-5">
           <label className="text-ink-soft flex cursor-pointer items-start gap-3 text-sm">
@@ -350,7 +346,7 @@ export function CheckoutForm({
         <div className="flex flex-wrap items-center gap-4">
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !paypalAvailable}
             className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
           >
             {dict.payNow}
@@ -359,9 +355,7 @@ export function CheckoutForm({
             {dict.backToCart}
           </Link>
         </div>
-        <p className="text-ink-soft text-xs">
-          {paymentMethod === 'paypal' ? dict.redirectNotePaypal : dict.redirectNote}
-        </p>
+        <p className="text-ink-soft text-xs">{dict.redirectNotePaypal}</p>
       </form>
 
       <aside className="bg-paper-soft h-fit p-6">

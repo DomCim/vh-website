@@ -58,11 +58,11 @@ test.describe('Verwaltung', () => {
     await page.goto('/admin/globals/integrations')
     await page.waitForTimeout(5000)
 
-    const feld = page.locator('.field-type.text', { hasText: 'Secret Key' }).first()
+    const feld = page.locator('.field-type.text', { hasText: 'Client Secret' }).first()
     const eingabe = feld.locator('input').first()
     await expect(eingabe).toHaveAttribute('type', 'password')
 
-    const wert = `sk_test_${Date.now()}`
+    const wert = `pruef-geheimnis-${Date.now()}`
     await eingabe.fill(wert)
     await eingabe.blur()
 
@@ -80,7 +80,7 @@ test.describe('Verwaltung', () => {
     await page.waitForTimeout(3000)
     const gespeichert = await page.evaluate(async () => {
       const antwort = await fetch('/api/globals/integrations?depth=0', { credentials: 'include' })
-      return (await antwort.json())?.stripe?.secretKey
+      return (await antwort.json())?.paypal?.clientSecret
     })
     expect(gespeichert).toBe(wert)
   })

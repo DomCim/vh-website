@@ -33,7 +33,7 @@ test.describe('Einstellungen im Büro', () => {
     await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
 
     // Die Gruppen aus Payload müssen alle da sein
-    for (const gruppe of ['E-Mail-Versand', 'Postfächer', 'Takt', 'Sicherung', 'Stripe']) {
+    for (const gruppe of ['E-Mail-Versand', 'Postfächer', 'Takt', 'Sicherung', 'PayPal']) {
       await expect(page.locator('legend', { hasText: gruppe }).first()).toBeVisible({
         timeout: 15_000,
       })

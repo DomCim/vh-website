@@ -8,7 +8,7 @@ import { liveMelden } from './live'
  * Löschungen für später fest.
  *
  * Bewusst am Datenmodell und nicht in den Formularen: So ist es gleich,
- * woher die Änderung kommt — Büro, Admin-Panel, Shop-Bestellung, Stripe-Rückruf
+ * woher die Änderung kommt — Büro, Admin-Panel, Shop-Bestellung, PayPal-Rückkehr
  * oder der KI-Zugang. Alles landet in derselben Meldung.
  *
  * Die Live-Meldung erreicht nur, wer gerade verbunden ist. Ein Gerät, das

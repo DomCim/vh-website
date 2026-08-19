@@ -3,7 +3,7 @@ import type { GlobalConfig } from 'payload'
 import { admins } from '../access'
 
 /**
- * Zugangsdaten für E-Mail, Stripe und Facebook — pflegbar im Admin.
+ * Zugangsdaten für E-Mail, PayPal und Facebook — pflegbar im Admin.
  * Leere Felder fallen auf die gleichnamigen Umgebungsvariablen zurück.
  * Nur für eingeloggte Benutzer lesbar (enthält Geheimnisse!).
  */
@@ -13,7 +13,7 @@ export const Integrations: GlobalConfig = {
   admin: {
     group: 'Verwaltung',
     description:
-      'Zugangsdaten für E-Mail-Versand, Stripe und Facebook. Leere Felder nutzen die im Server hinterlegten Umgebungsvariablen.',
+      'Zugangsdaten für E-Mail-Versand, PayPal und Facebook. Leere Felder nutzen die im Server hinterlegten Umgebungsvariablen.',
   },
   access: {
     read: admins,
@@ -241,31 +241,6 @@ export const Integrations: GlobalConfig = {
               admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
             },
           ],
-        },
-      ],
-    },
-    {
-      name: 'stripe',
-      label: 'Stripe (Zahlungen)',
-      type: 'group',
-      fields: [
-        {
-          name: 'secretKey',
-          label: 'Secret Key',
-          type: 'text',
-          admin: {
-            description: 'sk_test_… oder sk_live_… (Stripe-Dashboard → API-Keys)',
-            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
-          },
-        },
-        {
-          name: 'webhookSecret',
-          label: 'Webhook Signing Secret',
-          type: 'text',
-          admin: {
-            description: 'whsec_… des Webhook-Endpunkts /api/stripe-webhook',
-            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
-          },
         },
       ],
     },

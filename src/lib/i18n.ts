@@ -69,8 +69,9 @@ const de = {
     optionPickup: 'Abholung (versandkostenfrei)',
     pickupNote: 'Die Abholadresse und den Termin stimmen wir nach der Bestellung mit Ihnen ab.',
     paymentMethod: 'Zahlungsart',
-    optionCard: 'Karte, Apple Pay, Klarna & mehr',
     optionPaypal: 'PayPal',
+    paypalNote:
+      'Bezahlt wird der volle Betrag in einem Schritt — mit PayPal-Konto, Karte oder Lastschrift. Ein PayPal-Konto ist dafür nicht nötig.',
     shipping: 'Versand',
     contactData: 'Ihre Kontaktdaten',
     name: 'Vor- und Nachname',
@@ -89,9 +90,6 @@ const de = {
     consentWaiver:
       'Mein Auftrag enthält ein nach meinen Vorgaben angefertigtes Einzelstück. Mir ist bekannt, dass dafür kein Widerrufsrecht besteht, sobald die Fertigung beginnt.',
     consentMissing: 'Bitte bestätigen Sie die Bedingungen, bevor Sie bestellen.',
-    payNowStripe: 'Weiter zur sicheren Zahlung',
-    payNowPaypal: 'Weiter zu PayPal',
-    redirectNote: 'Zur Zahlung werden Sie sicher zu Stripe weitergeleitet.',
     redirectNotePaypal: 'Sie werden zu PayPal weitergeleitet und schließen die Zahlung dort ab.',
     paypalAddressNote: 'Die Lieferadresse übernehmen wir aus Ihrem PayPal-Konto.',
     differentAddress: 'Abweichende Lieferadresse angeben',
@@ -342,8 +340,9 @@ const fr: Dictionary = {
     optionPickup: 'Retrait sur place (sans frais de livraison)',
     pickupNote: "Nous conviendrons de l'adresse et de la date de retrait avec vous après la commande.",
     paymentMethod: 'Moyen de paiement',
-    optionCard: 'Carte, Apple Pay, Klarna & plus',
     optionPaypal: 'PayPal',
+    paypalNote:
+      "Le montant total est réglé en une seule fois — avec un compte PayPal, une carte ou un prélèvement. Un compte PayPal n'est pas nécessaire.",
     shipping: 'Livraison',
     contactData: 'Vos coordonnées',
     name: 'Nom et prénom',
@@ -362,9 +361,6 @@ const fr: Dictionary = {
     consentWaiver:
       "Ma commande comprend une pièce réalisée sur mesure d'après mes indications. Je sais qu'aucun droit de rétractation ne s'applique dès que la fabrication commence.",
     consentMissing: 'Merci de confirmer les conditions avant de commander.',
-    payNowStripe: 'Continuer vers le paiement sécurisé',
-    payNowPaypal: 'Continuer vers PayPal',
-    redirectNote: 'Vous serez redirigé en toute sécurité vers Stripe pour le paiement.',
     redirectNotePaypal: 'Vous serez redirigé vers PayPal pour finaliser le paiement.',
     paypalAddressNote: "Nous reprenons l'adresse de livraison de votre compte PayPal.",
     differentAddress: 'Indiquer une adresse de livraison différente',
@@ -612,8 +608,9 @@ const en: Dictionary = {
     optionPickup: 'Pickup (free of delivery costs)',
     pickupNote: 'We will arrange the pickup address and date with you after your order.',
     paymentMethod: 'Payment method',
-    optionCard: 'Card, Apple Pay, Klarna & more',
     optionPaypal: 'PayPal',
+    paypalNote:
+      'The full amount is paid in one go — with a PayPal account, a card or direct debit. A PayPal account is not required.',
     shipping: 'Delivery',
     contactData: 'Your contact details',
     name: 'First and last name',
@@ -632,9 +629,6 @@ const en: Dictionary = {
     consentWaiver:
       'My order contains a piece made to my specifications. I understand that there is no right of withdrawal once production starts.',
     consentMissing: 'Please confirm the terms before ordering.',
-    payNowStripe: 'Continue to secure payment',
-    payNowPaypal: 'Continue to PayPal',
-    redirectNote: 'You will be securely redirected to our payment provider.',
     redirectNotePaypal: 'You will be redirected to PayPal to complete the payment.',
     paypalAddressNote: 'We will use the delivery address from your PayPal account.',
     differentAddress: 'Enter a different delivery address',

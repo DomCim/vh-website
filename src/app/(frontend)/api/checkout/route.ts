@@ -11,7 +11,6 @@ import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
-import { stripeClient } from '../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +19,6 @@ type CheckoutBody = {
   promoCode?: string
   locale?: string
   deliveryMethod?: DeliveryMethod
-  paymentMethod?: 'stripe' | 'paypal'
   customer: {
     name: string
     email: string
@@ -39,8 +37,8 @@ type CheckoutBody = {
 
 export async function POST(req: Request) {
   try {
-    // Jede Kasse legt eine Bestellung an und ruft Stripe bzw. PayPal — ohne
-    // Bremse ließe sich damit die Nummernreihe zumüllen.
+    // Jede Kasse legt eine Bestellung an und ruft PayPal — ohne Bremse ließe
+    // sich damit die Nummernreihe zumüllen.
     if (zuVieleAnfragen(`kasse:${ipAus(req)}`, 20, 10 * 60_000)) {
       return NextResponse.json({ error: 'too-many-requests' }, { status: 429 })
     }
@@ -56,20 +54,13 @@ export async function POST(req: Request) {
     if (!body.customer?.name || !body.customer?.email) {
       return NextResponse.json({ error: 'missing-fields' }, { status: 400 })
     }
-    const paymentMethodEarly = body.paymentMethod === 'paypal' ? 'paypal' : 'stripe'
     const hasProvidedAddress = Boolean(
       body.shippingAddress?.line1 && body.shippingAddress?.postalCode && body.shippingAddress?.city,
     )
-    // Lieferadresse ist Pflicht bei Lieferung — außer bei PayPal,
-    // dort kommt sie aus dem PayPal-Konto (sofern keine abweichende angegeben ist)
-    if (deliveryMethod === 'shipping' && paymentMethodEarly !== 'paypal' && !hasProvidedAddress) {
-      return NextResponse.json({ error: 'missing-address' }, { status: 400 })
-    }
 
     const payload = await payloadClient()
     const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod)
     const orderNumber = await nextOrderNumber(payload)
-    const paymentMethod = body.paymentMethod === 'paypal' ? 'paypal' : 'stripe'
 
     // Bestellung als "offen" anlegen — bezahlt wird sie erst per Webhook
     const order = await payload.create({
@@ -79,7 +70,7 @@ export async function POST(req: Request) {
         orderNumber,
         accessToken: randomUUID(),
         status: 'pending',
-        paymentProvider: paymentMethod,
+        paymentProvider: 'paypal',
         items: cart.lines.map((l) => ({
           product: typeof l.productId === 'string' ? Number(l.productId) : l.productId,
           titleSnapshot: l.titleSnapshot,
@@ -122,125 +113,48 @@ export async function POST(req: Request) {
     const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
     // ── PayPal ────────────────────────────────────────────────────────────
-    if (paymentMethod === 'paypal') {
-      const cfg = await paypalConfig(payload)
-      if (!cfg) {
-        return NextResponse.json({ error: 'paypal-not-configured' }, { status: 500 })
-      }
-      // PayPal hängt ?token=<order-id> selbst an die Return-URL an
-      const countryToCode: Record<string, string> = {
-        deutschland: 'DE', germany: 'DE', allemagne: 'DE',
-        frankreich: 'FR', france: 'FR',
-        österreich: 'AT', austria: 'AT', autriche: 'AT',
-        schweiz: 'CH', switzerland: 'CH', suisse: 'CH',
-      }
-      const paypalOrder = await createPayPalOrder(cfg, {
-        amountEUR: cart.total,
-        orderNumber,
-        returnUrl: `${serverURL}/${locale}/bestellung/danke`,
-        cancelUrl: `${serverURL}/${locale}/kasse?cancelled=1`,
-        shippingMode:
-          deliveryMethod === 'pickup' ? 'none' : hasProvidedAddress ? 'provided' : 'paypal',
-        providedAddress: hasProvidedAddress
-          ? {
-              name: body.customer.name,
-              line1: body.shippingAddress?.line1,
-              line2: body.shippingAddress?.line2,
-              postalCode: body.shippingAddress?.postalCode,
-              city: body.shippingAddress?.city,
-              countryCode:
-                countryToCode[(body.shippingAddress?.country || '').trim().toLowerCase()] || 'DE',
-            }
-          : undefined,
-      })
-      await payload.update({
-        collection: 'orders',
-        id: order.id,
-        overrideAccess: true,
-        data: { paypalOrderId: paypalOrder.id },
-      })
-      return NextResponse.json({ url: paypalOrder.approveUrl })
+    const cfg = await paypalConfig(payload)
+    if (!cfg) {
+      /*
+       * 503, nicht 500: Wiederholen hilft hier nichts, und die Kasse sagt der
+       * Kundschaft daraufhin, dass sie uns kurz schreiben soll — statt sie
+       * dreimal auf denselben Knopf drücken zu lassen.
+       */
+      return NextResponse.json({ error: 'zahlung-nicht-eingerichtet' }, { status: 503 })
     }
-
-    // ── Stripe ────────────────────────────────────────────────────────────
-    const stripe = await stripeClient(payload)
-
-    // Rabatt als einmaliger Stripe-Coupon
-    let discounts: { coupon: string }[] | undefined
-    if (cart.discount > 0) {
-      const coupon = await stripe.coupons.create({
-        amount_off: Math.round(cart.discount * 100),
-        currency: 'eur',
-        duration: 'once',
-        name: cart.promotionTitle || 'Rabatt',
-      })
-      discounts = [{ coupon: coupon.id }]
+    // PayPal hängt ?token=<order-id> selbst an die Return-URL an
+    const countryToCode: Record<string, string> = {
+      deutschland: 'DE', germany: 'DE', allemagne: 'DE',
+      frankreich: 'FR', france: 'FR',
+      österreich: 'AT', austria: 'AT', autriche: 'AT',
+      schweiz: 'CH', switzerland: 'CH', suisse: 'CH',
     }
-
-    const shippingLabel =
-      locale === 'fr' ? 'Livraison' : locale === 'en' ? 'Delivery' : 'Lieferung'
-    const pickupLabel =
-      locale === 'fr' ? 'Retrait sur place' : locale === 'en' ? 'Pickup' : 'Abholung'
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      locale: locale === 'fr' ? 'fr' : locale === 'en' ? 'en' : 'de',
-      customer_email: body.customer.email,
-      line_items: [
-        ...cart.lines.map((l) => ({
-          quantity: l.quantity,
-          price_data: {
-            currency: 'eur',
-            unit_amount: Math.round(l.unitPrice * 100),
-            product_data: {
-              name: [l.titleSnapshot, l.variantTitle, l.color].filter(Boolean).join(' – '),
-            },
-          },
-        })),
-        // Versandkosten als eigene Positionen je Artikel
-        ...cart.lines
-          .filter((l) => l.shippingCost > 0)
-          .map((l) => ({
-            quantity: l.quantity,
-            price_data: {
-              currency: 'eur',
-              unit_amount: Math.round(l.shippingCost * 100),
-              product_data: {
-                name: `${shippingLabel}: ${l.titleSnapshot}`,
-              },
-            },
-          })),
-        // Abholung als 0-€-Position, damit sie auf der Stripe-Seite sichtbar ist
-        ...(deliveryMethod === 'pickup'
-          ? [
-              {
-                quantity: 1,
-                price_data: {
-                  currency: 'eur',
-                  unit_amount: 0,
-                  product_data: { name: pickupLabel },
-                },
-              },
-            ]
-          : []),
-      ],
-      discounts,
-      metadata: {
-        orderId: String(order.id),
-        orderNumber,
-      },
-      success_url: `${serverURL}/${locale}/bestellung/danke?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${serverURL}/${locale}/kasse?cancelled=1`,
+    const paypalOrder = await createPayPalOrder(cfg, {
+      amountEUR: cart.total,
+      orderNumber,
+      returnUrl: `${serverURL}/${locale}/bestellung/danke`,
+      cancelUrl: `${serverURL}/${locale}/kasse?cancelled=1`,
+      shippingMode:
+        deliveryMethod === 'pickup' ? 'none' : hasProvidedAddress ? 'provided' : 'paypal',
+      providedAddress: hasProvidedAddress
+        ? {
+            name: body.customer.name,
+            line1: body.shippingAddress?.line1,
+            line2: body.shippingAddress?.line2,
+            postalCode: body.shippingAddress?.postalCode,
+            city: body.shippingAddress?.city,
+            countryCode:
+              countryToCode[(body.shippingAddress?.country || '').trim().toLowerCase()] || 'DE',
+          }
+        : undefined,
     })
-
     await payload.update({
       collection: 'orders',
       id: order.id,
       overrideAccess: true,
-      data: { stripeSessionId: session.id },
+      data: { paypalOrderId: paypalOrder.id },
     })
-
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: paypalOrder.approveUrl })
   } catch (err) {
     console.error('Checkout fehlgeschlagen:', err)
 

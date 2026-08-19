@@ -7,7 +7,7 @@ import React, { useState } from 'react'
 /**
  * Eingabefeld für Geheimnisse: Passwörter, Schlüssel, Token.
  *
- * Bisher standen SMTP-Passwort, Stripe-Schlüssel und Postfach-Zugänge im
+ * Bisher standen SMTP-Passwort, PayPal-Schlüssel und Postfach-Zugänge im
  * Klartext in der Verwaltung — wer jemandem über die Schulter schaute oder
  * einen Bildschirm teilte, sah alles. Ein reines Passwortfeld wäre allerdings
  * genauso unpraktisch: Diese Werte werden nicht getippt, sondern von woanders

@@ -2,6 +2,12 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Bezahlt wird über PayPal
+
+- **Stripe ist raus.** Karte, Apple Pay und Klarna liefen bisher über Stripe, PayPal stand als zweite Zahlart daneben. Geblieben ist PayPal — und darüber lässt sich ebenfalls mit Karte oder Lastschrift zahlen, auch ohne PayPal-Konto. Die Kasse fragt deshalb nicht mehr nach der Zahlungsart: Es gibt nur noch einen Weg, und der Betrag geht in einem Schritt raus. Der Webhook-Endpunkt entfällt ersatzlos — die Zahlung wird beim Rücksprung auf die Danke-Seite eingezogen, das braucht keinen Rückruf von außen.
+- **Bestellungen aus der Stripe-Zeit bleiben, wie sie sind.** Anbieter, Session- und Zahlungsnummer stehen weiter an der Bestellung; sie sind der Beleg dafür, welche Zahlung damals wozu gehörte. Nur die Zugangsdaten fallen aus der Datenbank — Schlüssel zu einem Konto, das niemand mehr benutzt, gehören dort nicht herum.
+- **Wenn die Bezahlung nicht eingerichtet ist, sagt die Kasse das jetzt.** Vorher führte der Bestellknopf ins Leere und meldete „bitte versuchen Sie es erneut" — was nicht half, weil ein zweiter Versuch genauso scheitert. Jetzt steht der Hinweis schon bei der Zahlungsart, und der Knopf lässt sich gar nicht erst drücken.
+
 ## 19.08.2026 — Das Büro arbeitet jetzt auch ohne Netz
 
 - **Live: Was einer ändert, sehen die anderen sofort.** Das Büro hält eine offene Verbindung zum Server. Legt jemand am Rechner einen Auftrag an, steht er eine Sekunde später auf dem Tablet in der Werkstatt — ohne Nachladen, ohne Antippen. Gemeldet wird am Datenmodell und nicht in den Formularen: Ob die Änderung aus dem Büro kommt, aus der Website-Verwaltung, aus einer Shop-Bestellung, von Stripe oder vom KI-Zugang, macht keinen Unterschied.

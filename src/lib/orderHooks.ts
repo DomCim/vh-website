@@ -14,13 +14,13 @@ import { firmenAngaben, getIntegrations } from './settings'
 
 /**
  * Markiert eine Bestellung als bezahlt und verschickt Bestätigungs- und
- * Benachrichtigungs-Mail. Gemeinsam genutzt von Stripe-Webhook und
- * PayPal-Capture; idempotent (nur pending-Bestellungen werden umgestellt).
+ * Benachrichtigungs-Mail. Aufgerufen nach dem PayPal-Capture; idempotent
+ * (nur pending-Bestellungen werden umgestellt).
  */
 export async function markOrderPaid(
   payload: Payload,
   orderId: number | string,
-  data: { stripePaymentIntentId?: string; paypalCaptureId?: string } = {},
+  data: { paypalCaptureId?: string } = {},
 ): Promise<void> {
   const order = await payload.findByID({
     collection: 'orders',

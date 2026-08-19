@@ -644,7 +644,7 @@ export interface Order {
     city?: string | null;
     country?: string | null;
   };
-  paymentProvider?: ('stripe' | 'paypal') | null;
+  paymentProvider?: ('paypal' | 'stripe') | null;
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
   paypalOrderId?: string | null;
@@ -2496,7 +2496,7 @@ export interface Legal {
   createdAt?: string | null;
 }
 /**
- * Zugangsdaten für E-Mail-Versand, Stripe und Facebook. Leere Felder nutzen die im Server hinterlegten Umgebungsvariablen.
+ * Zugangsdaten für E-Mail-Versand, PayPal und Facebook. Leere Felder nutzen die im Server hinterlegten Umgebungsvariablen.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "integrations".
@@ -2585,16 +2585,6 @@ export interface Integration {
         id?: string | null;
       }[]
     | null;
-  stripe?: {
-    /**
-     * sk_test_… oder sk_live_… (Stripe-Dashboard → API-Keys)
-     */
-    secretKey?: string | null;
-    /**
-     * whsec_… des Webhook-Endpunkts /api/stripe-webhook
-     */
-    webhookSecret?: string | null;
-  };
   paypal?: {
     /**
      * Aus dem PayPal-Developer-Dashboard (REST-App)
@@ -2893,12 +2883,6 @@ export interface IntegrationsSelect<T extends boolean = true> {
         smtpUser?: T;
         smtpPass?: T;
         id?: T;
-      };
-  stripe?:
-    | T
-    | {
-        secretKey?: T;
-        webhookSecret?: T;
       };
   paypal?:
     | T

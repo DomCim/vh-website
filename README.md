@@ -2,13 +2,13 @@
 
 Neuaufbau von [vincent-hellmann.com](https://www.vincent-hellmann.com) als moderne, selbst verwaltbare Website mit Online-Shop — ohne TYPO3.
 
-**Stack:** Next.js 15 · Payload CMS 3 (Admin-Backend unter `/admin`) · PostgreSQL · Tailwind CSS 4 · Motion (Scroll-Animationen) · Stripe Checkout · PayPal · Docker/Traefik
+**Stack:** Next.js 15 · Payload CMS 3 (Admin-Backend unter `/admin`) · PostgreSQL · Tailwind CSS 4 · Motion (Scroll-Animationen) · PayPal · Docker/Traefik
 
 ## Funktionen
 
 - **1:1-Design** angelehnt an die bestehende Website (Logo, Navigation, Hero-Slider, dunkler Footer), veredelt mit dezenten Scroll-Animationen; der Header übernimmt auf der Startseite automatisch den Farbton des aktiven Hero-Bildes (berechnet aus dem oberen Bildstreifen, Schrift/Logo wechseln je nach Helligkeit)
 - **Dreisprachig** Deutsch/Französisch/Englisch — alle Inhalte im Backend übersetzbar (Fallback: Deutsch)
-- **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout via **Stripe** (Karte, Apple/Google Pay, Klarna) oder **PayPal**; Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
+- **Shop** mit Varianten (Größen), Farboptionen (RAL), **Versandkosten je Artikel**, Warenkorb, **Lieferung oder Abholung** und Checkout über **PayPal** (auch ohne PayPal-Konto mit Karte oder Lastschrift, immer der volle Betrag in einem Schritt); Produkte optional „nur auf Anfrage" mit direktem **Anfrage-Formular am Produkt**
 - **Bestellverwaltung** im Büro (offen → bezahlt → in Fertigung → versendet) mit Trackingnummer; **automatische Versand-Mail** beim Umstellen auf „versendet“, Bestätigungs-Mail an Kunden + Benachrichtigung an euch
 - **Büro unter `/office`**: CRM und Warenwirtschaft mit einer Anmeldung — Angebote, Fertigungsaufträge, Stücklisten mit Dienstleistern, Belege per Foto (von Claude ausgelesen), Inventar mit Inventur, Steuer-Export, **Postfach für mehrere IMAP-Konten** und Push-Benachrichtigungen; als App installierbar
 - **News & Ratgeber** mit optionalem **Facebook- und Instagram-Autopost** beim Veröffentlichen; Ratgeber-Artikel als dauerhafter SEO-Content
@@ -46,7 +46,7 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
    - `PAYLOAD_SECRET` (z.B. `openssl rand -hex 32`)
    - `POSTGRES_PASSWORD`
    - `SEED=true` **nur beim allerersten Start** (spielt Kategorien, Produkte, Bilder usw. ein; danach wieder auf `false`)
-   - optional: SMTP-, Stripe- und Facebook-Variablen (siehe `.env.example`)
+   - optional: SMTP-, PayPal- und Facebook-Variablen (siehe `.env.example`)
 4. **NPM-Weiterleitung**: `vh.dominikdill.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vh.dominikdill.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`).
 5. **Erster Login**: `https://vh.dominikdill.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
 
@@ -170,19 +170,23 @@ In beiden Fällen liegt das Abbild danach in der Registry und wartet. Ausgerollt
 
 Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurückzugehen, nachdem eine neue die Datenbank verändert hat, geht nur über das Einspielen einer Sicherung.
 
-## Stripe einrichten
+## PayPal einrichten
 
-1. [Stripe-Konto](https://dashboard.stripe.com) → API-Keys → `STRIPE_SECRET_KEY` setzen (erst Test-, später Live-Key).
-2. Webhook-Endpunkt anlegen: `https://vh.dominikdill.com/api/stripe-webhook`, Event `checkout.session.completed` → Signing-Secret als `STRIPE_WEBHOOK_SECRET` setzen.
-3. Testbestellung mit Karte `4242 4242 4242 4242` durchführen — die Bestellung muss im Admin auf „Bezahlt" springen.
-
-Ohne Stripe-Keys funktioniert die Website vollständig, nur der Checkout meldet dann einen Fehler.
-
-## PayPal einrichten (optional)
+PayPal ist die einzige Zahlart im Shop. Bezahlt wird immer der **volle Betrag in
+einem Schritt** — Anzahlungen und Teilzahlungen laufen ausschließlich über
+Rechnungen aus dem Büro (per Überweisung, mit GiroCode auf dem Papier).
 
 1. [PayPal Developer](https://developer.paypal.com) → REST-App erstellen (Business-Konto nötig) → Client-ID + Secret.
 2. Im Admin unter **Verwaltung → Integrationen → PayPal** eintragen; zum Testen Sandbox-Zugangsdaten + Haken „Sandbox-Modus".
-3. Sobald Zugangsdaten hinterlegt sind, erscheint PayPal automatisch als Zahlungsart in der Kasse. Die Zahlung wird beim Rücksprung auf die Danke-Seite server-seitig eingezogen (Capture).
+3. Testbestellung durchführen — die Zahlung wird beim Rücksprung auf die Danke-Seite server-seitig eingezogen (Capture), danach muss die Bestellung im Admin auf „Bezahlt" stehen.
+
+Ohne PayPal-Zugangsdaten funktioniert die Website vollständig, nur bestellen
+lässt sich nicht: Die Kasse sagt das an der Zahlungsart und bittet um eine
+Nachricht, statt einen Knopf anzubieten, der ins Leere führt.
+
+**Karten- und Klarna-Zahlung über Stripe gibt es nicht mehr.** Bestellungen aus
+der Stripe-Zeit behalten ihren Anbieter und ihre Belegnummern in der Datenbank;
+neu hereinkommen kann darüber nichts.
 
 ## Facebook- & Instagram-Autopost einrichten (optional)
 
@@ -231,7 +235,7 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
 | **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
-| **Einstellungen** | Fünf Blätter: Benachrichtigungen dieses Geräts, das eigene Konto (Zwei-Faktor, angemeldete Geräte), Benutzerverwaltung, Betrieb (Firmenangaben, Preise) und Integrationen (SMTP, Postfächer, Stripe, PayPal, KI, Takt, Sicherung). |
+| **Einstellungen** | Fünf Blätter: Benachrichtigungen dieses Geräts, das eigene Konto (Zwei-Faktor, angemeldete Geräte), Benutzerverwaltung, Betrieb (Firmenangaben, Preise) und Integrationen (SMTP, Postfächer, PayPal, KI, Takt, Sicherung). |
 
 ### Ohne Netz arbeiten
 
@@ -337,7 +341,7 @@ pnpm rechtstexte --ueberschreiben   # ersetzt vorhandene Texte
 
 **Die Entwürfe sind keine Rechtsberatung.** Sie tragen am Ende einen Hinweis darauf und müssen vor dem Verkaufsstart geprüft und an die tatsächliche Praxis angepasst werden — besonders bei den Rücksendekosten für schwere Stahlmöbel.
 
-In der **Kasse** wird vor dem Absenden bestätigt: AGB und Widerrufsbelehrung gelesen, und — falls ein Stück nach Vorgabe entsteht — dass dafür kein Widerrufsrecht besteht. Beides wird mit Zeitpunkt an der Bestellung festgehalten. Der Bestellknopf heißt „Zahlungspflichtig bestellen"; der Hinweis auf die Weiterleitung zu Stripe bzw. PayPal steht darunter.
+In der **Kasse** wird vor dem Absenden bestätigt: AGB und Widerrufsbelehrung gelesen, und — falls ein Stück nach Vorgabe entsteht — dass dafür kein Widerrufsrecht besteht. Beides wird mit Zeitpunkt an der Bestellung festgehalten. Der Bestellknopf heißt „Zahlungspflichtig bestellen"; der Hinweis auf die Weiterleitung zu PayPal steht darunter.
 
 ## Sicherung (Büro → Sicherung)
 
@@ -406,7 +410,7 @@ Eingerichtet wird das **je Benutzer**, genau wie die Zwei-Faktor-Anmeldung: im A
 - Die Anmeldung mit Passwort bleibt bestehen — ein Gerät kann kaputtgehen. Der Passkey-Knopf steht auf beiden Anmeldeseiten (`/office/login` und `/admin`) und erscheint nur, wenn das Gerät ihn überhaupt kann.
 - **Kein zusätzlicher Zwei-Faktor-Code**: Ein Passkey ist bereits beides — das Gerät, das man hat, und das Gesicht (oder der Finger), das man ist.
 
-**Passwörter und Schlüssel** (SMTP, Postfächer, Stripe, PayPal, Anthropic, MCP, Facebook, NAS) stehen in der Verwaltung nicht mehr im Klartext: Sie sind verdeckt wie ein Passwortfeld, lassen sich mit einem Knopf aufdecken — und mit einem zweiten kopieren, ohne sie überhaupt sichtbar zu machen. Denn getippt werden solche Werte nie, sie werden von woanders hierher und wieder zurück kopiert.
+**Passwörter und Schlüssel** (SMTP, Postfächer, PayPal, Anthropic, MCP, Facebook, NAS) stehen in der Verwaltung nicht mehr im Klartext: Sie sind verdeckt wie ein Passwortfeld, lassen sich mit einem Knopf aufdecken — und mit einem zweiten kopieren, ohne sie überhaupt sichtbar zu machen. Denn getippt werden solche Werte nie, sie werden von woanders hierher und wieder zurück kopiert.
 
 ## Sicherheits-Kopfzeilen
 
@@ -467,7 +471,7 @@ Es gibt **zwei Schlüssel**: Der volle Zugriff bringt alle 47 Werkzeuge und wirk
 - **Sprachen.** Jedes lesende und ändernde Werkzeug kennt `sprache` (`de`/`fr`/`en`). Angelegt wird immer auf Deutsch, Französisch und Englisch trägt man mit demselben `*_aendern`-Aufruf nach. `uebersetzungen_pruefen` listet auf, was noch fehlt — das ist die Arbeitsliste.
 - **Seitentexte.** Vor jedem `seite_schreiben` zuerst `seite_lesen` aufrufen. Listen (Hero-Slider, Zeitleiste, Highlights) werden komplett ersetzt, nicht ergänzt.
 - **Löschen ist zweistufig.** Ohne `bestaetigen: true` kommt nur eine Vorschau, was gelöscht würde. Bestellungen und Seitentexte lassen sich gar nicht löschen; Bilder nur, wenn sie nirgends mehr verwendet werden.
-- **Zugangsdaten bleiben außen vor.** Das Global *Integrationen* mit SMTP-, Stripe-, PayPal- und Facebook-Zugängen ist bewusst nicht angebunden — weder lesend noch schreibend.
+- **Zugangsdaten bleiben außen vor.** Das Global *Integrationen* mit SMTP-, PayPal- und Facebook-Zugängen ist bewusst nicht angebunden — weder lesend noch schreibend.
 
 ### Bilder hochladen
 
@@ -507,7 +511,7 @@ Alles unter `https://vh.dominikdill.com/admin` — das ist die Verwaltung dessen
 | **Startseite** | Hero-Slider, Mission, Galerie, Highlights, Werte. |
 | **Website-Einstellungen** | Kontaktdaten, Social-Media-Links, SEO-Standardwerte, Firmen-/Steuerangaben, Handarbeits-Hinweis und Fertigungszeit sowie optional eine cookiefreie Besucherstatistik. |
 | **Rechtliches** | Impressum, Datenschutzerklärung, AGB. |
-| **Integrationen** | SMTP-Zugangsdaten, **Postfächer (IMAP)**, Stripe-Keys, PayPal, Facebook-Token, der Claude-Schlüssel und die MCP-Schlüssel — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
+| **Integrationen** | SMTP-Zugangsdaten, **Postfächer (IMAP)**, PayPal, Facebook-Token, der Claude-Schlüssel und die MCP-Schlüssel — direkt im Admin pflegbar (nur für eingeloggte Benutzer sichtbar). Leere Felder fallen auf die Umgebungsvariablen zurück. |
 
 Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News, Produkte, Referenzen …) sind vollwertige Rich-Text-Editoren mit fester Toolbar: Überschriften, Fett/Kursiv, Listen, Links und Bilder mitten im Text (Upload-Button in der Toolbar). URL-Slugs können leer gelassen werden — sie entstehen automatisch aus dem Titel.
 
@@ -525,7 +529,7 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
 - [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
 - [ ] Claude-Schlüssel eintragen (Büro → Einstellungen → Integrationen), damit Belege ausgelesen werden können
-- [ ] Stripe-Keys + Webhook eintragen (Büro → Einstellungen → Integrationen)
+- [ ] PayPal-Zugangsdaten eintragen (Büro → Einstellungen → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit
 - [ ] Optional: Facebook-Token eintragen (Büro → Einstellungen → Integrationen)
 - [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Büro → Einstellungen → Integrationen)

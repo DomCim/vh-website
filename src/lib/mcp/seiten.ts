@@ -6,8 +6,8 @@ import { db, fehler, type McpServer, ohneRueckfall, ok, sprache } from './helper
 /**
  * Die redaktionell pflegbaren Seitentexte (Payload-Globals).
  *
- * Bewusst NICHT dabei: das Global "integrations" — dort liegen SMTP-, Stripe-,
- * PayPal- und Facebook-Zugangsdaten.
+ * Bewusst NICHT dabei: das Global "integrations" — dort liegen SMTP-, PayPal-
+ * und Facebook-Zugangsdaten.
  */
 const SEITEN = {
   startseite: 'homepage',

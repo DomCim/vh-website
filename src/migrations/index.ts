@@ -24,6 +24,7 @@ import * as migration_20260819_093716_rollen from './20260819_093716_rollen';
 import * as migration_20260819_101556_anzahlungen from './20260819_101556_anzahlungen';
 import * as migration_20260819_102635_rechnungsnummern from './20260819_102635_rechnungsnummern';
 import * as migration_20260819_103459_zahlungsziele from './20260819_103459_zahlungsziele';
+import * as migration_20260819_112326_stripe_ausbau from './20260819_112326_stripe_ausbau';
 
 export const migrations = [
   {
@@ -154,6 +155,11 @@ export const migrations = [
   {
     up: migration_20260819_103459_zahlungsziele.up,
     down: migration_20260819_103459_zahlungsziele.down,
-    name: '20260819_103459_zahlungsziele'
+    name: '20260819_103459_zahlungsziele',
+  },
+  {
+    up: migration_20260819_112326_stripe_ausbau.up,
+    down: migration_20260819_112326_stripe_ausbau.down,
+    name: '20260819_112326_stripe_ausbau'
   },
 ];
