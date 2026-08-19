@@ -1,24 +1,35 @@
-import React from 'react'
+'use client'
+
+import React, { useMemo } from 'react'
 
 import { InventurFormular } from '../../../../../components/office/InventurFormular'
-import { payloadClient } from '../../../../../lib/data'
-import { bueroBenutzer } from '../../../../../lib/office'
+import { useBestand } from '../../../../../lib/buero/bestand'
+import type { Posten } from '../../../../../lib/buero/material'
 
-export const dynamic = 'force-dynamic'
-
-export default async function NeueInventur() {
-  await bueroBenutzer()
-  const payload = await payloadClient()
-
-  const { docs } = await payload.find({
-    collection: 'inventory-items',
-    sort: 'name',
-    limit: 500,
-    depth: 0,
-    overrideAccess: true,
-  })
-
+/**
+ * Neue Inventur — die Zählliste entsteht aus dem Inventar im Gerät.
+ *
+ * Das ist genau der Fall, für den sich die Umstellung lohnt: Inventur macht
+ * man im Lager, und dort ist das Netz am schlechtesten.
+ */
+export default function NeueInventurSeite() {
+  const inventar = useBestand<Posten>('inventar')
   const heute = new Date()
+
+  const zeilen = useMemo(
+    () =>
+      [...inventar]
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'de'))
+        .map((i) => ({
+          item: Number(i.id),
+          name: i.name ?? '',
+          einheit: i.unit ?? '',
+          expected: i.quantity ?? 0,
+          counted: i.quantity ?? 0,
+          unitValue: i.unitValue ?? 0,
+        })),
+    [inventar],
+  )
 
   return (
     <>
@@ -32,14 +43,7 @@ export default async function NeueInventur() {
           title: `Inventur ${heute.getFullYear()}`,
           date: heute.toISOString().slice(0, 10),
           status: 'offen',
-          lines: docs.map((i) => ({
-            item: i.id as number,
-            name: i.name,
-            einheit: i.unit ?? '',
-            expected: i.quantity ?? 0,
-            counted: i.quantity ?? 0,
-            unitValue: i.unitValue ?? 0,
-          })),
+          lines: zeilen,
         }}
       />
     </>
