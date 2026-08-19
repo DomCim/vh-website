@@ -94,6 +94,22 @@ Ohne gesetzte `ROLLE` macht ein Prozess alles — so laufen Entwicklung und Prü
 
 **Update:** Beide Container ziehen dasselbe Abbild. In Portainer „Re-pull image & redeploy" auf den Stack anwenden, dann starten sie gemeinsam neu; die Migrationen laufen dabei nur im Web-Container.
 
+### Welche Fassung der Stack fährt
+
+Es gibt zwei Wege, und sie unterscheiden sich genau in einem Punkt — ob es von selbst passiert:
+
+| | Push auf `main` | Tag `v1.2.3` |
+| --- | --- | --- |
+| Gebaute Abbilder | `latest`, `sha-…` | `1.2.3`, `sha-…` |
+| Rollt sich selbst aus | ja (Webhook) | nein |
+| Zu tun | nichts | `VH_FASSUNG` setzen und neu ausrollen |
+
+Der Stack zieht `ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}`. Ohne die Variable also `latest` — den Stand von `main`, der sich nach jedem Push von selbst ausrollt.
+
+Wer einen bestimmten Stand fahren will, bevor er auf `main` geht: Tag setzen (`git tag v1.2.3 && git push origin v1.2.3`), warten bis das Abbild gebaut ist, dann im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
+
+Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurückzugehen, nachdem eine neue die Datenbank verändert hat, geht nur über das Einspielen einer Sicherung.
+
 ## Stripe einrichten
 
 1. [Stripe-Konto](https://dashboard.stripe.com) → API-Keys → `STRIPE_SECRET_KEY` setzen (erst Test-, später Live-Key).

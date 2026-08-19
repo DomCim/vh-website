@@ -6,7 +6,7 @@
 #  - Umgebungsvariablen im Stack setzen (siehe .env.example)
 services:
   web:
-    image: ghcr.io/domcim/vh-website:latest
+    image: ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}
     restart: unless-stopped
     depends_on:
       db:
@@ -94,7 +94,7 @@ services:
   # Postgres-Meldung hin und her, damit die Live-Verbindung im Büro auch
   # mitbekommt, was im Shop passiert.
   buero:
-    image: ghcr.io/domcim/vh-website:latest
+    image: ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}
     restart: unless-stopped
     depends_on:
       db:
