@@ -21,6 +21,7 @@ type Settings = {
 
 type Dict = {
   newsletter: NewsletterDict
+  nav: { account: string }
   footer: {
     impressum: string
     datenschutz: string
@@ -105,6 +106,11 @@ export function Footer({
             </Link>
             <Link href={`/${locale}/kontakt/versand-zahlung`} className="hover:text-white">
               {dict.footer.versandZahlung}
+            </Link>
+            {/* Zweiter Weg ins Kundenportal: Im Kopf steht es als Zeichen, hier
+                als Wort — wer nach „meine Bestellung" sucht, schaut unten. */}
+            <Link href={`/${locale}/konto`} className="hover:text-white">
+              {dict.nav.account}
             </Link>
           </div>
         </div>

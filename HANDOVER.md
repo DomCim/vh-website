@@ -108,6 +108,19 @@ ausgewiesen; sonst sähe die Deckung besser aus, als sie ist.
 Werkstatt, nicht die des Kunden — Termin, Material und Werkstattplatz
 entscheidet der Betrieb. Das Büro bekommt die Annahme per Push.
 
+**Die Kopfleiste zeigt die Produktwelten nur noch im Aufklappmenü.** Sie kamen
+aus dem CMS und wurden einzeln in die oberste Reihe geschrieben — jede neue
+Kategorie machte die Leiste voller, bis Punkte umbrachen. Die volle Reihe
+erscheint ab 1280 px; darunter ist das Blatt ehrlicher als eine gequetschte
+Zeile. Die Leiste ist bewusst breiter als der Seiteninhalt (`max-w-[88rem]`
+gegen `max-w-7xl`), sonst stößt die Navigation an den Schriftzug.
+
+**Die Wochenstunden sind kein fester Wert.** `craft.weeklyHours` ist nur noch
+die Faustregel; abweichende Wochen stehen als eigene Datensätze
+(`workshop-weeks`, Schlüssel `2026-38`). Leeres Feld löscht den Datensatz und
+stellt die Faustregel wieder her — eine Null bedeutet dagegen ausdrücklich
+„diese Woche geht nichts". Das ist nicht dasselbe, und beide Fälle kommen vor.
+
 **Die Zahlungseingänge-Seite ist die einzige Büro-Seite ohne Offline-Betrieb.**
 Sie fragt den Server, weil die Zuordnung über Geld entscheidet und überall
 dieselbe sein soll — auch dann, wenn im Gerät der Bestand von gestern liegt.

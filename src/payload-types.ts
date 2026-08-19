@@ -86,6 +86,7 @@ export interface Config {
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     'follow-ups': FollowUp;
+    'workshop-weeks': WorkshopWeek;
     counters: Counter;
     deletions: Deletion;
     drafts: Draft;
@@ -121,6 +122,7 @@ export interface Config {
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     'follow-ups': FollowUpsSelect<false> | FollowUpsSelect<true>;
+    'workshop-weeks': WorkshopWeeksSelect<false> | WorkshopWeeksSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
     deletions: DeletionsSelect<false> | DeletionsSelect<true>;
     drafts: DraftsSelect<false> | DraftsSelect<true>;
@@ -1295,6 +1297,27 @@ export interface Role {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workshop-weeks".
+ */
+export interface WorkshopWeek {
+  id: number;
+  /**
+   * Jahr und ISO-Woche, z.B. „2026-38".
+   */
+  woche: string;
+  /**
+   * 0 heißt: in dieser Woche geht nichts — Urlaub, Hauptberuf, krank.
+   */
+  stunden: number;
+  /**
+   * Steht in der Auslastung neben der Woche, z.B. „Urlaub".
+   */
+  notiz?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "counters".
  */
 export interface Counter {
@@ -1486,6 +1509,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'follow-ups';
         value: number | FollowUp;
+      } | null)
+    | ({
+        relationTo: 'workshop-weeks';
+        value: number | WorkshopWeek;
       } | null)
     | ({
         relationTo: 'counters';
@@ -2130,6 +2157,17 @@ export interface FollowUpsSelect<T extends boolean = true> {
   doneAt?: T;
   remindedAt?: T;
   createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workshop-weeks_select".
+ */
+export interface WorkshopWeeksSelect<T extends boolean = true> {
+  woche?: T;
+  stunden?: T;
+  notiz?: T;
   updatedAt?: T;
   createdAt?: T;
 }

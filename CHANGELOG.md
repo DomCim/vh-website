@@ -2,6 +2,12 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Aufgeräumte Kopfleiste, sichtbares Kundenkonto, Wochenstunden
+
+- **Die Kopfleiste stand voll.** Neun Punkte nebeneinander, „Next Concept" und „Über uns" brachen auf zwei Zeilen um, und die Navigation saß irgendwo zwischen Schriftzug und Warenkorb statt in der Mitte. Jetzt liegen die Produktwelten unter **Kollektion** in einem Aufklappmenü — dort wächst künftig jede neue Kategorie, statt die Leiste zu verbreitern —, und drei Spalten halten Schriftzug links, Navigation mittig und die Zeichen rechts. Am Handy stehen die Kategorien eingerückt unter „Kollektion", damit nichts hinter einem zweiten Tipp verschwindet.
+- **Das Kundenkonto hat endlich einen Weg.** Das Portal gab es längst — nur führte kein sichtbarer Link dorthin: Wer die Bestellmail nicht mehr hatte, kam nicht hinein. Jetzt steht es als Zeichen in der Kopfleiste, als Punkt im Handy-Menü und als Zeile im Fuß. Angemeldet wird dort mit der E-Mail-Adresse und einem sechsstelligen Code, ohne Passwort.
+- **Die Werkstattstunden stehen jetzt je Woche.** Die Werkstatt läuft neben einem Hauptberuf: In der einen Woche sind zwanzig Stunden drin, in der nächsten fünf, im Urlaub keine. Eine feste Wochenzahl war genau dann falsch, wenn es darauf ankommt. In der Auslastung trägt jede Woche ihre eigene Zahl — leeres Feld heißt „es gilt die Voreinstellung", eine Null heißt „diese Woche geht nichts", und die Antwort „Platz ist ab KW …" richtet sich danach.
+
 ## 19.08.2026 — Sechs Lücken im Büro geschlossen
 
 - **Zahlungseingänge kommen aus dem Kontoauszug** (Geld → Zahlungseingänge). Datei aus dem Onlinebanking wählen — CSV oder CAMT.053 —, und zu jeder Zahlung steht ein Vorschlag da: Rechnungsnummer im Verwendungszweck ist der sichere Fall (dafür schreibt der GiroCode sie hinein), sonst entscheiden Betrag und Name. Gibt es zwei offene Rechnungen über denselben Betrag, wird **nicht geraten** — lieber einmal von Hand zuordnen als einmal die falsche Rechnung abhaken. Ein Klick setzt die Rechnung auf bezahlt, und was daran hängt, läuft von selbst weiter. Dieselbe Datei zweimal einzulesen schadet nichts.

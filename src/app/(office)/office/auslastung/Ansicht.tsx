@@ -3,8 +3,14 @@
 import Link from 'next/link'
 import React, { useMemo, useState } from 'react'
 
-import { auslastung, ersteFreieWoche, type AuslastungsAuftrag } from '../../../../lib/auslastung'
+import {
+  auslastung,
+  ersteFreieWoche,
+  type AuslastungsAuftrag,
+  type Wochenkapazitaet,
+} from '../../../../lib/auslastung'
 import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
+import { absenden } from '../../../../lib/buero/warteschlange'
 
 /**
  * Wie voll die nächsten Wochen sind.
@@ -14,22 +20,32 @@ import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
  * Kalender zeigte zwar, was wann fällig ist, aber nicht, wie viele Stunden
  * dahinterstehen. Bei Einzelfertigung entscheidet genau das.
  *
- * Gerechnet wird aus dem Bestand im Gerät, die Kapazität kommt aus den
- * Einstellungen. Die Seite steht damit auch in der Werkstatt ohne Netz.
+ * Die verfügbare Zeit steht je Woche und ist von hier aus änderbar. Das ist
+ * kein Beiwerk, sondern der Kern: Die Werkstatt läuft neben einem Hauptberuf,
+ * und eine feste Wochenzahl wäre genau dann falsch, wenn es darauf ankommt.
+ * Wer weiß, dass nächste Woche nichts geht, trägt eine Null ein — und die
+ * Auslastung sagt danach die Wahrheit.
+ *
+ * Gerechnet wird aus dem Bestand im Gerät. Die Seite steht damit auch in der
+ * Werkstatt ohne Netz, und geänderte Stunden gehen über die Warteschlange raus.
  */
 
 const stunden = (n: number) => `${n.toLocaleString('de-DE', { maximumFractionDigits: 1 })} h`
 
 const kurz = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
 
+type Werkstattwoche = Wochenkapazitaet & { id: number | string }
+
 export function AuslastungAnsicht() {
   const auftraege = useBestand<AuslastungsAuftrag>('auftraege')
+  const kapazitaeten = useBestand<Werkstattwoche>('werkstattwochen')
   const { wochenstunden } = useRahmen()
   const [gebraucht, setGebraucht] = useState(20)
+  const [meldung, setMeldung] = useState<string | null>(null)
 
   const wochen = useMemo(
-    () => auslastung(auftraege, { stundenProWoche: wochenstunden, wochen: 16 }),
-    [auftraege, wochenstunden],
+    () => auslastung(auftraege, { stundenProWoche: wochenstunden, wochen: 16, kapazitaeten }),
+    [auftraege, wochenstunden, kapazitaeten],
   )
 
   const frei = ersteFreieWoche(wochen, gebraucht)
@@ -41,12 +57,35 @@ export function AuslastungAnsicht() {
       (a.status === 'geplant' || a.status === 'inFertigung') && a.dueDate && !a.plannedMinutes,
   )
 
+  /**
+   * Die Stunden einer Woche setzen — oder den Eintrag wieder entfernen.
+   *
+   * Leeres Feld heißt „es gilt wieder die Faustregel", eine Null heißt „diese
+   * Woche geht nichts". Das ist nicht dasselbe, und deshalb sind es zwei Fälle.
+   */
+  async function setzen(woche: string, wert: string) {
+    const stundenWert = wert.trim() === '' ? null : Math.max(Number(wert) || 0, 0)
+    setMeldung(null)
+    try {
+      const { sofort } = await absenden({
+        pfad: '/api/office/werkstattwoche',
+        bereich: 'werkstattwochen',
+        koerper: { woche, stunden: stundenWert },
+        vorschau: { woche, stunden: stundenWert },
+      })
+      if (!sofort) setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
+    } catch {
+      setMeldung('Das hat nicht geklappt.')
+    }
+  }
+
   return (
     <>
       <h1>Auslastung</h1>
       <p className="buero-unterzeile">
-        Zugesagte Fertigungsstunden je Woche, gemessen an {stunden(wochenstunden)} Werkstattzeit.
-        Zu ändern unter Website-Verwaltung → Einstellungen → Handarbeit &amp; Fertigung.
+        Zugesagte Fertigungsstunden je Woche. Die verfügbare Zeit steht rechts an jeder Woche und
+        lässt sich dort ändern — Urlaub, viel im Hauptberuf, eine ruhige Woche. Ohne eigene Angabe
+        gelten {stunden(wochenstunden)} aus den Einstellungen.
       </p>
 
       <div className="buero-karte">
@@ -73,18 +112,20 @@ export function AuslastungAnsicht() {
             </>
           )}
         </p>
+        {meldung && <p className="buero-hinweis">{meldung}</p>}
       </div>
 
       <h2>Die nächsten Wochen</h2>
       <div className="buero-liste">
         {wochen.map((w) => {
-          const voll = w.anteil >= 1
-          const knapp = w.anteil >= 0.8
+          const voll = w.stunden >= w.kapazitaet
+          const knapp = w.kapazitaet > 0 && w.anteil >= 0.8
           return (
             <div key={w.schluessel} className="buero-zeile">
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">
                   KW {w.woche} · {kurz(w.von)}–{kurz(w.bis)}
+                  {w.notiz ? ` · ${w.notiz}` : ''}
                 </div>
                 <div className="buero-zeile-neben">
                   {w.auftraege.length === 0
@@ -119,10 +160,28 @@ export function AuslastungAnsicht() {
                   />
                 </div>
               </div>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
                 <span className="buero-betrag">{stunden(w.stunden)}</span>
+                <label
+                  className="buero-feld"
+                  style={{ width: '7.5rem', margin: 0 }}
+                  title="Verfügbare Stunden in dieser Woche. Leer = Voreinstellung, 0 = geht nichts."
+                >
+                  <span style={{ fontSize: '.7rem' }}>
+                    verfügbar{w.eigeneKapazitaet ? '' : ' (Regel)'}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    defaultValue={w.eigeneKapazitaet ? w.kapazitaet : ''}
+                    placeholder={String(wochenstunden)}
+                    onBlur={(e) => void setzen(w.schluessel, e.target.value)}
+                  />
+                </label>
                 <span className={`buero-marker ${voll ? 'warn' : knapp ? 'offen' : 'gut'}`}>
-                  {voll ? 'voll' : `${stunden(w.frei)} frei`}
+                  {w.kapazitaet === 0 ? 'keine Zeit' : voll ? 'voll' : `${stunden(w.frei)} frei`}
                 </span>
               </div>
             </div>

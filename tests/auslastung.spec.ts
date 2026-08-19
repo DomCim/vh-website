@@ -112,6 +112,58 @@ test.describe('Die Wochenübersicht', () => {
     expect(eng[0].frei).toBe(0)
   })
 
+  /*
+   * Der eigentliche Punkt bei einer Werkstatt im Nebenerwerb: Die Kapazität
+   * ist keine feste Zahl. Eine Woche Urlaub steht auf null, eine ruhige Woche
+   * auf fünfundzwanzig — und die Terminzusage richtet sich danach, nicht nach
+   * einer Faustregel.
+   */
+  test('eine Woche darf ihre eigene Stundenzahl haben', () => {
+    const wochen = auslastung(AUFTRAEGE, {
+      stundenProWoche: 30,
+      wochen: 3,
+      ab,
+      kapazitaeten: [
+        { woche: '2026-38', stunden: 12 },
+        { woche: '2026-39', stunden: 0, notiz: 'Urlaub' },
+      ],
+    })
+    expect(wochen[0].kapazitaet).toBe(12)
+    expect(wochen[0].eigeneKapazitaet).toBe(true)
+    expect(wochen[0].frei).toBe(0) // 30 zugesagte Stunden auf 12 verfügbare
+    expect(wochen[1].kapazitaet).toBe(0)
+    expect(wochen[1].notiz).toBe('Urlaub')
+    // Ohne eigene Angabe gilt weiter die Faustregel
+    expect(wochen[2].kapazitaet).toBe(30)
+    expect(wochen[2].eigeneKapazitaet).toBe(false)
+  })
+
+  /*
+   * Null Stunden und nichts zugesagt ist keine volle Woche, sondern eine
+   * leere. Ohne die Fallunterscheidung stünde dort eine Division durch null.
+   */
+  test('eine Woche ohne Zeit ist voll, sobald etwas zugesagt ist', () => {
+    const leer = auslastung([], { wochen: 1, ab, kapazitaeten: [{ woche: '2026-38', stunden: 0 }] })
+    expect(leer[0].anteil).toBe(0)
+
+    const belegt = auslastung(AUFTRAEGE, {
+      wochen: 1,
+      ab,
+      kapazitaeten: [{ woche: '2026-38', stunden: 0 }],
+    })
+    expect(belegt[0].anteil).toBe(Infinity)
+  })
+
+  test('eine Woche ohne Zeit ist nie die freie Woche', () => {
+    const wochen = auslastung([], {
+      stundenProWoche: 30,
+      wochen: 3,
+      ab,
+      kapazitaeten: [{ woche: '2026-38', stunden: 0, notiz: 'Urlaub' }],
+    })
+    expect(ersteFreieWoche(wochen, 10)?.woche).toBe(39)
+  })
+
   test('die erste Woche mit genug Platz ist die Antwort am Telefon', () => {
     const wochen = auslastung(AUFTRAEGE, { stundenProWoche: 30, wochen: 4, ab })
     expect(ersteFreieWoche(wochen, 25)?.woche).toBe(39)

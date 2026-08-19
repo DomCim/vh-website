@@ -38,6 +38,7 @@ import { Stocktakes } from './collections/Stocktakes'
 import { SystemState } from './collections/SystemState'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
+import { WorkshopWeeks } from './collections/WorkshopWeeks'
 import { About } from './globals/About'
 import { Homepage } from './globals/Homepage'
 import { Integrations } from './globals/Integrations'
@@ -92,6 +93,7 @@ export default buildConfig({
     InventoryItems,
     Stocktakes,
     FollowUps,
+    WorkshopWeeks,
     Counters,
     Deletions,
     Drafts,

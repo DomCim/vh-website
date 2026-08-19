@@ -7,9 +7,16 @@
  * Bauch: „müsste gehen". Das geht ein paarmal gut.
  *
  * Gerechnet wird aus den Aufträgen. Die zugesagte Zeit steht am Auftrag
- * (`plannedMinutes`), die verfügbare in den Einstellungen. Bewusst grob: Eine
- * Woche ist voll oder sie ist es nicht, und ob eine Stunde am Dienstag oder am
+ * (`plannedMinutes`), die verfügbare je Woche. Bewusst grob: Eine Woche ist
+ * voll oder sie ist es nicht, und ob eine Stunde am Dienstag oder am
  * Donnerstag liegt, entscheidet der Mensch in der Werkstatt.
+ *
+ * Die verfügbare Zeit ist **keine feste Zahl**. Die Werkstatt läuft neben
+ * einem Hauptberuf: In der einen Woche sind es fünf Stunden, in der nächsten
+ * fünfundzwanzig, im Urlaub keine. Die Voreinstellung aus den Einstellungen
+ * ist deshalb nur die Faustregel; jede Woche, die davon abweicht, trägt ihre
+ * eigene Zahl (siehe collections/WorkshopWeeks.ts). Eine feste Kapazität
+ * hätte genau dann gelogen, wenn es darauf ankommt.
  *
  * Ohne Payload-Import: Die Seite rechnet im Gerät, damit sie auch ohne Netz
  * dasteht — und der Test rechnet ohne Datenbank.
@@ -32,6 +39,13 @@ export type WochenAnteil = {
   stunden: number
 }
 
+/** Was für eine einzelne Woche abweichend gilt. */
+export type Wochenkapazitaet = {
+  woche: string
+  stunden?: number | null
+  notiz?: string | null
+}
+
 export type Woche = {
   /** `2026-38` — Jahr und Kalenderwoche, sortierbar */
   schluessel: string
@@ -43,7 +57,13 @@ export type Woche = {
   bis: Date
   /** Zugesagte Fertigungsstunden */
   stunden: number
-  /** Verfügbare Stunden */
+  /** Verfügbare Stunden in dieser Woche */
+  kapazitaet: number
+  /** Steht für diese Woche eine eigene Zahl, oder gilt die Faustregel? */
+  eigeneKapazitaet: boolean
+  /** Warum diese Woche anders ist, z.B. „Urlaub" */
+  notiz?: string | null
+  /** Verfügbare Stunden abzüglich der zugesagten */
   frei: number
   /** Anteil der Kapazität, 1 = voll */
   anteil: number
@@ -143,8 +163,18 @@ export function wochenAnteile(
  */
 export function auslastung(
   auftraege: AuslastungsAuftrag[],
-  { stundenProWoche = 30, wochen = 12, ab = new Date() } = {},
+  {
+    stundenProWoche = 30,
+    wochen = 12,
+    ab = new Date(),
+    kapazitaeten = [] as Wochenkapazitaet[],
+  } = {},
 ): Woche[] {
+  const eigene = new Map(
+    kapazitaeten
+      .filter((k) => k.woche && typeof k.stunden === 'number')
+      .map((k) => [k.woche, k]),
+  )
   const last = new Map<string, WochenAnteil[]>()
 
   for (const auftrag of auftraege.filter(zaehlt)) {
@@ -173,6 +203,9 @@ export function auslastung(
     const drin = last.get(schluessel) ?? []
     const stunden = runden(drin.reduce((s, a) => s + a.stunden, 0))
 
+    const eigen = eigene.get(schluessel)
+    const kapazitaet = eigen ? Number(eigen.stunden) : stundenProWoche
+
     ergebnis.push({
       schluessel,
       jahr,
@@ -180,8 +213,16 @@ export function auslastung(
       von,
       bis,
       stunden,
-      frei: runden(Math.max(stundenProWoche - stunden, 0)),
-      anteil: stundenProWoche > 0 ? stunden / stundenProWoche : 0,
+      kapazitaet,
+      eigeneKapazitaet: Boolean(eigen),
+      notiz: eigen?.notiz ?? null,
+      frei: runden(Math.max(kapazitaet - stunden, 0)),
+      /*
+       * Eine Woche ohne Zeit ist immer voll, sobald auch nur eine Stunde
+       * zugesagt ist — und leer, wenn nichts zugesagt ist. Ohne diese
+       * Fallunterscheidung stünde im Urlaub eine Division durch null.
+       */
+      anteil: kapazitaet > 0 ? stunden / kapazitaet : stunden > 0 ? Infinity : 0,
       auftraege: drin.sort((a, b) => b.stunden - a.stunden),
     })
   }
@@ -196,5 +237,7 @@ export function auslastung(
  * dann ist die ehrliche Antwort nicht ein Termin, sondern „im Moment nicht".
  */
 export function ersteFreieWoche(wochen: Woche[], gebraucht: number): Woche | null {
-  return wochen.find((w) => w.frei >= gebraucht) ?? null
+  // `> 0` schließt Wochen ohne Zeit aus: Wer null Stunden hat, hat auch für
+  // eine Null-Stunden-Anfrage keinen Platz.
+  return wochen.find((w) => w.kapazitaet > 0 && w.frei >= gebraucht) ?? null
 }

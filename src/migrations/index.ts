@@ -34,6 +34,7 @@ import * as migration_20260819_173532_auslastung from './20260819_173532_auslast
 import * as migration_20260819_174511_wiedervorlagen from './20260819_174511_wiedervorlagen';
 import * as migration_20260819_175115_angebotsannahme from './20260819_175115_angebotsannahme';
 import * as migration_20260819_175504_erechnung_plattform from './20260819_175504_erechnung_plattform';
+import * as migration_20260819_182142_werkstattwochen from './20260819_182142_werkstattwochen';
 
 export const migrations = [
   {
@@ -214,6 +215,11 @@ export const migrations = [
   {
     up: migration_20260819_175504_erechnung_plattform.up,
     down: migration_20260819_175504_erechnung_plattform.down,
-    name: '20260819_175504_erechnung_plattform'
+    name: '20260819_175504_erechnung_plattform',
+  },
+  {
+    up: migration_20260819_182142_werkstattwochen.up,
+    down: migration_20260819_182142_werkstattwochen.down,
+    name: '20260819_182142_werkstattwochen'
   },
 ];

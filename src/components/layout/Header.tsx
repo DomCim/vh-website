@@ -3,11 +3,26 @@
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import type { Locale } from '../../lib/i18n'
 import { CartLink } from '../shop/CartLink'
 import { SprachWahl } from './SprachWahl'
+
+/**
+ * Kopfleiste der Website.
+ *
+ * Drei Spalten statt einer Reihe: Logo links, Navigation in der Mitte,
+ * Werkzeuge rechts. Vorher standen alle drei in einer Reihe mit
+ * `justify-between` — dann sitzt die Navigation dort, wo der Platz gerade
+ * bleibt, und wandert bei jedem neuen Menüpunkt. Mit dem Raster steht sie in
+ * der Mitte der Leiste, unabhängig davon, wie breit Logo und Werkzeuge sind.
+ *
+ * Und die Kategorien liegen unter einem Punkt. Jede neue Produktwelt im CMS
+ * war vorher ein weiterer Punkt in der obersten Reihe; bei neun Punkten brachen
+ * „Next Concept" und „Über uns" auf zwei Zeilen um, und die Leiste sah kaputt
+ * aus. Jetzt wächst das Aufklappmenü statt der Leiste.
+ */
 
 type Category = {
   id: number | string
@@ -27,6 +42,8 @@ type Dict = {
     search: string
     menu: string
     language: string
+    collection: string
+    account: string
   }
 }
 
@@ -40,10 +57,12 @@ export function Header({
   dict: Dict
 }) {
   const [open, setOpen] = useState(false)
+  const [kollektionOffen, setKollektionOffen] = useState(false)
   const [hidden, setHidden] = useState(false)
   const pathname = usePathname()
   const reduceMotion = useReducedMotion()
   const { scrollY } = useScroll()
+  const leiste = useRef<HTMLElement>(null)
 
   // Header taucht beim Hochscrollen sofort wieder auf, verschwindet beim Runterscrollen
   useMotionValueEvent(scrollY, 'change', (latest) => {
@@ -55,12 +74,37 @@ export function Header({
     setHidden(latest > previous && latest > 140)
   })
 
+  // Beim Seitenwechsel schließen — sonst bliebe das Menü über der neuen Seite
+  useEffect(() => {
+    setOpen(false)
+    setKollektionOffen(false)
+  }, [pathname])
+
+  // Klick daneben und Escape schließen das Aufklappmenü
+  useEffect(() => {
+    if (!kollektionOffen) return
+    const beiKlick = (e: MouseEvent) => {
+      if (!leiste.current?.contains(e.target as Node)) setKollektionOffen(false)
+    }
+    const beiTaste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setKollektionOffen(false)
+    }
+    document.addEventListener('mousedown', beiKlick)
+    window.addEventListener('keydown', beiTaste)
+    return () => {
+      document.removeEventListener('mousedown', beiKlick)
+      window.removeEventListener('keydown', beiTaste)
+    }
+  }, [kollektionOffen])
+
+  const kategorien = categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name }))
+
+  /** Was in der obersten Reihe steht — die Kategorien stecken im Aufklappmenü. */
   const items: { href: string; label: string }[] = [
-    { href: `/${locale}/news`, label: dict.nav.news },
-    ...categories.map((c) => ({ href: `/${locale}/${c.slug}`, label: c.name })),
-    { href: `/${locale}/projekte`, label: dict.nav.projects },
     { href: `/${locale}/massanfertigung`, label: dict.nav.custom },
+    { href: `/${locale}/projekte`, label: dict.nav.projects },
     { href: `/${locale}/ueber-uns`, label: dict.nav.about },
+    { href: `/${locale}/news`, label: dict.nav.news },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]
 
@@ -71,36 +115,94 @@ export function Header({
   const isActive = (href: string) =>
     pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
 
+  const kollektionAktiv = kategorien.some((k) => isActive(k.href))
+  const linkKlasse = (aktiv: boolean) =>
+    `tracking-nav text-xs font-medium whitespace-nowrap uppercase transition-colors ${
+      aktiv ? 'text-ink' : 'text-ink-soft hover:text-ink'
+    }`
+
   return (
     <motion.header
+      ref={leiste}
       className="site-header border-line bg-paper/95 fixed inset-x-0 top-0 z-50 border-b backdrop-blur"
       animate={reduceMotion ? undefined : { y: hidden ? '-100%' : '0%' }}
       transition={{ duration: 0.35, ease: [0.22, 0.65, 0.28, 1] }}
     >
-      <div className="site-header-bar mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
-        <Link href={`/${locale}`} className="shrink-0" onClick={() => setOpen(false)}>
-          <img
-            src="/logo.svg"
-            alt="Vincent Hellmann"
-            className="site-logo h-4 w-auto sm:h-5"
-          />
+      {/* Breiter als der Seiteninhalt (max-w-7xl) und mit großzügigem Abstand
+          zwischen den drei Spalten: Bei sieben Punkten und vier Zeichen rechts
+          stieß die Navigation sonst direkt an den Schriftzug — und genau das
+          ließ die Leiste vollgestopft aussehen. */}
+      <div className="site-header-bar mx-auto grid h-20 max-w-[88rem] grid-cols-[1fr_auto_1fr] items-center gap-8 px-4 sm:px-6">
+        <Link href={`/${locale}`} className="shrink-0 justify-self-start" onClick={() => setOpen(false)}>
+          <img src="/logo.svg" alt="Vincent Hellmann" className="site-logo h-4 w-auto sm:h-5" />
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`tracking-nav text-xs font-medium uppercase transition-colors ${
-                isActive(item.href) ? 'text-ink' : 'text-ink-soft hover:text-ink'
-              }`}
+        <nav className="hidden items-center justify-center gap-6 xl:flex">
+          {kategorien.length > 0 && (
+            <div
+              className="relative"
+              /*
+               * Aufklappen beim Drüberfahren, damit man am Rechner nicht erst
+               * klicken muss — und trotzdem ein echter Knopf darunter, weil
+               * Hovern mit der Tastatur nichts tut.
+               */
+              onMouseEnter={() => setKollektionOffen(true)}
+              onMouseLeave={() => setKollektionOffen(false)}
             >
+              <button
+                type="button"
+                aria-expanded={kollektionOffen}
+                aria-current={kollektionAktiv ? 'page' : undefined}
+                className={`${linkKlasse(kollektionAktiv || kollektionOffen)} flex cursor-pointer items-center gap-1`}
+                onClick={() => setKollektionOffen((v) => !v)}
+              >
+                {dict.nav.collection}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                  className={`transition-transform ${kollektionOffen ? 'rotate-180' : ''}`}
+                >
+                  <path d="m7 10 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              {kollektionOffen && (
+                <div
+                  role="menu"
+                  aria-label={dict.nav.collection}
+                  className="border-line bg-paper absolute top-full left-1/2 min-w-52 -translate-x-1/2 border py-2 shadow-lg"
+                >
+                  {kategorien.map((k) => (
+                    <Link
+                      key={k.href}
+                      href={k.href}
+                      role="menuitem"
+                      className={`tracking-nav block px-5 py-2.5 text-xs font-medium whitespace-nowrap uppercase transition-colors ${
+                        isActive(k.href) ? 'text-ink' : 'text-ink-soft hover:text-bronze'
+                      }`}
+                      onClick={() => setKollektionOffen(false)}
+                    >
+                      {k.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {items.map((item) => (
+            <Link key={item.href} href={item.href} className={linkKlasse(isActive(item.href))}>
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 justify-self-end sm:gap-3">
           <SprachWahl locale={locale} pfadFuer={pathFor} label={dict.nav.language} />
 
           <Link
@@ -123,12 +225,41 @@ export function Header({
             </svg>
           </Link>
 
+          {/*
+           * Der Weg zur eigenen Übersicht.
+           *
+           * Das Kundenportal gab es längst — nur führte kein sichtbarer Weg
+           * dorthin: Wer den Link aus der Bestellmail nicht mehr hatte, kam
+           * nicht hinein. Angemeldet wird dort mit der E-Mail-Adresse und
+           * einem sechsstelligen Code, ohne Passwort.
+           */}
+          <Link
+            href={`/${locale}/konto`}
+            aria-label={dict.nav.account}
+            title={dict.nav.account}
+            className="text-ink-soft hover:text-bronze flex h-10 w-10 items-center justify-center transition-colors"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M4.8 20c.9-3.6 3.7-5.6 7.2-5.6s6.3 2 7.2 5.6" strokeLinecap="round" />
+            </svg>
+          </Link>
+
           <CartLink locale={locale} label={dict.nav.cart} />
 
           <button
             type="button"
             aria-label={dict.nav.menu}
-            className="text-ink flex h-10 w-10 flex-col items-center justify-center gap-1.5 lg:hidden"
+            aria-expanded={open}
+            className="text-ink flex h-10 w-10 flex-col items-center justify-center gap-1.5 xl:hidden"
             onClick={() => setOpen((v) => !v)}
           >
             <span
@@ -143,18 +274,44 @@ export function Header({
       </div>
 
       {open && (
-        <nav className="border-line bg-paper border-t lg:hidden">
+        <nav className="border-line bg-paper border-t xl:hidden">
           <div className="mx-auto flex max-w-7xl flex-col px-4 py-4 sm:px-6">
+            {/* Am Handy bleibt alles untereinander sichtbar — ein Aufklappmenü
+                im Aufklappmenü wäre ein Tipp mehr für nichts. */}
+            {kategorien.length > 0 && (
+              <>
+                <span className="tracking-nav text-ink-soft pt-2 pb-1 text-[0.65rem] uppercase">
+                  {dict.nav.collection}
+                </span>
+                {kategorien.map((k) => (
+                  <Link
+                    key={k.href}
+                    href={k.href}
+                    className="tracking-nav text-ink border-line border-b py-3 pl-3 text-sm font-medium uppercase"
+                    onClick={() => setOpen(false)}
+                  >
+                    {k.label}
+                  </Link>
+                ))}
+              </>
+            )}
             {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="tracking-nav text-ink border-line border-b py-3 text-sm font-medium uppercase last:border-b-0"
+                className="tracking-nav text-ink border-line border-b py-3 text-sm font-medium uppercase"
                 onClick={() => setOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
+            <Link
+              href={`/${locale}/konto`}
+              className="tracking-nav text-ink py-3 text-sm font-medium uppercase"
+              onClick={() => setOpen(false)}
+            >
+              {dict.nav.account}
+            </Link>
           </div>
         </nav>
       )}
