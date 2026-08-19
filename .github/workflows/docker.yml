@@ -182,7 +182,7 @@ jobs:
   # Dokumentation geändert wurde —, steht dort `skipped`, und dann gibt es
   # auch nichts auszurollen.
   ausrollen:
-    needs: bauen
+    needs: [aenderungen, bauen]
     if: >-
       needs.bauen.result == 'success'
       && github.ref == 'refs/heads/main'
@@ -220,11 +220,15 @@ jobs:
             *) echo "::error::Die Webhook-Adresse beginnt nicht mit https:// — vermutlich beim Kopieren verstümmelt."; exit 1 ;;
           esac
 
+          # `web` und `buero` sagen Home Assistant, welche Hälfte gebaut
+          # wurde. Ohne das wartete die Automatisierung nach einem reinen
+          # Büro-Bau sechs Minuten auf eine Website-Fassung, die nie kommt —
+          # und meldete dann fälschlich „Ausrollen hakt".
           antwort=$(mktemp)
           code=$(curl -sS -o "$antwort" -w '%{http_code}' --max-time 30 \
             -X POST "$ziel" \
             -H 'Content-Type: application/json' \
-            -d "{\"token\":\"$geheim\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\"}") || {
+            -d "{\"token\":\"$geheim\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\",\"web\":${{ needs.aenderungen.outputs.web }},\"buero\":${{ needs.aenderungen.outputs.buero }}}") || {
               echo "::error::curl kam nicht durch — Adresse prüfen."
               exit 1
             }
