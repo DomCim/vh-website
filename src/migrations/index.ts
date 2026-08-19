@@ -26,6 +26,7 @@ import * as migration_20260819_102635_rechnungsnummern from './20260819_102635_r
 import * as migration_20260819_103459_zahlungsziele from './20260819_103459_zahlungsziele';
 import * as migration_20260819_112326_stripe_ausbau from './20260819_112326_stripe_ausbau';
 import * as migration_20260819_113245_zahlplan_am_auftrag from './20260819_113245_zahlplan_am_auftrag';
+import * as migration_20260819_125944_benutzername from './20260819_125944_benutzername';
 
 export const migrations = [
   {
@@ -166,6 +167,11 @@ export const migrations = [
   {
     up: migration_20260819_113245_zahlplan_am_auftrag.up,
     down: migration_20260819_113245_zahlplan_am_auftrag.down,
-    name: '20260819_113245_zahlplan_am_auftrag'
+    name: '20260819_113245_zahlplan_am_auftrag',
+  },
+  {
+    up: migration_20260819_125944_benutzername.up,
+    down: migration_20260819_125944_benutzername.down,
+    name: '20260819_125944_benutzername'
   },
 ];

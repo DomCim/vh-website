@@ -15,7 +15,7 @@ import { bestandFreigeben } from '../../lib/buero/bestand'
  */
 export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [kennung, setKennung] = useState('')
   const [passwort, setPasswort] = useState('')
   const [code, setCode] = useState('')
   const [codeNoetig, setCodeNoetig] = useState(false)
@@ -31,7 +31,16 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password: passwort, code: code || undefined }),
+        /*
+         * Ein Feld für beides: Payload gleicht `username` auch gegen die
+         * E-Mail-Spalte ab (allowEmailLogin). Wer „werkstatt" tippt, kommt
+         * genauso herein wie wer seine Adresse tippt.
+         */
+        body: JSON.stringify({
+          username: kennung.trim(),
+          password: passwort,
+          code: code || undefined,
+        }),
       })
 
       if (res.ok) {
@@ -54,7 +63,7 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
         setCodeNoetig(true)
         setMeldung('Der Code stimmt nicht oder ist abgelaufen.')
       } else if (res.status === 401) {
-        setMeldung('E-Mail oder Passwort stimmt nicht.')
+        setMeldung('Anmeldename oder Passwort stimmt nicht.')
       } else if (text.includes('locked') || res.status === 429) {
         setMeldung('Zu viele Versuche — das Konto ist vorübergehend gesperrt.')
       } else {
@@ -70,13 +79,14 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
   return (
     <form onSubmit={anmelden} className="buero-karte" style={{ maxWidth: '24rem' }}>
       <label className="buero-feld">
-        <span>E-Mail</span>
+        <span>E-Mail oder Benutzername</span>
         <input
-          type="email"
+          type="text"
           required
           autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          autoCapitalize="none"
+          value={kennung}
+          onChange={(e) => setKennung(e.target.value)}
         />
       </label>
 

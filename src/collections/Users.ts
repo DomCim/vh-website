@@ -42,6 +42,20 @@ export const Users: CollectionConfig = {
      * ist der Benutzer damit ganz normal angemeldet.
      */
     strategies: [passkeyStrategie],
+    /**
+     * Anmelden mit Benutzernamen oder E-Mail.
+     *
+     * Das Werkstatt-Tablet gehört keiner Person — ein Konto „werkstatt"
+     * braucht keine eigene Mail-Adresse, und niemand soll sich eine ausdenken
+     * müssen, nur weil das Feld Pflicht ist. E-Mail bleibt erlaubt und ist
+     * weiter der Weg für alles, was zustellen muss (Passwort vergessen);
+     * ein Konto ohne Adresse verzichtet bewusst darauf.
+     */
+    loginWithUsername: {
+      allowEmailLogin: true,
+      requireEmail: false,
+      requireUsername: false,
+    },
   },
   admin: {
     useAsTitle: 'email',

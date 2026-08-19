@@ -2,6 +2,10 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Anmelden mit Benutzernamen
+
+- **Das Werkstatt-Tablet braucht keine eigene E-Mail-Adresse mehr.** Konten lassen sich jetzt mit einem Benutzernamen anlegen — „werkbank" statt einer erfundenen Adresse. Das Anmeldefeld ist eines für beides: Wer seine E-Mail tippt, kommt genauso herein wie wer den Benutzernamen tippt. Ein Konto ohne E-Mail verzichtet dafür auf „Passwort vergessen" — das Zurücksetzen übernimmt dann die Benutzerverwaltung.
+
 ## 19.08.2026 — Das Kundenportal
 
 - **Kundschaft sieht jetzt ihre Vorgänge selbst.** Unter „Meine Bestellungen" stehen nach der Anmeldung per E-Mail-Code nicht mehr nur Shop-Bestellungen, sondern auch die Aufträge aus dem Projektgeschäft — mit Stand („in Fertigung"), Fertigstellungstermin, Auftragswert und dem, was davon schon bezahlt ist. Rechnungen lassen sich als PDF herunterladen, samt GiroCode. Laufendes steht oben, Abgeschlossenes gesammelt darunter — wer nachschauen will, was er vor zwei Jahren bestellt hat, findet es trotzdem.

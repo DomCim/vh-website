@@ -83,7 +83,8 @@ export async function GET(req: Request) {
       const konto = k as unknown as Record<string, unknown>
       return {
         id: konto.id,
-        email: konto.email,
+        email: konto.email ?? '',
+        benutzername: konto.username ?? '',
         name: konto.name ?? '',
         role: konto.role ?? 'redaktion',
         rolleId:
@@ -108,6 +109,7 @@ export async function POST(req: Request) {
       aktion?: Aktion
       id?: string | number
       email?: string
+      benutzername?: string
       name?: string
       role?: string
       rolleId?: number | string
@@ -136,7 +138,15 @@ export async function POST(req: Request) {
     }
 
     if (b.aktion === 'anlegen') {
-      if (!b.email?.trim() || !b.passwort || b.passwort.length < 8) {
+      /*
+       * E-Mail ODER Benutzername — eines von beiden muss da sein, sonst kann
+       * sich das Konto nie anmelden. Das Werkstatt-Tablet bekommt einen
+       * Benutzernamen und keine erfundene Adresse; ein Konto ohne E-Mail
+       * verzichtet dafür auf „Passwort vergessen".
+       */
+      const email = b.email?.trim().toLowerCase() || undefined
+      const benutzername = b.benutzername?.trim().toLowerCase() || undefined
+      if ((!email && !benutzername) || !b.passwort || b.passwort.length < 8) {
         return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
       }
       const gewaehlt = await rolleAufloesen(b.rolleId)
@@ -144,7 +154,8 @@ export async function POST(req: Request) {
         collection: 'users',
         overrideAccess: true,
         data: {
-          email: b.email.trim(),
+          email,
+          username: benutzername,
           password: b.passwort,
           name: b.name?.trim() || undefined,
           role: (gewaehlt?.altwert as 'inhaber' | 'redaktion') ?? 'redaktion',

@@ -15,6 +15,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 type Konto = {
   id: string | number
   email: string
+  benutzername: string
   name: string
   role: string
   rolleId: number | null
@@ -31,7 +32,8 @@ const FEHLERTEXT: Record<string, string> = {
   'letzter-inhaber': 'Das ist der letzte Inhaber — sonst käme niemand mehr herein.',
   'email-vergeben': 'Diese E-Mail-Adresse gibt es schon.',
   'passwort-zu-kurz': 'Das Passwort braucht mindestens acht Zeichen.',
-  unvollstaendig: 'E-Mail und ein Passwort mit acht Zeichen werden gebraucht.',
+  unvollstaendig:
+    'E-Mail oder Benutzername, dazu ein Passwort mit acht Zeichen — das wird gebraucht.',
 }
 
 export function BenutzerVerwaltung() {
@@ -40,9 +42,13 @@ export function BenutzerVerwaltung() {
   const [ich, setIch] = useState<string | number | null>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
-  const [neu, setNeu] = useState<{ email: string; name: string; rolleId: number | ''; passwort: string }>(
-    { email: '', name: '', rolleId: '', passwort: '' },
-  )
+  const [neu, setNeu] = useState<{
+    email: string
+    benutzername: string
+    name: string
+    rolleId: number | ''
+    passwort: string
+  }>({ email: '', benutzername: '', name: '', rolleId: '', passwort: '' })
 
   const holen = useCallback(async () => {
     try {
@@ -123,12 +129,14 @@ export function BenutzerVerwaltung() {
         {konten.map((k) => (
           <div key={k.id} className="buero-karte" style={{ marginBottom: '.8rem' }}>
             <div className="buero-zeile-titel">
-              {k.email}
+              {k.email || k.benutzername}
               {String(k.id) === String(ich) ? ' — das bin ich' : ''}
             </div>
             <div className="buero-unterzeile">
               {k.name || 'ohne Namen'} ·{' '}
               {rollen.find((r) => r.id === k.rolleId)?.name ?? k.role}
+              {k.benutzername && k.email ? ` · Anmeldename ${k.benutzername}` : ''}
+              {!k.email ? ' · ohne E-Mail' : ''}
               {k.mfaEnabled ? ' · Zwei-Faktor an' : ''}
               {k.passkeys.length ? ` · ${k.passkeys.length} Gerät(e)` : ''}
             </div>
@@ -250,11 +258,20 @@ export function BenutzerVerwaltung() {
       <div className="buero-karte">
         <div className="buero-reihe">
           <label className="buero-feld">
-            <span>E-Mail</span>
+            <span>E-Mail (leer lassen geht)</span>
             <input
               type="email"
               value={neu.email}
               onChange={(e) => setNeu((v) => ({ ...v, email: e.target.value }))}
+            />
+          </label>
+          <label className="buero-feld">
+            <span>Benutzername (statt E-Mail)</span>
+            <input
+              autoCapitalize="none"
+              placeholder="z.B. werkstatt"
+              value={neu.benutzername}
+              onChange={(e) => setNeu((v) => ({ ...v, benutzername: e.target.value }))}
             />
           </label>
           <label className="buero-feld">
@@ -291,10 +308,11 @@ export function BenutzerVerwaltung() {
         <button
           type="button"
           className="buero-knopf"
-          disabled={laeuft || !neu.email || neu.passwort.length < 8}
+          disabled={laeuft || (!neu.email && !neu.benutzername) || neu.passwort.length < 8}
           onClick={async () => {
             const gut = await rufen({ aktion: 'anlegen', ...neu }, 'Konto angelegt.')
-            if (gut) setNeu((v) => ({ email: '', name: '', rolleId: v.rolleId, passwort: '' }))
+            if (gut)
+              setNeu((v) => ({ email: '', benutzername: '', name: '', rolleId: v.rolleId, passwort: '' }))
           }}
         >
           Anlegen

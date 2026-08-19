@@ -50,11 +50,13 @@ type BereichsAntwort = {
  */
 async function rahmen(
   payload: Awaited<ReturnType<typeof payloadClient>>,
-  benutzer: { email?: string; name?: string },
+  benutzer: { email?: string; username?: string; name?: string },
   konto: unknown,
 ) {
   const rahmen = {
-    benutzer: { email: benutzer.email ?? '', name: benutzer.name ?? '' },
+    // Ohne E-Mail zeigt die Oberfläche den Benutzernamen — irgendetwas muss
+    // dastehen, sonst begrüßt die Einstellungsseite ein leeres „Angemeldet als".
+    benutzer: { email: benutzer.email || benutzer.username || '', name: benutzer.name ?? '' },
     kiVerfuegbar: false,
     stundensatz: 65,
     wunschaufschlag: 40,
@@ -185,6 +187,6 @@ export async function POST(req: Request) {
     bereiche: antwort,
     // Diese Bereiche bitte vorher leeren — der bisherige Bestand ist zu alt
     voll: vollstaendig,
-    rahmen: await rahmen(payload, user as { email?: string; name?: string }, user),
+    rahmen: await rahmen(payload, user as { email?: string; username?: string; name?: string }, user),
   })
 }
