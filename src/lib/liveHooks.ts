@@ -20,13 +20,13 @@ export function liveHooks(bereich: LiveBereich): {
   afterChange: CollectionAfterChangeHook[]
   afterDelete: CollectionAfterDeleteHook[]
 } {
-  const afterChange: CollectionAfterChangeHook = ({ doc, operation }) => {
-    liveMelden(bereich, operation === 'create' ? 'neu' : 'geaendert', doc?.id)
+  const afterChange: CollectionAfterChangeHook = ({ doc, operation, req }) => {
+    liveMelden(req.payload, bereich, operation === 'create' ? 'neu' : 'geaendert', doc?.id)
     return doc
   }
 
   const afterDelete: CollectionAfterDeleteHook = async ({ doc, id, req }) => {
-    liveMelden(bereich, 'geloescht', id)
+    liveMelden(req.payload, bereich, 'geloescht', id)
 
     // Das Postfach führt keine eigene Sammlung, dort gibt es nichts zu merken
     if (istBereich(bereich)) {

@@ -8,18 +8,26 @@ import type { LiveBereich } from './bereiche'
  * Bisher zeigte jede Seite den Stand ihres Aufrufs: Wer am Rechner einen
  * Auftrag anlegte, sah ihn auf dem Tablet in der Werkstatt erst beim nächsten
  * Antippen. Jetzt hält jede offene Büro-Seite eine WebSocket-Verbindung, und
- * sobald sich etwas ändert, lädt sie genau die betroffene Ansicht nach.
+ * sobald sich etwas ändert, gleicht sie den betroffenen Bereich nach.
  *
- * Der Aufbau in drei Teilen:
+ * Der Weg einer Meldung, seit Website und Büro in getrennten Containern
+ * laufen:
  *
- *   1. Diese Datei — die Sammelstelle. Payload meldet hier jede Änderung.
- *   2. server.mjs — der eigene Server neben Next, der die Verbindungen hält.
- *      Next selbst kann das nicht: Route-Handler beantworten Anfragen, sie
- *      halten keine Leitung offen.
- *   3. components/office/LiveAktualisierung.tsx — die Gegenstelle im Browser.
+ *   1. Irgendwo ändert sich etwas — im Büro, im Admin-Panel, durch eine
+ *      bezahlte Bestellung im Shop oder über den KI-Zugang.
+ *   2. `liveMelden` schickt die Meldung als `pg_notify` an die Datenbank.
+ *      Das ist der entscheidende Punkt: Die Datenbank teilen sich beide
+ *      Container ohnehin, also braucht es keinen zusätzlichen Dienst und
+ *      keine Verbindung zwischen ihnen. Wer gerade läuft, hört es; wer
+ *      neu startet, hört es ab dann wieder.
+ *   3. Der Büro-Container horcht auf diesem Kanal (liveHoeren.ts) und reicht
+ *      die Meldung an seine Sammelstelle weiter.
+ *   4. server.mjs verteilt sie an die offenen Drähte.
+ *   5. components/office/BestandAnbieter.tsx gleicht den Bereich nach.
  *
- * Verbunden sind (1) und (2) über `globalThis`: Beide laufen im selben
- * Node-Prozess, der Server legt die Sammelstelle an, bevor Next startet.
+ * Bewusst nur ein Weg, auch wenn ein Prozess alles macht: Meldete er
+ * zusätzlich direkt an die eigene Sammelstelle, käme dieselbe Änderung
+ * zweimal an.
  */
 
 export type { LiveBereich } from './bereiche'
@@ -36,21 +44,41 @@ type Sammelstelle = {
   melde: (ereignis: LiveEreignis) => void
 }
 
+/** Der Kanal, auf dem die Container einander Bescheid geben. */
+export const LIVE_KANAL = 'vh_live'
+
 /**
  * Ohne laufenden Server (Build, Skripte, Tests) gibt es keine Sammelstelle —
  * dann verpufft die Meldung, und das ist richtig so.
  */
-function sammelstelle(): Sammelstelle | null {
+export function sammelstelle(): Sammelstelle | null {
   return (globalThis as { __vhLive?: Sammelstelle }).__vhLive ?? null
 }
 
-/** Meldet eine Änderung an alle offenen Büro-Seiten. */
+type MitPool = { db?: { pool?: { query: (text: string, werte: unknown[]) => Promise<unknown> } } }
+
+/**
+ * Meldet eine Änderung an alle offenen Büro-Seiten — auch im anderen
+ * Container.
+ *
+ * Absichtlich ohne `await` beim Aufrufer und mit verschlucktem Fehler: Eine
+ * Meldung ist eine Annehmlichkeit, kein Teil des Vorgangs. Dass eine
+ * Benachrichtigung nicht hinausgeht, darf niemals dazu führen, dass ein Beleg
+ * nicht gespeichert wird.
+ */
 export function liveMelden(
+  payload: unknown,
   bereich: LiveBereich,
   art: LiveEreignis['art'] = 'geaendert',
   id?: number | string,
 ): void {
-  sammelstelle()?.melde({ bereich, art, id, zeit: Date.now() })
+  const pool = (payload as MitPool)?.db?.pool
+  if (!pool) return
+
+  const ereignis: LiveEreignis = { bereich, art, id, zeit: Date.now() }
+  void pool
+    .query('SELECT pg_notify($1, $2)', [LIVE_KANAL, JSON.stringify(ereignis)])
+    .catch(() => undefined)
 }
 
 // ── Eintrittskarte ──────────────────────────────────────────────────────────

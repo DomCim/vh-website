@@ -1,6 +1,16 @@
 #!/bin/sh
 set -e
 
+# Website und Büro laufen aus demselben Abbild in getrennten Containern.
+# Alles, was es genau einmal geben darf — Migrationen, Startdaten, Zugänge —,
+# erledigt der Web-Container. Liefe es in beiden, würden sie einander bei der
+# Schema-Änderung in die Quere kommen.
+if [ "$ROLLE" = "buero" ]; then
+  echo "Rolle buero: Migrationen und Startdaten macht der Web-Container."
+  echo "Starte Server …"
+  exec node server.mjs
+fi
+
 # Auf die Datenbank warten und Migrationen anwenden (bei Fehlern mehrfach versuchen)
 echo "Wende Datenbank-Migrationen an …"
 tries=0

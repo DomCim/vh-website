@@ -12,6 +12,10 @@ services:
       db:
         condition: service_healthy
     environment:
+      # Dieser Container bedient die Website und erledigt alles, was es genau
+      # einmal geben darf: Migrationen, Startdaten, nächtliche Sicherung,
+      # Erinnerungen, Postfach-Blick.
+      ROLLE: web
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vh.dominikdill.com}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
       DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
@@ -72,7 +76,77 @@ services:
       - traefik.docker.network=edge
       - traefik.http.routers.vhweb.rule=Host(`${DOMAIN:-vh.dominikdill.com}`)
       - traefik.http.routers.vhweb.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      # Niedrigere Priorität als das Büro: Bei zwei passenden Regeln gewinnt
+      # die höhere, und /office soll ausdrücklich beim Büro landen.
+      - traefik.http.routers.vhweb.priority=1
       - traefik.http.services.vhweb.loadbalancer.server.port=3000
+
+  # ── Büro ────────────────────────────────────────────────────────────────
+  #
+  # Dasselbe Abbild, dieselbe Datenbank, dieselbe Adresse — nur ein eigener
+  # Prozess. Der Grund ist nüchtern: Vorher teilten sich Shop und Büro einen
+  # Prozess, und ein Fehler im Büro riss den Shop mit. Jetzt kann das Büro
+  # abstürzen, neu starten oder ausgerollt werden, ohne dass ein Kunde etwas
+  # merkt — und umgekehrt.
+  #
+  # Weil die Adresse dieselbe bleibt, gelten Anmeldung und Passkeys unverändert
+  # für beide. Verbunden sind sie nur über die Datenbank: Änderungen laufen als
+  # Postgres-Meldung hin und her, damit die Live-Verbindung im Büro auch
+  # mitbekommt, was im Shop passiert.
+  buero:
+    image: ghcr.io/domcim/vh-website:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    environment:
+      # Kein Takt, keine Migrationen — die macht der Web-Container. Dafür hält
+      # dieser hier die offenen Live-Verbindungen.
+      ROLLE: buero
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vh.dominikdill.com}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Vincent Hellmann}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
+      # Zugangsdaten der Datenbank für pg_dump — die Sicherung lässt sich auch
+      # aus dem Büro von Hand anstoßen
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+      CSP_EXTRA_SCRIPT: ${CSP_EXTRA_SCRIPT:-}
+    volumes:
+      # Dieselben Volumes wie die Website: Belege und Sicherungen sind
+      # dieselben Dateien, nicht zwei Sätze davon.
+      - media:/app/media
+      - backups:/app/backups
+    networks:
+      - edge
+      - internal
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "node -e \"fetch('http://localhost:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=edge
+      # Das Büro, seine eigenen Schnittstellen und die Live-Verbindung
+      - traefik.http.routers.vhbuero.rule=Host(`${DOMAIN:-vh.dominikdill.com}`) && (PathPrefix(`/office`) || PathPrefix(`/api/office`) || PathPrefix(`/ws/buero`))
+      - traefik.http.routers.vhbuero.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      - traefik.http.routers.vhbuero.priority=10
+      - traefik.http.services.vhbuero.loadbalancer.server.port=3000
 
   db:
     image: postgres:17-alpine

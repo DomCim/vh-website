@@ -33,6 +33,27 @@ const SCHLAG_MS = 60_000
 
 export async function taktStarten(): Promise<void> {
   const { payloadClient } = await import('./lib/data')
+  const { hoertZu, machtTakt } = await import('./lib/rolle')
+
+  // Der Büro-Container horcht auf Meldungen der anderen Seite — sonst bekäme
+  // ein Tablet in der Werkstatt nichts davon mit, dass im Shop eine
+  // Bestellung bezahlt wurde.
+  if (hoertZu()) {
+    const { liveHoerenStarten } = await import('./lib/liveHoeren')
+    void payloadClient()
+      .then((payload) => liveHoerenStarten(payload))
+      .catch((err) => console.error('Live-Meldungen konnten nicht starten:', err))
+  }
+
+  /*
+   * Alles Zeitgesteuerte gehört in genau einen Container. Liefe es in beiden,
+   * gäbe es jede Sicherung doppelt und jede Erinnerung zweimal aufs Handy.
+   */
+  if (!machtTakt()) {
+    console.log('Rolle „buero": kein eigener Takt, das erledigt der Web-Container.')
+    return
+  }
+
   const { istFaellig, postfachPruefen, takteinstellungen, wartungslauf } = await import(
     './lib/wartung'
   )

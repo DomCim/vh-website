@@ -444,7 +444,7 @@ export async function postfachPruefen(
       if (neu) {
         // Auch an die offenen Büro-Seiten: Wer gerade im Postfach steht, soll
         // die neue Nachricht sehen, ohne die Benachrichtigung anzutippen.
-        liveMelden('post', 'neu', fach.id)
+        liveMelden(payload, 'post', 'neu', fach.id)
         await benachrichtige(payload, {
           titel: `Neue Post für ${fach.label}`,
           text:
