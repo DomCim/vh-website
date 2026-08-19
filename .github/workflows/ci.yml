@@ -68,11 +68,11 @@ jobs:
       - name: Bauen
         run: pnpm build
 
-      # Auch hier NODE_ENV, und aus demselben Grund: Ohne das steht der
-      # Postgres-Adapter auf `push` — er gleicht das Schema dann selbst ab
-      # und überspringt die Migrationen wortlos. Die Tabellen entstanden
-      # bisher nur zufällig, weil der nächste Schritt ebenfalls in diesem
-      # Modus lief; fiel das weg, fehlte auf einmal `users`.
+      # NODE_ENV wie im Container: Ohne das steht der Postgres-Adapter auf
+      # `push` — er gleicht das Schema dann selbst ab und überspringt die
+      # Migrationen wortlos. Die Tabellen entstanden bisher nur beiläufig
+      # beim Anlegen der Zugänge; wer die Migrationen prüfen will, prüfte
+      # in Wahrheit gar nichts.
       - name: Datenbank migrieren
         run: pnpm migrate
         env:
@@ -81,14 +81,15 @@ jobs:
       - name: Browser für die Rauchtests
         run: pnpm exec playwright install --with-deps chromium
 
-      # NODE_ENV bewusst gesetzt: Ohne das hält Payload den Lauf für
-      # Entwicklung und gleicht das Schema selbst ab, statt sich auf die
-      # Migrationen zu verlassen. Auf einer frisch migrierten Datenbank
-      # endete das ohne eine Zeile Ausgabe — und ohne Zugänge.
+      # Hier bewusst *ohne* NODE_ENV=production, anders als beim Migrieren:
+      # `payload run` braucht die Entwicklungswerkzeuge, um das TypeScript-
+      # Skript überhaupt zu übersetzen. In Produktionsstellung endete der
+      # Schritt nach zwei Sekunden ohne Ausgabe und ohne Zugänge. Dass das
+      # Schema dabei zusätzlich abgeglichen wird, ist folgenlos — die
+      # Migrationen sind einen Schritt vorher schon durchgelaufen.
       - name: Zugang für die Oberflächen-Prüfung anlegen
         run: pnpm benutzer
         env:
-          NODE_ENV: production
           ADMIN_PASSWORT: pruef-geheim-123
           VH_PASSWORT: pruef-geheim-123
 
