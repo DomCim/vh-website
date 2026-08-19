@@ -82,6 +82,7 @@ export interface Config {
     quotes: Quote;
     jobs: Job;
     'outgoing-invoices': OutgoingInvoice;
+    'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
     counters: Counter;
@@ -115,6 +116,7 @@ export interface Config {
     quotes: QuotesSelect<false> | QuotesSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     'outgoing-invoices': OutgoingInvoicesSelect<false> | OutgoingInvoicesSelect<true>;
+    'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
@@ -1080,6 +1082,38 @@ export interface OutgoingInvoice {
   createdAt: string;
 }
 /**
+ * Eingelesene Kontoauszüge und ihre Zuordnung zu Rechnungen.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bank-transactions".
+ */
+export interface BankTransaction {
+  id: number;
+  fingerprint: string;
+  status: 'offen' | 'zugeordnet' | 'ignoriert';
+  bookingDate: string;
+  /**
+   * Positiv ist ein Eingang, negativ eine Abbuchung.
+   */
+  amount: number;
+  counterparty?: string | null;
+  /**
+   * Hier steht die Rechnungsnummer, wenn der GiroCode benutzt wurde.
+   */
+  purpose?: string | null;
+  iban?: string | null;
+  currency?: string | null;
+  /**
+   * Wird beim Zuordnen gesetzt und setzt die Rechnung auf „bezahlt".
+   */
+  invoice?: (number | null) | OutgoingInvoice;
+  matchedAt?: string | null;
+  source?: ('csv' | 'camt') | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stocktakes".
  */
@@ -1386,6 +1420,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'outgoing-invoices';
         value: number | OutgoingInvoice;
+      } | null)
+    | ({
+        relationTo: 'bank-transactions';
+        value: number | BankTransaction;
       } | null)
     | ({
         relationTo: 'inventory-items';
@@ -1948,6 +1986,26 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   note?: T;
   project?: T;
   quote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bank-transactions_select".
+ */
+export interface BankTransactionsSelect<T extends boolean = true> {
+  fingerprint?: T;
+  status?: T;
+  bookingDate?: T;
+  amount?: T;
+  counterparty?: T;
+  purpose?: T;
+  iban?: T;
+  currency?: T;
+  invoice?: T;
+  matchedAt?: T;
+  source?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -10,6 +10,7 @@ import { fr } from '@payloadcms/translations/languages/fr'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { BankTransactions } from './collections/BankTransactions'
 import { Categories } from './collections/Categories'
 import { Contacts } from './collections/Contacts'
 import { Counters } from './collections/Counters'
@@ -86,6 +87,7 @@ export default buildConfig({
     Quotes,
     Jobs,
     OutgoingInvoices,
+    BankTransactions,
     InventoryItems,
     Stocktakes,
     Counters,

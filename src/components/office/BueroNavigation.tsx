@@ -61,6 +61,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
     titel: 'Geld',
     punkte: [
       { href: '/office/rechnungen', label: 'Rechnungen', recht: 'rechnungen.schreiben' },
+      { href: '/office/zahlungen', label: 'Zahlungseingänge', recht: 'rechnungen.schreiben' },
       { href: '/office/belege', label: 'Belege', recht: 'belege.erfassen' },
       { href: '/office/steuer', label: 'Steuer', recht: 'zahlen.sehen' },
       { href: '/office/partner', label: 'Partner', recht: 'partner.pflegen' },

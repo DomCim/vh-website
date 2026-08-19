@@ -28,6 +28,7 @@ import * as migration_20260819_112326_stripe_ausbau from './20260819_112326_stri
 import * as migration_20260819_113245_zahlplan_am_auftrag from './20260819_113245_zahlplan_am_auftrag';
 import * as migration_20260819_125944_benutzername from './20260819_125944_benutzername';
 import * as migration_20260819_144742_rechnungskauf from './20260819_144742_rechnungskauf';
+import * as migration_20260819_172008_zahlungsabgleich from './20260819_172008_zahlungsabgleich';
 
 export const migrations = [
   {
@@ -178,6 +179,11 @@ export const migrations = [
   {
     up: migration_20260819_144742_rechnungskauf.up,
     down: migration_20260819_144742_rechnungskauf.down,
-    name: '20260819_144742_rechnungskauf'
+    name: '20260819_144742_rechnungskauf',
+  },
+  {
+    up: migration_20260819_172008_zahlungsabgleich.up,
+    down: migration_20260819_172008_zahlungsabgleich.down,
+    name: '20260819_172008_zahlungsabgleich'
   },
 ];
