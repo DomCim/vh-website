@@ -56,6 +56,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/auslastung', label: 'Auslastung', recht: 'auftraege.bearbeiten' },
       { href: '/office/artikel', label: 'Artikel', recht: 'website.pflegen' },
       { href: '/office/inventar', label: 'Inventar', recht: 'inventar.pflegen' },
+      { href: '/office/nachbestellen', label: 'Nachbestellen', recht: 'inventar.pflegen' },
       { href: '/office/inventur', label: 'Inventur', recht: 'inventar.pflegen' },
     ],
   },

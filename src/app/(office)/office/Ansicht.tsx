@@ -298,7 +298,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {knapp.length > 0 && darf('inventar.pflegen') && (
-              <Link href="/office/inventar" className="buero-zeile">
+              <Link href="/office/nachbestellen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {knapp.length} Posten unter Mindestbestand

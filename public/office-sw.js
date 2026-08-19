@@ -68,6 +68,7 @@ const VORRAT = [
   AUSKUNFT,
   '/office/kalender',
   '/office/auslastung',
+  '/office/nachbestellen',
   '/office/nachkalkulation',
   '/office/wiedervorlagen',
   '/office/einstellungen',

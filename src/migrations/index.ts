@@ -37,6 +37,7 @@ import * as migration_20260819_175504_erechnung_plattform from './20260819_17550
 import * as migration_20260819_182142_werkstattwochen from './20260819_182142_werkstattwochen';
 import * as migration_20260819_193745_variantenstueckliste from './20260819_193745_variantenstueckliste';
 import * as migration_20260819_201353_variantendienste_bestandsverlauf from './20260819_201353_variantendienste_bestandsverlauf';
+import * as migration_20260819_202917_nachbestellung from './20260819_202917_nachbestellung';
 
 export const migrations = [
   {
@@ -232,6 +233,11 @@ export const migrations = [
   {
     up: migration_20260819_201353_variantendienste_bestandsverlauf.up,
     down: migration_20260819_201353_variantendienste_bestandsverlauf.down,
-    name: '20260819_201353_variantendienste_bestandsverlauf'
+    name: '20260819_201353_variantendienste_bestandsverlauf',
+  },
+  {
+    up: migration_20260819_202917_nachbestellung.up,
+    down: migration_20260819_202917_nachbestellung.down,
+    name: '20260819_202917_nachbestellung'
   },
 ];

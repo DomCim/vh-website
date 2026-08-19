@@ -57,7 +57,10 @@ export const InventoryItems: CollectionConfig = {
           name: 'minQuantity',
           label: 'Mindestbestand',
           type: 'number',
-          admin: { description: 'Darunter erscheint der Posten in der Übersicht als knapp.' },
+          admin: {
+            description:
+              'Darunter meldet sich das Büro und der Posten steht unter „Nachbestellen".',
+          },
         },
       ],
     },
@@ -90,6 +93,46 @@ export const InventoryItems: CollectionConfig = {
           min: 0,
         },
       ],
+    },
+    {
+      /*
+       * Wie viel nachbestellt wird, wenn es knapp wird.
+       *
+       * Ohne diese Zahl müsste jemand bei jeder Bestellung neu überlegen, und
+       * dabei kommt mal die Rolle und mal der Karton heraus. Steht sie hier,
+       * ist Nachbestellen ein Klick — und die Menge ist die, die zum
+       * Gebindeformat des Lieferanten passt.
+       */
+      name: 'orderQuantity',
+      label: 'Nachbestellmenge',
+      type: 'number',
+      min: 0,
+      admin: {
+        description:
+          'Übliche Bestellmenge, z.B. eine ganze Rolle. Leer heißt: bis auf das Doppelte des Mindestbestands auffüllen.',
+      },
+    },
+    {
+      name: 'supplierRef',
+      label: 'Artikelnummer beim Lieferanten',
+      type: 'text',
+      admin: {
+        description: 'Steht in der Bestellanfrage — damit beim Lieferanten niemand suchen muss.',
+      },
+    },
+    {
+      /*
+       * Wann zuletzt bestellt wurde.
+       *
+       * Verhindert die zweite Bestellung derselben Sache: Zwischen „bestellt"
+       * und „liegt im Regal" vergehen Tage, und in denen steht der Bestand
+       * weiter unter dem Mindestbestand. Ein Zugang im Bestandsverlauf setzt
+       * die Angabe wieder zurück.
+       */
+      name: 'reorderedAt',
+      label: 'Nachbestellt am',
+      type: 'date',
+      admin: { readOnly: true, description: 'Wird beim Verschicken der Anfrage gesetzt.' },
     },
     {
       name: 'supplier',

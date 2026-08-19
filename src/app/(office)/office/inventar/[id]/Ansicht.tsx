@@ -93,6 +93,8 @@ export function PostenAnsicht() {
           quantity: i.quantity as number,
           unit: i.unit as string,
           minQuantity: i.minQuantity as number,
+          orderQuantity: i.orderQuantity as number,
+          supplierRef: i.supplierRef as string,
           unitValue: i.unitValue as number,
           location: i.location as string,
           purchaseDate: i.purchaseDate as string,

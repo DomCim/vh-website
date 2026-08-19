@@ -131,6 +131,14 @@ Bestellposition trägt dafür `variantId`; die Bezeichnung ist übersetzt und
 änderbar und taugt nur als Rückfallweg für Bestellungen von vorher. Dieselbe
 Regel gilt für Arbeitszeit und Fremdleistung der Variante.
 
+**Nachbestellen fragt an, es bestellt nicht.** Die Mail an den Lieferanten
+bittet um Preis und Liefertermin; verbindlich bestellt wird danach von Hand.
+`reorderedAt` am Posten hält fest, dass etwas unterwegs ist — sonst stünde
+dieselbe Anfrage täglich wieder auf der Liste. Ein Zugang im Bestandsverlauf
+(positive Korrektur) setzt den Merker automatisch zurück. Bewusst **keine**
+Bedarfsprognose aus vergangenen Aufträgen: Bei ein paar Stück im Jahr wäre das
+eine Zahl mit erfundener Genauigkeit.
+
 **Der Bestand wird als Veränderung gebucht, nicht gesetzt.** `/api/office/inventar`
 mit `aktion: 'korrektur'` rechnet `delta` auf den Bestand und hängt eine Zeile
 an `movements` — Grund, Zeit, Person, Rest. Das normale Speichern des

@@ -54,6 +54,13 @@ export async function POST(req: Request) {
         overrideAccess: true,
         data: {
           quantity: rest,
+          /*
+           * Ein Zugang heißt: Die Lieferung ist da. Damit ist der Posten nicht
+           * mehr „unterwegs" — sonst bliebe er es für immer, und die
+           * Nachbestellliste verschwiege beim nächsten Mal, dass er wieder
+           * knapp ist.
+           */
+          ...(delta > 0 ? { reorderedAt: null } : {}),
           movements: [
             ...(posten.movements ?? []),
             {
@@ -78,6 +85,8 @@ export async function POST(req: Request) {
       quantity: Number(b.quantity) || 0,
       unit: b.unit || 'Stück',
       minQuantity: b.minQuantity ?? undefined,
+      orderQuantity: b.orderQuantity ?? undefined,
+      supplierRef: b.supplierRef || undefined,
       unitValue: b.unitValue ?? undefined,
       location: b.location || undefined,
       purchaseDate: b.purchaseDate || undefined,

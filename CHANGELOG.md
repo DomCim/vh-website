@@ -2,6 +2,14 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Nachbestellen: vom Mindestbestand zur Anfrage
+
+- **Der Mindestbestand wurde bisher nur angezeigt.** Der Schritt danach fing wieder bei null an: Wer liefert das, wie war die Artikelnummer, wie viel nehmen wir? Neu unter **Werkstatt → Nachbestellen**: alles Knappe, nach Lieferant sortiert, mit Bestand, Mindestbestand, Fehlmenge und einem Vorschlag für die Bestellmenge.
+- **Ein Knopf schickt die Anfrage raus** — an die E-Mail-Adresse des Lieferanten, im Briefbogen des Hauses, mit Mengen und Artikelnummern. Bewusst eine *Anfrage* nach Preis und Liefertermin und keine Bestellung: Beides steht noch nicht fest, und eine Bestellung mit falschem Preis ist eine Reklamation in spe. Wer beim Lieferanten anruft oder in dessen Portal bestellt, drückt stattdessen „Anderswo bestellt — nur vermerken".
+- **Was bestellt ist, steht unter „Unterwegs"** und nicht mehr auf der Liste. Zwischen „bestellt" und „liegt im Regal" vergehen Tage, in denen der Bestand weiter unter dem Mindestbestand steht — ohne diesen Merker stünde dieselbe Anfrage jeden Morgen wieder da, und irgendwann läge alles doppelt im Lager. Sobald die Lieferung als „Dazubekommen" gebucht wird, verschwindet der Eintrag von selbst.
+- **Das Büro meldet sich, wenn etwas knapp wird** — einmal am Tag, alle Posten in einer Meldung, mit dem Weg direkt auf die Nachbestellliste. Was schon bestellt ist, zählt dabei nicht mit.
+- Am Posten stehen dafür zwei neue Angaben: die **übliche Bestellmenge** (leer heißt: auf das Doppelte des Mindestbestands auffüllen) und die **Artikelnummer beim Lieferanten**, damit dort niemand suchen muss.
+
 ## 19.08.2026 — Fremdleistung je Variante, Bestand korrigierbar
 
 - **Auch die Fremdleistung hängt jetzt an der Variante.** Verzinken wird nach Gewicht abgerechnet, Beschichten nach Fläche — ein großes Stück kostet dort mehr Farbe und mehr Geld. Mit einem gemeinsamen Preis rechnete die Kalkulation das kleine Stück zu teuer und das große zu billig, und ausgerechnet beim großen fällt es ins Gewicht. Im Büro steht das unter demselben Umschalter wie die Stückliste: Grundlage, dann jede Variante; ohne eigene Angabe gilt weiter die Grundlage.

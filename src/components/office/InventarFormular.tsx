@@ -13,6 +13,8 @@ export type InventarWerte = {
   quantity?: number | null
   unit?: string | null
   minQuantity?: number | null
+  orderQuantity?: number | null
+  supplierRef?: string | null
   unitValue?: number | null
   location?: string | null
   purchaseDate?: string | null
@@ -124,6 +126,33 @@ export function InventarFormular({
             inputMode="decimal"
             value={w.minQuantity ?? ''}
             onChange={(e) => setzen({ minQuantity: Number(e.target.value) || 0 })}
+          />
+          <span style={{ marginTop: '.4rem' }}>
+            Darunter meldet sich das Büro und der Posten steht unter „Nachbestellen“.
+          </span>
+        </label>
+      </div>
+
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Nachbestellmenge</span>
+          <input
+            inputMode="decimal"
+            value={w.orderQuantity ?? ''}
+            onChange={(e) => setzen({ orderQuantity: Number(e.target.value) || 0 })}
+            placeholder="z.B. 100"
+          />
+          <span style={{ marginTop: '.4rem' }}>
+            Übliche Bestellmenge, z.B. eine ganze Rolle. Leer heißt: auf das Doppelte des
+            Mindestbestands auffüllen.
+          </span>
+        </label>
+        <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
+          <span>Artikelnummer beim Lieferanten</span>
+          <input
+            value={w.supplierRef ?? ''}
+            onChange={(e) => setzen({ supplierRef: e.target.value })}
+            placeholder="steht in der Bestellanfrage"
           />
         </label>
       </div>

@@ -278,6 +278,52 @@ export async function offeneRechnungenMelden(payload: Payload): Promise<number> 
 }
 
 /**
+ * Was unter den Mindestbestand gerutscht ist.
+ *
+ * Eine Meldung für alle zusammen, nicht eine je Posten: Nachbestellt wird
+ * ohnehin in einem Zug, und drei Meldungen hintereinander wischt man weg,
+ * ohne die dritte gelesen zu haben.
+ *
+ * Was schon bestellt ist, zählt nicht mit. Zwischen „bestellt" und „liegt im
+ * Regal" vergehen Tage, und in denen stünde sonst jeden Morgen dieselbe
+ * Meldung — bis niemand mehr hinsieht.
+ */
+export async function bestandMelden(payload: Payload): Promise<number> {
+  const { docs } = await payload.find({
+    collection: 'inventory-items',
+    where: { minQuantity: { greater_than: 0 } },
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const knapp = (docs as Record<string, any>[]).filter(
+    (p) => (p.quantity ?? 0) < (p.minQuantity ?? 0) && !p.reorderedAt,
+  )
+  if (!knapp.length) return 0
+
+  // Höchstens einmal am Tag — der Takt klopft viermal in der Stunde
+  const zustand = await zustandLesen(payload, 'bestand')
+  const heute = tagesStempel(new Date())
+  if (zustand?.lastRun && tagesStempel(new Date(zustand.lastRun)) >= heute) return 0
+
+  const namen = knapp
+    .slice(0, 3)
+    .map((p) => p.name)
+    .join(', ')
+
+  await benachrichtige(payload, {
+    titel: `${knapp.length} ${knapp.length === 1 ? 'Posten' : 'Posten'} unter Mindestbestand`,
+    text: `${namen}${knapp.length > 3 ? ' …' : ''} — Anfrage geht mit einem Klick raus.`,
+    url: '/office/nachbestellen',
+    tag: 'bestand-knapp',
+  })
+
+  await zustandMerken(payload, 'bestand', { ok: true, note: `${knapp.length} knapp` })
+  return knapp.length
+}
+
+/**
  * Fällige Wiedervorlagen melden.
  *
  * Der Unterschied zu allem anderen hier: Diese Erinnerung hat sich jemand
@@ -527,6 +573,7 @@ export type WartungsBericht = {
   belege: number
   angebote: number
   rechnungen: number
+  bestand: number
   wiedervorlagen: number
   kundenstimmen: number
   aufgeraeumt: Record<string, number>
@@ -540,6 +587,7 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     belege: 0,
     angebote: 0,
     rechnungen: 0,
+    bestand: 0,
     wiedervorlagen: 0,
     kundenstimmen: 0,
     aufgeraeumt: {},
@@ -568,6 +616,12 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     bericht.rechnungen = await offeneRechnungenMelden(payload)
   } catch (err) {
     payload.logger.error({ err }, 'Wartung: offene Rechnungen fehlgeschlagen')
+  }
+
+  try {
+    bericht.bestand = await bestandMelden(payload)
+  } catch (err) {
+    payload.logger.error({ err }, 'Wartung: Bestandsmeldung fehlgeschlagen')
   }
 
   try {

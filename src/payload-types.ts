@@ -427,7 +427,7 @@ export interface InventoryItem {
   quantity: number;
   unit?: string | null;
   /**
-   * Darunter erscheint der Posten in der Übersicht als knapp.
+   * Darunter meldet sich das Büro und der Posten steht unter „Nachbestellen".
    */
   minQuantity?: number | null;
   /**
@@ -440,6 +440,18 @@ export interface InventoryItem {
    */
   purchaseDate?: string | null;
   purchaseValue?: number | null;
+  /**
+   * Übliche Bestellmenge, z.B. eine ganze Rolle. Leer heißt: bis auf das Doppelte des Mindestbestands auffüllen.
+   */
+  orderQuantity?: number | null;
+  /**
+   * Steht in der Bestellanfrage — damit beim Lieferanten niemand suchen muss.
+   */
+  supplierRef?: string | null;
+  /**
+   * Wird beim Verschicken der Anfrage gesetzt.
+   */
+  reorderedAt?: string | null;
   supplier?: (number | null) | Contact;
   /**
    * Nur bei fertigen Stücken, die im Shop stehen.
@@ -2170,6 +2182,9 @@ export interface InventoryItemsSelect<T extends boolean = true> {
   location?: T;
   purchaseDate?: T;
   purchaseValue?: T;
+  orderQuantity?: T;
+  supplierRef?: T;
+  reorderedAt?: T;
   supplier?: T;
   product?: T;
   movements?:
