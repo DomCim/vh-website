@@ -31,6 +31,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Von Hand angestoßen wird die Fassung gebaut, die in package.json steht.
+      # Damit lässt sich ein bestimmter Stand veröffentlichen, ohne ihn vorher
+      # auf main zu bringen und ohne einen Tag zu setzen — was etwa dann zählt,
+      # wenn die Nummer nachher in den Portainer-Stack getippt wird.
+      - name: Fassung aus package.json lesen
+        id: fassung
+        run: echo "nummer=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Image-Metadaten (Tags & Labels)
         id: meta
         uses: docker/metadata-action@v5
@@ -40,6 +48,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=semver,pattern={{version}}
+            type=raw,value=${{ steps.fassung.outputs.nummer }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=sha,format=short
 
       - name: Bauen & pushen

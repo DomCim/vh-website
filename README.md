@@ -106,7 +106,12 @@ Es gibt zwei Wege, und sie unterscheiden sich genau in einem Punkt — ob es von
 
 Der Stack zieht `ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}`. Ohne die Variable also `latest` — den Stand von `main`, der sich nach jedem Push von selbst ausrollt.
 
-Wer einen bestimmten Stand fahren will, bevor er auf `main` geht: Tag setzen (`git tag v1.2.3 && git push origin v1.2.3`), warten bis das Abbild gebaut ist, dann im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
+Wer einen bestimmten Stand fahren will, bevor er auf `main` geht, hat zwei Möglichkeiten:
+
+- **Tag setzen:** `git tag v1.2.3 && git push origin v1.2.3`
+- **Von Hand anstoßen:** Im Repository unter **Actions → „Docker-Image bauen & veröffentlichen" → Run workflow**, den gewünschten Branch wählen. Gebaut wird dann die Nummer, die in `package.json` steht — dasselbe Ergebnis ohne Tag.
+
+Danach im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
 
 Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurückzugehen, nachdem eine neue die Datenbank verändert hat, geht nur über das Einspielen einer Sicherung.
 
