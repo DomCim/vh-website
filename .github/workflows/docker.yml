@@ -5,6 +5,12 @@ on:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      ausrollen:
+        description: 'Nach dem Bauen ausrollen? (greift nur auf main)'
+        type: choice
+        options: ['ja', 'nein']
+        default: 'ja'
 
 env:
   REGISTRY: ghcr.io
@@ -67,8 +73,18 @@ jobs:
       # deshalb einen Cloud-Webhook von Home Assistant auf; der löst drinnen
       # das Neu-Ausrollen aus. Ohne hinterlegte Secrets wird der Schritt
       # übersprungen, der Build bleibt also auch ohne sie grün.
+      # Zwei Bremsen, weil es zwei Fälle gibt.
+      #
+      # Von Hand angestoßen: das Auswahlfeld oben. Beim Merge nach main lässt
+      # sich dagegen nichts mitgeben — dort steht die Bremse im Text des
+      # Commits. Wer `[kein-ausrollen]` in die Merge-Nachricht schreibt, baut
+      # `latest`, ohne dass es gleich live geht; ausgerollt wird dann später
+      # von Hand über den Portainer-Stack.
       - name: Ausrollen anstoßen (über Home Assistant)
-        if: github.ref == 'refs/heads/main'
+        if: >-
+          github.ref == 'refs/heads/main'
+          && inputs.ausrollen != 'nein'
+          && !contains(github.event.head_commit.message, '[kein-ausrollen]')
         env:
           HA_DEPLOY_WEBHOOK: ${{ secrets.HA_DEPLOY_WEBHOOK }}
           HA_DEPLOY_TOKEN: ${{ secrets.HA_DEPLOY_TOKEN }}

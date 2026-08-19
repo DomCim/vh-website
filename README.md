@@ -113,6 +113,15 @@ Wer einen bestimmten Stand fahren will, bevor er auf `main` geht, hat zwei Mögl
 
 Danach im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
 
+### Bauen, ohne auszurollen
+
+Manchmal soll der neue Stand ins Regal, aber noch nicht in den Betrieb. Dafür gibt es zwei Bremsen, je nachdem, wie der Lauf ausgelöst wurde:
+
+- **Von Hand:** Beim „Run workflow" steht ein Auswahlfeld *Nach dem Bauen ausrollen?* — auf `nein` stellen.
+- **Beim Merge nach `main`:** Dort lässt sich nichts mitgeben, also steht die Bremse im Text des Commits. Wer **`[kein-ausrollen]`** in die Merge-Nachricht schreibt, baut `latest`, ohne dass es gleich live geht.
+
+In beiden Fällen liegt das Abbild danach in der Registry und wartet. Ausgerollt wird es, wenn du im Portainer-Stack „Re-pull image & redeploy" drückst.
+
 Wichtig dabei: **Migrationen laufen vorwärts.** Auf eine ältere Fassung zurückzugehen, nachdem eine neue die Datenbank verändert hat, geht nur über das Einspielen einer Sicherung.
 
 ## Stripe einrichten
