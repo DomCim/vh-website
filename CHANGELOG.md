@@ -2,6 +2,13 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Das Kundenportal
+
+- **Kundschaft sieht jetzt ihre Vorgänge selbst.** Unter „Meine Bestellungen" stehen nach der Anmeldung per E-Mail-Code nicht mehr nur Shop-Bestellungen, sondern auch die Aufträge aus dem Projektgeschäft — mit Stand („in Fertigung"), Fertigstellungstermin, Auftragswert und dem, was davon schon bezahlt ist. Rechnungen lassen sich als PDF herunterladen, samt GiroCode. Laufendes steht oben, Abgeschlossenes gesammelt darunter — wer nachschauen will, was er vor zwei Jahren bestellt hat, findet es trotzdem.
+- **Der Satz, wegen dem es das Portal gibt:** „Ihre Anzahlung steht noch aus. Die Fertigung beginnt, sobald die Zahlung eingegangen ist." Genau deswegen rufen Leute an — jetzt steht die Antwort da, bevor die Frage kommt. Freundlich formuliert: Das ist keine Mahnung, die geht ihren eigenen Weg.
+- **Wem was gehört, entscheidet eine einzige Datei** (`lib/portalDaten.ts`) — für die Seite genauso wie für den PDF-Abruf. Entwürfe und alles Interne (Kosten, Material, Zeiten, Notizen) bleiben draußen; eine fremde Rechnungsnummer antwortet mit „nicht gefunden", nicht mit „nicht erlaubt". Auch Projektkunden ohne Shop-Bestellung bekommen jetzt einen Anmeldecode — vorher stand genau diese Kundschaft vor einer Tür, die es für sie nicht gab.
+- **Dabei einen stillen Fehler gefunden, der alle PDF-Routen betraf:** PDFKit suchte seine eingebauten Schriftmaße im Next-Bundle und fand sie nicht — jede über die Website ausgelieferte Rechnung wäre ein leerer 404 gewesen, obwohl dieselbe Funktion in Skripten lief. PDFKit bleibt jetzt außerhalb des Bundles.
+
 ## 19.08.2026 — Rollen, und eine Navigation, die man wiederfindet
 
 - **Rollen lassen sich jetzt im Büro anlegen.** Unter Einstellungen → Benutzer stehen alle Rollen mit ihren Rechten zum Anhaken; eine neue Rolle darf zunächst nur das Büro öffnen, alles Weitere wird bewusst dazugegeben. Bisher gab es dafür nur „Inhaber" und „Redaktion" — wer eine Werkstattrolle ohne Umsätze wollte, hätte ins Admin-Panel wechseln müssen und wusste das nicht. Die Inhaberrolle bleibt unangetastet: Sie darf alles, weil sie an ihrem Schlüssel erkannt wird — das ist der Weg zurück, falls sich jemand beim Umbauen aussperrt.

@@ -88,6 +88,17 @@ const nextConfig = {
   // Verrät nicht mehr, womit die Seite gebaut ist
   poweredByHeader: false,
   /**
+   * PDFKit bleibt außerhalb des Next-Bundles.
+   *
+   * Gebündelt sucht es seine eingebauten Schriftmaße (Helvetica.afm) relativ
+   * zum Bundle-Verzeichnis und findet sie nicht — jede PDF-Route antwortete
+   * dann mit einem stillen Fehler, obwohl dieselbe Funktion in Skripten
+   * einwandfrei lief. Aufgefallen ist das erst, als das Kundenportal seine
+   * erste Rechnung ausliefern sollte. Als externes Paket lädt PDFKit aus
+   * node_modules, wo die Dateien liegen; das Abbild kopiert node_modules mit.
+   */
+  serverExternalPackages: ['pdfkit'],
+  /**
    * Im Büro-Abbild liegen die Skripte und Stile unter `/office/_next/…`.
    *
    * Seit Website und Büro getrennt gebaut werden, hat jedes seine eigenen

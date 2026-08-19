@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../lib/data'
 import { codeAnlegen, codeEinloesen, sitzungErzeugen, SITZUNGS_COOKIE } from '../../../../lib/kundenportal'
+import { hatVorgaenge } from '../../../../lib/portalDaten'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import { sendMail } from '../../../../lib/sendMail'
 
@@ -36,13 +37,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'zu-viele-anfragen' }, { status: 429 })
       }
 
-      const { totalDocs } = await payload.count({
-        collection: 'orders',
-        where: { 'customer.email': { equals: email } },
-        overrideAccess: true,
-      })
-
-      if (totalDocs > 0) {
+      /*
+       * Nicht nur Bestellungen: Ein Kunde aus dem Projektgeschäft hat nie im
+       * Shop bestellt — er hat einen Auftrag und Rechnungen. Vorher bekam
+       * genau der keinen Code und stand vor einer Tür, die es für ihn gar
+       * nicht gab.
+       */
+      if (await hatVorgaenge(payload, email)) {
         const code = await codeAnlegen(payload, email)
         await sendMail(payload, {
           to: email,
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
           html: `
             <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:520px">
               <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-              <p>Ihr Anmeldecode für die Bestellübersicht:</p>
+              <p>Ihr Anmeldecode für Ihre Übersicht:</p>
               <p style="font-size:30px;letter-spacing:8px;font-weight:bold;margin:18px 0">${code}</p>
               <p style="color:#666;font-size:13px">Der Code gilt 10 Minuten. Wenn Sie ihn nicht angefordert
               haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.</p>
