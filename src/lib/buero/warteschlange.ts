@@ -371,6 +371,22 @@ export async function verwerfen(nummer: number): Promise<void> {
   await zaehlenUndMelden()
 }
 
+/** Nimmt einen abgelehnten Eintrag noch einmal in die Reihe. */
+export async function nochmalVersuchen(nummer: number): Promise<void> {
+  const alle = await alleWartend()
+  const eintrag = alle.find((e) => e.nummer === nummer)
+  if (!eintrag) return
+  eintrag.fehler = null
+  await ablegen(eintrag)
+  await zaehlenUndMelden()
+  void abarbeiten()
+}
+
+/** Was liegen geblieben ist — für die Anzeige im Büro. */
+export async function haengengebliebene(): Promise<Wartend[]> {
+  return (await alleWartend()).filter((e) => e.fehler)
+}
+
 /** Beim Start einmal nachzählen, damit die Anzeige stimmt. */
 export async function warteschlangeLaden(): Promise<void> {
   await zaehlenUndMelden().catch(() => undefined)

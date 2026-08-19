@@ -149,4 +149,54 @@ test.describe('Schreiben ohne Netz', () => {
       )
       .toBe(true)
   })
+
+  test('was der Server abweist, bleibt liegen und lässt sich verwerfen', async ({ page }) => {
+    await page.goto('/office/login')
+    await page.waitForLoadState('networkidle')
+    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[type="password"]', PASSWORT!)
+    await page.locator('form button[type="submit"]').first().click()
+    await page.waitForURL(/\/office$/, { timeout: 30_000 })
+
+    await page.goto('/office/einstellungen?teil=geraet')
+    await page.waitForLoadState('networkidle')
+
+    /*
+     * Ein Eintrag, den der Server nicht annehmen kann — ein Partner ohne
+     * Namen. Über das Formular ginge das nicht, das fängt es vorher ab; hier
+     * wird er direkt in die Schlange gelegt, so wie er dort läge, wenn eine
+     * ältere Fassung der App ihn eingereiht hätte.
+     */
+    await page.evaluate(
+      () =>
+        new Promise<void>((fertig) => {
+          const anfrage = indexedDB.open('vh-buero')
+          anfrage.onsuccess = () => {
+            const vorgang = anfrage.result.transaction('warteschlange', 'readwrite')
+            vorgang.objectStore('warteschlange').put({
+              pfad: '/api/office/partner',
+              bereich: 'partner',
+              koerper: {},
+              versuche: 0,
+              zeit: Date.now(),
+            })
+            vorgang.oncomplete = () => fertig()
+            vorgang.onerror = () => fertig()
+          }
+          anfrage.onerror = () => fertig()
+        }),
+    )
+
+    // Beim nächsten Öffnen nimmt sich die Schlange den Eintrag vor
+    await page.reload()
+
+    // Er wird nicht endlos wiederholt und nicht heimlich weggeworfen
+    await expect(page.getByText('Nicht angekommen')).toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('.buero-abgleich')).toContainText('abgelehnt', { timeout: 20_000 })
+
+    // Verwerfen räumt ihn weg
+    page.once('dialog', (d) => d.accept())
+    await page.getByRole('button', { name: 'verwerfen' }).first().click()
+    await expect(page.getByText('Nicht angekommen')).toBeHidden({ timeout: 20_000 })
+  })
 })

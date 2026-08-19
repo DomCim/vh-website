@@ -7,6 +7,7 @@ import React from 'react'
 import { Benachrichtigungen } from '../../../../components/office/Benachrichtigungen'
 import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwaltung'
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
+import { Haengengebliebenes } from '../../../../components/office/Haengengebliebenes'
 import { MeinKonto } from '../../../../components/office/MeinKonto'
 import { useRahmen } from '../../../../lib/buero/bestand'
 
@@ -59,7 +60,12 @@ export function EinstellungenAnsicht() {
         ))}
       </div>
 
-      {teil === 'geraet' && <Benachrichtigungen />}
+      {teil === 'geraet' && (
+        <>
+          <Benachrichtigungen />
+          <Haengengebliebenes />
+        </>
+      )}
 
       {teil === 'konto' && <MeinKonto />}
 
