@@ -3,11 +3,17 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { AngebotAnnehmen } from '../../../../components/shop/AngebotAnnehmen'
 import { KontoAnmeldung } from '../../../../components/shop/KontoAnmeldung'
 import { payloadClient } from '../../../../lib/data'
 import { formatPrice, isLocale, t, type Locale } from '../../../../lib/i18n'
 import { SITZUNGS_COOKIE, sitzungLesen } from '../../../../lib/kundenportal'
-import { vorgaenge, type PortalAuftrag, type PortalRechnung } from '../../../../lib/portalDaten'
+import {
+  vorgaenge,
+  type PortalAngebot,
+  type PortalAuftrag,
+  type PortalRechnung,
+} from '../../../../lib/portalDaten'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,7 +66,7 @@ async function Uebersicht({
   dict: ReturnType<typeof t>
 }) {
   const payload = await payloadClient()
-  const { bestellungen, auftraege, rechnungen } = await vorgaenge(payload, email)
+  const { bestellungen, auftraege, rechnungen, angebote } = await vorgaenge(payload, email)
   const k = dict.account
 
   /*
@@ -89,7 +95,13 @@ async function Uebersicht({
   const tag = (wert?: string | null) =>
     wert ? new Date(wert).toLocaleDateString(locale) : ''
 
-  const leer = !bestellungen.length && !auftraege.length && !rechnungen.length
+  // Offene Angebote zuerst — das ist das Einzige auf dieser Seite, wo etwas
+  // von der Kundschaft erwartet wird
+  const offeneAngebote = angebote.filter((a) => a.status === 'versendet')
+  const alteAngebote = angebote.filter((a) => a.status !== 'versendet')
+
+  const leer =
+    !bestellungen.length && !auftraege.length && !rechnungen.length && !angebote.length
 
   return (
     <>
@@ -97,12 +109,36 @@ async function Uebersicht({
 
       {leer && <p className="text-ink-soft mt-8">{k.nothing}</p>}
 
+      {offeneAngebote.length > 0 && (
+        <>
+          <h2 className={ueberschrift}>{k.quotes}</h2>
+          <ul className="divide-line divide-y border-y">
+            {offeneAngebote.map((a) => (
+              <AngebotsZeile key={a.id} angebot={a} locale={locale} dict={dict} />
+            ))}
+          </ul>
+        </>
+      )}
+
       {laufendeAuftraege.length > 0 && (
         <>
           <h2 className={ueberschrift}>{k.jobs}</h2>
           <ul className="divide-line divide-y border-y">
             {laufendeAuftraege.map((a) => (
               <AuftragsZeile key={a.id} auftrag={a} locale={locale} dict={dict} />
+            ))}
+          </ul>
+        </>
+      )}
+
+      {alteAngebote.length > 0 && (
+        <>
+          <h2 className={ueberschrift}>
+            {k.quotes} · {k.finished}
+          </h2>
+          <ul className="divide-line divide-y border-y">
+            {alteAngebote.map((a) => (
+              <AngebotsZeile key={a.id} angebot={a} locale={locale} dict={dict} />
             ))}
           </ul>
         </>
@@ -256,6 +292,65 @@ function AuftragsZeile({
           )}
         </p>
       )}
+    </li>
+  )
+}
+
+function AngebotsZeile({
+  angebot,
+  locale,
+  dict,
+}: {
+  angebot: PortalAngebot
+  locale: Locale
+  dict: ReturnType<typeof t>
+}) {
+  const k = dict.account
+  const abgelaufen = !angebot.annehmbar && angebot.status === 'versendet'
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-3 py-4">
+      <div>
+        <p className="text-sm font-semibold">
+          {k.quoteNumber} {angebot.nummer}
+          {angebot.titel ? ` · ${angebot.titel}` : ''}
+        </p>
+        <p className="text-ink-soft text-xs">
+          {angebot.status === 'angenommen'
+            ? `${k.acceptedOn} ${angebot.angenommenAm ? new Date(angebot.angenommenAm).toLocaleDateString(locale) : ''}`
+            : angebot.status === 'abgelehnt'
+              ? k.quoteDeclined
+              : abgelaufen
+                ? k.expired
+                : angebot.gueltigBis
+                  ? `${k.validUntil} ${new Date(angebot.gueltigBis).toLocaleDateString(locale)}`
+                  : ''}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="text-sm">{formatPrice(angebot.betrag, locale)}</span>
+        <a
+          href={`/api/konto/angebot/${angebot.id}/pdf`}
+          target="_blank"
+          rel="noreferrer"
+          className="tracking-nav hover:text-bronze text-xs font-semibold uppercase underline transition-colors"
+        >
+          {k.viewQuote}
+        </a>
+        {angebot.annehmbar && (
+          <AngebotAnnehmen
+            id={angebot.id}
+            labels={{
+              acceptQuote: k.acceptQuote,
+              acceptName: k.acceptName,
+              acceptHint: k.acceptHint,
+              accepting: k.accepting,
+              acceptedNow: k.acceptedNow,
+              acceptError: k.acceptError,
+            }}
+          />
+        )}
+      </div>
     </li>
   )
 }

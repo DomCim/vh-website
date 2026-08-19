@@ -230,6 +230,45 @@ export const Quotes: CollectionConfig = {
       ],
     },
     {
+      /*
+       * Die Annahme — und wie sie zustande kam.
+       *
+       * Ein Angebot wird meist am Telefon angenommen, und danach steht im
+       * Büro nur noch ein Status. Wer später fragt „wann haben Sie
+       * zugestimmt?", bekommt keine Antwort. Nimmt die Kundschaft im Portal
+       * an, ist die Frage beantwortet: Zeitpunkt, Name und der Weg stehen
+       * am Angebot.
+       *
+       * Deshalb auch `acceptedVia`: „telefonisch" ist eine ehrliche Angabe,
+       * „im Portal angenommen" ist ein Beleg. Beides gehört unterschieden.
+       */
+      type: 'row',
+      fields: [
+        {
+          name: 'acceptedAt',
+          label: 'Angenommen am',
+          type: 'date',
+          admin: { readOnly: true, description: 'Wird beim Annehmen gesetzt.' },
+        },
+        {
+          name: 'acceptedVia',
+          label: 'Angenommen über',
+          type: 'select',
+          options: [
+            { label: 'Kundenportal', value: 'portal' },
+            { label: 'Im Büro erfasst', value: 'buero' },
+          ],
+          admin: { readOnly: true },
+        },
+        {
+          name: 'acceptedName',
+          label: 'Angenommen von',
+          type: 'text',
+          admin: { readOnly: true, description: 'Der Name, den die Kundschaft dabei angegeben hat.' },
+        },
+      ],
+    },
+    {
       name: 'productionTime',
       label: 'Zugesagte Fertigungszeit',
       type: 'text',

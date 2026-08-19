@@ -55,6 +55,19 @@ export type PortalRechnung = {
   auftrag?: string | null
 }
 
+export type PortalAngebot = {
+  id: number | string
+  nummer: string
+  titel: string
+  status: string
+  datum?: string | null
+  gueltigBis?: string | null
+  betrag: number
+  /** Kann die Kundschaft es jetzt annehmen? */
+  annehmbar: boolean
+  angenommenAm?: string | null
+}
+
 export type PortalBestellung = {
   id: number | string
   nummer: string
@@ -102,7 +115,23 @@ export async function hatVorgaenge(payload: Payload, email: string): Promise<boo
     where: { and: [{ customer: { in: ids } }, { status: { in: ['gestellt', 'bezahlt'] } }] },
     overrideAccess: true,
   })
-  return rechnungen.totalDocs > 0
+  if (rechnungen.totalDocs > 0) return true
+
+  /*
+   * Auch ein verschicktes Angebot ist ein Vorgang.
+   *
+   * Wer eines bekommen hat, hat noch nichts gekauft — und stand deshalb vor
+   * einer Tür, die es für ihn nicht gab. Dabei ist genau er derjenige, der
+   * sich anmelden soll: um das Angebot anzusehen und anzunehmen.
+   */
+  const angebote = await payload.count({
+    collection: 'quotes',
+    where: {
+      and: [{ customer: { in: ids } }, { status: { in: ['versendet', 'angenommen'] } }],
+    },
+    overrideAccess: true,
+  })
+  return angebote.totalDocs > 0
 }
 
 /**
@@ -120,6 +149,7 @@ export async function vorgaenge(
   bestellungen: PortalBestellung[]
   auftraege: PortalAuftrag[]
   rechnungen: PortalRechnung[]
+  angebote: PortalAngebot[]
 }> {
   const ids = await kontaktIds(payload, email)
 
@@ -160,6 +190,27 @@ export async function vorgaenge(
         collection: 'outgoing-invoices',
         where: {
           and: [{ or: rechnungsFilter }, { status: { in: ['gestellt', 'bezahlt'] } }],
+        },
+        sort: '-issueDate',
+        limit: 50,
+        depth: 0,
+        overrideAccess: true,
+      })
+    : { docs: [] }
+
+  /*
+   * Angebote hängen nur am Geschäftspartner — anders als Rechnungen gibt es
+   * keinen zweiten Weg über den Auftrag. Entwürfe bleiben draußen, wie überall
+   * hier: Ein Entwurf ist eine interne Überlegung und noch kein Angebot.
+   */
+  const { docs: angebote } = ids.length
+    ? await payload.find({
+        collection: 'quotes',
+        where: {
+          and: [
+            { customer: { in: ids } },
+            { status: { in: ['versendet', 'angenommen', 'abgelehnt'] } },
+          ],
         },
         sort: '-issueDate',
         limit: 50,
@@ -218,6 +269,23 @@ export async function vorgaenge(
       }
     }),
 
+    angebote: angebote.map((a) => {
+      // Abgelaufen heißt nicht ungültig — aber annehmen soll man es nicht mehr
+      // per Knopf, sonst entstünde ein Auftrag zu Preisen von vorletztem Jahr.
+      const abgelaufen = Boolean(a.validUntil && new Date(a.validUntil).getTime() < Date.now())
+      return {
+        id: a.id,
+        nummer: a.quoteNumber ?? '',
+        titel: a.title ?? '',
+        status: a.status ?? 'versendet',
+        datum: a.issueDate,
+        gueltigBis: a.validUntil,
+        betrag: Number(a.total) || 0,
+        annehmbar: a.status === 'versendet' && !abgelaufen,
+        angenommenAm: a.acceptedAt,
+      }
+    }),
+
     rechnungen: rechnungen.map((r) => {
       const id = typeof r.auftrag === 'object' ? (r.auftrag as { id?: number })?.id : r.auftrag
       return {
@@ -242,6 +310,15 @@ export async function vorgaenge(
  * an der die beiden irgendwann auseinanderlaufen — und dann liegt eine
  * fremde Rechnung hinter einer Nummer, die jemand durchprobiert.
  */
+export async function darfAngebotSehen(
+  payload: Payload,
+  email: string,
+  angebotId: string | number,
+): Promise<boolean> {
+  const meine = await vorgaenge(payload, email)
+  return meine.angebote.some((a) => String(a.id) === String(angebotId))
+}
+
 export async function darfRechnungSehen(
   payload: Payload,
   email: string,

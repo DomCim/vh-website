@@ -119,11 +119,11 @@ const de = {
   account: {
     title: 'Meine Bestellungen',
     intro:
-      'Geben Sie die E-Mail-Adresse ein, mit der Sie bestellt haben. Sie erhalten einen sechsstelligen Code per E-Mail, den Sie hier eintragen.',
+      'Geben Sie die E-Mail-Adresse ein, unter der wir Sie kennen — aus einer Bestellung oder einem Angebot. Sie erhalten einen sechsstelligen Code per E-Mail, den Sie hier eintragen.',
     email: 'E-Mail-Adresse',
     requestCode: 'Code anfordern',
     codeSent:
-      'Falls zu dieser Adresse Bestellungen vorliegen, ist der Code unterwegs. Er gilt 10 Minuten.',
+      'Falls zu dieser Adresse Vorgänge vorliegen, ist der Code unterwegs. Er gilt 10 Minuten.',
     code: 'Sechsstelliger Code',
     signIn: 'Anmelden',
     signOut: 'Abmelden',
@@ -166,6 +166,20 @@ const de = {
       abgebrochen: 'abgebrochen',
     },
     finished: 'Abgeschlossen',
+    quotes: 'Angebote',
+    quoteNumber: 'Angebot',
+    validUntil: 'gültig bis',
+    expired: 'abgelaufen',
+    viewQuote: 'Angebot ansehen',
+    acceptQuote: 'Angebot annehmen',
+    acceptName: 'Ihr Name',
+    acceptHint:
+      'Mit dem Annehmen beauftragen Sie die Fertigung zu den Bedingungen des Angebots. Wir melden uns danach mit dem Termin.',
+    accepting: 'wird gesendet …',
+    acceptedOn: 'angenommen am',
+    acceptedNow: 'Danke — wir haben Ihre Zusage. Der Termin kommt in den nächsten Tagen.',
+    quoteDeclined: 'abgelehnt',
+    acceptError: 'Das hat nicht geklappt. Bitte erneut versuchen oder kurz anrufen.',
   },
   orderStatus: {
     title: 'Ihre Bestellung',
@@ -431,11 +445,11 @@ const fr: Dictionary = {
   account: {
     title: 'Mes commandes',
     intro:
-      "Saisissez l'adresse e-mail utilisée pour votre commande. Vous recevrez un code à six chiffres par e-mail, à saisir ici.",
+      "Saisissez l'adresse e-mail sous laquelle nous vous connaissons — commande ou devis. Vous recevrez un code à six chiffres par e-mail, à saisir ici.",
     email: 'Adresse e-mail',
     requestCode: 'Demander un code',
     codeSent:
-      "Si des commandes existent pour cette adresse, le code est en route. Il est valable 10 minutes.",
+      "Si des dossiers existent pour cette adresse, le code est en route. Il est valable 10 minutes.",
     code: 'Code à six chiffres',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
@@ -478,6 +492,20 @@ const fr: Dictionary = {
       abgebrochen: 'annulée',
     },
     finished: 'Terminé',
+    quotes: 'Devis',
+    quoteNumber: 'Devis',
+    validUntil: "valable jusqu'au",
+    expired: 'expiré',
+    viewQuote: 'Voir le devis',
+    acceptQuote: 'Accepter le devis',
+    acceptName: 'Votre nom',
+    acceptHint:
+      'En acceptant, vous commandez la fabrication aux conditions du devis. Nous revenons ensuite vers vous avec la date.',
+    accepting: 'envoi en cours …',
+    acceptedOn: 'accepté le',
+    acceptedNow: 'Merci — nous avons votre accord. La date vous parvient dans les prochains jours.',
+    quoteDeclined: 'refusé',
+    acceptError: "Cela n'a pas fonctionné. Merci de réessayer ou de nous appeler.",
   },
   orderStatus: {
     title: 'Votre commande',
@@ -740,10 +768,11 @@ const en: Dictionary = {
   account: {
     title: 'My orders',
     intro:
-      'Enter the email address you ordered with. You will receive a six-digit code by email to enter here.',
+      'Enter the email address we know you by — from an order or a quote. You will receive a six-digit code by email to enter here.',
     email: 'Email address',
     requestCode: 'Request code',
-    codeSent: 'If there are orders for this address, the code is on its way. It is valid for 10 minutes.',
+    codeSent:
+      'If there is anything on file for this address, the code is on its way. It is valid for 10 minutes.',
     code: 'Six-digit code',
     signIn: 'Sign in',
     signOut: 'Sign out',
@@ -786,6 +815,20 @@ const en: Dictionary = {
       abgebrochen: 'cancelled',
     },
     finished: 'Completed',
+    quotes: 'Quotes',
+    quoteNumber: 'Quote',
+    validUntil: 'valid until',
+    expired: 'expired',
+    viewQuote: 'View quote',
+    acceptQuote: 'Accept quote',
+    acceptName: 'Your name',
+    acceptHint:
+      'By accepting you commission the work on the terms of the quote. We will come back to you with a date.',
+    accepting: 'sending …',
+    acceptedOn: 'accepted on',
+    acceptedNow: 'Thank you — we have your acceptance. The date follows in the next few days.',
+    quoteDeclined: 'declined',
+    acceptError: 'That did not work. Please try again or give us a call.',
   },
   orderStatus: {
     title: 'Your order',

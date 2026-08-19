@@ -861,6 +861,15 @@ export interface Quote {
   revision?: number | null;
   revisedAt?: string | null;
   /**
+   * Wird beim Annehmen gesetzt.
+   */
+  acceptedAt?: string | null;
+  acceptedVia?: ('portal' | 'buero') | null;
+  /**
+   * Der Name, den die Kundschaft dabei angegeben hat.
+   */
+  acceptedName?: string | null;
+  /**
    * z.B. „6–8 Wochen ab Auftragserteilung"
    */
   productionTime?: string | null;
@@ -1910,6 +1919,9 @@ export interface QuotesSelect<T extends boolean = true> {
   total?: T;
   revision?: T;
   revisedAt?: T;
+  acceptedAt?: T;
+  acceptedVia?: T;
+  acceptedName?: T;
   productionTime?: T;
   note?: T;
   inquiry?: T;

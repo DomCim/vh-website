@@ -134,6 +134,17 @@ export async function POST(req: Request) {
           vatRate: Number(p.vatRate) || 0,
         })),
       note: b.note || undefined,
+      /*
+       * Wird das Angebot hier auf „angenommen" gestellt, war es ein Anruf.
+       * Der Zeitpunkt gehört trotzdem festgehalten — sonst steht hinterher
+       * nur ein Status da, und „wann haben Sie zugestimmt?" bleibt
+       * unbeantwortet. Die Portal-Annahme setzt dieselben Felder mit
+       * `acceptedVia: 'portal'`, und das ist der Unterschied zwischen einer
+       * Angabe und einem Beleg.
+       */
+      ...(b.status === 'angenommen'
+        ? { acceptedAt: b.acceptedAt || new Date().toISOString(), acceptedVia: 'buero' as const }
+        : {}),
     }
 
     const doc = b.id

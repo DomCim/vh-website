@@ -32,6 +32,7 @@ import * as migration_20260819_172008_zahlungsabgleich from './20260819_172008_z
 import * as migration_20260819_172805_storno from './20260819_172805_storno';
 import * as migration_20260819_173532_auslastung from './20260819_173532_auslastung';
 import * as migration_20260819_174511_wiedervorlagen from './20260819_174511_wiedervorlagen';
+import * as migration_20260819_175115_angebotsannahme from './20260819_175115_angebotsannahme';
 
 export const migrations = [
   {
@@ -202,6 +203,11 @@ export const migrations = [
   {
     up: migration_20260819_174511_wiedervorlagen.up,
     down: migration_20260819_174511_wiedervorlagen.down,
-    name: '20260819_174511_wiedervorlagen'
+    name: '20260819_174511_wiedervorlagen',
+  },
+  {
+    up: migration_20260819_175115_angebotsannahme.up,
+    down: migration_20260819_175115_angebotsannahme.down,
+    name: '20260819_175115_angebotsannahme'
   },
 ];
