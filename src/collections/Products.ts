@@ -99,6 +99,42 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      /*
+       * Zahlung in Stufen — je Artikel, weil es je Artikel verschieden ist.
+       *
+       * Ein Regal aus dem Lager wird bezahlt und geht raus. Ein Sofa nach Maß
+       * bindet wochenlang Material und Arbeitszeit, bevor es überhaupt etwas
+       * zu liefern gibt — und das Geld dafür soll nicht die Werkstatt
+       * vorstrecken.
+       *
+       * Beide Sätze auf 0 heißt: eine Rechnung wie bisher. Nur Anzahlung
+       * gesetzt heißt: zwei Rechnungen. Der Rest ist immer die
+       * Schlussrechnung, sie wird nicht eingetragen — sonst müsste jemand
+       * darauf achten, dass die drei Zahlen zusammen hundert ergeben, und
+       * genau das geht irgendwann daneben.
+       */
+      name: 'anzahlungProzent',
+      label: 'Anzahlung (%)',
+      type: 'number',
+      min: 0,
+      max: 100,
+      defaultValue: 0,
+      admin: {
+        description: 'Fällig bei Auftragsbestätigung, vor Fertigungsbeginn. 0 = keine Anzahlung.',
+      },
+    },
+    {
+      name: 'zwischenProzent',
+      label: 'Zwischenrechnung (%)',
+      type: 'number',
+      min: 0,
+      max: 100,
+      defaultValue: 0,
+      admin: {
+        description: 'Fällig, wenn der Meilenstein am Auftrag erreicht ist. 0 = keine.',
+      },
+    },
+    {
       name: 'variants',
       label: 'Varianten',
       type: 'array',

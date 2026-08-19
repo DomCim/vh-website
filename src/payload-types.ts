@@ -215,6 +215,14 @@ export interface Product {
    */
   shippingCost?: number | null;
   /**
+   * Fällig bei Auftragsbestätigung, vor Fertigungsbeginn. 0 = keine Anzahlung.
+   */
+  anzahlungProzent?: number | null;
+  /**
+   * Fällig, wenn der Meilenstein am Auftrag erreicht ist. 0 = keine.
+   */
+  zwischenProzent?: number | null;
+  /**
    * z.B. Größen oder Ausführungen mit eigenem Preis
    */
   variants?:
@@ -856,6 +864,16 @@ export interface Job {
    * Bei einer Shop-Bestellung löst „In Fertigung" die E-Mail an die Kundschaft aus.
    */
   status: 'geplant' | 'inFertigung' | 'fertig' | 'geliefert' | 'abgebrochen';
+  /**
+   * Erreicht der Auftrag diesen Punkt, wird die Zwischenrechnung vorbereitet.
+   */
+  meilenstein?: {
+    bezeichnung?: string | null;
+    /**
+     * Sobald hier ein Datum steht, legt das Büro die Zwischenrechnung als Entwurf an.
+     */
+    erreichtAm?: string | null;
+  };
   title: string;
   source: 'shop' | 'angebot' | 'manuell';
   customerName?: string | null;
@@ -935,6 +953,14 @@ export interface OutgoingInvoice {
    * Wird beim Festschreiben automatisch und lückenlos vergeben.
    */
   invoiceNumber?: string | null;
+  /**
+   * Bei Zahlung in Stufen — sonst bleibt es bei „Vollständige Rechnung".
+   */
+  stufe?: ('vollstaendig' | 'anzahlung' | 'zwischen' | 'schluss') | null;
+  /**
+   * Bei Zahlung in Stufen: der Auftrag, zu dem diese Rechnung gehört.
+   */
+  auftrag?: (number | null) | Job;
   /**
    * Ab „Gestellt" bekommt die Rechnung ihre Nummer und ist verbindlich.
    */
@@ -1426,6 +1452,8 @@ export interface ProductsSelect<T extends boolean = true> {
   description?: T;
   price?: T;
   shippingCost?: T;
+  anzahlungProzent?: T;
+  zwischenProzent?: T;
   variants?:
     | T
     | {
@@ -1778,6 +1806,12 @@ export interface QuotesSelect<T extends boolean = true> {
 export interface JobsSelect<T extends boolean = true> {
   jobNumber?: T;
   status?: T;
+  meilenstein?:
+    | T
+    | {
+        bezeichnung?: T;
+        erreichtAm?: T;
+      };
   title?: T;
   source?: T;
   customerName?: T;
@@ -1827,6 +1861,8 @@ export interface JobsSelect<T extends boolean = true> {
  */
 export interface OutgoingInvoicesSelect<T extends boolean = true> {
   invoiceNumber?: T;
+  stufe?: T;
+  auftrag?: T;
   status?: T;
   customer?: T;
   customerName?: T;

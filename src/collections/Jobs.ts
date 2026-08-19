@@ -150,6 +150,43 @@ export const Jobs: CollectionConfig = {
           'Bei einer Shop-Bestellung löst „In Fertigung" die E-Mail an die Kundschaft aus.',
       },
     },
+    {
+      /*
+       * Der Punkt, an dem die Zwischenrechnung fällig wird.
+       *
+       * Bewusst kein weiterer Status: Der Auftrag bleibt „In Fertigung", auch
+       * wenn der Rohbau steht — es ist kein anderer Zustand, sondern ein
+       * erreichter Punkt darin. Als Status müsste man ihn durchlaufen und
+       * wieder verlassen, und beim Zurückspringen wäre unklar, ob die
+       * Rechnung nun gilt oder nicht.
+       *
+       * Das Datum ist der Auslöser. Wer es setzt, sagt: Ab hier ist genug
+       * Arbeit drin, dass sie bezahlt gehört.
+       */
+      name: 'meilenstein',
+      label: 'Meilenstein',
+      type: 'group',
+      admin: {
+        description: 'Erreicht der Auftrag diesen Punkt, wird die Zwischenrechnung vorbereitet.',
+      },
+      fields: [
+        {
+          name: 'bezeichnung',
+          label: 'Was ist erreicht?',
+          type: 'text',
+          defaultValue: 'Rohbau fertig',
+        },
+        {
+          name: 'erreichtAm',
+          label: 'Erreicht am',
+          type: 'date',
+          admin: {
+            description:
+              'Sobald hier ein Datum steht, legt das Büro die Zwischenrechnung als Entwurf an.',
+          },
+        },
+      ],
+    },
     { name: 'title', label: 'Bezeichnung', type: 'text', required: true },
     {
       name: 'source',

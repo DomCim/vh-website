@@ -76,6 +76,47 @@ export const OutgoingInvoices: CollectionConfig = {
       },
     },
     {
+      /*
+       * Welche Stufe der Zahlung diese Rechnung ist.
+       *
+       * Bei einem Stück, das Wochen in der Werkstatt liegt, wird nicht einmal
+       * kassiert, sondern dreimal: bei der Bestätigung, beim erreichten
+       * Meilenstein, und vor der Lieferung. Für die Buchhaltung sind das drei
+       * verschiedene Dinge — und die Schlussrechnung muss die beiden ersten
+       * aufführen und abziehen, samt Umsatzsteuer. Ohne diese Angabe wüsste
+       * sie nicht, welche das sind.
+       */
+      name: 'stufe',
+      label: 'Stufe',
+      type: 'select',
+      defaultValue: 'vollstaendig',
+      options: [
+        { label: 'Vollständige Rechnung', value: 'vollstaendig' },
+        { label: 'Anzahlung', value: 'anzahlung' },
+        { label: 'Zwischenrechnung', value: 'zwischen' },
+        { label: 'Schlussrechnung', value: 'schluss' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Bei Zahlung in Stufen — sonst bleibt es bei „Vollständige Rechnung".',
+      },
+    },
+    {
+      /*
+       * Woran diese Rechnung hängt. Erst darüber findet die Schlussrechnung
+       * ihre Vorgänger — und der Auftrag weiß, was schon gestellt ist.
+       */
+      name: 'auftrag',
+      label: 'Auftrag',
+      type: 'relationship',
+      relationTo: 'jobs',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Bei Zahlung in Stufen: der Auftrag, zu dem diese Rechnung gehört.',
+      },
+    },
+    {
       name: 'status',
       label: 'Status',
       type: 'select',
