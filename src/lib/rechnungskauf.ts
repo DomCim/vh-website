@@ -1,9 +1,11 @@
 import type { Payload } from 'payload'
 
 import { geplanteStufen, type Zahlplan } from './anzahlung'
+import type { Locale } from './i18n'
+import { rechnungskaufEmail, type CompanyInfo } from './mail'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
-import type { Locale } from './i18n'
+import { firmenAngaben } from './settings'
 
 /**
  * Kauf auf Rechnung im Shop.
@@ -31,11 +33,20 @@ type Bestellung = {
   id: number | string
   orderNumber: string
   total?: number | null
+  subtotal?: number | null
   discount?: number | null
   shippingTotal?: number | null
   promotionTitle?: string | null
   deliveryMethod?: string | null
+  accessToken?: string | null
   customer?: { name?: string | null; email?: string | null; phone?: string | null } | null
+  shippingAddress?: {
+    line1?: string | null
+    line2?: string | null
+    postalCode?: string | null
+    city?: string | null
+    country?: string | null
+  } | null
   items?:
     | {
         product?: unknown
@@ -198,22 +209,14 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
   }).catch(() => undefined)
 }
 
-const EINGANG: Record<Locale, { betreff: string; text: string }> = {
-  de: {
-    betreff: 'Ihre Bestellung {nummer} ist eingegangen – Vincent Hellmann',
-    text: 'vielen Dank für Ihre Bestellung {nummer}. Sie erhalten in Kürze die Rechnung per E-Mail — mit einem QR-Code, den Sie einfach mit Ihrer Banking-App scannen. Die Fertigung beginnt, sobald die Zahlung eingegangen ist.',
-  },
-  fr: {
-    betreff: 'Votre commande {nummer} est bien reçue – Vincent Hellmann',
-    text: 'merci pour votre commande {nummer}. Vous recevrez prochainement la facture par e-mail — avec un QR code à scanner avec votre application bancaire. La fabrication démarre dès réception du paiement.',
-  },
-  en: {
-    betreff: 'Your order {nummer} has been received – Vincent Hellmann',
-    text: 'thank you for your order {nummer}. You will shortly receive the invoice by email — with a QR code you can scan with your banking app. Production starts once the payment has arrived.',
-  },
-}
-
-/** Kurze Eingangsbestätigung — die eigentliche Rechnung folgt aus dem Büro. */
+/**
+ * Kurze Eingangsbestätigung — die eigentliche Rechnung folgt aus dem Büro.
+ *
+ * Die Vorlage steht in `lib/mail.ts`, wie alle anderen auch: mit Logo, Corten-
+ * Strich, den Positionen samt Summe und den Pflichtangaben im Fuß. Vorher war
+ * das HTML hier von Hand gebaut — ohne Logo, ohne Fuß und ohne eine einzige
+ * Zahl darin.
+ */
 export async function rechnungskaufBestaetigen(
   payload: Payload,
   bestellung: Bestellung,
@@ -221,15 +224,31 @@ export async function rechnungskaufBestaetigen(
 ): Promise<void> {
   const email = bestellung.customer?.email
   if (!email) return
-  const t = EINGANG[locale] ?? EINGANG.de
+
+  // Firmierung und Handarbeits-Hinweis wie bei der PayPal-Bestätigung. Fehlen
+  // sie, geht die Mail trotzdem raus — sie ist wichtiger als ihr Fuß.
+  let firma: CompanyInfo | undefined
+  let handarbeit: string | null = null
+  try {
+    const einstellungen = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
+    firma = firmenAngaben(einstellungen)
+    handarbeit = (einstellungen as { craft?: { notice?: string | null } })?.craft?.notice ?? null
+  } catch (err) {
+    payload.logger.warn({ err }, 'Firmenangaben für die Eingangsbestätigung nicht lesbar')
+  }
+
   await sendMail(payload, {
-    to: email,
-    subject: t.betreff.replace('{nummer}', bestellung.orderNumber),
-    html: `
-      <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:520px">
-        <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-        <p>${bestellung.customer?.name ? `${bestellung.customer.name}, ` : ''}${t.text.replace('{nummer}', bestellung.orderNumber)}</p>
-      </div>`,
+    ...rechnungskaufEmail(
+      {
+        ...bestellung,
+        total: bestellung.total ?? 0,
+        subtotal: bestellung.subtotal ?? bestellung.total ?? 0,
+      },
+      locale,
+      firma,
+      handarbeit,
+    ),
     art: 'bestellung',
+    bezug: { order: bestellung.id },
   }).catch(() => undefined)
 }

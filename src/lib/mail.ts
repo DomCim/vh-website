@@ -1,3 +1,5 @@
+import type { Locale } from './i18n'
+
 type OrderLike = {
   orderNumber: string
   total: number
@@ -51,12 +53,79 @@ export type CompanyInfo = {
 const euro = (v: number) =>
   new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v)
 
+/**
+ * Die Wörter der Mailbausteine in den drei Sprachen des Shops.
+ *
+ * Bisher standen sie deutsch im HTML — auch in der Mail an jemanden, der auf
+ * Französisch bestellt hat. „Zwischensumme" über einer Rechnungssumme liest
+ * sich dann wie eine Verwechslung, und bei Geld ist eine Verwechslung teuer.
+ *
+ * Deutsch bleibt die Vorgabe: Wo keine Sprache bekannt ist (die Bestellung
+ * merkt sie sich nicht), ist das die Sprache des Hauses.
+ */
+const WORTE: Record<
+  Locale,
+  {
+    zwischensumme: string
+    rabatt: string
+    versand: string
+    gesamt: string
+    steuer: (satz: number) => string
+    abholungHinweis: string
+    bestellung: string
+    lieferadresse: string
+    abholung: string
+    stand: string
+    gruss: string
+  }
+> = {
+  de: {
+    zwischensumme: 'Zwischensumme',
+    rabatt: 'Rabatt',
+    versand: 'Versand',
+    gesamt: 'Gesamt',
+    steuer: (satz) => `enthaltene MwSt./TVA (${satz} %)`,
+    abholungHinweis: 'Abholung — Adresse und Termin werden nach der Bestellung abgestimmt.',
+    bestellung: 'Ihre Bestellung',
+    lieferadresse: 'Lieferadresse',
+    abholung: 'Abholung',
+    stand: 'Stand Ihrer Bestellung ansehen',
+    gruss: 'Mit freundlichen Grüßen',
+  },
+  fr: {
+    zwischensumme: 'Sous-total',
+    rabatt: 'Remise',
+    versand: 'Livraison',
+    gesamt: 'Total',
+    steuer: (satz) => `TVA incluse (${satz} %)`,
+    abholungHinweis: 'Retrait sur place — adresse et rendez-vous seront convenus après la commande.',
+    bestellung: 'Votre commande',
+    lieferadresse: 'Adresse de livraison',
+    abholung: 'Retrait sur place',
+    stand: 'Suivre votre commande',
+    gruss: 'Cordialement',
+  },
+  en: {
+    zwischensumme: 'Subtotal',
+    rabatt: 'Discount',
+    versand: 'Shipping',
+    gesamt: 'Total',
+    steuer: (satz) => `VAT included (${satz} %)`,
+    abholungHinweis: 'Collection — address and appointment are arranged after the order.',
+    bestellung: 'Your order',
+    lieferadresse: 'Delivery address',
+    abholung: 'Collection',
+    stand: 'View the status of your order',
+    gruss: 'Kind regards',
+  },
+}
+
 /** Enthaltene MwSt./TVA aus dem Bruttobetrag herausrechnen */
-function vatRow(order: OrderLike, company?: CompanyInfo): string {
+function vatRow(order: OrderLike, company?: CompanyInfo, sprache: Locale = 'de'): string {
   const rate = company?.vatRate ?? 20
   if (!rate) return ''
   const vat = Math.round((order.total - order.total / (1 + rate / 100)) * 100) / 100
-  return `<tr><td></td><td style="padding:2px 12px 2px 0;color:#666;font-size:12px">enthaltene MwSt./TVA (${rate} %)</td><td style="text-align:right;color:#666;font-size:12px">${euro(vat)}</td></tr>`
+  return `<tr><td></td><td style="padding:2px 12px 2px 0;color:#666;font-size:12px">${WORTE[sprache].steuer(rate)}</td><td style="text-align:right;color:#666;font-size:12px">${euro(vat)}</td></tr>`
 }
 
 /**
@@ -140,7 +209,8 @@ export function briefbogen(inhalt: string, company?: CompanyInfo, mitFuss = true
 </div>`
 }
 
-function orderTable(order: OrderLike, company?: CompanyInfo): string {
+function orderTable(order: OrderLike, company?: CompanyInfo, sprache: Locale = 'de'): string {
+  const w = WORTE[sprache]
   const rows = (order.items ?? [])
     .map((item) => {
       const label = [item.titleSnapshot, item.variantTitle, item.color].filter(Boolean).join(' – ')
@@ -154,29 +224,27 @@ function orderTable(order: OrderLike, company?: CompanyInfo): string {
 
   const discountRow =
     order.discount && order.discount > 0
-      ? `<tr><td></td><td style="padding:6px 12px 6px 0">Rabatt${order.promotionTitle ? ` (${order.promotionTitle})` : ''}</td><td style="text-align:right">−${euro(order.discount)}</td></tr>`
+      ? `<tr><td></td><td style="padding:6px 12px 6px 0">${w.rabatt}${order.promotionTitle ? ` (${order.promotionTitle})` : ''}</td><td style="text-align:right">−${euro(order.discount)}</td></tr>`
       : ''
 
   const shippingRow =
     order.shippingTotal && order.shippingTotal > 0
-      ? `<tr><td></td><td style="padding:2px 12px 2px 0">Versand</td><td style="text-align:right">${euro(order.shippingTotal)}</td></tr>`
+      ? `<tr><td></td><td style="padding:2px 12px 2px 0">${w.versand}</td><td style="text-align:right">${euro(order.shippingTotal)}</td></tr>`
       : ''
 
   return `<table style="border-collapse:collapse;font-size:14px">
     ${rows}
     <tr><td colspan="3" style="border-top:1px solid #ddd;padding-top:8px"></td></tr>
-    <tr><td></td><td style="padding:2px 12px 2px 0">Zwischensumme</td><td style="text-align:right">${euro(order.subtotal)}</td></tr>
+    <tr><td></td><td style="padding:2px 12px 2px 0">${w.zwischensumme}</td><td style="text-align:right">${euro(order.subtotal)}</td></tr>
     ${discountRow}
     ${shippingRow}
-    <tr><td></td><td style="padding:6px 12px 2px 0;font-weight:bold">Gesamt</td><td style="text-align:right;font-weight:bold">${euro(order.total)}</td></tr>
-    ${vatRow(order, company)}
+    <tr><td></td><td style="padding:6px 12px 2px 0;font-weight:bold">${w.gesamt}</td><td style="text-align:right;font-weight:bold">${euro(order.total)}</td></tr>
+    ${vatRow(order, company, sprache)}
   </table>`
 }
 
-function addressBlock(order: OrderLike): string {
-  if (order.deliveryMethod === 'pickup') {
-    return 'Abholung — Adresse und Termin werden nach der Bestellung abgestimmt.'
-  }
+function addressBlock(order: OrderLike, sprache: Locale = 'de'): string {
+  if (order.deliveryMethod === 'pickup') return WORTE[sprache].abholungHinweis
   const a = order.shippingAddress
   if (!a) return ''
   return [order.customer?.name, a.line1, a.line2, `${a.postalCode ?? ''} ${a.city ?? ''}`, a.country]
@@ -184,12 +252,18 @@ function addressBlock(order: OrderLike): string {
     .join('<br>')
 }
 
-/** Link auf die Bestellstatus-Seite — dauerhaft gültig, verbraucht nichts */
-function statusLink(order: OrderLike): string {
+/**
+ * Link auf die Bestellstatus-Seite — dauerhaft gültig, verbraucht nichts.
+ *
+ * Die Sprache steht im Pfad. Vorher stand dort fest `/de/`: Wer auf
+ * Französisch bestellt hatte, landete auf einer deutschen Seite und musste
+ * oben erst umschalten.
+ */
+function statusLink(order: OrderLike, sprache: Locale = 'de'): string {
   if (!order.accessToken) return ''
   const basis = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || ''
-  const url = `${basis}/de/bestellung/${order.accessToken}`
-  return `<p style="margin-top:20px"><a href="${url}" style="color:#1d1d1f">Stand Ihrer Bestellung ansehen</a></p>`
+  const url = `${basis}/${sprache}/bestellung/${order.accessToken}`
+  return `<p style="margin-top:20px"><a href="${url}" style="color:#1d1d1f">${WORTE[sprache].stand}</a></p>`
 }
 
 /** Hinweis auf die Einzelfertigung, wenn ein Zeitraum bekannt ist */
@@ -347,6 +421,134 @@ export function contactEmail(
         <p style="white-space:pre-line;border-left:3px solid ${BRONZE};padding-left:12px">${data.message}</p>`,
       undefined,
       false,
+    ),
+  }
+}
+
+/**
+ * Der sechsstellige Code — für die Kasse und für das Kundenportal.
+ *
+ * Beide Mails standen vorher als selbstgebautes `<div>` in ihrer Route: ohne
+ * Logo, ohne Corten-Strich, ohne die Pflichtangaben, die in Frankreich unter
+ * jede geschäftliche Mail gehören — und nur auf Deutsch. Wer eine solche Mail
+ * bekommt, hält sie im Zweifel für einen Betrugsversuch und gibt den Code
+ * lieber nicht ein. Deshalb liegt sie jetzt hier, im Briefbogen des Hauses.
+ *
+ * Der Code steht auch im Betreff: Er ist auf dem Sperrbildschirm zu lesen, und
+ * die Mail muss dafür nicht geöffnet werden.
+ */
+export function zugangscodeEmail(
+  code: string,
+  zweck: 'bestellung' | 'anmeldung',
+  sprache: Locale = 'de',
+  company?: CompanyInfo,
+) {
+  const texte: Record<Locale, { betreff: string; einleitung: string; hinweis: string }> = {
+    de: {
+      betreff:
+        zweck === 'bestellung'
+          ? `Ihr Bestätigungscode: ${code} – Vincent Hellmann`
+          : `Ihr Anmeldecode: ${code} – Vincent Hellmann`,
+      einleitung:
+        zweck === 'bestellung'
+          ? 'Ihr Code, um die Bestellung abzuschließen:'
+          : 'Ihr Anmeldecode für Ihre Übersicht:',
+      hinweis:
+        zweck === 'bestellung'
+          ? 'Der Code gilt 10 Minuten. Wenn Sie nichts bestellt haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.'
+          : 'Der Code gilt 10 Minuten. Wenn Sie ihn nicht angefordert haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.',
+    },
+    fr: {
+      betreff:
+        zweck === 'bestellung'
+          ? `Votre code de confirmation : ${code} – Vincent Hellmann`
+          : `Votre code de connexion : ${code} – Vincent Hellmann`,
+      einleitung:
+        zweck === 'bestellung'
+          ? 'Votre code pour finaliser la commande :'
+          : 'Votre code de connexion à votre espace :',
+      hinweis:
+        zweck === 'bestellung'
+          ? "Le code est valable 10 minutes. Si vous n'avez rien commandé, vous pouvez simplement supprimer ce message — sans le code, il ne se passe rien."
+          : "Le code est valable 10 minutes. Si vous ne l'avez pas demandé, vous pouvez simplement supprimer ce message — sans le code, il ne se passe rien.",
+    },
+    en: {
+      betreff:
+        zweck === 'bestellung'
+          ? `Your confirmation code: ${code} – Vincent Hellmann`
+          : `Your sign-in code: ${code} – Vincent Hellmann`,
+      einleitung:
+        zweck === 'bestellung'
+          ? 'Your code to complete the order:'
+          : 'Your sign-in code for your overview:',
+      hinweis:
+        zweck === 'bestellung'
+          ? 'The code is valid for 10 minutes. If you did not place an order, simply delete this message — nothing happens without the code.'
+          : 'The code is valid for 10 minutes. If you did not request it, simply delete this message — nothing happens without the code.',
+    },
+  }
+  const t = texte[sprache] ?? texte.de
+
+  return {
+    subject: t.betreff,
+    html: briefbogen(
+      `<p>${t.einleitung}</p>
+        <p style="font-size:30px;letter-spacing:8px;font-weight:bold;margin:18px 0">${code}</p>
+        <p style="color:#666;font-size:13px">${t.hinweis}</p>`,
+      company,
+    ),
+  }
+}
+
+/**
+ * Kauf auf Rechnung: die Eingangsbestätigung.
+ *
+ * Anders als bei PayPal ist hier noch nichts bezahlt — diese Mail bestätigt
+ * den Eingang und sagt, was als Nächstes kommt. Sie trägt trotzdem alles, was
+ * eine Bestellbestätigung tragen muss: was bestellt wurde, was es kostet,
+ * wohin es geht. Vorher stand dort ein einziger Satz ohne Zahlen; wer wissen
+ * wollte, worüber die angekündigte Rechnung lauten würde, musste warten.
+ */
+export function rechnungskaufEmail(
+  order: OrderLike,
+  sprache: Locale = 'de',
+  company?: CompanyInfo,
+  craftNotice?: string | null,
+) {
+  const texte: Record<Locale, { betreff: string; anrede: string; text: string }> = {
+    de: {
+      betreff: `Ihre Bestellung ${order.orderNumber} ist eingegangen – Vincent Hellmann`,
+      anrede: 'Guten Tag',
+      text: `vielen Dank für Ihre Bestellung <strong>${order.orderNumber}</strong>. Sie erhalten in Kürze die Rechnung per E-Mail — mit einem QR-Code, den Sie einfach mit Ihrer Banking-App scannen. Die Fertigung beginnt, sobald die Zahlung eingegangen ist.`,
+    },
+    fr: {
+      betreff: `Votre commande ${order.orderNumber} est bien reçue – Vincent Hellmann`,
+      anrede: 'Bonjour',
+      text: `merci pour votre commande <strong>${order.orderNumber}</strong>. Vous recevrez prochainement la facture par e-mail — avec un QR code à scanner avec votre application bancaire. La fabrication démarre dès réception du paiement.`,
+    },
+    en: {
+      betreff: `Your order ${order.orderNumber} has been received – Vincent Hellmann`,
+      anrede: 'Hello',
+      text: `thank you for your order <strong>${order.orderNumber}</strong>. You will shortly receive the invoice by email — with a QR code you can scan with your banking app. Production starts once the payment has arrived.`,
+    },
+  }
+  const t = texte[sprache] ?? texte.de
+  const w = WORTE[sprache] ?? WORTE.de
+
+  return {
+    to: order.customer?.email ?? '',
+    subject: t.betreff,
+    html: briefbogen(
+      `<p>${t.anrede} ${order.customer?.name ?? ''},</p>
+        <p>${t.text}</p>
+        ${craftNotice?.trim() ? `<p style="color:#666;font-size:13px">${craftNotice.trim()}</p>` : ''}
+        ${ueberschrift(w.bestellung)}
+        ${orderTable(order, company, sprache)}
+        ${ueberschrift(order.deliveryMethod === 'pickup' ? w.abholung : w.lieferadresse)}
+        <p>${addressBlock(order, sprache)}</p>
+        ${statusLink(order, sprache)}
+        <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
+      company,
     ),
   }
 }

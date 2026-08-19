@@ -39,7 +39,7 @@ export default async function KontoSeite({ params }: { params: Promise<{ locale:
 
       {!email ? (
         <div className="mt-8">
-          <KontoAnmeldung labels={dict.account} />
+          <KontoAnmeldung labels={dict.account} locale={locale} />
         </div>
       ) : (
         <Uebersicht email={email} locale={locale} dict={dict} />

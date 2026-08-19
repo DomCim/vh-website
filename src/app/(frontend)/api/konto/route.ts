@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../lib/data'
+import { isLocale, type Locale } from '../../../../lib/i18n'
 import { codeAnlegen, codeEinloesen, sitzungErzeugen, SITZUNGS_COOKIE } from '../../../../lib/kundenportal'
+import { zugangscodeEmail, type CompanyInfo } from '../../../../lib/mail'
 import { hatVorgaenge } from '../../../../lib/portalDaten'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import { sendMail } from '../../../../lib/sendMail'
+import { firmenAngaben } from '../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,8 +19,16 @@ export const dynamic = 'force-dynamic'
  */
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { aktion?: 'code-anfordern' | 'anmelden' | 'abmelden'; email?: string; code?: string }
+    const body = (await req.json()) as {
+      aktion?: 'code-anfordern' | 'anmelden' | 'abmelden'
+      email?: string
+      code?: string
+      locale?: string
+    }
     const email = body.email?.trim().toLowerCase() ?? ''
+    // In welcher Sprache die Kundschaft gerade auf der Seite steht — die Mail
+    // soll in derselben ankommen
+    const sprache: Locale = body.locale && isLocale(body.locale) ? body.locale : 'de'
     const ip = ipAus(req)
 
     if (body.aktion === 'abmelden') {
@@ -45,17 +56,16 @@ export async function POST(req: Request) {
        */
       if (await hatVorgaenge(payload, email)) {
         const code = await codeAnlegen(payload, email)
+        let firma: CompanyInfo | undefined
+        try {
+          firma = firmenAngaben(await payload.findGlobal({ slug: 'site-settings', depth: 0 }))
+        } catch {
+          // Ohne Pflichtangaben geht die Mail trotzdem raus — ohne Code kommt
+          // niemand ins Portal
+        }
         await sendMail(payload, {
           to: email,
-          subject: `Ihr Anmeldecode: ${code} – Vincent Hellmann`,
-          html: `
-            <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:520px">
-              <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-              <p>Ihr Anmeldecode für Ihre Übersicht:</p>
-              <p style="font-size:30px;letter-spacing:8px;font-weight:bold;margin:18px 0">${code}</p>
-              <p style="color:#666;font-size:13px">Der Code gilt 10 Minuten. Wenn Sie ihn nicht angefordert
-              haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.</p>
-            </div>`,
+          ...zugangscodeEmail(code, 'anmeldung', sprache, firma),
           art: 'zugangscode',
         })
       }

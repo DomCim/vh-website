@@ -16,10 +16,12 @@ import {
   sitzungLesen,
   SITZUNGS_COOKIE,
 } from '../../../../lib/kundenportal'
+import { zugangscodeEmail, type CompanyInfo } from '../../../../lib/mail'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
 import { rechnungskaufAnlegen, rechnungskaufBestaetigen } from '../../../../lib/rechnungskauf'
 import { sendMail } from '../../../../lib/sendMail'
+import { firmenAngaben } from '../../../../lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,6 +47,22 @@ type CheckoutBody = {
   consent?: { terms?: boolean; waiver?: boolean }
   /** Sechsstelliger Code aus der Bestätigungs-Mail */
   emailCode?: string
+}
+
+/**
+ * Firmierung, SIRET und TVA-Nummer für den Fuß der Mail.
+ *
+ * In Frankreich gehören sie unter jede geschäftliche E-Mail. Fehlen die
+ * Einstellungen, geht der Code trotzdem raus — ohne ihn steht die Kasse.
+ */
+async function firmaLesen(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+): Promise<CompanyInfo | undefined> {
+  try {
+    return firmenAngaben(await payload.findGlobal({ slug: 'site-settings', depth: 0 }))
+  } catch {
+    return undefined
+  }
 }
 
 /** Das vh-konto-Cookie aus dem Header, ohne next/headers zu bemühen. */
@@ -113,15 +131,7 @@ export async function POST(req: Request) {
         const code = await codeAnlegen(payload, email)
         await sendMail(payload, {
           to: email,
-          subject: `Ihr Bestätigungscode: ${code} – Vincent Hellmann`,
-          html: `
-            <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:520px">
-              <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
-              <p>Ihr Code, um die Bestellung abzuschließen:</p>
-              <p style="font-size:30px;letter-spacing:8px;font-weight:bold;margin:18px 0">${code}</p>
-              <p style="color:#666;font-size:13px">Der Code gilt 10 Minuten. Wenn Sie nichts bestellt
-              haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.</p>
-            </div>`,
+          ...zugangscodeEmail(code, 'bestellung', locale, await firmaLesen(payload)),
           art: 'zugangscode',
         })
         return NextResponse.json({ error: 'code-noetig' }, { status: 409 })

@@ -22,7 +22,7 @@ type Labels = {
  * Bewusst kein Link in der E-Mail: Outlook ruft Links vorab auf und würde
  * einen Einmal-Link verbrauchen, bevor die Kundschaft ihn anklickt.
  */
-export function KontoAnmeldung({ labels }: { labels: Labels }) {
+export function KontoAnmeldung({ labels, locale }: { labels: Labels; locale: string }) {
   const router = useRouter()
   const [schritt, setSchritt] = useState<'email' | 'code'>('email')
   const [email, setEmail] = useState('')
@@ -50,7 +50,9 @@ export function KontoAnmeldung({ labels }: { labels: Labels }) {
       const res = await fetch('/api/konto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aktion, email, code }),
+        // Die Sprache mit: Der Anmeldecode soll in der Sprache ankommen, in
+        // der die Kundschaft gerade auf der Seite steht
+        body: JSON.stringify({ aktion, email, code, locale }),
       })
       const daten = await res.json()
       if (!res.ok) {
