@@ -6,7 +6,10 @@
 #  - Umgebungsvariablen im Stack setzen (siehe .env.example)
 services:
   web:
-    image: ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}
+    # `VH_FASSUNG` setzt beide, `VH_FASSUNG_WEB` überstimmt sie für diesen einen.
+    # Damit lässt sich das Büro allein austauschen, ohne dass der Shop neu
+    # startet — siehe README, „Nur eines von beiden ausrollen".
+    image: ghcr.io/domcim/vh-website:${VH_FASSUNG_WEB:-${VH_FASSUNG:-latest}}
     restart: unless-stopped
     depends_on:
       db:
@@ -101,7 +104,7 @@ services:
   # Postgres-Meldung hin und her, damit die Live-Verbindung im Büro auch
   # mitbekommt, was im Shop passiert.
   buero:
-    image: ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}
+    image: ghcr.io/domcim/vh-website:${VH_FASSUNG_BUERO:-${VH_FASSUNG:-latest}}
     restart: unless-stopped
     depends_on:
       db:

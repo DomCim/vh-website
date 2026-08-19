@@ -124,6 +124,24 @@ Wer einen bestimmten Stand fahren will, bevor er auf `main` geht, hat zwei Mögl
 
 Danach im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide Container ziehen dieselbe Nummer, es ist ein einziges Feld. Zurück auf den laufenden Stand geht es, indem man die Variable wieder auf `latest` setzt.
 
+### Nur eines von beiden ausrollen
+
+Website und Büro laufen aus demselben Abbild, müssen aber nicht dieselbe Fassung fahren. `VH_FASSUNG` setzt beide; `VH_FASSUNG_WEB` und `VH_FASSUNG_BUERO` überstimmen sie einzeln:
+
+```
+VH_FASSUNG=1.1.0            # beide
+VH_FASSUNG_BUERO=1.1.1      # nur das Büro, Website bleibt auf 1.1.0
+```
+
+Beim Ausrollen tauscht Docker dann **nur den Container, dessen Abbild sich geändert hat**. Der andere läuft weiter — kein Neustart, kein Aussetzer für die Kundschaft, keine abreißende Bestellung mitten in der Kasse. Eine Änderung, die nur das Büro betrifft, kostet den Shop damit gar nichts.
+
+Zwei Dinge, die man dabei wissen muss:
+
+- **Migrationen wendet der Web-Container an.** Bringt eine Fassung eine Datenbank-Änderung mit, gehört sie auf beide — sonst läuft das neue Büro gegen ein altes Schema. Reine Oberflächen- oder Rechenänderungen im Büro sind davon nicht betroffen.
+- **Sie teilen sich die Datenbank.** Zwei Fassungen weit auseinander laufen zu lassen ist kein Dauerzustand, sondern etwas für den Nachmittag, an dem man eine Änderung im Büro ausprobiert.
+
+Warum nicht zwei getrennte Abbilder: Shop, Admin-Panel und Büro teilen sich Payload, das Datenmodell, die Collections und den größten Teil von `src/lib`. Zwei Abbilder wären zu neunzig Prozent dieselben Dateien — dafür zwei Bauläufe und zwei Stellen, an denen etwas auseinanderlaufen kann. Getrennt *ausrollen* lässt sich mit den zwei Variablen oben genauso.
+
 ### Bauen, ohne auszurollen
 
 Manchmal soll der neue Stand ins Regal, aber noch nicht in den Betrieb. Dafür gibt es zwei Bremsen, je nachdem, wie der Lauf ausgelöst wurde:
