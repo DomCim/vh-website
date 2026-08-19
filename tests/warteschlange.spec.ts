@@ -22,7 +22,7 @@ test.describe('Schreiben ohne Netz', () => {
   test('Eingabe steht sofort, geht später von selbst raus', async ({ page, context, request }) => {
     await page.goto('/office/login')
     await page.waitForLoadState('networkidle')
-    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[autocomplete="username"]', EMAIL)
     await page.fill('input[type="password"]', PASSWORT!)
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
@@ -112,7 +112,7 @@ test.describe('Schreiben ohne Netz', () => {
   }) => {
     await page.goto('/office/login')
     await page.waitForLoadState('networkidle')
-    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[autocomplete="username"]', EMAIL)
     await page.fill('input[type="password"]', PASSWORT!)
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
@@ -169,7 +169,7 @@ test.describe('Schreiben ohne Netz', () => {
   test('was der Server abweist, bleibt liegen und lässt sich verwerfen', async ({ page }) => {
     await page.goto('/office/login')
     await page.waitForLoadState('networkidle')
-    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[autocomplete="username"]', EMAIL)
     await page.fill('input[type="password"]', PASSWORT!)
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })

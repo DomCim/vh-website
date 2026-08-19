@@ -29,7 +29,9 @@ test('Passkey anlegen, abmelden, wieder anmelden', async ({ page, context }) => 
 
   // 1. Mit Passwort anmelden
   await page.goto('/admin/login')
-  await page.fill('#field-email', EMAIL)
+  // Seit der Anmeldung mit Benutzernamen heißt das Feld im Admin anders —
+  // je nach Payload-Fassung #field-username oder weiter #field-email.
+  await page.locator('#field-username, #field-email').first().fill(EMAIL)
   await page.fill('#field-password', PASSWORT!)
   // Der Passkey-Knopf steht daneben — hier ist das Anmeldeformular gemeint
     await page.locator('form.login__form button[type="submit"], form button[type="submit"]').first().click()

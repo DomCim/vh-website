@@ -1,4 +1,4 @@
-# Übergabe — Stand 19.08.2026
+# Übergabe — Stand 19.08.2026, zweiter Durchgang
 
 Diese Datei ist für den nächsten Durchgang gedacht: was steht, was offen ist,
 und welche Entscheidungen schon gefallen sind, damit sie niemand ein zweites
@@ -9,224 +9,120 @@ sind.
 
 ## Wo die Arbeit liegt
 
-**Branch:** `claude/weitere-anforderungen-o5whjc` — 49 Commits vor `main`.
+**Branch:** `claude/handover-md-repository-4zemch` — er enthält den kompletten
+Stand von `claude/weitere-anforderungen-o5whjc` (dem Branch des ersten
+Durchgangs) plus alles Folgende. **Der alte Branch ist damit überholt.**
 
-`main` steht auf `c31ee2f` (Merge von PR #19). Alles danach liegt nur auf dem
-Branch. **Vor dem nächsten Merge:** CI abwarten, nicht wie beim letzten Mal
-vorher mergen.
-
-**Was in der Registry liegt:**
-
-```
-ghcr.io/domcim/vh-website:latest   ghcr.io/domcim/vh-buero:latest
-```
-
-Beide zuletzt von Hand gebaut (Actions → „Docker-Image bauen &
-veröffentlichen" → *Run workflow*, Auswahlfeld *Auch als latest
-veröffentlichen* auf `ja`).
+`main` steht weiterhin auf `c31ee2f` (PR #19). **Vor dem Merge: CI abwarten.**
+Die Fassung in `package.json` ist auf **1.2.0** gehoben — von Hand gebaute
+Abbilder tragen diese Nummer und lassen sich mit `VH_FASSUNG=1.2.0` auf dem
+Server ausprobieren, bevor etwas auf `main` geht.
 
 ---
 
-## Was seit dem letzten Stand fertig ist
+## Was in diesem Durchgang entschieden und gebaut wurde
 
-### Das Büro arbeitet ohne Netz
+### Stripe ist raus, PayPal ist die einzige Zahlart
 
-Bestand im Gerät (IndexedDB), alle Listen rechnen im Browser, Eingaben gehen
-über eine Warteschlange raus, sobald wieder Netz da ist. Eine Leiste sagt, von
-wann der Stand ist. Beim Abmelden wird alles gelöscht.
+So entschieden. Über PayPal geht auch Karte und Lastschrift ohne PayPal-Konto;
+**wer nicht alles auf einmal zahlen will, vereinbart Raten mit PayPal** — beim
+Betrieb kommt der Betrag als ganzer an, die Teilzahlung finanziert PayPal.
+Steht so in Kasse, AGB (drei Sprachen) und README. Der Stripe-Webhook ist
+ersatzlos weg (PayPal wird beim Rücksprung auf die Danke-Seite eingezogen).
+Alte Bestellungen behalten Anbieter und Belegnummern; nur die Zugangsdaten
+sind aus der Datenbank gefallen (Migration `stripe_ausbau`).
 
-**Nachgemessen mit abgeschaltetem Server**, nicht mit Playwrights
-`setOffline` — das kappt den Service Worker nicht und liefert einen grünen
-Test, obwohl nichts funktioniert. Wer das prüfen will, muss den Serverprozess
-wirklich beenden.
+### Die Kasse bestätigt die E-Mail-Adresse, bevor sie bestellt
 
-### Live-Verbindung
+Sechsstelliger Code an die eingegebene Adresse, erst dann entsteht die
+Bestellung (409 `code-noetig` → Formular blendet das Feld ein). Dieselbe
+Code-Maschinerie wie das Kundenportal; wer bestätigt, hat damit gleich die
+Portal-Sitzung, und wer eine gültige hat, sieht den Schritt nicht. Grund:
+An der Adresse hängt der Portal-Zugang — ein Tippfehler wäre ein Datenleck
+an den Besitzer der vertippten Adresse.
 
-`/ws/buero`, gemeldet wird am Datenmodell (`liveHooks`), zwischen den
-Containern über Postgres `LISTEN`/`NOTIFY`. Kein Nachrichtendienst, keine
-Verbindung zwischen den Containern.
+### Rechnungsentwürfe an den drei Auslösern
 
-### Einstellungen, Integrationen, Benutzer im Büro
+Anzahlung bei Auftragsanlage, Zwischenrechnung bei `meilenstein.erreichtAm`,
+Schlussrechnung bei Status `fertig`. Immer nur ein **Entwurf** plus Meldung
+aufs Handy; verschickt wird von Hand. Die Schlussrechnung zieht die Vorstufen
+einzeln ab (`abzugsZeilen`), mit Nummer, Datum und Steuer. Der Zahlplan steht
+als Abschrift am Auftrag (`zahlplan`-Gruppe), kommt über Anfrage → Angebot →
+Auftrag vom Artikel und wird nicht nachgeführt. Kern: `lib/rechnungsstufen.ts`.
 
-Unter `/office/einstellungen`, fünf Reiter. Die Formulare entstehen aus
-Payloads eigener Feldbeschreibung (`lib/felderLesen.ts`) — kommt dort ein Feld
-dazu, erscheint es hier von selbst.
+### GiroCode, Zahlungsverzug, Rollen, Navigation, Kundenportal, Benutzername
 
-### Zwei Abbilder statt einem
-
-| | enthält |
-| --- | --- |
-| `vh-website` | Website, Shop, Admin-Panel |
-| `vh-buero` | `/office`, `/api/office`, Live-Verbindung |
-
-Gebaut wird nur, was sich geändert hat (Auftrag `aenderungen` in
-`docker.yml`). Eine reine Büro-Änderung erzeugt kein neues Website-Abbild, der
-Shop-Container hat beim Ausrollen also nichts zu tun.
-
-Getrennt wird im `Dockerfile` über `ARG ROLLE`: Vor dem Bauen verschwindet der
-jeweils andere Routenbaum. **`src/components/office` bleibt im
-Website-Abbild** — der Passkey-Knopf im Admin-Panel benutzt die Anmeldung des
-Büros.
-
-Im Stack: `VH_FASSUNG` setzt beide, `VH_FASSUNG_WEB` und `VH_FASSUNG_BUERO`
-überstimmen einzeln.
-
-### Rollen mit Rechten
-
-`collections/Roles.ts`, Katalog in `lib/rechte.ts` (15 Rechte). Alle 30
-Büro-Endpunkte fragen über `lib/wache.ts` nach einem **Recht**, nicht nach der
-Rolle.
-
-Drei Vorkehrungen gegen das Aussperren: Die Inhaberrolle darf immer alles,
-unabhängig von Haken. Eingebaute Rollen und Rollen mit Konten daran lassen
-sich nicht löschen. Das alte Auswahlfeld `role` bleibt als Rückweg stehen.
-
-### Entwürfe am Benutzer
-
-`collections/Drafts.ts`, `lib/buero/entwurf.ts`, `EntwurfLeiste.tsx`. Alle
-sechs großen Formulare sind angeschlossen. Zwei Ablagen: sofort ins Gerät,
-nach 2,5 s Ruhe zum Server. Beim Öffnen wird ein Entwurf **angeboten, nicht
-eingesetzt**.
-
-### Zahlung in Stufen (angefangen)
-
-Fertig und geprüft:
-
-- **Artikel:** `anzahlungProzent`, `zwischenProzent`. Der Rest ist immer die
-  Schlussrechnung und wird nicht eingetragen.
-- **Auftrag:** Gruppe `meilenstein` (Bezeichnung + Datum). Das Datum ist der
-  Auslöser für die Zwischenrechnung. Bewusst kein Status.
-- **Rechnung:** `stufe`, `auftrag`.
-- **`lib/anzahlung.ts`** — die Rechenwege. Die Schlussrechnung wird *nicht
-  gerechnet, sondern ist der Rest*: 1000 € gedrittelt macht sonst 999,99 €.
-- **`lib/zahlungsstand.ts`** — was eine offene Rechnung für den Auftrag heißt.
-- **`lib/girocode.ts`** — EPC-QR, `qrcode` war schon Abhängigkeit.
-- **Rechnungsnummern:** `RE-2026-0042-1/3`. Basis und Nenner liegen am Auftrag
-  (`rechnungsBasis`, `stufenGesamt`) und werden beim Stellen der ersten Stufe
-  eingefroren.
-- **Rechnungsliste:** Stufe, Verzugstage und ein Knopf „Eingegangen".
+- **GiroCode** auf jeder Rechnung mit gültiger IBAN; bei unbrauchbarer keiner
+  (lieber keiner als ein falscher), auf Angeboten nie.
+- **Zahlungsleiste am Auftrag** (`components/office/Zahlungsleiste.tsx`):
+  eingegangen/offen, überfällige Stufe, Terminvorschlag per Knopf über den
+  schmalen Weg `aktion: 'termin'` — verschoben wird von Hand, nie automatisch.
+  Liste zeigt „wartet auf Zahlung" getrennt von „überfällig".
+- **Rollen-Oberfläche** unter Einstellungen → Benutzer; Katalog kommt vom
+  Server (`/api/office/rolle`). Navigation und Übersicht blenden aus, wozu
+  das Recht fehlt (`lib/buero/rechte.ts`, Rechte kommen im Abgleich-Rahmen mit).
+- **Navigation oben** in vier Gruppen (Kundschaft/Werkstatt/Geld/Sonstiges)
+  mit Aufklapp-Menü — gleiche Ordnung wie das Blatt am Handy.
+- **Kundenportal** (`/konto`): Aufträge mit Stand, Rechnungen als PDF,
+  „Ihre Anzahlung steht noch aus", Laufendes oben, Abgeschlossenes darunter.
+  Wem was gehört, entscheidet **nur** `lib/portalDaten.ts`. Fremde Rechnung →
+  „nicht gefunden", nie „nicht erlaubt". Anmeldecode geht jetzt auch an
+  Projektkunden ohne Shop-Bestellung.
+- **Benutzername statt E-Mail** fürs Büro (`loginWithUsername`, ein
+  Anmeldefeld für beides). Konten ohne E-Mail verzichten auf „Passwort
+  vergessen" — zurücksetzen kann die Benutzerverwaltung.
 
 ---
 
-## Offen — in dieser Reihenfolge gedacht
+## Offen
 
-### 1. Rechnungsentwürfe an den drei Auslösern
-
-Noch nicht gebaut. Vereinbart:
-
-| Stufe | Auslöser |
-| --- | --- |
-| Anzahlung | Auftragsbestätigung / Anlage des Auftrags |
-| Zwischenrechnung | `meilenstein.erreichtAm` wird gesetzt |
-| Schlussrechnung | Status → `fertig`, fällig vor Lieferung |
-
-**Vorbereiten, nicht verschicken.** Der Auslöser legt einen Entwurf an und
-setzt ihn im Büro auf die Liste; abgeschickt wird von Hand. Ein versehentlich
-gesetzter Status kostet dann einen Entwurf und keine Rechnung beim Kunden.
-
-Dazu gehört der Abzug auf der Schlussrechnung — `abzugsZeilen()` liegt bereit.
-**Rechtlich der heikelste Teil:** Ohne benannten Abzug ist dieselbe
-Umsatzsteuer zweimal erklärt.
-
-### 2. GiroCode aufs Papier
-
-`giroBild()` liefert das PNG. Es fehlt der Einbau in `lib/invoice.ts` /
-`lib/dokumente.ts`. IBAN und BIC stehen in den Firmenangaben.
-
-### 3. Zahlungsverzug sichtbar machen
-
-`zahlungsstand()` und `terminVerschiebung()` liegen bereit, werden aber
-nirgends angezeigt. Gedacht: Der Auftrag zeigt „Zahlung 9 Tage überfällig,
-Fertigstellung verschiebt sich um 9 Tage" — verschieben tut der Mensch.
-
-Bei offener **Anzahlung** wird erinnert, nicht gemahnt (so entschieden). Nach
-`platzFreigebenNachTagen` fragt das Büro nach dem Werkstattplatz.
-
-### 4. Rollen-Oberfläche im Büro
-
-Das Datenmodell steht, die Oberfläche fehlt. Heute läuft es noch über das alte
-Auswahlfeld „Inhaber / Redaktion", das im Hintergrund die passende Rolle
-mitsetzt (`rolleFuer()` in `api/office/benutzer/route.ts`). Zu bauen: Rollen
-anlegen, Rechte anhaken, Benutzern zuweisen. Und die Navigation sollte
-ausblenden, wozu jemand kein Recht hat.
-
-### 5. Kundenportal
-
-Gewünscht, noch nichts gebaut. Ansatzpunkt vorhanden: `/api/konto`,
-`components/shop/KontoAnmeldung.tsx`. Gedacht: Bestellungen und Aufträge des
-Kunden, Rechnungen als PDF, Stand des Auftrags, und der Hinweis „Ihre
-Anzahlung steht noch aus" — genau deswegen rufen Leute an.
-
-„Fast in Echtzeit" ginge über die bestehende Live-Verbindung, bräuchte aber
-eine engere Fassung: Ein Kunde darf mitbekommen, wenn sich *sein* Auftrag
-ändert, und sonst nichts.
-
-### 6. Kleinkram
-
-- `verstaendlich()` in `api/office/sicherung/route.ts` übersetzt „Permission
-  denied" — die Kasse (`api/checkout/route.ts`) gibt bei fehlender
-  Stripe-Konfiguration schon `zahlung-nicht-eingerichtet` (503) zurück, aber
-  die Oberfläche zeigt weiterhin den allgemeinen Text. Es fehlen die
-  Wörterbuch-Einträge `checkout.errorNoPayment` in `lib/i18n.ts` (de/fr/en)
-  und ihre Verwendung in `CheckoutForm.tsx`.
-- `HANDOVER.md` löschen, wenn das hier erledigt ist.
+1. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
+   („Den Stand Ihres Auftrags sehen Sie unter …/konto"). Vorgeschlagen, noch
+   nicht entschieden.
+2. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
+3. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
+   Volumes gehören dem falschen Benutzer (`chown 1000:1000`), `SEED=true`
+   steht noch im Stack, `MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe
+   Wert, übriggebliebener Container `vincent-hellmann-backup-1`.
 
 ---
 
-## Beim Betrieb zu erledigen (nicht im Code)
+## Fallen, die in diesem Durchgang Zeit gekostet haben
 
-1. **Volumes gehören dem falschen Benutzer.** Die Sicherung aus dem Büro
-   scheitert mit „Permission denied". Einmalig, der Stack darf laufen:
+**Payload-Hooks laufen in der Transaktion des Auslösers.** Jede Abfrage in
+einem Hook braucht `req` — ohne das nimmt sie eine eigene Verbindung, sieht
+den eben angelegten Datensatz nicht und wartet auf Sperren der eigenen
+Transaktion. So blieb das Fertigmelden stehen (Materialbuchung schrieb auf
+zweiter Verbindung an denselben Auftrag zurück) und die Anzahlung entstand
+nicht. Beides behoben; bei neuen Hooks daran denken.
 
-   ```
-   docker run --rm -v vincent-hellmann_backups:/b alpine chown -R 1000:1000 /b
-   docker run --rm -v vincent-hellmann_media:/m   alpine chown -R 1000:1000 /m
-   ```
+**PDFKit darf nicht ins Next-Bundle.** Gebündelt findet es seine
+Schriftmaße (Helvetica.afm) nicht — jede über die Website ausgelieferte
+PDF-Route war ein stiller 404, obwohl dieselbe Funktion in `payload run`
+lief. Steht jetzt in `serverExternalPackages` (next.config.mjs). Das Abbild
+kopiert node_modules mit, also trägt das auch in Docker.
 
-   Seit `d1ca6c9` warnt der Container beim Start, wenn das nötig ist.
+**`payload migrate` bleibt stumm stehen, wenn vorher `pnpm dev` lief.** Der
+Dev-Push schreibt einen `dev`-Eintrag in `payload_migrations`, und migrate
+wartet dann interaktiv auf eine Antwort. Lösung:
+`delete from payload_migrations where name='dev'`, dann migrieren.
 
-2. **`SEED=true`** steht noch im Stack. Läuft bei jedem Start durch und trägt
-   gelöschte Demo-Inhalte wieder nach. Gehört auf `false`.
+**Feld-Untergrenzen fressen Abzugszeilen.** `unitPrice` hatte `min: 0` — die
+negativen Abzugszeilen der Schlussrechnung scheiterten still an der
+Validierung. Wer neue Betragsfelder anlegt: an Gutschriften denken.
 
-3. **`MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe Wert.** Der
-   MCP-Schlüssel wird herausgegeben, das Datenbank-Passwort soll nirgends hin.
-   Zwei getrennte Werte, `openssl rand -hex 32`.
+**Playwright in dieser Umgebung:** vorinstallierter Chromium passt nicht zur
+gepinnten Fassung. `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`
+setzen (der Haken dafür ist schon in `playwright.config.ts`). Der MCP-Test
+braucht `MCP_API_KEY` am laufenden Server (CI setzt ihn).
 
-4. **Übriggebliebener Container** `vincent-hellmann-backup-1` aus dem alten
-   Stack. Die App sichert selbst; „Prune services" in Portainer einschalten
-   oder ihn löschen.
-
----
-
-## Fallen, die schon einmal Zeit gekostet haben
-
-**Payload-Werkzeuge und `NODE_ENV`.** `payload migrate` braucht
-`NODE_ENV=production` — sonst steht der Adapter auf `push` und überspringt die
-Migrationen *wortlos*. `payload run` braucht das Gegenteil: In
-Produktionsstellung findet es die Entwicklungswerkzeuge nicht und endet ohne
-Ausgabe. Beides ist in `ci.yml` richtig gesetzt; nicht „vereinheitlichen".
-
-**Traefik-Prioritäten.** Ohne Angabe vergibt Traefik sie nach der *Länge der
-Regel* — `Host(...)` allein kommt auf 26. Die Router stehen deshalb auf 100
-und 200, nicht auf 1 und 10.
-
-**Dateiadressen der zwei Abbilder.** Das Büro liefert seine Skripte unter
-`/office/_next/…` (`assetPrefix` in `next.config.mjs`), weil `/_next/…` laut
-Traefik-Regel zur Website geht. `tests/aufteilung.spec.ts` vergleicht die
-beiden Seiten dieser Übereinkunft.
-
-**Reiter innerhalb einer Seite** brauchen `.buero-reiter`, nicht
-`.buero-nav` — letztere wird unter 720 px ausgeblendet.
-
-**`type: 'row'` innerhalb einer Gruppe** wird im Admin still weggelassen. Die
-Felder sind dann schlicht nicht da. Flach lassen.
-
-**Die Rechnungs-Schnittstelle schreibt immer den ganzen Datensatz.** Ein
-Aufruf mit nur `{ id, status }` löscht die Positionen. Für schmale Änderungen
-gibt es `aktion: 'bezahlt'`; weitere gehören genauso angelegt.
-
-**Der Service Worker darf beim Einbau nicht bummeln.** Wer dort Anfragen
-verdoppelt, macht ihn so langsam, dass Prüfungen ihn nicht bereit finden.
+Die Fallen aus dem ersten Durchgang gelten weiter: `NODE_ENV` bei den
+Payload-Werkzeugen (migrate braucht production, run das Gegenteil),
+Traefik-Prioritäten 100/200, Dateiadressen der zwei Abbilder
+(`/office/_next/…`), `.buero-reiter` statt `.buero-nav` für Reiter in Seiten,
+kein `type: 'row'` in Gruppen, Rechnungs- und Auftrags-Schnittstelle schreiben
+immer den ganzen Datensatz (schmale Wege: `aktion: 'bezahlt'`, `aktion:
+'termin'`).
 
 ---
 
@@ -234,30 +130,20 @@ verdoppelt, macht ihn so langsam, dass Prüfungen ihn nicht bereit finden.
 
 ```
 pnpm typecheck && pnpm lint
-pnpm exec playwright test tests/<datei>.spec.ts --reporter=line
+ADMIN_TEST_PASSWORT=… PLAYWRIGHT_CHROMIUM_PATH=… pnpm exec playwright test --reporter=line
 ```
 
-Die Oberflächen-Prüfungen brauchen `ADMIN_TEST_PASSWORT` und einen laufenden
-Server; ohne das überspringen sie sich. Reine Rechenwege
-(`anzahlung`, `girocode`, `zahlungsstand`, `aufteilung`) laufen ohne beides.
-
-Postgres läuft in dieser Umgebung nicht von selbst:
-
-```
-su postgres -c "/usr/lib/postgresql/16/bin/initdb -D /var/lib/postgresql/vhdata -U vh --auth=trust"
-su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/vhdata -o '-p 5432 -k /tmp' -l /var/lib/postgresql/vhdata/log start"
-```
-
-`DATABASE_URI=postgres://vh@127.0.0.1:5432/vh` in `.env`.
+Stand dieses Durchgangs: **78 von 78 grün** (1 bedingt übersprungen), Build
+sauber, jede Funktion zusätzlich am gebauten Stand nachgemessen. Postgres in
+der Umgebung starten wie im ersten Durchgang beschrieben (initdb + pg_ctl,
+`DATABASE_URI=postgres://vh@127.0.0.1:5432/vh`).
 
 ---
 
 ## Ton und Arbeitsweise
 
 Deutsch, auch im Code. Kommentare erklären das *Warum* und den Fall, für den
-etwas gebaut ist — nicht, was die Zeile tut. Commit-Nachrichten in ganzen
-Sätzen, mit dem Fehler, der dahinterstand.
-
-Nicht veröffentlichen, ohne dass die Prüfung grün ist. Und lieber einmal
-nachmessen als einmal behaupten — die teuersten Fehler dieses Tages waren alle
-solche, die still gescheitert sind.
+etwas gebaut ist. Commit-Nachrichten in ganzen Sätzen, mit dem Fehler, der
+dahinterstand. Nicht veröffentlichen, ohne dass die Prüfung grün ist — und
+lieber einmal nachmessen als einmal behaupten: Die teuersten Fehler beider
+Durchgänge waren die, die still gescheitert sind.

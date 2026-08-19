@@ -24,7 +24,7 @@ test.describe('Einstellungen im Büro', () => {
   test('zeigt die Felder aus Payload und speichert Änderungen', async ({ page }) => {
     await page.goto('/office/login')
     await page.waitForLoadState('networkidle')
-    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[autocomplete="username"]', EMAIL)
     await page.fill('input[type="password"]', PASSWORT!)
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
@@ -75,7 +75,7 @@ test.describe('Einstellungen im Büro', () => {
 
     await seite.goto('/office/login')
     await seite.waitForLoadState('networkidle')
-    await seite.fill('input[type="email"]', EMAIL)
+    await seite.fill('input[autocomplete="username"]', EMAIL)
     await seite.fill('input[type="password"]', PASSWORT!)
     await seite.locator('form button[type="submit"]').first().click()
     await seite.waitForURL(/\/office$/, { timeout: 30_000 })
@@ -85,9 +85,10 @@ test.describe('Einstellungen im Büro', () => {
       await expect(seite.getByRole('link', { name: teil }), teil).toBeVisible({ timeout: 20_000 })
     }
 
-    // Und sie führen auch irgendwohin
+    // Und sie führen auch irgendwohin. Seit die Rollen mit auf dem Blatt
+    // stehen, gibt es dort mehrere Überschriften — gemeint ist die erste.
     await seite.getByRole('link', { name: 'Benutzer' }).click()
-    await expect(seite.locator('h2')).toContainText('Benutzer', { timeout: 20_000 })
+    await expect(seite.locator('h2').first()).toContainText('Benutzer', { timeout: 20_000 })
 
     await telefon.close()
   })

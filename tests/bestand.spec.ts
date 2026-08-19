@@ -62,7 +62,7 @@ async function anmelden(seite: Page) {
   await seite.goto('/office/login')
   // Erst wenn die Seite im Browser lebendig ist, tut der Knopf etwas
   await seite.waitForLoadState('networkidle')
-  await seite.fill('input[type="email"]', EMAIL)
+  await seite.fill('input[autocomplete="username"]', EMAIL)
   await seite.fill('input[type="password"]', PASSWORT!)
   await seite.locator('form button[type="submit"]').first().click()
   await seite.waitForURL(/\/office$/, { timeout: 30_000 })
