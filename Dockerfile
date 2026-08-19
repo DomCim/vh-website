@@ -12,6 +12,39 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+# ── Welche Hälfte wird gebaut? ───────────────────────────────────────────────
+#
+# Website und Büro entstehen aus demselben Quelltext, aber als zwei Abbilder.
+# Der Grund ist nicht Speicherplatz, sondern das Ausrollen: Ändert sich nur das
+# Büro, wird auch nur dessen Abbild neu gebaut — der Shop-Container hat beim
+# Ausrollen dann nichts zu tun und läuft ohne Unterbrechung weiter. Bei einem
+# gemeinsamen Abbild startete jede Büro-Änderung den Shop mit neu.
+#
+# Getrennt wird vor dem Bauen, indem die Seiten der anderen Hälfte
+# verschwinden. Das geht, weil die beiden Routenbäume einander nicht anfassen.
+# Geteilt wird nur der Unterbau darunter — Datenmodell, Payload, `src/lib` —,
+# und der liegt in beiden.
+#
+# `src/components/office` bleibt im Website-Abbild absichtlich liegen: Der
+# Passkey-Knopf im Admin-Panel benutzt die Anmeldung des Büros. Ohne Routen
+# darauf ist das totes Gewicht von wenigen Kilobyte — mit gelöschtem Ordner
+# scheitert der Bau.
+#
+# `alles` (Standard) baut wie bisher beides in ein Abbild; so laufen
+# Entwicklung und Prüfung weiter mit einem einzigen Start.
+ARG ROLLE=alles
+RUN set -e; \
+    case "$ROLLE" in \
+      web) \
+        echo "Baue nur Website, Shop und Admin-Panel."; \
+        rm -rf "src/app/(office)" ;; \
+      buero) \
+        echo "Baue nur das Büro."; \
+        rm -rf "src/app/(frontend)" "src/app/(payload)" \
+               src/app/robots.ts src/app/sitemap.ts ;; \
+      *) echo "Baue beides in ein Abbild." ;; \
+    esac
+
 # Dummy-Werte nur für den Build — zur Laufzeit kommen die echten aus dem Stack
 ENV PAYLOAD_SECRET=build-time-secret \
     DATABASE_URI=postgres://build:build@localhost:5432/build \
@@ -30,6 +63,11 @@ ENV NODE_ENV=production \
 # einem Ausrollen erkennbar ist, welcher Stand wirklich läuft
 ARG GIT_SHA=unbekannt
 ENV APP_VERSION=$GIT_SHA
+
+# Dieselbe Rolle wie beim Bauen — der Prozess soll nicht nach Arbeit suchen,
+# die in seinem Abbild gar nicht liegt. Im Stack lässt sie sich überstimmen.
+ARG ROLLE=alles
+ENV ROLLE=$ROLLE
 
 # Für die Sicherung: pg_dump zieht die Datenbank, smbclient schiebt das fertige
 # Archiv auf die NAS. Beides läuft aus der App heraus, damit die Sicherung im

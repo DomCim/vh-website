@@ -74,12 +74,25 @@ Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den 
 
 ### Zwei Container: Website und Büro
 
-Beide laufen aus **demselben Abbild**, nur mit unterschiedlicher `ROLLE`:
+Beide entstehen aus **demselben Quelltext**, aber als **zwei Abbilder**:
 
-| Dienst  | `ROLLE`  | bedient                                          |
-| ------- | -------- | ------------------------------------------------ |
-| `web`   | `web`    | Website, Shop, Admin-Panel, alles Übrige         |
-| `buero` | `buero`  | `/office`, `/api/office`, `/ws/buero`            |
+| Dienst  | Abbild                        | bedient                                  |
+| ------- | ----------------------------- | ---------------------------------------- |
+| `web`   | `ghcr.io/domcim/vh-website`   | Website, Shop, Admin-Panel, alles Übrige |
+| `buero` | `ghcr.io/domcim/vh-buero`     | `/office`, `/api/office`, `/ws/buero`    |
+
+Getrennt wird vor dem Bauen: Beim Bau-Argument `ROLLE=web` verschwindet `src/app/(office)`, bei `ROLLE=buero` verschwinden `(frontend)` und `(payload)`. Ohne Angabe entsteht wie bisher ein Abbild mit beidem — so laufen Entwicklung und Prüfung mit einem einzigen Start.
+
+Der Grund ist nicht Speicherplatz, sondern das Ausrollen: **Gebaut wird nur, was sich geändert hat.**
+
+| Geändert | Neu gebaut |
+| --- | --- |
+| `src/app/(office)/…`, `src/components/office/…` | nur `vh-buero` |
+| `src/app/(frontend)/…`, `(payload)/…` | nur `vh-website` |
+| `src/lib`, `src/collections`, `Dockerfile`, `package.json` … | beide |
+| README, Tests, `docker-compose.yml` | keines |
+
+Eine reine Büro-Änderung erzeugt damit gar kein neues Website-Abbild — der Shop-Container hat beim Ausrollen nichts zu tun und läuft ohne Unterbrechung weiter. Beide Container können deshalb auf `latest` bleiben, und das automatische Ausrollen funktioniert unverändert.
 
 Der Grund ist nüchtern: Vorher teilten sie sich einen Prozess, und ein Fehler im Büro riss den Shop mit. Getrennt kann das Büro abstürzen, neu starten oder ausgerollt werden, ohne dass ein Kunde etwas merkt.
 
@@ -126,21 +139,25 @@ Danach im Portainer-Stack `VH_FASSUNG=1.2.3` eintragen und neu ausrollen. Beide 
 
 ### Nur eines von beiden ausrollen
 
-Website und Büro laufen aus demselben Abbild, müssen aber nicht dieselbe Fassung fahren. `VH_FASSUNG` setzt beide; `VH_FASSUNG_WEB` und `VH_FASSUNG_BUERO` überstimmen sie einzeln:
+Im Normalfall braucht es das gar nicht: Beide bleiben auf `latest`, und weil nur das geänderte Abbild neu gebaut wird, startet ohnehin nur der betroffene Container neu.
+
+Wer trotzdem eine Hälfte einfrieren will — etwa den Shop, während im Büro etwas ausprobiert wird —, kann das: `VH_FASSUNG` setzt beide, `VH_FASSUNG_WEB` und `VH_FASSUNG_BUERO` überstimmen sie einzeln:
 
 ```
 VH_FASSUNG=1.1.0            # beide
 VH_FASSUNG_BUERO=1.1.1      # nur das Büro, Website bleibt auf 1.1.0
 ```
 
-Beim Ausrollen tauscht Docker dann **nur den Container, dessen Abbild sich geändert hat**. Der andere läuft weiter — kein Neustart, kein Aussetzer für die Kundschaft, keine abreißende Bestellung mitten in der Kasse. Eine Änderung, die nur das Büro betrifft, kostet den Shop damit gar nichts.
-
 Zwei Dinge, die man dabei wissen muss:
 
 - **Migrationen wendet der Web-Container an.** Bringt eine Fassung eine Datenbank-Änderung mit, gehört sie auf beide — sonst läuft das neue Büro gegen ein altes Schema. Reine Oberflächen- oder Rechenänderungen im Büro sind davon nicht betroffen.
 - **Sie teilen sich die Datenbank.** Zwei Fassungen weit auseinander laufen zu lassen ist kein Dauerzustand, sondern etwas für den Nachmittag, an dem man eine Änderung im Büro ausprobiert.
 
-Warum nicht zwei getrennte Abbilder: Shop, Admin-Panel und Büro teilen sich Payload, das Datenmodell, die Collections und den größten Teil von `src/lib`. Zwei Abbilder wären zu neunzig Prozent dieselben Dateien — dafür zwei Bauläufe und zwei Stellen, an denen etwas auseinanderlaufen kann. Getrennt *ausrollen* lässt sich mit den zwei Variablen oben genauso.
+Was die zwei Abbilder **nicht** trennen, und warum das so ist:
+
+- **Die Anmeldung** liegt im Website-Abbild — Payloads eigene Schnittstelle (`/api/users/…`) gehört zum Admin-Zweig. Wer sich im Büro *neu* anmeldet, braucht also den Web-Container; einmal angemeldet, prüft das Büro das Sitzungs-Cookie im eigenen Prozess und ist unabhängig. Dasselbe gilt für Passkey, Zwei-Faktor und die KI-Texthilfe.
+- **Der Unterbau** liegt in beiden: Datenmodell, Collections, Payload, `src/lib`. Das ist keine Nachlässigkeit, sondern die Geschäftslogik selbst — beide Hälften arbeiten mit denselben Rechnungen, Aufträgen und Beständen.
+- **`src/components/office`** bleibt auch im Website-Abbild liegen: Der Passkey-Knopf im Admin-Panel benutzt die Anmeldung des Büros.
 
 ### Bauen, ohne auszurollen
 
