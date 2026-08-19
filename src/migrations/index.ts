@@ -20,6 +20,7 @@ import * as migration_20260818_201729_takt_aufbewahrung from './20260818_201729_
 import * as migration_20260818_211055_passkeys from './20260818_211055_passkeys';
 import * as migration_20260818_230824_grabsteine from './20260818_230824_grabsteine';
 import * as migration_20260819_092633_entwuerfe from './20260819_092633_entwuerfe';
+import * as migration_20260819_093716_rollen from './20260819_093716_rollen';
 
 export const migrations = [
   {
@@ -130,6 +131,11 @@ export const migrations = [
   {
     up: migration_20260819_092633_entwuerfe.up,
     down: migration_20260819_092633_entwuerfe.down,
-    name: '20260819_092633_entwuerfe'
+    name: '20260819_092633_entwuerfe',
+  },
+  {
+    up: migration_20260819_093716_rollen.up,
+    down: migration_20260819_093716_rollen.down,
+    name: '20260819_093716_rollen'
   },
 ];

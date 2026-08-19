@@ -15,6 +15,7 @@ import { Contacts } from './collections/Contacts'
 import { Counters } from './collections/Counters'
 import { Deletions } from './collections/Deletions'
 import { Drafts } from './collections/Drafts'
+import { Roles } from './collections/Roles'
 import { MailLog } from './collections/MailLog'
 import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
@@ -90,6 +91,7 @@ export default buildConfig({
     Counters,
     Deletions,
     Drafts,
+    Roles,
     SystemState,
     MailLog,
     PushSubscriptions,

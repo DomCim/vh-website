@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../lib/data'
 import { dokument, type DokumentArt } from '../../../../../lib/dokumente'
 import { nachrichtSenden, postfachFinden } from '../../../../../lib/postfach'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
   try {
     const payload = await payloadClient()
     const { user } = await payload.auth({ headers: req.headers })
-    if (!user || (user as { role?: string }).role !== 'inhaber') {
+    if (!user || !(await darf(payload, user, 'anfragen.bearbeiten'))) {
       return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
     }
 
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') {
+  if (!user || !(await darf(payload, user, 'anfragen.bearbeiten'))) {
     return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
   }
 

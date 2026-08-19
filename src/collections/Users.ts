@@ -63,8 +63,27 @@ export const Users: CollectionConfig = {
       type: 'text',
     },
     {
-      name: 'role',
+      /*
+       * Die Rolle als Datensatz — daran hängen die Rechte.
+       *
+       * Das alte Auswahlfeld darunter bleibt vorerst stehen. Es ist der
+       * Rückweg für Konten, die der Umzug nicht erwischt hat: `hatRecht`
+       * erkennt einen alten Inhaber auch daran und lässt ihn weiterarbeiten,
+       * statt ihn an einem halb fertigen Umbau auszusperren.
+       */
+      name: 'rolle',
       label: 'Rolle',
+      type: 'relationship',
+      relationTo: 'roles',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Bestimmt, was dieses Konto im Büro darf.',
+      },
+    },
+    {
+      name: 'role',
+      label: 'Rolle (alt)',
       type: 'select',
       required: true,
       defaultValue: 'redaktion',
@@ -75,7 +94,7 @@ export const Users: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Nur die Inhaberrolle sieht Belege, Rechnungen, Inventar und den Steuer-Export unter /office.',
+          'Vorgänger der Rollen. Wird nicht mehr gepflegt — maßgeblich ist das Feld „Rolle" darüber.',
       },
     },
     {

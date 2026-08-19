@@ -10,6 +10,7 @@ import {
   postfachFinden,
   postfaecher,
 } from '../../../../../lib/postfach'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -17,7 +18,7 @@ export const maxDuration = 120
 async function wache(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') return { payload, user: null }
+  if (!user || !(await darf(payload, user, 'postfach.lesen'))) return { payload, user: null }
   return { payload, user }
 }
 

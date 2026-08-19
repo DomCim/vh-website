@@ -87,6 +87,7 @@ export interface Config {
     counters: Counter;
     deletions: Deletion;
     drafts: Draft;
+    roles: Role;
     'system-state': SystemState;
     'mail-log': MailLog;
     'push-subscriptions': PushSubscription;
@@ -119,6 +120,7 @@ export interface Config {
     counters: CountersSelect<false> | CountersSelect<true>;
     deletions: DeletionsSelect<false> | DeletionsSelect<true>;
     drafts: DraftsSelect<false> | DraftsSelect<true>;
+    roles: RolesSelect<false> | RolesSelect<true>;
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
@@ -1096,7 +1098,11 @@ export interface User {
   id: number;
   name?: string | null;
   /**
-   * Nur die Inhaberrolle sieht Belege, Rechnungen, Inventar und den Steuer-Export unter /office.
+   * Bestimmt, was dieses Konto im Büro darf.
+   */
+  rolle?: (number | null) | Role;
+  /**
+   * Vorgänger der Rollen. Wird nicht mehr gepflegt — maßgeblich ist das Feld „Rolle" darüber.
    */
   role: 'redaktion' | 'inhaber';
   /**
@@ -1140,6 +1146,51 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * Verwaltet wird das im Büro unter Einstellungen → Benutzer.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roles".
+ */
+export interface Role {
+  id: number;
+  /**
+   * Wie die Rolle im Büro heißt, z.B. „Werkstatt" oder „Buchhaltung".
+   */
+  name: string;
+  /**
+   * Unveränderlicher Bezeichner, z.B. „werkstatt". Kleinbuchstaben ohne Umlaute.
+   */
+  schluessel: string;
+  /**
+   * Was diese Rolle darf. Die Inhaberrolle darf immer alles, unabhängig von den Haken.
+   */
+  rechte?:
+    | (
+        | 'buero.oeffnen'
+        | 'postfach.lesen'
+        | 'anfragen.bearbeiten'
+        | 'angebote.schreiben'
+        | 'auftraege.bearbeiten'
+        | 'rechnungen.schreiben'
+        | 'belege.erfassen'
+        | 'inventar.pflegen'
+        | 'partner.pflegen'
+        | 'zahlen.sehen'
+        | 'website.pflegen'
+        | 'newsletter.versenden'
+        | 'sicherung.ausloesen'
+        | 'einstellungen.aendern'
+        | 'benutzer.verwalten'
+      )[]
+    | null;
+  /**
+   * Eingebaute Rollen lassen sich nicht löschen.
+   */
+  eingebaut?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1295,6 +1346,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'drafts';
         value: number | Draft;
+      } | null)
+    | ({
+        relationTo: 'roles';
+        value: number | Role;
       } | null)
     | ({
         relationTo: 'system-state';
@@ -1896,6 +1951,18 @@ export interface DraftsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roles_select".
+ */
+export interface RolesSelect<T extends boolean = true> {
+  name?: T;
+  schluessel?: T;
+  rechte?: T;
+  eingebaut?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "system-state_select".
  */
 export interface SystemStateSelect<T extends boolean = true> {
@@ -2014,6 +2081,7 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  rolle?: T;
   role?: T;
   mfaEnabled?: T;
   passkeys?:

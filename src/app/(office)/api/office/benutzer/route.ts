@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,8 +23,31 @@ type Aktion = 'anlegen' | 'aendern' | 'passwort' | 'loeschen' | 'passkey-entfern
 async function wache(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') return { payload, user: null }
+  if (!user || !(await darf(payload, user, 'benutzer.verwalten'))) return { payload, user: null }
   return { payload, user }
+}
+
+/**
+ * Die Rolle als Datensatz zum alten Auswahlwert.
+ *
+ * Das Auswahlfeld und die Rollen-Beziehung stehen im Moment nebeneinander:
+ * Die Oberfläche arbeitet noch mit `inhaber` / `redaktion`, die Rechte hängen
+ * schon an der Beziehung. Solange das so ist, müssen beide gesetzt werden —
+ * ein Konto mit Auswahlwert, aber ohne Rolle dürfte nichts, und das sähe
+ * nach einem Fehler beim Passwort aus.
+ */
+async function rolleFuer(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+  schluessel: string,
+): Promise<number | undefined> {
+  const { docs } = await payload.find({
+    collection: 'roles',
+    where: { schluessel: { equals: schluessel } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return docs[0]?.id as number | undefined
 }
 
 /** Wie viele Inhaber gibt es noch außer diesem einen? */
@@ -99,6 +123,7 @@ export async function POST(req: Request) {
           password: b.passwort,
           name: b.name?.trim() || undefined,
           role: (b.role as 'inhaber' | 'redaktion') || 'redaktion',
+          rolle: await rolleFuer(payload, b.role || 'redaktion'),
         },
       })
       return NextResponse.json({ ok: true, id: doc.id })
@@ -158,7 +183,10 @@ export async function POST(req: Request) {
 
       const daten: Record<string, unknown> = {}
       if (typeof b.name === 'string') daten.name = b.name.trim() || null
-      if (b.role) daten.role = b.role
+      if (b.role) {
+        daten.role = b.role
+        daten.rolle = await rolleFuer(payload, b.role)
+      }
       if (typeof b.mfaEnabled === 'boolean' && b.mfaEnabled === false) {
         // Abschalten geht von hier — einschalten muss der Betroffene selbst,
         // dafür braucht es sein Gerät.

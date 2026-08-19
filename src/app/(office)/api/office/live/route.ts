@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { liveKarteErzeugen } from '../../../../../lib/live'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') {
+  if (!user || !(await darf(payload, user, 'buero.oeffnen'))) {
     return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
   }
 

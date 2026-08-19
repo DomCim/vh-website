@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +24,7 @@ const SCHLUESSEL = /^[a-z]+:(neu|[0-9]+|neu:[a-z0-9-]+)$/
 async function wer(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') return { payload, user: null }
+  if (!user || !(await darf(payload, user, 'buero.oeffnen'))) return { payload, user: null }
   return { payload, user }
 }
 

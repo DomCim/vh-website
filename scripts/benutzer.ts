@@ -15,6 +15,8 @@ import config from '@payload-config'
 import { randomBytes } from 'crypto'
 import { getPayload } from 'payload'
 
+import { EINGEBAUTE_ROLLEN } from '../src/collections/Roles'
+
 const KONTEN = [
   { email: 'vh@vincent-hellmann.com', name: 'Vincent Hellmann', umgebung: 'VH_PASSWORT' },
   { email: 'admin@vincent-hellmann.com', name: 'Verwaltung', umgebung: 'ADMIN_PASSWORT' },
@@ -26,6 +28,27 @@ const wuerfeln = () => randomBytes(12).toString('base64url')
 async function main() {
   const payload = await getPayload({ config })
 
+  /*
+   * Erst dafür sorgen, dass es die eingebauten Rollen gibt.
+   *
+   * Die Migration legt sie an, aber dieses Skript läuft auch auf Datenbanken,
+   * die auf anderen Wegen entstanden sind — und ein Konto ohne Rolle darf
+   * nichts. Wer den Zugang anlegt und sich dann nicht anmelden kann, hält es
+   * für einen Fehler beim Passwort und sucht an der falschen Stelle.
+   */
+  const rollen = new Map<string, number>()
+  for (const vorlage of EINGEBAUTE_ROLLEN) {
+    const da = await payload.find({
+      collection: 'roles',
+      where: { schluessel: { equals: vorlage.schluessel } },
+      limit: 1,
+      overrideAccess: true,
+    })
+    const rolle =
+      da.docs[0] ?? (await payload.create({ collection: 'roles', overrideAccess: true, data: vorlage }))
+    rollen.set(vorlage.schluessel, rolle.id as number)
+  }
+
   for (const konto of KONTEN) {
     const vorhanden = await payload.find({
       collection: 'users',
@@ -36,12 +59,13 @@ async function main() {
 
     if (vorhanden.docs[0]) {
       const nutzer = vorhanden.docs[0]
-      if (nutzer.role !== 'inhaber') {
+      const fehlt = nutzer.role !== 'inhaber' || !nutzer.rolle
+      if (fehlt) {
         await payload.update({
           collection: 'users',
           id: nutzer.id,
           overrideAccess: true,
-          data: { role: 'inhaber' },
+          data: { role: 'inhaber', rolle: rollen.get('inhaber') },
         })
         console.log(`${konto.email}: vorhanden, Rolle auf Inhaber gesetzt`)
       } else {
@@ -61,6 +85,7 @@ async function main() {
         password: passwort,
         name: konto.name,
         role: 'inhaber',
+        rolle: rollen.get('inhaber'),
       },
     })
 

@@ -4,6 +4,7 @@ import { Integrations } from '../../../../../globals/Integrations'
 import { SiteSettings } from '../../../../../globals/SiteSettings'
 import { payloadClient } from '../../../../../lib/data'
 import { felderLesen } from '../../../../../lib/felderLesen'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ function pruefen(name: string | null): Bereichsname | null {
 async function wachePassieren(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') return null
+  if (!user || !(await darf(payload, user, 'einstellungen.aendern'))) return null
   return payload
 }
 

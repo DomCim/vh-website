@@ -1,5 +1,6 @@
 import { payloadClient } from '../../../../../../../lib/data'
 import { rechnungFacturX } from '../../../../../../../lib/dokumente'
+import { darf } from '../../../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') {
+  if (!user || !(await darf(payload, user, 'rechnungen.schreiben'))) {
     return new Response('Nicht erlaubt', { status: 403 })
   }
 

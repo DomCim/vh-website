@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { newsletterVersenden, type Sprache } from '../../../../../lib/newsletter'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 // Ein paar hundert Empfänger nacheinander brauchen Zeit
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   try {
     const payload = await payloadClient()
     const { user } = await payload.auth({ headers: req.headers })
-    if (!user || (user as { role?: string }).role !== 'inhaber') {
+    if (!user || !(await darf(payload, user, 'newsletter.versenden'))) {
       return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
     }
 

@@ -12,6 +12,7 @@ import {
   sicherungsPfad,
   zustandMerken,
 } from '../../../../../lib/sicherung'
+import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 // Datenbank ziehen, packen und auf die NAS schieben dauert bei vielen
@@ -21,7 +22,7 @@ export const maxDuration = 3600
 async function nurInhaber(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') return null
+  if (!user || !(await darf(payload, user, 'sicherung.ausloesen'))) return null
   return payload
 }
 

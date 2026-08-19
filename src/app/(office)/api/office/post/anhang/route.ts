@@ -1,5 +1,6 @@
 import { payloadClient } from '../../../../../../lib/data'
 import { anhangLaden, postfachFinden } from '../../../../../../lib/postfach'
+import { darf } from '../../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -8,7 +9,7 @@ export const maxDuration = 120
 export async function GET(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || (user as { role?: string }).role !== 'inhaber') {
+  if (!user || !(await darf(payload, user, 'postfach.lesen'))) {
     return new Response('Nicht erlaubt', { status: 403 })
   }
 
