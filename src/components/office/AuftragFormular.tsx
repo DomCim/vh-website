@@ -28,6 +28,8 @@ export type AuftragWerte = {
   customerName?: string | null
   startDate?: string | null
   dueDate?: string | null
+  /** Geplante Fertigungszeit in Minuten — im Formular in Stunden eingegeben */
+  plannedMinutes?: number | null
   positions?: AuftragPosition[]
   material?: AuftragMaterial[]
   notes?: string | null
@@ -167,6 +169,25 @@ export function AuftragFormular({
             value={nurTag(w.dueDate)}
             onChange={(e) => setzen({ dueDate: e.target.value })}
           />
+        </label>
+        <label className="buero-feld">
+          <span>Fertigungszeit (Stunden)</span>
+          <input
+            type="number"
+            min={0}
+            step={0.5}
+            value={w.plannedMinutes == null ? '' : Math.round((w.plannedMinutes / 60) * 10) / 10}
+            onChange={(e) =>
+              setzen({
+                plannedMinutes: e.target.value === '' ? null : Math.round(Number(e.target.value) * 60),
+              })
+            }
+            placeholder="z.B. 20"
+          />
+          <span style={{ marginTop: '.4rem' }}>
+            Zählt in der Wochen-Auslastung. Leer heißt „noch nicht geschätzt“ — dann fehlt dieser
+            Auftrag dort.
+          </span>
         </label>
         <label className="buero-feld">
           <span>Status</span>

@@ -933,6 +933,10 @@ export interface Job {
     | null;
   materialGebucht?: boolean | null;
   /**
+   * Grundlage der Wochen-Auslastung. Bei Shop-Bestellungen aus der Fertigungszeit der Artikel vorbelegt.
+   */
+  plannedMinutes?: number | null;
+  /**
    * Gesetzt, solange die Stoppuhr im Büro läuft.
    */
   runningSince?: string | null;
@@ -1924,6 +1928,7 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  plannedMinutes?: T;
   runningSince?: T;
   timeEntries?:
     | T
@@ -2465,6 +2470,10 @@ export interface SiteSetting {
      */
     targetMargin?: number | null;
     /**
+     * Nur die reine Werkstattzeit — nicht die Arbeitszeit. Daran misst sich, wie voll eine Woche schon ist.
+     */
+    weeklyHours?: number | null;
+    /**
      * Gilt für alle Produkte ohne eigene Angabe, z.B. „3–4 Wochen".
      */
     defaultProductionTime?: string | null;
@@ -2913,6 +2922,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         notice?: T;
         hourlyRate?: T;
         targetMargin?: T;
+        weeklyHours?: T;
         defaultProductionTime?: T;
       };
   analytics?:

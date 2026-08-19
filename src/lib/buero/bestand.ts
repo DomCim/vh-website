@@ -46,6 +46,8 @@ export type Rahmen = {
   kiVerfuegbar: boolean
   stundensatz: number
   wunschaufschlag: number
+  /** Fertigungsstunden je Woche — die Kapazität der Werkstatt */
+  wochenstunden: number
   firma: { siret: string; vatId: string; iban: string }
   /** Ab wie vielen Tagen offener Anzahlung nach dem Werkstattplatz gefragt wird */
   platzFreigebenNachTagen: number
@@ -58,6 +60,7 @@ const RAHMEN_LEER: Rahmen = {
   kiVerfuegbar: false,
   stundensatz: 65,
   wunschaufschlag: 40,
+  wochenstunden: 30,
   firma: { siret: '', vatId: '', iban: '' },
   platzFreigebenNachTagen: 21,
   rechte: [],

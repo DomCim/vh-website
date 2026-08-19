@@ -127,16 +127,35 @@ async function auftragAusBestellung(
 
     // Nur, was wirklich gefertigt werden muss
     const zuFertigen: typeof order.items = []
+    /*
+     * Die zugesagte Werkstattzeit — Summe der Fertigungszeiten mal Menge.
+     *
+     * Sie wird hier gleich mitgenommen, weil die Artikel ohnehin geladen
+     * werden. Später am Auftrag nachzuschlagen ginge auch, wäre aber falsch:
+     * Was mit der Kundschaft vereinbart ist, darf sich nicht ändern, weil
+     * jemand Monate später den Artikel im Shop anfasst.
+     *
+     * Kennt ein Artikel seine Fertigungszeit nicht, bleibt die Summe
+     * unvollständig — dann steht am Auftrag lieber nichts als eine zu kleine
+     * Zahl, die in der Auslastung eine freie Woche vortäuscht.
+     */
+    let minuten = 0
+    let alleBekannt = true
     for (const pos of order.items ?? []) {
       const produktId = typeof pos.product === 'object' ? (pos.product as { id?: number })?.id : pos.product
       if (typeof produktId !== 'number') {
         zuFertigen.push(pos)
+        alleBekannt = false
         continue
       }
       const produkt = await payload
         .findByID({ collection: 'products', id: produktId, depth: 0, overrideAccess: true })
         .catch(() => null)
-      if (!produkt?.readyMade) zuFertigen.push(pos)
+      if (!produkt?.readyMade) {
+        zuFertigen.push(pos)
+        if (produkt?.productionMinutes) minuten += produkt.productionMinutes * (pos.quantity || 1)
+        else alleBekannt = false
+      }
     }
     if (!zuFertigen.length) return
 
@@ -153,6 +172,7 @@ async function auftragAusBestellung(
         source: 'shop',
         customerName: order.customer?.name ?? undefined,
         order: order.id as number,
+        plannedMinutes: alleBekannt && minuten > 0 ? minuten : undefined,
         positions: zuFertigen.map((p) => ({
           description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
           quantity: p.quantity,

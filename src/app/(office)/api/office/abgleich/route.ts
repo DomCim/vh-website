@@ -60,6 +60,9 @@ async function rahmen(
     kiVerfuegbar: false,
     stundensatz: 65,
     wunschaufschlag: 40,
+    // Wie voll eine Woche ist, rechnet die Seite im Gerät — dafür muss die
+    // Kapazität mit hinein
+    wochenstunden: 30,
     firma: { siret: '', vatId: '', iban: '' },
     platzFreigebenNachTagen: 21,
     /*
@@ -84,10 +87,15 @@ async function rahmen(
   }
   try {
     const einstellungen = (await payload.findGlobal({ slug: 'site-settings', depth: 0 })) as {
-      craft?: { hourlyRate?: number | null; targetMargin?: number | null } | null
+      craft?: {
+        hourlyRate?: number | null
+        targetMargin?: number | null
+        weeklyHours?: number | null
+      } | null
     }
     rahmen.stundensatz = einstellungen?.craft?.hourlyRate ?? 65
     rahmen.wunschaufschlag = einstellungen?.craft?.targetMargin ?? 40
+    rahmen.wochenstunden = einstellungen?.craft?.weeklyHours ?? 30
     const angaben = firmenAngaben(einstellungen)
     rahmen.firma = {
       siret: angaben.siret ?? '',

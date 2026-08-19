@@ -30,6 +30,7 @@ import * as migration_20260819_125944_benutzername from './20260819_125944_benut
 import * as migration_20260819_144742_rechnungskauf from './20260819_144742_rechnungskauf';
 import * as migration_20260819_172008_zahlungsabgleich from './20260819_172008_zahlungsabgleich';
 import * as migration_20260819_172805_storno from './20260819_172805_storno';
+import * as migration_20260819_173532_auslastung from './20260819_173532_auslastung';
 
 export const migrations = [
   {
@@ -190,6 +191,11 @@ export const migrations = [
   {
     up: migration_20260819_172805_storno.up,
     down: migration_20260819_172805_storno.down,
-    name: '20260819_172805_storno'
+    name: '20260819_172805_storno',
+  },
+  {
+    up: migration_20260819_173532_auslastung.up,
+    down: migration_20260819_173532_auslastung.down,
+    name: '20260819_173532_auslastung'
   },
 ];

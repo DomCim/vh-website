@@ -354,6 +354,28 @@ export const Jobs: CollectionConfig = {
       admin: { hidden: true },
     },
     {
+      /*
+       * Wie viele Werkstattstunden dieser Auftrag zusagt.
+       *
+       * Steht am Auftrag und nicht am Artikel, obwohl die Zahl von dort kommt:
+       * Aus einer Shop-Bestellung wird sie beim Anlegen übernommen (Summe der
+       * Fertigungszeiten mal Menge), im Projektgeschäft trägt sie jemand ein.
+       * Danach gehört sie dem Auftrag — was mit der Kundschaft vereinbart ist,
+       * darf sich nicht ändern, weil Monate später jemand den Artikel anfasst.
+       *
+       * Ohne diese Zahl ist die Auslastung blind: Der Kalender zeigt dann zwar
+       * Termine, aber nicht, ob die Woche schon voll ist.
+       */
+      name: 'plannedMinutes',
+      label: 'Geplante Fertigungszeit (Minuten)',
+      type: 'number',
+      min: 0,
+      admin: {
+        description:
+          'Grundlage der Wochen-Auslastung. Bei Shop-Bestellungen aus der Fertigungszeit der Artikel vorbelegt.',
+      },
+    },
+    {
       name: 'runningSince',
       label: 'Uhr läuft seit',
       type: 'date',

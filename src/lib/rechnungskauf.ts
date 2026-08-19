@@ -127,6 +127,27 @@ async function zahlplanAusBestellung(payload: Payload, bestellung: Bestellung): 
 }
 
 /**
+ * Die zugesagte Werkstattzeit einer Bestellung — Summe über die Artikel.
+ *
+ * Kennt ein Artikel seine Fertigungszeit nicht, bleibt die Summe
+ * unvollständig; dann steht am Auftrag lieber nichts als eine zu kleine Zahl,
+ * die in der Wochen-Auslastung eine freie Woche vortäuscht.
+ */
+async function geplanteMinuten(payload: Payload, bestellung: Bestellung): Promise<number | undefined> {
+  let minuten = 0
+  for (const pos of bestellung.items ?? []) {
+    const id = typeof pos.product === 'object' ? (pos.product as { id?: number })?.id : pos.product
+    if (typeof id !== 'number') return undefined
+    const produkt = await payload
+      .findByID({ collection: 'products', id, depth: 0, overrideAccess: true })
+      .catch(() => null)
+    if (!produkt?.productionMinutes) return undefined
+    minuten += produkt.productionMinutes * (pos.quantity || 1)
+  }
+  return minuten > 0 ? minuten : undefined
+}
+
+/**
  * Auftrag und Rechnungsentwurf zu einer Rechnungs-Bestellung.
  *
  * Gibt es einen Zahlplan, entsteht der Anzahlungsentwurf über den
@@ -172,6 +193,7 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
       customerName: bestellung.customer?.name ?? undefined,
       contact: kontakt,
       order: Number(bestellung.id),
+      plannedMinutes: await geplanteMinuten(payload, bestellung),
       zahlplan: plan,
       positions: positionen,
     },

@@ -132,6 +132,7 @@ export function AuftragAnsicht() {
           customerName: j.customerName as string,
           startDate: j.startDate as string,
           dueDate: j.dueDate as string,
+          plannedMinutes: j.plannedMinutes as number,
           notes: j.notes as string,
           materialGebucht: Boolean(j.materialGebucht),
           customerOrderRef: j.customerOrderRef as string,

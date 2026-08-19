@@ -46,6 +46,10 @@ export async function POST(req: Request) {
       customerName: b.customerName || undefined,
       startDate: b.startDate || undefined,
       dueDate: b.dueDate || undefined,
+      // Leer heißt „nicht geschätzt" und nicht „null Stunden" — sonst zählte
+      // ein Auftrag ohne Angabe als kostenlos in der Auslastung
+      plannedMinutes:
+        b.plannedMinutes === '' || b.plannedMinutes == null ? null : Number(b.plannedMinutes) || 0,
       notes: b.notes || undefined,
       positions: (b.positions ?? [])
         .filter((p: { description?: string }) => p.description?.trim())

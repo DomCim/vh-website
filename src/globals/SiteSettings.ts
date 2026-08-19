@@ -247,6 +247,26 @@ export const SiteSettings: GlobalConfig = {
           },
         },
         {
+          /*
+           * Wie viele Stunden in der Woche tatsächlich in der Werkstatt
+           * ankommen.
+           *
+           * Bewusst nicht 40: Angebote schreiben, Material holen, Kundschaft
+           * anrufen und der Papierkram gehören auch zur Woche. Wer hier die
+           * Vertragszeit einträgt, sagt Termine zu, die nicht zu halten sind.
+           */
+          name: 'weeklyHours',
+          label: 'Fertigungsstunden je Woche',
+          type: 'number',
+          min: 1,
+          max: 80,
+          defaultValue: 30,
+          admin: {
+            description:
+              'Nur die reine Werkstattzeit — nicht die Arbeitszeit. Daran misst sich, wie voll eine Woche schon ist.',
+          },
+        },
+        {
           name: 'defaultProductionTime',
           label: 'Standard-Fertigungszeit',
           type: 'text',
