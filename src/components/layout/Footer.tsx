@@ -3,6 +3,7 @@ import React from 'react'
 
 import type { Locale } from '../../lib/i18n'
 import { NewsletterAnmeldung, type NewsletterDict } from '../NewsletterAnmeldung'
+import { Logo } from './Logo'
 
 type Settings = {
   siteName?: string | null
@@ -64,8 +65,8 @@ export function Footer({
     <footer className="bg-dark text-white/80">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
         <div>
-          {/* Logo invertiert für den dunklen Hintergrund */}
-          <img src="/logo.svg" alt="Vincent Hellmann" className="mb-4 h-4 w-auto invert" />
+          {/* Nimmt die Schriftfarbe an — der Fußbereich ist in beiden Themen dunkel */}
+          <Logo className="mb-4 h-4 w-auto text-white" />
 
           {settings?.contact?.company && <p className="text-sm">{settings.contact.company}</p>}
           {settings?.contact?.address && (

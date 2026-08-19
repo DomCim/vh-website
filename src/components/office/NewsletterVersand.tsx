@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { Fussleiste } from './Fussleiste'
 
 export type NewsVorschlag = {
   id: number | string
@@ -128,10 +129,10 @@ export function NewsletterVersand({
 
       {meldung && <div className="buero-hinweis">{meldung}</div>}
 
-      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginTop: '.8rem' }}>
+      <Fussleiste>
         <button
           type="button"
-          className="buero-knopf schmal"
+          className="buero-knopf leise"
           disabled={laeuft !== null || !testAn}
           onClick={() => senden('test')}
         >
@@ -145,7 +146,7 @@ export function NewsletterVersand({
         >
           {laeuft === 'alle' ? 'Sendet …' : `An ${empfaenger} Empfänger schicken`}
         </button>
-      </div>
+      </Fussleiste>
     </>
   )
 }

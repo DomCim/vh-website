@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { absenden } from '../../lib/buero/warteschlange'
+import { Fussleiste } from './Fussleiste'
 
 export type PostenAuswahl = { id: number; name: string; unit: string }
 export type LieferantAuswahl = { id: number; name: string }
@@ -66,6 +67,8 @@ export function WareneingangFormular({
       setLaeuft(null)
     }
   }
+
+  const gefuellteZeilen = zeilen.filter((z) => z.item && z.quantity > 0).length
 
   async function speichern() {
     const gefuellt = zeilen.filter((z) => z.item && z.quantity > 0)
@@ -236,7 +239,9 @@ export function WareneingangFormular({
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
       </label>
 
-      <div style={{ marginTop: '1rem' }}>
+      {meldung && <p className="buero-hinweis">{meldung}</p>}
+
+      <Fussleiste hinweis={gefuellteZeilen > 0 ? `${gefuellteZeilen} Posten` : undefined}>
         <button
           type="button"
           className="buero-knopf"
@@ -245,8 +250,7 @@ export function WareneingangFormular({
         >
           Wareneingang buchen
         </button>
-      </div>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      </Fussleiste>
     </div>
   )
 }

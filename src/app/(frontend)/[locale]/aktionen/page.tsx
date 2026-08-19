@@ -30,7 +30,7 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
         <RevealStagger className="space-y-8">
           {promotions.map((p) => (
             <RevealItem key={p.id}>
-              <article className="border-line grid overflow-hidden border bg-white sm:grid-cols-[280px_1fr]">
+              <article className="border-line grid overflow-hidden border bg-paper sm:grid-cols-[280px_1fr]">
                 {p.image ? (
                   <div className="bg-paper-soft aspect-[4/3] sm:aspect-auto">
                     <Bild
@@ -42,7 +42,7 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
                       />
                   </div>
                 ) : (
-                  <div className="bg-accent flex items-center justify-center p-8 text-4xl font-bold text-white">
+                  <div className="bg-accent flex items-center justify-center p-8 text-4xl font-bold text-on-ink">
                     {p.discountType === 'percent' ? `−${p.discountValue}%` : `−${p.discountValue} €`}
                   </div>
                 )}
@@ -52,7 +52,7 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
                     <p className="text-ink-soft mt-2 leading-relaxed">{p.description}</p>
                   )}
                   <div className="text-ink-soft mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                    <span className="bg-accent tracking-nav px-3 py-1 text-xs font-semibold text-white uppercase">
+                    <span className="bg-accent tracking-nav px-3 py-1 text-xs font-semibold text-on-ink uppercase">
                       {p.discountType === 'percent'
                         ? `−${p.discountValue} %`
                         : `−${p.discountValue} €`}

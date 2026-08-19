@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { Locale } from '../../lib/i18n'
 import { CartLink } from '../shop/CartLink'
 import { SprachWahl } from './SprachWahl'
+import { Logo } from './Logo'
 
 /**
  * Kopfleiste der Website.
@@ -134,7 +135,7 @@ export function Header({
           ließ die Leiste vollgestopft aussehen. */}
       <div className="site-header-bar mx-auto grid h-20 max-w-[88rem] grid-cols-[1fr_auto_1fr] items-center gap-8 px-4 sm:px-6">
         <Link href={`/${locale}`} className="shrink-0 justify-self-start" onClick={() => setOpen(false)}>
-          <img src="/logo.svg" alt="Vincent Hellmann" className="site-logo h-4 w-auto sm:h-5" />
+          <Logo className="site-logo text-ink h-4 w-auto sm:h-5" />
         </Link>
 
         <nav className="hidden items-center justify-center gap-6 xl:flex">

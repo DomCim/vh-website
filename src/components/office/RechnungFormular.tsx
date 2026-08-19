@@ -7,6 +7,7 @@ import { VersandKnopf } from './VersandKnopf'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
+import { Fussleiste } from './Fussleiste'
 
 export type Position = {
   description: string
@@ -285,7 +286,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           {(w.items ?? []).length > 1 && (
             <button
               type="button"
-              className="buero-knopf leise"
+              className="buero-knopf stumm"
               onClick={() => setzen({ items: (w.items ?? []).filter((_, idx) => idx !== i) })}
             >
               Position entfernen
@@ -348,7 +349,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         <textarea rows={2} value={w.note ?? ''} onChange={(e) => setzen({ note: e.target.value })} />
       </label>
 
-      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginTop: '.5rem' }}>
+      {/*
+       * Genau eine Hauptsache, und sie steht zuletzt — am Handy heißt das:
+       * unten und über die volle Breite. Solange die Rechnung ein Entwurf
+       * ist, ist das Festschreiben die Hauptsache; danach das Verschicken.
+       * „Als bezahlt markieren" kommt Tage später und ist deshalb zweite
+       * Reihe, auch wenn es dann der nächste Schritt ist.
+       */}
+      <Fussleiste>
         <button
           type="button"
           className="buero-knopf leise"
@@ -357,6 +365,26 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         >
           Speichern
         </button>
+        {festgeschrieben && (
+          <a
+            className="buero-knopf leise"
+            href={`/api/office/rechnung/${w.id}/pdf`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            PDF ansehen
+          </a>
+        )}
+        {festgeschrieben && w.status !== 'bezahlt' && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft}
+            onClick={() => void speichern('bezahlt')}
+          >
+            Als bezahlt markieren
+          </button>
+        )}
         {!festgeschrieben && (
           <button
             type="button"
@@ -367,30 +395,8 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
             Festschreiben &amp; Nummer vergeben
           </button>
         )}
-        {festgeschrieben && w.status !== 'bezahlt' && (
-          <button
-            type="button"
-            className="buero-knopf"
-            disabled={laeuft}
-            onClick={() => void speichern('bezahlt')}
-          >
-            Als bezahlt markieren
-          </button>
-        )}
-        {festgeschrieben && (
-          <>
-            <a
-              className="buero-knopf leise"
-              href={`/api/office/rechnung/${w.id}/pdf`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              PDF ansehen
-            </a>
-            {w.id && <VersandKnopf art="rechnung" id={w.id} />}
-          </>
-        )}
-      </div>
+        {festgeschrieben && w.id && <VersandKnopf art="rechnung" id={w.id} />}
+      </Fussleiste>
     </div>
   )
 }

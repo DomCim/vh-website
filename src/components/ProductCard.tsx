@@ -36,7 +36,7 @@ export function ProductCard({
   return (
     <Link
       href={`/${locale}/${categorySlug}/${product.slug}`}
-      className="group border-line block border bg-white transition-shadow hover:shadow-lg"
+      className="group border-line block border bg-paper transition-shadow hover:shadow-lg"
     >
       <div className="bg-paper-soft aspect-[4/3] overflow-hidden">
         {image ? (

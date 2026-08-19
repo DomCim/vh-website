@@ -199,7 +199,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           </h2>
           {testimonials.map((tst) => (
             <Reveal key={tst.id}>
-              <figure className="border-line border bg-white p-6">
+              <figure className="border-line border bg-paper p-6">
                 <blockquote className="text-ink-soft leading-relaxed">
                   „{tst.quote}&ldquo;
                 </blockquote>

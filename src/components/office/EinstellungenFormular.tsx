@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 
 import type { FeldBeschreibung } from '../../lib/felderLesen'
+import { Fussleiste } from './Fussleiste'
 
 /**
  * Einstellungen im Büro — gerendert aus der Feldbeschreibung von Payload.
@@ -139,7 +140,7 @@ function Feld({
 
         <button
           type="button"
-          className="buero-knopf schmal"
+          className="buero-knopf leise schmal"
           style={{ marginTop: '.8rem' }}
           onClick={() => setzen(eigenerPfad, [...eintraege, {}])}
         >
@@ -319,9 +320,11 @@ export function EinstellungenFormular({
         <Feld key={feld.name} feld={feld} pfad={[]} werte={werte} setzen={setzen} />
       ))}
 
-      <button type="button" className="buero-knopf" disabled={laeuft} onClick={speichern}>
-        {laeuft ? 'speichert …' : 'Speichern'}
-      </button>
+      <Fussleiste>
+        <button type="button" className="buero-knopf" disabled={laeuft} onClick={speichern}>
+          {laeuft ? 'speichert …' : 'Speichern'}
+        </button>
+      </Fussleiste>
     </>
   )
 }

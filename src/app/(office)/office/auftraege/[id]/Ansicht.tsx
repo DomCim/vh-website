@@ -81,10 +81,10 @@ export function AuftragAnsicht() {
       <p className="buero-unterzeile">{j.title}</p>
 
       <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', margin: '.6rem 0 1rem' }}>
-        <a className="buero-knopf schmal" href={`/api/office/auftrag/${j.id}/bestaetigung`}>
+        <a className="buero-knopf leise schmal" href={`/api/office/auftrag/${j.id}/bestaetigung`}>
           Auftragsbestätigung
         </a>
-        <a className="buero-knopf schmal" href={`/api/office/auftrag/${j.id}/lieferschein`}>
+        <a className="buero-knopf leise schmal" href={`/api/office/auftrag/${j.id}/lieferschein`}>
           Lieferschein
         </a>
         <VersandKnopf art="lieferschein" id={j.id} leise />

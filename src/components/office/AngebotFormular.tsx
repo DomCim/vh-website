@@ -8,6 +8,7 @@ import { VersandKnopf } from './VersandKnopf'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
+import { Fussleiste } from './Fussleiste'
 
 export type AngebotPosition = {
   description: string
@@ -230,7 +231,7 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
           {(w.items ?? []).length > 1 && (
             <button
               type="button"
-              className="buero-knopf leise"
+              className="buero-knopf stumm"
               onClick={() => setzen({ items: (w.items ?? []).filter((_, idx) => idx !== i) })}
             >
               Position entfernen
@@ -333,53 +334,58 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         <textarea rows={2} value={w.note ?? ''} onChange={(e) => setzen({ note: e.target.value })} />
       </label>
 
-      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+      {/*
+       * Die Hauptsache wandert mit dem Stand des Angebots: erst verschicken,
+       * dann „Angenommen", dann den Auftrag daraus anlegen. Nur eine davon
+       * ist je sichtbar, und sie steht immer zuletzt.
+       */}
+      <Fussleiste>
         <button type="button" className="buero-knopf leise" disabled={laeuft} onClick={() => void speichern()}>
           Speichern
         </button>
-        {!versendet && (
-          <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('versendet')}>
-            Versenden &amp; Nummer vergeben
-          </button>
-        )}
         {versendet && (
           <a className="buero-knopf leise" href={`/api/office/angebot/${w.id}/pdf`} target="_blank" rel="noreferrer">
             PDF ansehen
           </a>
         )}
-        {versendet && w.id && <VersandKnopf art="angebot" id={w.id} />}
+        {versendet && w.id && <VersandKnopf art="angebot" id={w.id} leise />}
+        {w.status === 'angenommen' && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft}
+            onClick={async () => {
+              const j = await senden({ aktion: 'in-rechnung', id: w.id })
+              if (j?.rechnungId) router.push(`/office/rechnungen/${j.rechnungId}`)
+            }}
+          >
+            Rechnung daraus
+          </button>
+        )}
+        {!versendet && (
+          <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('versendet')}>
+            Versenden &amp; Nummer vergeben
+          </button>
+        )}
         {versendet && w.status !== 'angenommen' && (
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern('angenommen')}>
             Angenommen
           </button>
         )}
         {w.status === 'angenommen' && (
-          <>
-            <button
-              type="button"
-              className="buero-knopf"
-              disabled={laeuft}
-              onClick={async () => {
-                const j = await senden({ aktion: 'in-auftrag', id: w.id })
-                if (j?.auftragId) router.push(`/office/auftraege/${j.auftragId}`)
-              }}
-            >
-              Auftrag anlegen
-            </button>
-            <button
-              type="button"
-              className="buero-knopf leise"
-              disabled={laeuft}
-              onClick={async () => {
-                const j = await senden({ aktion: 'in-rechnung', id: w.id })
-                if (j?.rechnungId) router.push(`/office/rechnungen/${j.rechnungId}`)
-              }}
-            >
-              Rechnung daraus
-            </button>
-          </>
+          <button
+            type="button"
+            className="buero-knopf"
+            disabled={laeuft}
+            onClick={async () => {
+              const j = await senden({ aktion: 'in-auftrag', id: w.id })
+              if (j?.auftragId) router.push(`/office/auftraege/${j.auftragId}`)
+            }}
+          >
+            Auftrag anlegen
+          </button>
         )}
-      </div>
+      </Fussleiste>
     </div>
   )
 }

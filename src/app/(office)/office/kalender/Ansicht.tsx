@@ -180,13 +180,13 @@ export function KalenderAnsicht() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
-          <Link className="buero-knopf schmal" href={verschieben(-1)}>
+          <Link className="buero-knopf leise schmal" href={verschieben(-1)}>
             Zurück
           </Link>
-          <Link className="buero-knopf schmal" href="/office/kalender">
+          <Link className="buero-knopf leise schmal" href="/office/kalender">
             Heute
           </Link>
-          <Link className="buero-knopf schmal" href={verschieben(1)}>
+          <Link className="buero-knopf leise schmal" href={verschieben(1)}>
             Weiter
           </Link>
         </div>

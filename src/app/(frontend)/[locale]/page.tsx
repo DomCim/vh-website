@@ -224,7 +224,7 @@ export default async function HomePage({
                 <RevealItem key={p.id}>
                   <Link
                     href={`/${locale}/projekte/${p.slug}`}
-                    className="group border-line block h-full border bg-white transition-shadow hover:shadow-lg"
+                    className="group border-line block h-full border bg-paper transition-shadow hover:shadow-lg"
                   >
                     <div className="bg-paper-soft aspect-[4/3] overflow-hidden">
                       <Bild
@@ -261,7 +261,7 @@ export default async function HomePage({
           <RevealStagger className="grid gap-6 sm:grid-cols-3">
             {testimonials.map((tst) => (
               <RevealItem key={tst.id}>
-                <figure className="border-line flex h-full flex-col border bg-white p-6">
+                <figure className="border-line flex h-full flex-col border bg-paper p-6">
                   <blockquote className="text-ink-soft flex-1 leading-relaxed">
                     „{tst.quote}&ldquo;
                   </blockquote>
@@ -300,7 +300,7 @@ export default async function HomePage({
               <RevealItem key={n.id}>
                 <Link
                   href={`/${locale}/news/${n.slug}`}
-                  className="group border-line block border bg-white transition-shadow hover:shadow-lg"
+                  className="group border-line block border bg-paper transition-shadow hover:shadow-lg"
                 >
                   <div className="bg-paper-soft aspect-[16/10] overflow-hidden">
                     <Bild

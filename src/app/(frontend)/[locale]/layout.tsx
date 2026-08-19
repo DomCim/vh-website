@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
@@ -11,6 +11,20 @@ import { isLocale, t } from '../../../lib/i18n'
 import { alternatesFor, BASE_URL, jsonLd } from '../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Die Adressleiste des Browsers zieht mit dem Thema mit.
+ *
+ * Ohne das steht am Handy über einer dunklen Seite ein weißer Balken — der
+ * auffälligste Fehler an einem dunklen Thema, weil er genau dort sitzt, wo
+ * man beim Scrollen hinschaut.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#131315' },
+  ],
+}
 
 type Args = {
   children: React.ReactNode

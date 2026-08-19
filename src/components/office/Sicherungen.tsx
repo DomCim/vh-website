@@ -100,7 +100,7 @@ export function Sicherungen({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                 <a
-                  className="buero-knopf schmal"
+                  className="buero-knopf leise schmal"
                   href={`/api/office/sicherung?name=${encodeURIComponent(s.name)}`}
                 >
                   Laden
@@ -108,7 +108,7 @@ export function Sicherungen({
                 {nasBereit && (
                   <button
                     type="button"
-                    className="buero-knopf schmal"
+                    className="buero-knopf leise schmal"
                     disabled={laeuft !== null}
                     onClick={() => rufen('hochladen', s.name)}
                   >

@@ -189,7 +189,7 @@ export function ProductDetail({
                   onClick={() => setVariantIndex(i)}
                   className={`border px-4 py-2 text-sm transition-colors ${
                     i === variantIndex
-                      ? "border-ink bg-ink text-white"
+                      ? "border-ink bg-ink text-on-ink"
                       : "border-line text-ink hover:border-ink"
                   }`}
                 >

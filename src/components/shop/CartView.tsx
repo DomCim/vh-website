@@ -83,7 +83,7 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
         <p className="text-ink-soft mb-6">{dict.empty}</p>
         <Link
           href={`/${locale}`}
-          className="bg-ink tracking-nav hover:bg-bronze inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze inline-block px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors"
         >
           {dict.continueShopping}
         </Link>
@@ -223,7 +223,7 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
       <div className="mt-8 flex justify-end">
         <Link
           href={`/${locale}/kasse${code ? `?code=${encodeURIComponent(code)}` : ''}`}
-          className="bg-ink tracking-nav hover:bg-bronze inline-block px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze inline-block px-10 py-3.5 text-xs font-semibold text-on-ink uppercase transition-colors"
         >
           {dict.checkout} →
         </Link>

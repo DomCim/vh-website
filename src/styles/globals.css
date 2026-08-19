@@ -13,14 +13,53 @@
   /* Corten-/Bronzeton: dezente Akzentfarbe, greift das Material der Arbeiten auf */
   --color-bronze: #a5622d;
 
+  /* Schrift auf einer gefüllten Fläche — Knopf in Tinte, Bronze oder Rot.
+     Im Hellen weiß, im Dunkeln dunkel: Ein aufgehelltes Bronze trägt weiße
+     Schrift nur noch mit 2,9:1, dunkle dagegen mit über 6:1. Eine Variable
+     statt eines zweiten Satzes Klassen an jedem Knopf. */
+  --color-on-ink: #ffffff;
+
   --font-sans: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif;
 
   --tracking-brand: 0.22em;
   --tracking-nav: 0.14em;
 }
 
+/* ── Dunkles Thema ─────────────────────────────────────────────────────────
+   Die Seite folgt der Einstellung des Geräts. Umgeschaltet werden nur die
+   Farbwerte oben — die Tailwind-Klassen (`bg-paper`, `text-ink`,
+   `border-line`) lesen dieselben Variablen und drehen deshalb von selbst mit.
+
+   Zwei Dinge sind bewusst keine bloße Umkehrung:
+
+   **Der Fußbereich bleibt der dunkelste Block der Seite.** Im Hellen hebt er
+   sich als schwarzer Fuß vom weißen Blatt ab; würde er im Dunkeln heller als
+   der Rest, stünde die Seite auf dem Kopf. Also wird er noch etwas tiefer als
+   das Papier — und die weiße Schrift darauf stimmt weiter.
+
+   **Rot und Bronze werden heller.** #b32428 auf dunklem Grund kommt auf
+   3,0:1; die aufgehellten Töne liegen über 5:1. Dieselbe Farbe, nur so hell,
+   dass sie im Dunkeln noch als Farbe und nicht als Fleck ankommt. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-ink: #ececed;
+    --color-ink-soft: #a9a9b0;
+    --color-paper: #131315;
+    --color-paper-soft: #1c1c1f;
+    --color-line: #2e2e33;
+    --color-dark: #0b0b0c;
+    --color-dark-soft: #17171a;
+    --color-accent: #e8615f;
+    --color-bronze: #c98a52;
+    --color-on-ink: #131315;
+  }
+}
+
 html {
   scroll-behavior: smooth;
+  /* Damit Auswahlfelder, Datumsauswahl und Bildlaufleisten mitziehen —
+     ohne das bleiben Systembedienelemente im Dunkeln weiß */
+  color-scheme: light dark;
 }
 
 body {
@@ -76,11 +115,12 @@ body {
   background-color: var(--hero-tint);
   border-color: transparent;
 }
+/* Der Schriftzug ist inline und trägt `currentColor` (components/layout/Logo).
+   Deshalb genügt hier die Farbe — kein `filter: invert(1)` mehr, das aus
+   jedem Farbwert sein Gegenteil gemacht hat und mit zwei Themen vier
+   Sonderfälle gebraucht hätte. */
 .site-header .site-logo {
-  transition: filter 1.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-:root[data-hero-tint='dark'] .site-header .site-logo {
-  filter: invert(1);
+  transition: color 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 :root[data-hero-tint='dark'] .site-header-bar {
   --color-ink: #ffffff;
@@ -88,6 +128,10 @@ body {
   --color-line: rgba(255, 255, 255, 0.35);
   --color-accent: #ffffff;
   --color-bronze: #ffffff;
+  /* Über dem dunklen Hero ist der Grund dunkel — unabhängig davon, welches
+     Thema das Gerät gerade vorgibt. Sonst stünde im dunklen Thema die
+     dunkle Schrift des Warenkorb-Zählers auf dunklem Grund. */
+  --color-on-ink: #ffffff;
 }
 :root[data-hero-tint='dark'] .site-header-bar .bg-accent,
 :root[data-hero-tint='dark'] .site-header-bar .bg-bronze {

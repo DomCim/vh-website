@@ -82,10 +82,10 @@ export function RechnungAnsicht() {
       {r.invoiceNumber && (
         <>
           <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', margin: '.6rem 0 1rem' }}>
-            <a className="buero-knopf schmal" href={`/api/office/rechnung/${r.id}/pdf`}>
+            <a className="buero-knopf leise schmal" href={`/api/office/rechnung/${r.id}/pdf`}>
               PDF ansehen
             </a>
-            <a className="buero-knopf schmal" href={`/api/office/rechnung/${r.id}/xml`}>
+            <a className="buero-knopf leise schmal" href={`/api/office/rechnung/${r.id}/xml`}>
               XML herunterladen
             </a>
             {r.status === 'gestellt' && <VersandKnopf art="mahnung" id={r.id} leise />}

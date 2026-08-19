@@ -59,7 +59,7 @@ export function StornoKnopf({ id, nummer }: { id: number | string; nummer: strin
 
   if (!offen) {
     return (
-      <button type="button" className="buero-knopf schmal" onClick={() => setOffen(true)}>
+      <button type="button" className="buero-knopf leise schmal" onClick={() => setOffen(true)}>
         Stornieren
       </button>
     )

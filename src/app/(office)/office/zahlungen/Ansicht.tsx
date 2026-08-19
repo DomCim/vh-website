@@ -190,7 +190,7 @@ export function ZahlungenAnsicht() {
                     <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
                       <button
                         type="button"
-                        className="buero-knopf schmal"
+                        className="buero-knopf leise schmal"
                         disabled={laeuft}
                         onClick={() => void handeln(b.id, 'zuordnen', b.vorschlag!.rechnung)}
                       >
@@ -221,7 +221,7 @@ export function ZahlungenAnsicht() {
                     <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
                       <button
                         type="button"
-                        className="buero-knopf schmal"
+                        className="buero-knopf leise schmal"
                         onClick={() => setOffen(offen === b.id ? null : b.id)}
                       >
                         Rechnung auswählen

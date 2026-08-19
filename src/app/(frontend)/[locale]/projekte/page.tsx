@@ -70,7 +70,7 @@ export default async function ProjectsPage({
               href={`/${locale}/projekte${tab.key ? `?bereich=${tab.key}` : ''}`}
               className={`tracking-nav border px-4 py-2 text-xs font-medium uppercase transition-colors ${
                 sector === tab.key
-                  ? 'border-ink bg-ink text-white'
+                  ? 'border-ink bg-ink text-on-ink'
                   : 'border-line text-ink hover:border-ink'
               }`}
             >
@@ -88,7 +88,7 @@ export default async function ProjectsPage({
             <Link
               key={p.id}
               href={`/${locale}/projekte/${p.slug}`}
-              className="group border-line block border bg-white transition-shadow hover:shadow-lg"
+              className="group border-line block border bg-paper transition-shadow hover:shadow-lg"
             >
               <ImageReveal delay={(i % 3) * 0.08} className="bg-paper-soft aspect-[4/3]">
                 <Bild

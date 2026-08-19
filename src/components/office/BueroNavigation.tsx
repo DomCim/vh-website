@@ -9,13 +9,18 @@ import { useRahmen } from '../../lib/buero/bestand'
 /**
  * Navigation im Büro.
  *
- * Am Rechner vier Gruppen, die aufklappen. Am Handy eine Tableiste unten mit
- * dem täglichen Handwerkszeug — dort kommt der Daumen hin, ohne das Gerät
- * umzugreifen —, und alles Weitere hinter „Mehr".
+ * Am Rechner vier Gruppen, die aufklappen. Am Handy dieselben vier Bereiche
+ * als Tableiste am unteren Rand — dort kommt der Daumen hin, ohne das Gerät
+ * umzugreifen —, und jeder Bereich öffnet sein eigenes Blatt.
  *
- * Beide zeigen dieselbe Ordnung nach Arbeitsbereichen. Achtzehn Punkte
- * nebeneinander findet niemand: Sie liefen seitlich aus dem Bild, und gesucht
- * wird ohnehin nicht alphabetisch, sondern nach „wo war das mit den
+ * Vorher lagen unten vier feste Ziele und ein „Mehr", hinter dem alle
+ * achtzehn Punkte auf einmal standen: eine Wand aus Kästchen, durch die man
+ * scrollen musste, um an die Einstellungen zu kommen. Jetzt ist jeder Punkt
+ * in zwei Griffen erreichbar, beide unten.
+ *
+ * Beide Fassungen zeigen dieselbe Ordnung nach Arbeitsbereichen. Achtzehn
+ * Punkte nebeneinander findet niemand: Sie liefen seitlich aus dem Bild, und
+ * gesucht wird ohnehin nicht alphabetisch, sondern nach „wo war das mit den
  * Rechnungen".
  */
 
@@ -91,48 +96,46 @@ const Zeichen = {
       <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" />
     </svg>
   ),
-  post: (
+  /* Kundschaft: zwei Leute — alles, was von außen hereinkommt */
+  Kundschaft: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3.5 7 8.5 6 8.5-6" />
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+      <path d="M16 6.2a3 3 0 0 1 0 5.6M17.5 14.8c2 .7 3.2 2.4 3.2 4.7" />
     </svg>
   ),
-  auftraege: (
+  /* Werkstatt: Hammer — was gebaut, gelagert und geplant wird */
+  Werkstatt: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 4h6v2.5H9z" />
-      <path d="M6 6.5h12a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z" />
-      <path d="M8.5 12h7M8.5 15.5h4.5" />
+      <path d="M13.5 3.5 20 10l-2.5 2.5L11 6z" />
+      <path d="M10.2 7.3 4 13.5a2 2 0 0 0 0 2.8l1.7 1.7a2 2 0 0 0 2.8 0l6.2-6.2" />
     </svg>
   ),
-  belege: (
+  /* Geld: Schein — Rechnungen, Belege, Steuer */
+  Geld: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 3h9l4 4v14H6z" />
-      <path d="M15 3v4h4" />
-      <path d="M9 12h6M9 16h4" />
+      <rect x="2.5" y="6" width="19" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M6 12h.01M18 12h.01" />
     </svg>
   ),
-  mehr: (
+  /* Sonstiges: Zahnrad — Einstellungen, Sicherung, Verwaltung */
+  Sonstiges: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="5.5" cy="12" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="18.5" cy="12" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2.8v2.4M12 18.8v2.4M4.5 12H2.1M21.9 12h-2.4M6.7 6.7 5 5M19 19l-1.7-1.7M6.7 17.3 5 19M19 5l-1.7 1.7" />
     </svg>
   ),
 }
-
-const TABS = [
-  { href: '/office', label: 'Übersicht', zeichen: Zeichen.uebersicht },
-  { href: '/office/post', label: 'Postfach', zeichen: Zeichen.post },
-  { href: '/office/auftraege', label: 'Aufträge', zeichen: Zeichen.auftraege },
-  { href: '/office/belege', label: 'Belege', zeichen: Zeichen.belege },
-]
 
 const istAktiv = (pfad: string | null, href: string) =>
   href === '/office' ? pfad === '/office' : Boolean(pfad?.startsWith(href))
 
 export function BueroNavigation() {
   const pfad = usePathname()
-  const [blattOffen, setBlattOffen] = useState(false)
+  /* Am Handy ist immer höchstens ein Bereich aufgeklappt — hier steht,
+     welcher. `null` heißt: kein Blatt offen. */
+  const [offenesBlatt, setOffenesBlatt] = useState<string | null>(null)
   const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
   const leiste = useRef<HTMLElement>(null)
   const rahmen = useRahmen()
@@ -157,7 +160,7 @@ export function BueroNavigation() {
 
   // Beim Seitenwechsel schließen — sonst bliebe das Blatt über der neuen Seite
   useEffect(() => {
-    setBlattOffen(false)
+    setOffenesBlatt(null)
     setOffeneGruppe(null)
   }, [pfad])
 
@@ -179,13 +182,13 @@ export function BueroNavigation() {
   }, [offeneGruppe])
 
   useEffect(() => {
-    if (!blattOffen) return
+    if (!offenesBlatt) return
     const beiTaste = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setBlattOffen(false)
+      if (e.key === 'Escape') setOffenesBlatt(null)
     }
     window.addEventListener('keydown', beiTaste)
     return () => window.removeEventListener('keydown', beiTaste)
-  }, [blattOffen])
+  }, [offenesBlatt])
 
   // Auf der Anmeldeseite gibt es nichts zu navigieren
   if (pfad?.startsWith('/office/login') || pfad?.startsWith('/office/kein-zugang')) return null
@@ -248,57 +251,71 @@ export function BueroNavigation() {
         })}
       </nav>
 
+      {/*
+       * Am Handy: Übersicht plus die vier Bereiche. Jeder Bereich öffnet sein
+       * eigenes Blatt — zwei Griffe zu jedem Punkt, und beide unten, wo der
+       * Daumen ohnehin liegt.
+       *
+       * Ein Bereich, in dem gerade nichts erlaubt ist, fällt weg statt leer
+       * dazustehen: `gruppen` ist bereits gefiltert.
+       *
+       * Solange ein Blatt offen ist, trägt nur dieses die Markierung: Zwei
+       * bronzene Punkte nebeneinander — „hier stehst du" und „das ist
+       * aufgeklappt" — sind einer zu viel.
+       */}
       <nav className="buero-tableiste" aria-label="Büro">
-        {TABS.map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="buero-tab"
-            aria-current={istAktiv(pfad, t.href) ? 'page' : undefined}
-          >
-            {t.zeichen}
-            <span>{t.label}</span>
-          </Link>
-        ))}
-        <button
-          type="button"
-          className={`buero-tab${blattOffen ? ' offen' : ''}`}
-          aria-expanded={blattOffen}
-          onClick={() => setBlattOffen((v) => !v)}
+        <Link
+          href={UEBERSICHT.href}
+          className="buero-tab"
+          aria-current={!offenesBlatt && istAktiv(pfad, UEBERSICHT.href) ? 'page' : undefined}
         >
-          {Zeichen.mehr}
-          <span>Mehr</span>
-        </button>
+          {Zeichen.uebersicht}
+          <span>{UEBERSICHT.label}</span>
+        </Link>
+
+        {gruppen.map((b) => {
+          const offen = offenesBlatt === b.titel
+          const drin = b.punkte.some((p) => istAktiv(pfad, p.href))
+          return (
+            <button
+              key={b.titel}
+              type="button"
+              className={`buero-tab${offen ? ' offen' : ''}`}
+              aria-expanded={offen}
+              aria-current={drin && !offenesBlatt ? 'page' : undefined}
+              onClick={() => setOffenesBlatt((v) => (v === b.titel ? null : b.titel))}
+            >
+              {Zeichen[b.titel as keyof typeof Zeichen] ?? Zeichen.uebersicht}
+              <span>{b.titel}</span>
+            </button>
+          )
+        })}
       </nav>
 
-      {blattOffen && (
+      {offenesBlatt && (
         <>
           <button
             type="button"
             className="buero-blatt-grund"
             aria-label="Schließen"
-            onClick={() => setBlattOffen(false)}
+            onClick={() => setOffenesBlatt(null)}
           />
-          <div className="buero-blatt" role="dialog" aria-label="Alle Bereiche">
+          <div className="buero-blatt" role="dialog" aria-label={offenesBlatt}>
             <div className="buero-blatt-griff" />
-            {gruppen.map((b) => (
-              <React.Fragment key={b.titel}>
-                <h3>{b.titel}</h3>
-                <div className="buero-blatt-punkte">
-                  {b.punkte.map((p) => (
-                    <Link
-                      key={p.href}
-                      href={p.href}
-                      aria-current={
-                        p.href.startsWith('/office') && istAktiv(pfad, p.href) ? 'page' : undefined
-                      }
-                    >
-                      {p.label}
-                    </Link>
-                  ))}
-                </div>
-              </React.Fragment>
-            ))}
+            <h3>{offenesBlatt}</h3>
+            <div className="buero-blatt-punkte">
+              {(gruppen.find((b) => b.titel === offenesBlatt)?.punkte ?? []).map((p) => (
+                <Link
+                  key={p.href}
+                  href={p.href}
+                  aria-current={
+                    p.href.startsWith('/office') && istAktiv(pfad, p.href) ? 'page' : undefined
+                  }
+                >
+                  {p.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </>
       )}

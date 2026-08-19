@@ -5,6 +5,16 @@
       .cls-1 {
         fill: #1d1d1b;
       }
+
+      /* Wird die Datei für sich verwendet — als Bild, in einer Mail, direkt
+         im Browser geöffnet —, dreht sie mit dem Thema mit. Im Markup der
+         Website steckt der Schriftzug inline und nimmt dort ohnehin die
+         Schriftfarbe an (components/layout/Logo). */
+      @media (prefers-color-scheme: dark) {
+        .cls-1 {
+          fill: #ececed;
+        }
+      }
     </style>
   </defs>
   <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->

@@ -241,13 +241,13 @@ export function NachbestellenAnsicht() {
                   href={`/office/wareneingang/neu${
                     z.lieferantId ? `?lieferant=${z.lieferantId}` : ''
                   }`}
-                  className="buero-knopf schmal"
+                  className="buero-knopf stumm schmal"
                 >
                   Lieferung buchen
                 </Link>
                 <button
                   type="button"
-                  className="buero-knopf leise schmal"
+                  className="buero-knopf stumm schmal"
                   disabled={laeuft === `zurueck-${z.id}`}
                   onClick={() =>
                     void schicken(

@@ -154,7 +154,7 @@ export function Zeiterfassung({
         </label>
         <button
           type="button"
-          className="buero-knopf schmal"
+          className="buero-knopf leise schmal"
           disabled={busy || !nachtrag}
           onClick={() => rufen('nachtragen', { minuten: Number(nachtrag) })}
           style={{ alignSelf: 'end', marginBottom: '.3rem' }}

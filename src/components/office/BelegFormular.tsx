@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
+import { Fussleiste } from './Fussleiste'
 
 export type Kategorie = { label: string; value: string }
 
@@ -231,7 +232,7 @@ export function BelegFormular({
           </button>
           <button
             type="button"
-            className="buero-knopf leise"
+            className="buero-knopf stumm"
             disabled={laeuft !== null}
             onClick={() => setzen({ documentId: null, documentUrl: null })}
           >
@@ -372,10 +373,7 @@ export function BelegFormular({
         <textarea rows={2} value={w.notes ?? ''} onChange={(e) => setzen({ notes: e.target.value })} />
       </label>
 
-      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
-        <button type="button" className="buero-knopf" disabled={laeuft !== null} onClick={speichern}>
-          {laeuft === 'speichern' ? 'speichert …' : 'Speichern'}
-        </button>
+      <Fussleiste>
         <button
           type="button"
           className="buero-knopf leise"
@@ -383,7 +381,10 @@ export function BelegFormular({
         >
           Abbrechen
         </button>
-      </div>
+        <button type="button" className="buero-knopf" disabled={laeuft !== null} onClick={speichern}>
+          {laeuft === 'speichern' ? 'speichert …' : 'Speichern'}
+        </button>
+      </Fussleiste>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
+import { Fussleiste } from './Fussleiste'
 
 export type PartnerWerte = {
   id?: number | string
@@ -181,9 +182,11 @@ export function PartnerFormular({
         <textarea rows={2} value={w.notes ?? ''} onChange={(e) => setzen({ notes: e.target.value })} />
       </label>
 
-      <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
-        Speichern
-      </button>
+      <Fussleiste>
+        <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
+          Speichern
+        </button>
+      </Fussleiste>
     </div>
   )
 }

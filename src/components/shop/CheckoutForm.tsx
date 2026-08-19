@@ -158,7 +158,7 @@ export function CheckoutForm({
         <p className="text-ink-soft mb-6">{cartDict.empty}</p>
         <Link
           href={`/${locale}`}
-          className="bg-ink tracking-nav hover:bg-bronze inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze inline-block px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors"
         >
           {cartDict.continueShopping}
         </Link>
@@ -254,7 +254,7 @@ export function CheckoutForm({
   }
 
   const inputClass =
-    'border-line focus:border-ink w-full border bg-white px-4 py-3 text-sm outline-none transition-colors'
+    'border-line focus:border-ink w-full border bg-paper px-4 py-3 text-sm outline-none transition-colors'
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
@@ -264,7 +264,7 @@ export function CheckoutForm({
             {dict.deliveryMethod}
           </h2>
           <div className="space-y-2">
-            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-paper px-4 py-3 text-sm">
               <input
                 type="radio"
                 name="deliveryMethod"
@@ -275,7 +275,7 @@ export function CheckoutForm({
               />
               {dict.optionShipping}
             </label>
-            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-white px-4 py-3 text-sm">
+            <label className="border-line has-checked:border-ink flex cursor-pointer items-center gap-3 border bg-paper px-4 py-3 text-sm">
               <input
                 type="radio"
                 name="deliveryMethod"
@@ -298,7 +298,7 @@ export function CheckoutForm({
           </h2>
           <div className="space-y-2">
             {paypalAvailable && (
-              <label className="border-line has-checked:border-ink block cursor-pointer border bg-white px-4 py-3 text-sm">
+              <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
                 <span className="flex items-center gap-3">
                   <input
                     type="radio"
@@ -315,7 +315,7 @@ export function CheckoutForm({
                 )}
               </label>
             )}
-            <label className="border-line has-checked:border-ink block cursor-pointer border bg-white px-4 py-3 text-sm">
+            <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
               <span className="flex items-center gap-3">
                 <input
                   type="radio"
@@ -445,7 +445,7 @@ export function CheckoutForm({
           <button
             type="submit"
             disabled={submitting}
-            className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+            className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50"
           >
             {dict.payNow}
           </button>

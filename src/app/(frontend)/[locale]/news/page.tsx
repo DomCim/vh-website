@@ -61,7 +61,7 @@ export default async function NewsPage({
               href={`/${locale}/news${tab.key ? `?rubrik=${tab.key}` : ''}`}
               className={`tracking-nav border px-4 py-2 text-xs font-medium uppercase transition-colors ${
                 type === tab.key
-                  ? 'border-ink bg-ink text-white'
+                  ? 'border-ink bg-ink text-on-ink'
                   : 'border-line text-ink hover:border-ink'
               }`}
             >
@@ -79,7 +79,7 @@ export default async function NewsPage({
             <RevealItem key={n.id}>
               <Link
                 href={`/${locale}/news/${n.slug}`}
-                className="group border-line block h-full border bg-white transition-shadow hover:shadow-lg"
+                className="group border-line block h-full border bg-paper transition-shadow hover:shadow-lg"
               >
                 <div className="bg-paper-soft relative aspect-[16/10] overflow-hidden">
                   <Bild
@@ -90,7 +90,7 @@ export default async function NewsPage({
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   {n.type === 'ratgeber' && (
-                    <span className="bg-bronze tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-white uppercase">
+                    <span className="bg-bronze tracking-nav absolute top-3 left-3 px-2 py-1 text-[10px] font-semibold text-on-ink uppercase">
                       {dict.news.guideBadge}
                     </span>
                   )}

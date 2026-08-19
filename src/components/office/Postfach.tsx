@@ -228,7 +228,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void senden()}>
             Senden
           </button>
-          <button type="button" className="buero-knopf leise" onClick={() => setEntwurf(null)}>
+          <button type="button" className="buero-knopf stumm" onClick={() => setEntwurf(null)}>
             Verwerfen
           </button>
           {faecher.length > 1 && (

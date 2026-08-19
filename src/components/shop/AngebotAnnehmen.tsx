@@ -57,7 +57,7 @@ export function AngebotAnnehmen({ id, labels }: { id: number | string; labels: L
       <button
         type="button"
         onClick={() => setOffen(true)}
-        className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-2 text-xs font-semibold text-white uppercase transition-colors"
+        className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-2 text-xs font-semibold text-on-ink uppercase transition-colors"
       >
         {labels.acceptQuote}
       </button>
@@ -72,7 +72,7 @@ export function AngebotAnnehmen({ id, labels }: { id: number | string; labels: L
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border-line focus:border-ink w-full border bg-white px-3 py-2 text-sm outline-none transition-colors"
+          className="border-line focus:border-ink w-full border bg-paper px-3 py-2 text-sm outline-none transition-colors"
         />
       </label>
       <div className="flex flex-wrap items-center gap-3">
@@ -80,7 +80,7 @@ export function AngebotAnnehmen({ id, labels }: { id: number | string; labels: L
           type="button"
           disabled={laeuft}
           onClick={annehmen}
-          className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-2 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+          className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-2 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50"
         >
           {laeuft ? labels.accepting : labels.acceptQuote}
         </button>

@@ -8,6 +8,7 @@ import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
+import { Tastaturwache } from '../../components/office/Tastaturwache'
 import '../../styles/office.css'
 
 export const metadata: Metadata = {
@@ -28,8 +29,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f6f4' },
-    { media: '(prefers-color-scheme: dark)', color: '#141416' },
+    { media: '(prefers-color-scheme: light)', color: '#f4f2ef' },
+    { media: '(prefers-color-scheme: dark)', color: '#111113' },
   ],
 }
 
@@ -43,6 +44,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
     <html lang="de">
       <body className="buero">
         <SitzungVerlaengern />
+        <Tastaturwache />
         <BestandAnbieter />
         <AbgleichLeiste />
         <header className="buero-kopf">

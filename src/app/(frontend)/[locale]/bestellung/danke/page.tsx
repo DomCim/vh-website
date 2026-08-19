@@ -70,7 +70,7 @@ export default async function ThankYouPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
       <Reveal>
-        <div className="bg-ink mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full text-2xl text-white">
+        <div className="bg-ink mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full text-2xl text-on-ink">
           ✓
         </div>
         <h1 className="tracking-nav text-ink text-2xl font-semibold uppercase">
@@ -79,7 +79,7 @@ export default async function ThankYouPage({
         <p className="text-ink-soft mt-4 leading-relaxed">{dict.thanks.text}</p>
         <Link
           href={`/${locale}`}
-          className="bg-ink tracking-nav hover:bg-bronze mt-8 inline-block px-8 py-3 text-xs font-semibold text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze mt-8 inline-block px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors"
         >
           {dict.thanks.backHome}
         </Link>

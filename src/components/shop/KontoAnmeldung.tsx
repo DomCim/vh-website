@@ -31,9 +31,9 @@ export function KontoAnmeldung({ labels, locale }: { labels: Labels; locale: str
   const [laeuft, setLaeuft] = useState(false)
 
   const inputClass =
-    'border-line focus:border-ink w-full border bg-white px-4 py-3 text-sm outline-none transition-colors'
+    'border-line focus:border-ink w-full border bg-paper px-4 py-3 text-sm outline-none transition-colors'
   const buttonClass =
-    'bg-ink tracking-nav hover:bg-bronze cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50'
+    'bg-ink tracking-nav hover:bg-bronze cursor-pointer px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50'
 
   const fehlerText = (schluessel: string) =>
     ({

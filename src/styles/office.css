@@ -2,17 +2,39 @@
    Formensprache wie die Website: viel Weißraum, Corten als einziger Akzent. */
 
 :root {
-  --buero-papier: #f7f6f4;
+  --buero-papier: #f4f2ef;
   --buero-flaeche: #ffffff;
   --buero-tinte: #1d1d1f;
   /* Was auf einer Fläche in Tintenfarbe steht — im Dunkelmodus dreht sich
      das um, sonst steht helle Schrift auf hellem Grund */
   --buero-auf-tinte: #ffffff;
   --buero-tinte-leise: #6b6b70;
-  --buero-linie: #e3e1dd;
+
+  /* Zwei Grautöne, nicht einer.
+   *
+   * `--buero-linie` trennt (Tabellenstrich, Kartenrand), `--buero-rahmen`
+   * kennzeichnet etwas, das man bedienen kann. Vorher war beides dieselbe
+   * Farbe — deshalb sah ein Knopf mit Rahmen aus wie eine Zeilentrennung
+   * und wurde schlicht nicht als Knopf gelesen. */
+  --buero-linie: #e6e3de;
+  --buero-rahmen: #b4aea5;
+
   --buero-bronze: #a86b3d;
+  /* Bronze ist im Hellen dunkel genug für weiße Schrift (4,3:1); im Dunkeln
+   * dreht sich das um. Deshalb eine eigene Variable statt #fff im Regelsatz. */
+  --buero-auf-bronze: #ffffff;
   --buero-gruen: #2f6b46;
   --buero-rot: #a4342c;
+
+  /* Wogegen die Kennzeichen aufgehellt werden: im Hellen Weiß, im Dunkeln
+   * die Karte. Sonst werden aus den Markern im Dunkeln Pastellaufkleber. */
+  --buero-marker-grund: #ffffff;
+
+  /* Tiefe kommt im Hellen vom Schatten. Im Dunkeln gibt es keinen Schatten,
+   * dort übernimmt das eine hellere Fläche mit heller Oberkante. */
+  --buero-schatten:
+    0 1px 2px rgb(29 29 31 / 4%),
+    0 4px 14px rgb(29 29 31 / 5%);
 }
 
 /* Die Website bekommt das von Tailwind, das Büro bringt sein eigenes
@@ -126,9 +148,12 @@
   color: var(--buero-tinte);
 }
 
+/* Bronze heißt überall dasselbe: hier bist du, hier handelst du. Vorher war
+   das `--buero-tinte`, was im Dunkeln zu einem weißen Block wurde — dem
+   lautesten Element der Seite, ohne dass es das Wichtigste gewesen wäre. */
 .buero-nav a[aria-current='page'] {
-  background: var(--buero-tinte);
-  color: var(--buero-auf-tinte);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
 }
 
 /* ── Gruppen in der Hauptnavigation ─────────────────────────────────────── */
@@ -164,8 +189,8 @@
 }
 
 .buero-nav-gruppe > button[aria-current='page'] {
-  background: var(--buero-tinte);
-  color: var(--buero-auf-tinte);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
 }
 
 .buero-nav-pfeil {
@@ -268,14 +293,18 @@
 
 .buero-reiter a[aria-current='page'],
 .buero-reiter button[aria-current='page'] {
-  background: var(--buero-tinte);
-  color: var(--buero-auf-tinte);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
 }
 
-/* ── Tableiste am unteren Rand (nur Handy) ──────────────────────────────── */
-/* Dreizehn Punkte in einer seitlich scrollenden Leiste findet am Handy
-   niemand. Unten liegen die fünf, die man täglich braucht; der Rest steht
-   hinter „Mehr" — und der Daumen kommt überall hin. */
+/* ── Tableiste am unteren Rand (nur Handy) ────────────────────────────────
+   Unten stehen die Übersicht und die vier Arbeitsbereiche; jeder öffnet sein
+   eigenes Blatt mit seinen Punkten.
+
+   Vorher lagen dort vier feste Ziele und ein „Mehr", hinter dem alle achtzehn
+   Punkte auf einmal standen — eine Wand aus Kästchen, durch die man scrollen
+   musste. Jetzt ist jeder Punkt in zwei Griffen erreichbar, und beide sind
+   am unteren Rand, wo der Daumen ohnehin liegt. */
 .buero-tableiste {
   display: none;
 }
@@ -287,15 +316,23 @@
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  padding: 0.5rem 0.2rem;
+  padding: 0.45rem 0.15rem;
   background: none;
   border: none;
   font: inherit;
-  font-size: 0.65rem;
-  letter-spacing: 0.02em;
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--buero-tinte-leise);
   cursor: pointer;
-  min-height: 3.25rem;
+  min-height: 3.4rem;
+}
+
+.buero-tab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .buero-tab svg {
@@ -308,33 +345,53 @@
   stroke-linejoin: round;
 }
 
+/* Farbe allein trägt nicht: Bei Sonne aufs Display sieht man den Unterschied
+   zwischen Grau und Bronze kaum. Der Strich an der Oberkante schon. */
 .buero-tab[aria-current='page'],
 .buero-tab.offen {
   color: var(--buero-bronze);
+  box-shadow: inset 0 2px 0 var(--buero-bronze);
+}
+
+.buero-tab:focus-visible {
+  outline: 3px solid var(--buero-bronze);
+  outline-offset: -3px;
 }
 
 /* ── Blatt mit allen Bereichen ──────────────────────────────────────────── */
+/* Der abdunkelnde Grund liegt **unter** Blatt und Tableiste.
+ *
+ * Vorher lag er darüber: Er nahm den Tipp auf die Leiste an und schloss das
+ * Blatt, statt in den nächsten Bereich zu wechseln. Sichtbar war das nicht —
+ * der Knopf leuchtete auf, es passierte nur das Falsche. */
 .buero-blatt-grund {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 40;
+  z-index: 30;
   border: none;
   padding: 0;
 }
 
+/* Das Blatt steht **unter** der Tableiste, nicht darüber.
+ *
+ * Damit bleibt beim offenen Blatt sichtbar, welche Bereiche es sonst noch
+ * gibt, und ein zweiter Tipp wechselt direkt hinüber — statt schließen,
+ * zielen, wieder öffnen. Der untere Innenabstand hält die letzte Reihe frei
+ * von der Leiste. */
 .buero-blatt {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 41;
+  z-index: 31;
   background: var(--buero-flaeche);
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
-  padding: 0.75rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 1.1rem calc(5rem + env(safe-area-inset-bottom));
   max-height: 82vh;
   overflow-y: auto;
+  box-shadow: 0 -10px 30px rgb(0 0 0 / 22%);
 }
 
 .buero-blatt-griff {
@@ -346,12 +403,12 @@
 }
 
 .buero-blatt h3 {
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--buero-tinte-leise);
-  margin: 1.1rem 0 0.4rem;
-  font-weight: 600;
+  margin: 1.1rem 0 0.6rem;
+  font-weight: 700;
 }
 
 .buero-blatt h3:first-of-type {
@@ -365,16 +422,25 @@
 }
 
 .buero-blatt-punkte a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
   padding: 0.7rem 0.85rem;
-  border: 1px solid var(--buero-linie);
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.buero-blatt-punkte a:focus-visible {
+  outline: 3px solid var(--buero-bronze);
+  outline-offset: 2px;
 }
 
 .buero-blatt-punkte a[aria-current='page'] {
-  background: var(--buero-tinte);
-  color: var(--buero-auf-tinte);
-  border-color: var(--buero-tinte);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  border-color: var(--buero-bronze);
 }
 
 @media (max-width: 719px) {
@@ -389,7 +455,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 30;
+    /* Über dem Blatt: siehe Kommentar dort */
+    z-index: 32;
     background: var(--buero-flaeche);
     border-top: 1px solid var(--buero-linie);
     padding-bottom: env(safe-area-inset-bottom);
@@ -398,6 +465,51 @@
   /* Platz, damit die Leiste nichts verdeckt */
   .buero-inhalt {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Die Hauptaktion klebt über der Tableiste, dort wo der Daumen liegt.
+     Volle Breite, weil daneben ohnehin nichts hinpasst. */
+  .buero-fussleiste {
+    position: sticky;
+    bottom: calc(4.1rem + env(safe-area-inset-bottom));
+    z-index: 25;
+    padding: 0.6rem;
+    border: 1px solid var(--buero-linie);
+    border-radius: 14px;
+    background: var(--buero-flaeche);
+    box-shadow: 0 6px 22px rgb(0 0 0 / 14%);
+  }
+
+  .buero-fussleiste > .buero-knopf {
+    flex: 1 1 100%;
+  }
+
+  .buero-fussleiste-hinweis {
+    flex: 1 1 100%;
+    text-align: center;
+    order: -1;
+  }
+}
+
+/* ── Bildschirmtastatur ────────────────────────────────────────────────────
+   Ist sie offen, klebt die Tableiste sonst mitten im Bild — bei manchen
+   Android-Browsern über dem Feld, in das man gerade tippt. Weg damit,
+   solange getippt wird; die Fußleiste rutscht dabei aus dem Kleben zurück
+   in den Fluss, statt über der Tastatur zu schweben.
+
+   Gesetzt wird die Klasse von `Tastaturwache` über `visualViewport`. */
+html.tastatur-offen .buero-tableiste {
+  display: none;
+}
+
+html.tastatur-offen .buero-inhalt {
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 719px) {
+  html.tastatur-offen .buero-fussleiste {
+    position: static;
+    box-shadow: none;
   }
 }
 
@@ -417,14 +529,16 @@
 }
 
 .buero h1 {
-  font-size: 1.35rem;
-  letter-spacing: 0.02em;
+  font-size: 1.55rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   margin: 0 0 0.35rem;
 }
 
 .buero h2 {
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--buero-tinte-leise);
   margin: 2rem 0 0.75rem;
@@ -443,25 +557,31 @@
   gap: 0.75rem;
 }
 
+/* Karte, Liste und Kachel sind dieselbe Sorte Fläche und sehen deshalb
+   gleich aus: heller Grund, feiner Rand, weicher Schatten. Vorher trennte
+   nur ein Strich, und jede Seite wirkte wie ein einziges langes Blatt. */
 .buero-kachel {
   background: var(--buero-flaeche);
   border: 1px solid var(--buero-linie);
-  border-radius: 10px;
-  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  box-shadow: var(--buero-schatten);
+  padding: 1.1rem 1.2rem;
   display: block;
 }
 
 .buero-kachel-titel {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--buero-tinte-leise);
 }
 
 .buero-kachel-wert {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-top: 0.35rem;
+  font-size: 1.9rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-top: 0.45rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -475,17 +595,47 @@
 .buero-liste {
   background: var(--buero-flaeche);
   border: 1px solid var(--buero-linie);
-  border-radius: 10px;
+  border-radius: 14px;
+  box-shadow: var(--buero-schatten);
   overflow: hidden;
 }
 
 .buero-zeile {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.1rem;
+  padding: 1rem 1.2rem 1rem 1.35rem;
   border-bottom: 1px solid var(--buero-linie);
+  transition: background-color 0.12s ease;
+}
+
+/* Statusbalken links.
+ *
+ * Damit liest man eine Liste im Vorbeigehen: rot heißt überfällig, bronze
+ * heißt offen, grün heißt erledigt. Ohne Zustand bleibt der Streifen leer —
+ * die Zeile sieht dann aus wie vorher. */
+.buero-zeile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+}
+
+.buero-zeile.ist-warn::before {
+  background: var(--buero-rot);
+}
+
+.buero-zeile.ist-offen::before {
+  background: var(--buero-bronze);
+}
+
+.buero-zeile.ist-gut::before {
+  background: var(--buero-gruen);
 }
 
 .buero-zeile:last-child {
@@ -501,16 +651,27 @@
 }
 
 .buero-zeile-titel {
-  font-weight: 500;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .buero-zeile-neben {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--buero-tinte-leise);
-  margin-top: 0.1rem;
+  margin-top: 0.2rem;
+}
+
+/* Zahlen in der Nebenzeile hervorheben: „Bestand 12 m von 50 m" liest man
+   dann als Zahl und nicht als Satz. Tabellarische Ziffern, damit Beträge
+   untereinander bündig stehen statt zu tanzen. */
+.buero-zeile-neben b {
+  color: var(--buero-tinte);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .buero-betrag {
@@ -520,118 +681,199 @@
 }
 
 /* ── Kennzeichen ────────────────────────────────────────────────────────── */
+/* Gefüllt statt nur umrandet: Ein reiner Umriss verschwindet bei Tageslicht
+   am Werkstattfenster. Aufgehellt wird gegen `--buero-marker-grund` — im
+   Hellen Weiß, im Dunkeln die Karte. Eine Variable statt zweier Regelsätze. */
 .buero-marker {
   display: inline-block;
-  font-size: 0.7rem;
+  font-size: 0.66rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0.15rem 0.5rem;
+  padding: 0.22rem 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--buero-linie);
+  background: var(--buero-marker-grund);
   color: var(--buero-tinte-leise);
+  white-space: nowrap;
 }
 
 .buero-marker.gut {
   color: var(--buero-gruen);
+  background: color-mix(in srgb, var(--buero-gruen) 14%, var(--buero-marker-grund));
   border-color: color-mix(in srgb, var(--buero-gruen) 35%, transparent);
 }
 
 .buero-marker.offen {
   color: var(--buero-bronze);
+  background: color-mix(in srgb, var(--buero-bronze) 14%, var(--buero-marker-grund));
   border-color: color-mix(in srgb, var(--buero-bronze) 35%, transparent);
 }
 
 .buero-marker.warn {
   color: var(--buero-rot);
+  background: color-mix(in srgb, var(--buero-rot) 14%, var(--buero-marker-grund));
   border-color: color-mix(in srgb, var(--buero-rot) 35%, transparent);
 }
 
-/* ── Bedienelemente ─────────────────────────────────────────────────────── */
-.buero-knopf {
+/* ── Bedienelemente ───────────────────────────────────────────────────────
+   Drei Stufen, aus zwei Metern Abstand unterscheidbar. Vorher gab es
+   fünf Varianten, von denen genau eine nach Knopf aussah: `leise` und
+   `schmal` trugen denselben 1px-Strich wie eine Tabellenlinie (1,3:1
+   Kontrast), und das Auge las sie als Beschriftung.
+
+   1  .buero-knopf         primär, gefüllt in Bronze — die eine Haupthandlung
+   2  .buero-knopf.leise   sekundär, eigene Fläche mit 2px Rahmen
+   3  .buero-knopf.stumm   tertiär, nur Text, aber unterstrichen
+
+   `schmal` ist ab hier nur noch eine Größe und keine eigene Bedeutung mehr,
+   `gefahr` färbt rot — und Rot bleibt dem Wegnehmen vorbehalten.
+
+   Die Höhen (48/44/38px) sind keine Geschmacksfrage: Bedient wird das an der
+   Werkbank, mit Handschuh oder fettigem Finger. */
+.buero-knopf,
+.buero a.buero-knopf {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  background: var(--buero-tinte);
-  color: var(--buero-auf-tinte);
-  border: none;
-  border-radius: 8px;
-  padding: 0.65rem 1.1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 48px;
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--buero-bronze);
+  border-radius: 10px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.005em;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-/* Ein Knopf ist oft ein Link. Ohne diese Zeilen greift `.buero a` und die
-   Schrift verschwindet im Hintergrund — genau das war der leere weiße Kasten. */
-.buero a.buero-knopf {
-  color: var(--buero-auf-tinte);
-}
-
-.buero a.buero-knopf.leise {
-  color: var(--buero-tinte);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
 
 .buero-knopf:hover,
 .buero a.buero-knopf:hover {
-  background: var(--buero-bronze);
-  color: #fff;
+  background: color-mix(in srgb, var(--buero-bronze) 82%, var(--buero-tinte));
+  border-color: color-mix(in srgb, var(--buero-bronze) 82%, var(--buero-tinte));
+  color: var(--buero-auf-bronze);
+}
+
+/* Ohne das ist die Tastatur im Büro unbenutzbar: Bisher gab es an Knöpfen
+   überhaupt keine Fokusmarkierung, nur an Eingabefeldern. */
+.buero-knopf:focus-visible,
+.buero a.buero-knopf:focus-visible {
+  outline: 3px solid var(--buero-bronze);
+  outline-offset: 2px;
 }
 
 /* Ausgegraut, aber lesbar — halbdurchsichtige Schrift auf halbdurchsichtigem
    Grund war auf dem Handy nicht mehr zu entziffern */
-.buero-knopf:disabled {
+.buero-knopf:disabled,
+.buero-knopf:disabled:hover {
   background: var(--buero-linie);
+  border-color: var(--buero-linie);
   color: var(--buero-tinte-leise);
   cursor: default;
 }
 
-.buero-knopf:disabled:hover {
-  background: var(--buero-linie);
-  color: var(--buero-tinte-leise);
+/* 2 — Sekundär: eine echte Alternative, kein Fließtext. Eigene Fläche plus
+   2px Rahmen in einem Grau, das kein Tabellenstrich ist. */
+.buero-knopf.leise,
+.buero a.buero-knopf.leise {
+  min-height: 44px;
+  background: var(--buero-flaeche);
+  border-color: var(--buero-rahmen);
+  color: var(--buero-tinte);
 }
 
-/* Zweitrangige Aktionen an einer Listenzeile — schmal genug, dass drei davon
-   nebeneinander auf ein Handy passen */
+.buero-knopf.leise:hover,
+.buero a.buero-knopf.leise:hover {
+  background: var(--buero-papier);
+  border-color: var(--buero-tinte);
+  color: var(--buero-tinte);
+}
+
+/* 3 — Tertiär: beiläufig, aber unterstrichen. Ohne die Linie wäre es wieder
+   das alte Problem — grauer Text, den niemand für einen Knopf hält. */
+.buero-knopf.stumm,
+.buero a.buero-knopf.stumm {
+  min-height: 40px;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--buero-tinte-leise);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.buero-knopf.stumm:hover,
+.buero a.buero-knopf.stumm:hover {
+  background: var(--buero-papier);
+  border-color: transparent;
+  color: var(--buero-tinte);
+}
+
+/* Nur eine Größe — an einer Listenzeile, wo drei davon nebeneinander auf ein
+   Handy passen müssen. Die Bedeutung kommt weiter von leise/stumm/gefahr. */
 .buero-knopf.schmal,
 .buero a.buero-knopf.schmal {
-  padding: 0.4rem 0.7rem;
-  font-size: 0.78rem;
-  background: transparent;
-  color: var(--buero-tinte);
-  border: 1px solid var(--buero-linie);
+  min-height: 38px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
 }
 
-.buero-knopf.schmal:hover,
-.buero a.buero-knopf.schmal:hover {
-  background: var(--buero-bronze);
-  border-color: var(--buero-bronze);
-  color: #fff;
+.buero-knopf.stumm.schmal {
+  min-height: 34px;
+  padding: 0.3rem 0.5rem;
 }
 
+/* Wegnehmendes bleibt rot — und wird nie zur gefüllten Hauptfläche, damit
+   „löschen" nie wie die vorgeschlagene Handlung aussieht. */
 .buero-knopf.gefahr,
 .buero a.buero-knopf.gefahr {
+  background: var(--buero-flaeche);
+  border-color: color-mix(in srgb, var(--buero-rot) 50%, transparent);
   color: var(--buero-rot);
-  border-color: color-mix(in srgb, var(--buero-rot) 40%, transparent);
 }
 
 .buero-knopf.gefahr:hover,
 .buero a.buero-knopf.gefahr:hover {
   background: var(--buero-rot);
   border-color: var(--buero-rot);
-  color: #fff;
+  color: var(--buero-auf-bronze);
 }
 
-.buero-knopf.leise {
-  background: transparent;
-  color: var(--buero-tinte);
-  border: 1px solid var(--buero-linie);
+.buero-knopf.gefahr:focus-visible {
+  outline-color: var(--buero-rot);
 }
 
-.buero-knopf.leise:hover,
-.buero a.buero-knopf.leise:hover {
-  background: var(--buero-papier);
-  color: var(--buero-tinte);
+/* ── Fußleiste mit der Hauptaktion ─────────────────────────────────────────
+   Gebucht, gespeichert und verschickt wird an der Werkbank und nicht am
+   Schreibtisch. Lag die Hauptaktion unter dem Formular, war sie schon bei
+   zwei Positionen aus dem Bild — man tippt, scrollt, sucht.
+
+   `sticky` statt `fixed`: Ein festgenagelter Balken springt, sobald die
+   Bildschirmtastatur aufgeht, weil iOS dann nur den sichtbaren Ausschnitt
+   verschiebt. Sticky bleibt im Fluss und macht das mit. */
+.buero-fussleiste {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.buero-fussleiste-hinweis {
+  flex: 1;
+  min-width: 8rem;
+  font-size: 0.82rem;
+  color: var(--buero-tinte-leise);
 }
 
 .buero-feld {
@@ -641,7 +883,9 @@
 
 .buero-feld > span {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   color: var(--buero-tinte-leise);
   margin-bottom: 0.3rem;
 }
@@ -650,9 +894,11 @@
 .buero-feld select,
 .buero-feld textarea {
   width: 100%;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--buero-linie);
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  /* Derselbe Rahmen wie am Knopf: Ein Feld ist auch etwas zum Bedienen */
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 9px;
   background: var(--buero-flaeche);
   color: inherit;
   font: inherit;
@@ -684,15 +930,17 @@
 .buero-karte {
   background: var(--buero-flaeche);
   border: 1px solid var(--buero-linie);
-  border-radius: 10px;
-  padding: 1.1rem 1.2rem;
+  border-radius: 14px;
+  box-shadow: var(--buero-schatten);
+  padding: 1.3rem 1.4rem;
 }
 
 /* ── Postfach ───────────────────────────────────────────────────────────── */
 .buero-fach-wahl {
+  min-height: 44px;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--buero-linie);
-  border-radius: 8px;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 9px;
   background: var(--buero-flaeche);
   color: inherit;
   font: inherit;
@@ -786,17 +1034,76 @@
   border-color: color-mix(in srgb, var(--buero-rot) 35%, transparent);
 }
 
+/* ── Dunkelmodus ────────────────────────────────────────────────────────────
+   Derselbe Entwurf, andere Mittel. Drei Dinge tragen im Dunkeln nicht und
+   brauchen Ersatz:
+
+   **Bronze dreht die Schriftfarbe um.** #c98a52 mit weißer Schrift kommt auf
+   2,9:1 und ist nicht lesbar. Hier wird Bronze heller und trägt dunkle
+   Schrift — 7,6:1, und der Knopf wirkt wie eine Lampe im Raum. Ohne das wäre
+   der primäre Knopf ein weißer Block: das lauteste Element der Seite, egal
+   ob dort „senden" oder „löschen" steht.
+
+   **Schatten werden zu Flächen.** Papier eine Spur tiefer, Karte eine Spur
+   höher, dazu eine 5-%-Oberkante — das ist im Dunkeln das Zeichen für
+   „diese Fläche liegt oben".
+
+   **Trennstrich und Bedienrahmen bleiben zwei Farben**, nur andersherum als
+   im Hellen: der Strich dunkler als die Fläche, der Rahmen heller. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --buero-papier: #141416;
-    --buero-flaeche: #1c1c1f;
+    --buero-papier: #111113;
+    --buero-flaeche: #1f1f23;
     --buero-tinte: #ececed;
     --buero-auf-tinte: #141416;
-    --buero-tinte-leise: #9a9aa0;
-    --buero-linie: #2c2c31;
-    --buero-bronze: #c98a52;
-    --buero-gruen: #6cc08c;
-    --buero-rot: #e0796f;
+    --buero-tinte-leise: #a4a4ab;
+    --buero-linie: #2e2e34;
+    --buero-rahmen: #5c5c66;
+    --buero-bronze: #d9975c;
+    --buero-auf-bronze: #16110c;
+    --buero-gruen: #77cc96;
+    --buero-rot: #ef8579;
+    --buero-marker-grund: var(--buero-flaeche);
+    --buero-schatten:
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 2px 10px rgb(0 0 0 / 40%);
+  }
+
+  /* Der sekundäre Knopf hat im Hellen eine weiße Fläche gegen das Papier.
+     Im Dunkeln muss er dafür heller werden als die Karte, auf der er steht. */
+  .buero-knopf.leise,
+  .buero a.buero-knopf.leise {
+    background: #2a2a30;
+  }
+
+  .buero-knopf.leise:hover,
+  .buero a.buero-knopf.leise:hover {
+    background: #34343c;
+  }
+
+  .buero-knopf.stumm:hover,
+  .buero a.buero-knopf.stumm:hover {
+    background: #26262c;
+  }
+
+  .buero-knopf:disabled,
+  .buero-knopf:disabled:hover {
+    background: #26262c;
+    border-color: #26262c;
+    color: #6e6e77;
+  }
+
+  /* Eingabefelder liegen im Dunkeln tiefer als die Karte — sonst sieht ein
+     Feld aus wie ein Stück Karte mit Rahmen drumherum. */
+  .buero-feld input,
+  .buero-feld select,
+  .buero-feld textarea,
+  .buero-fach-wahl {
+    background: color-mix(in srgb, var(--buero-papier) 70%, var(--buero-flaeche));
+  }
+
+  .buero-zeile:hover {
+    background: #26262c;
   }
 }
 

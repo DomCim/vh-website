@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
+import { Fussleiste } from './Fussleiste'
 
 export type InventurZeile = {
   item: number
@@ -214,7 +215,7 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
       </label>
 
       {!fertig && (
-        <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <Fussleiste>
           <button
             type="button"
             className="buero-knopf leise"
@@ -231,7 +232,7 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
           >
             Abschließen &amp; ins Inventar übernehmen
           </button>
-        </div>
+        </Fussleiste>
       )}
     </div>
   )

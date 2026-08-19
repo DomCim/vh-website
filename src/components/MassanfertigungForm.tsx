@@ -83,7 +83,7 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
   }
 
   const inputClass =
-    'border-line focus:border-ink w-full border bg-white px-4 py-3 text-sm outline-none transition-colors'
+    'border-line focus:border-ink w-full border bg-paper px-4 py-3 text-sm outline-none transition-colors'
 
   if (status === 'success') {
     return <p className="mt-6 text-sm text-green-700">{labels.success}</p>
@@ -138,7 +138,7 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+        className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50"
       >
         {labels.send}
       </button>

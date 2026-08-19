@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
+import { Fussleiste } from './Fussleiste'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -596,11 +597,11 @@ export function ArtikelFormular({
           )}
       </div>
 
-      <div style={{ marginTop: '1.25rem' }}>
+      <Fussleiste>
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
           Speichern
         </button>
-      </div>
+      </Fussleiste>
     </div>
   )
 }

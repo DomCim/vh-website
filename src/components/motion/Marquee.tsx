@@ -21,7 +21,7 @@ export function Marquee({ words, speed = 40 }: { words: string[]; speed?: number
   )
 
   return (
-    <div className="border-line text-ink/90 overflow-hidden border-y bg-white py-6 whitespace-nowrap select-none">
+    <div className="border-line text-ink/90 overflow-hidden border-y bg-paper py-6 whitespace-nowrap select-none">
       {reduceMotion ? (
         <div className="tracking-brand text-xl font-semibold uppercase sm:text-2xl">{row}</div>
       ) : (

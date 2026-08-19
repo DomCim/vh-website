@@ -7,6 +7,7 @@ import { VersandKnopf } from './VersandKnopf'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
+import { Fussleiste } from './Fussleiste'
 
 export type AuftragPosition = {
   description: string
@@ -411,15 +412,7 @@ export function AuftragFormular({
         />
       </label>
 
-      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="buero-knopf"
-          disabled={laeuft}
-          onClick={() => void speichern()}
-        >
-          Speichern
-        </button>
+      <Fussleiste>
         {w.status === 'geplant' && (
           <button
             type="button"
@@ -440,7 +433,15 @@ export function AuftragFormular({
             Fertig melden &amp; Material abbuchen
           </button>
         )}
-      </div>
+        <button
+          type="button"
+          className="buero-knopf"
+          disabled={laeuft}
+          onClick={() => void speichern()}
+        >
+          Speichern
+        </button>
+      </Fussleiste>
     </div>
   )
 }

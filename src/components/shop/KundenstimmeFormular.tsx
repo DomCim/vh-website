@@ -114,7 +114,7 @@ export function KundenstimmeFormular({
       <button
         type="submit"
         disabled={stand === 'laeuft'}
-        className="bg-ink tracking-nav hover:bg-bronze px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
+        className="bg-ink tracking-nav hover:bg-bronze px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50"
       >
         {dict.submit}
       </button>

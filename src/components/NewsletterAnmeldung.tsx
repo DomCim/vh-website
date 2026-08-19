@@ -89,8 +89,8 @@ export function NewsletterAnmeldung({
           disabled={stand === 'laeuft'}
           className={
             kompakt
-              ? 'tracking-nav bg-white px-4 py-2 text-xs font-semibold text-black uppercase transition-colors hover:bg-bronze hover:text-white disabled:opacity-50'
-              : 'bg-ink tracking-nav hover:bg-bronze px-8 py-3 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50'
+              ? 'tracking-nav bg-white px-4 py-2 text-xs font-semibold text-black uppercase transition-colors hover:bg-bronze hover:text-on-ink disabled:opacity-50'
+              : 'bg-ink tracking-nav hover:bg-bronze px-8 py-3 text-xs font-semibold text-on-ink uppercase transition-colors disabled:opacity-50'
           }
         >
           {dict.submit}

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
+import { Fussleiste } from './Fussleiste'
 
 export type BestellungWerte = {
   id: number | string
@@ -103,9 +104,11 @@ export function BestellungFormular({ werte }: { werte: BestellungWerte }) {
         </label>
       </div>
 
-      <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
-        Speichern
-      </button>
+      <Fussleiste>
+        <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
+          Speichern
+        </button>
+      </Fussleiste>
     </div>
   )
 }

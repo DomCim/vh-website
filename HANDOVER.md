@@ -161,6 +161,84 @@ Sie steht deshalb nicht im Vorrat des Service Workers.
 
 ---
 
+## Vierter Durchgang: Erscheinungsbild und Bedienung
+
+### Knopfhierarchie statt fünf gleich aussehender Varianten
+
+`src/styles/office.css` kennt jetzt drei Stufen, und sie sind es auch
+optisch: `.buero-knopf` primär (gefüllt in Bronze, 48 px), `.leise` sekundär
+(eigene Fläche, 2 px Rahmen, 44 px), `.stumm` beiläufig (unterstrichener
+Text). `.schmal` ist nur noch eine **Größe**, keine Bedeutung mehr — vorher
+war es „zweitrangig", und ohne diese Umstellung wären die sechzehn
+`schmal`-Knöpfe im Büro schlagartig gefüllte Hauptknöpfe geworden.
+
+Der Kern des alten Problems steckte in einer einzigen Variablen: Trennstrich
+und Bedienrahmen waren dieselbe Farbe (`--buero-linie`, 1,3:1 gegen die
+Fläche). Es gibt jetzt zusätzlich `--buero-rahmen`. Wer eine neue Fläche
+baut, nimmt `--buero-linie` zum Trennen und `--buero-rahmen` für alles, was
+man anfassen kann.
+
+**Genau eine primäre Aktion je Seite.** Steht daneben noch etwas, ist es
+`leise` oder `stumm`. In Rechnung und Angebot wandert die Hauptsache mit dem
+Stand des Vorgangs (festschreiben → verschicken → angenommen → Auftrag), und
+es ist immer nur eine davon sichtbar.
+
+### Dunkles Thema: dieselbe Ordnung, andere Mittel
+
+Nicht invertiert, sondern drei bewusste Abweichungen (`office.css`,
+`globals.css`, jeweils im `prefers-color-scheme`-Block dokumentiert):
+
+- **Bronze dreht die Schriftfarbe um.** `#c98a52` mit weißer Schrift kommt
+  auf 2,9:1. Im Dunkeln wird Bronze heller und trägt dunkle Schrift
+  (`--buero-auf-bronze` bzw. `--color-on-ink`) — 7,6:1. Ohne das wäre der
+  primäre Knopf ein weißer Block: das lauteste Element der Seite, egal ob
+  dort „senden" oder „löschen" steht.
+- **Schatten werden zu Flächen.** Im Dunkeln hebt kein Schatten etwas an;
+  dort macht das eine hellere Fläche mit 5-%-Oberkante (`--buero-schatten`).
+- **Kennzeichen mischen gegen `--buero-marker-grund`** — im Hellen Weiß, im
+  Dunkeln die Karte. Eine Variable statt zweier Regelsätze.
+
+Auf der Website reicht es, die `--color-*`-Variablen umzuschalten: Die
+Tailwind-Utilities lesen dieselben. Zwei Ausnahmen sind Absicht — der
+Fußbereich bleibt der dunkelste Block, und `text-white` auf gefüllten
+Flächen wurde durch `text-on-ink` ersetzt, das mitdreht. Reines `text-white`
+bleibt nur dort, wo der Grund in beiden Themen dunkel ist (Bilder, Banner,
+Fußbereich).
+
+### Der Schriftzug als Bauteil
+
+`src/components/layout/Logo.tsx` — das SVG inline mit `fill="currentColor"`.
+Damit fällt `filter: invert(1)` weg, das aus jedem Farbwert sein Gegenteil
+machte und mit zwei Themen vier Sonderfälle gebraucht hätte. `public/logo.svg`
+bleibt für die Verwendung als Datei (Mail, OG-Bild) und hat dafür selbst eine
+`prefers-color-scheme`-Regel bekommen.
+
+### Bedienung am Daumen
+
+`src/components/office/Fussleiste.tsx` trägt die Hauptaktion; am Handy klebt
+sie über der Tableiste, am Rechner steht sie rechts unter dem Formular.
+Bewusst `position: sticky` und nicht `fixed`: Ein festgenagelter Balken
+springt, sobald die Bildschirmtastatur aufgeht, weil iOS dann nur den
+sichtbaren Ausschnitt verschiebt.
+
+`src/components/office/Tastaturwache.tsx` erkennt die Tastatur über
+`visualViewport` (Fensterhöhe minus sichtbare Höhe) und setzt
+`html.tastatur-offen`; das Stylesheet blendet daraufhin die Tableiste aus und
+nimmt die Fußleiste aus dem Kleben. Die Schwelle ist grob (120 px bzw. ein
+Viertel der Höhe) — feiner wäre sie beim Ein- und Ausblenden der
+Adressleiste am Flackern.
+
+### Untere Leiste: vier Bereiche, vier Blätter
+
+`BueroNavigation` zeigt am Handy Übersicht plus die vier Arbeitsbereiche;
+jeder öffnet **sein** Blatt. Wichtig sind die drei Ebenen: abdunkelnder
+Grund 30, Blatt 31, Leiste 32. Lag der Grund darüber (wie zuerst gebaut),
+schluckte er den Tipp auf die Leiste und schloss das Blatt, statt in den
+nächsten Bereich zu wechseln — sichtbar war das nicht, der Knopf leuchtete
+auf und es passierte das Falsche. `tests/bueroleiste.spec.ts` hält das fest.
+
+---
+
 ## Offen
 
 1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit
@@ -181,6 +259,20 @@ Sie steht deshalb nicht im Vorrat des Service Workers.
 ---
 
 ## Fallen, die in diesem Durchgang Zeit gekostet haben
+
+**Das Projekt hat keine Prettier-Konfiguration.** `npx prettier --write` läuft
+deshalb mit den Voreinstellungen (doppelte Anführungszeichen, 80 Zeichen) und
+formatiert das halbe Repo um — aus 51 geänderten Dateien wurden 174. Nicht
+laufen lassen; ESLint (`pnpm lint`) prüft, was zu prüfen ist.
+
+**Zwei Server auf Port 3000.** Startet man `pnpm start` neu, ohne den alten
+Prozess sicher zu beenden, bindet der neue den Port nicht — und der alte
+bedient weiter aus einem `.next`, das der Neubau gerade ersetzt hat. Ergebnis
+sind `ChunkLoadError` und Stylesheets mit MIME-Typ `text/html`, die wie ein
+Fehler im Service Worker aussehen. Erst `ps -eo pid,cmd | grep "node
+server.mjs"` prüfen. `pkill -f server.mjs` ist dabei die falsche Wahl: Das
+Muster trifft die eigene Shell mit.
+
 
 **Payload-Hooks laufen in der Transaktion des Auslösers.** Jede Abfrage in
 einem Hook braucht `req` — ohne das nimmt sie eine eigene Verbindung, sieht

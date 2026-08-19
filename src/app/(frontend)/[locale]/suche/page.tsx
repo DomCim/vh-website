@@ -58,11 +58,11 @@ export default async function SucheSeite({
           defaultValue={begriff}
           placeholder={dict.search.placeholder}
           aria-label={dict.search.placeholder}
-          className="border-line focus:border-ink w-full border bg-white px-4 py-3 text-sm outline-none transition-colors"
+          className="border-line focus:border-ink w-full border bg-paper px-4 py-3 text-sm outline-none transition-colors"
         />
         <button
           type="submit"
-          className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-3 text-xs font-semibold whitespace-nowrap text-white uppercase transition-colors"
+          className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-6 py-3 text-xs font-semibold whitespace-nowrap text-on-ink uppercase transition-colors"
         >
           {dict.search.submit}
         </button>
