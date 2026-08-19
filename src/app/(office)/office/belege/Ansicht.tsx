@@ -83,7 +83,7 @@ export function BelegeAnsicht() {
         </Link>
       </div>
 
-      <div className="buero-nav" style={{ borderRadius: 10, border: '1px solid var(--buero-linie)' }}>
+      <div className="buero-reiter">
         {FILTER.map((f) => (
           <Link
             key={f.label}

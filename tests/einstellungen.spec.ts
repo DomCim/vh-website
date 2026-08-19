@@ -59,6 +59,39 @@ test.describe('Einstellungen im Büro', () => {
     ).toHaveValue(marke, { timeout: 30_000 })
   })
 
+  /**
+   * Am Telefon war die Seite eine Sackgasse.
+   *
+   * Die Reiter liehen sich die Klasse der Hauptnavigation, und die wird unter
+   * 720 px ausgeblendet — dort übernimmt die Leiste am unteren Rand ihre
+   * Aufgabe. Für Reiter *innerhalb* einer Seite tut sie das nicht: Sichtbar
+   * blieb nur der erste Abschnitt, und an Benutzer, Betrieb und Integrationen
+   * kam man am Handy überhaupt nicht mehr heran. Am Rechner sah alles richtig
+   * aus, und genau deshalb steht hier eine Fenstergröße drin.
+   */
+  test('die Abschnitte sind auch am Telefon erreichbar', async ({ browser }) => {
+    const telefon = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const seite = await telefon.newPage()
+
+    await seite.goto('/office/login')
+    await seite.waitForLoadState('networkidle')
+    await seite.fill('input[type="email"]', EMAIL)
+    await seite.fill('input[type="password"]', PASSWORT!)
+    await seite.locator('form button[type="submit"]').first().click()
+    await seite.waitForURL(/\/office$/, { timeout: 30_000 })
+
+    await seite.goto('/office/einstellungen')
+    for (const teil of ['Dieses Gerät', 'Mein Konto', 'Benutzer', 'Betrieb', 'Integrationen']) {
+      await expect(seite.getByRole('link', { name: teil }), teil).toBeVisible({ timeout: 20_000 })
+    }
+
+    // Und sie führen auch irgendwohin
+    await seite.getByRole('link', { name: 'Benutzer' }).click()
+    await expect(seite.locator('h2')).toContainText('Benutzer', { timeout: 20_000 })
+
+    await telefon.close()
+  })
+
   test('ohne Anmeldung verschlossen', async ({ playwright }) => {
     const frisch = await playwright.request.newContext()
     const antwort = await frisch.get(`${BASIS}/api/office/einstellungen?bereich=integrationen`, {

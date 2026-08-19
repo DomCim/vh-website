@@ -45,10 +45,7 @@ export function EinstellungenAnsicht() {
         {benutzer.name ? ` (${benutzer.name})` : ''}
       </p>
 
-      <div
-        className="buero-nav"
-        style={{ borderRadius: 10, border: '1px solid var(--buero-linie)', marginBottom: '1rem' }}
-      >
+      <div className="buero-reiter">
         {TEILE.map((t) => (
           <Link
             key={t.schluessel}

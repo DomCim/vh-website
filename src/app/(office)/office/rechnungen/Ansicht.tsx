@@ -78,7 +78,7 @@ export function RechnungenAnsicht() {
         </Link>
       </div>
 
-      <div className="buero-nav" style={{ borderRadius: 10, border: '1px solid var(--buero-linie)' }}>
+      <div className="buero-reiter">
         {filterPunkte.map((f) => (
           <Link
             key={f.label}

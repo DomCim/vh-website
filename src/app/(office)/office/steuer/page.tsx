@@ -27,7 +27,7 @@ export default async function SteuerSeite({
         Alles, was der Steuerberater braucht — Einnahmen, Ausgaben und die Belege dazu.
       </p>
 
-      <div className="buero-nav" style={{ borderRadius: 10, border: '1px solid var(--buero-linie)' }}>
+      <div className="buero-reiter">
         {jahre.map((j) => (
           <Link key={j} href={`/office/steuer?jahr=${j}`} aria-current={j === jahr ? 'page' : undefined}>
             {j}
