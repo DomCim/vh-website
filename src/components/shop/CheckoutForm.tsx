@@ -14,6 +14,9 @@ type CheckoutDict = {
   paymentMethod: string
   optionPaypal: string
   paypalNote: string
+  optionInvoice: string
+  invoiceNote: string
+  redirectNoteInvoice: string
   redirectNotePaypal: string
   paypalAddressNote: string
   differentAddress: string
@@ -116,6 +119,14 @@ export function CheckoutForm({
    * Absendeversuch trägt den Code mit. Wer schon im Kundenportal angemeldet
    * ist, sieht davon nichts.
    */
+  /*
+   * Zwei Zahlarten: PayPal (nur wenn eingerichtet) und Rechnung (immer).
+   * Ohne PayPal-Zugangsdaten ist Rechnung vorgewählt — die Kasse funktioniert
+   * damit auch, bevor irgendein Zahlungsdienst eingerichtet ist.
+   */
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'rechnung'>(
+    paypalAvailable ? 'paypal' : 'rechnung',
+  )
   const [codeNoetig, setCodeNoetig] = useState(false)
   const [codeAn, setCodeAn] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -126,9 +137,11 @@ export function CheckoutForm({
   const [verzicht, setVerzicht] = useState(false)
   const [fehlendeZustimmung, setFehlendeZustimmung] = useState(false)
 
-  // Die Lieferadresse kommt aus dem PayPal-Konto, außer der Kunde will
-  // ausdrücklich eine abweichende angeben
-  const showAddressForm = deliveryMethod === 'shipping' && differentAddress
+  // Bei PayPal kommt die Lieferadresse aus dem PayPal-Konto, außer der Kunde
+  // will ausdrücklich eine abweichende angeben. Bei Rechnung gibt es diese
+  // Quelle nicht — dort ist die Adresse bei Lieferung Pflicht.
+  const showAddressForm =
+    deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
 
   // Nur wenn wir sicher wissen, dass ein Stück nach Vorgabe entsteht, wird der
   // Verzicht abgefragt — sonst spräche die Kasse jemandem ein Recht ab, das er hat.
@@ -172,6 +185,7 @@ export function CheckoutForm({
           locale,
           promoCode: initialCode,
           deliveryMethod,
+          paymentMethod,
           items: items.map((i) => ({
             productId: i.productId,
             variantTitle: i.variantTitle,
@@ -281,22 +295,42 @@ export function CheckoutForm({
           <h2 className="tracking-nav text-ink mb-3 text-sm font-semibold uppercase">
             {dict.paymentMethod}
           </h2>
-          {paypalAvailable ? (
-            <div className="border-line bg-paper-soft border px-4 py-3 text-sm">
-              <p className="text-ink font-semibold">{dict.optionPaypal}</p>
-              <p className="text-ink-soft mt-1 text-xs">{dict.paypalNote}</p>
-            </div>
-          ) : (
-            /*
-             * Ohne eingerichtete Zahlung führt der Bestellknopf ins Leere. Dann
-             * lieber gleich hier sagen, dass es persönlich weitergeht — sonst
-             * füllt jemand das ganze Formular aus und bekommt am Ende nur einen
-             * Fehler.
-             */
-            <p className="border-accent bg-paper-soft text-ink border px-4 py-3 text-sm">
-              {dict.errorNoPayment}
-            </p>
-          )}
+          <div className="space-y-2">
+            {paypalAvailable && (
+              <label className="border-line has-checked:border-ink block cursor-pointer border bg-white px-4 py-3 text-sm">
+                <span className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="paypal"
+                    checked={paymentMethod === 'paypal'}
+                    onChange={() => setPaymentMethod('paypal')}
+                    className="accent-ink"
+                  />
+                  {dict.optionPaypal}
+                </span>
+                {paymentMethod === 'paypal' && (
+                  <span className="text-ink-soft mt-1 block pl-7 text-xs">{dict.paypalNote}</span>
+                )}
+              </label>
+            )}
+            <label className="border-line has-checked:border-ink block cursor-pointer border bg-white px-4 py-3 text-sm">
+              <span className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="rechnung"
+                  checked={paymentMethod === 'rechnung'}
+                  onChange={() => setPaymentMethod('rechnung')}
+                  className="accent-ink"
+                />
+                {dict.optionInvoice}
+              </span>
+              {paymentMethod === 'rechnung' && (
+                <span className="text-ink-soft mt-1 block pl-7 text-xs">{dict.invoiceNote}</span>
+              )}
+            </label>
+          </div>
         </div>
 
         <div>
@@ -310,7 +344,7 @@ export function CheckoutForm({
           </div>
         </div>
 
-        {deliveryMethod === 'shipping' && (
+        {deliveryMethod === 'shipping' && paymentMethod === 'paypal' && (
           <div className="border-line bg-paper-soft border p-4 text-sm">
             <p className="text-ink-soft">{dict.paypalAddressNote}</p>
             <label className="text-ink mt-2 flex cursor-pointer items-center gap-2">
@@ -409,7 +443,7 @@ export function CheckoutForm({
         <div className="flex flex-wrap items-center gap-4">
           <button
             type="submit"
-            disabled={submitting || !paypalAvailable}
+            disabled={submitting}
             className="bg-ink tracking-nav hover:bg-bronze cursor-pointer px-10 py-3.5 text-xs font-semibold text-white uppercase transition-colors disabled:opacity-50"
           >
             {dict.payNow}
@@ -418,7 +452,9 @@ export function CheckoutForm({
             {dict.backToCart}
           </Link>
         </div>
-        <p className="text-ink-soft text-xs">{dict.redirectNotePaypal}</p>
+        <p className="text-ink-soft text-xs">
+          {paymentMethod === 'rechnung' ? dict.redirectNoteInvoice : dict.redirectNotePaypal}
+        </p>
       </form>
 
       <aside className="bg-paper-soft h-fit p-6">

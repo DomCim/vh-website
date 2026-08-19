@@ -18,6 +18,7 @@ import {
 } from '../../../../lib/kundenportal'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
+import { rechnungskaufAnlegen, rechnungskaufBestaetigen } from '../../../../lib/rechnungskauf'
 import { sendMail } from '../../../../lib/sendMail'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,7 @@ type CheckoutBody = {
   promoCode?: string
   locale?: string
   deliveryMethod?: DeliveryMethod
+  paymentMethod?: 'paypal' | 'rechnung'
   customer: {
     name: string
     email: string
@@ -74,9 +76,15 @@ export async function POST(req: Request) {
     if (!body.customer?.name || !body.customer?.email) {
       return NextResponse.json({ error: 'missing-fields' }, { status: 400 })
     }
+    const paymentMethod = body.paymentMethod === 'rechnung' ? 'rechnung' : 'paypal'
     const hasProvidedAddress = Boolean(
       body.shippingAddress?.line1 && body.shippingAddress?.postalCode && body.shippingAddress?.city,
     )
+    // Bei PayPal kommt die Lieferadresse notfalls aus dem PayPal-Konto —
+    // bei Rechnung gibt es diese Quelle nicht, da muss sie hier stehen.
+    if (paymentMethod === 'rechnung' && deliveryMethod === 'shipping' && !hasProvidedAddress) {
+      return NextResponse.json({ error: 'missing-address' }, { status: 400 })
+    }
 
     const payload = await payloadClient()
 
@@ -138,7 +146,7 @@ export async function POST(req: Request) {
         orderNumber,
         accessToken: randomUUID(),
         status: 'pending',
-        paymentProvider: 'paypal',
+        paymentProvider: paymentMethod,
         items: cart.lines.map((l) => ({
           product: typeof l.productId === 'string' ? Number(l.productId) : l.productId,
           titleSnapshot: l.titleSnapshot,
@@ -179,6 +187,31 @@ export async function POST(req: Request) {
     })
 
     const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+    // ── Kauf auf Rechnung ─────────────────────────────────────────────────
+    //
+    // Ist fast Projektgeschäft — jedes Stück entsteht ohnehin einzeln. Es
+    // entsteht sofort der Fertigungsauftrag mit dem Zahlplan vom Artikel,
+    // die Anzahlungsrechnung liegt dem Büro als Entwurf vor, und der Kunde
+    // landet auf seiner Bestellseite statt bei einem Zahlungsdienst.
+    if (paymentMethod === 'rechnung') {
+      await rechnungskaufAnlegen(payload, order)
+      await rechnungskaufBestaetigen(payload, order, locale)
+
+      const antwort = NextResponse.json({
+        url: `${serverURL}/${locale}/bestellung/${order.accessToken}`,
+      })
+      if (neueSitzung) {
+        antwort.cookies.set(neueSitzung.name, neueSitzung.wert, {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: neueSitzung.maxAge,
+        })
+      }
+      return antwort
+    }
 
     // ── PayPal ────────────────────────────────────────────────────────────
     const cfg = await paypalConfig(payload)

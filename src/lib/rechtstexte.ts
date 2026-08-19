@@ -153,7 +153,7 @@ function versandZahlung(sprache: Sprache): string {
       "Les frais de port sont indiqués par article et additionnés dans le panier ; le montant exact apparaît avant la commande. L'enlèvement à l'atelier est possible et gratuit — nous convenons ensemble de la date.",
       "Chaque pièce est fabriquée à l'unité. Le délai de fabrication figure sur la fiche produit et court à partir du paiement ; nous vous informons dès que la fabrication commence et dès l'expédition, avec le numéro de suivi.",
       'Paiement',
-      "Le paiement se fait via PayPal — avec un compte PayPal, une carte ou un prélèvement ; un compte PayPal n'est pas nécessaire. À notre égard, le montant total est dû à la commande ; la fabrication commence une fois le paiement reçu. Si PayPal vous propose en outre un paiement différé ou en plusieurs fois, cela relève de PayPal : c'est un accord entre vous et PayPal, sans effet sur notre créance.",
+      "Le paiement se fait via PayPal ou sur facture par virement. Via PayPal — avec un compte PayPal, une carte ou un prélèvement ; un compte PayPal n'est pas nécessaire — le montant total est dû à la commande ; si PayPal vous propose un paiement différé ou en plusieurs fois, c'est un accord entre vous et PayPal, sans effet sur notre créance. Pour l'achat sur facture, vous recevez la facture par e-mail ; pour les pièces sur mesure, d'abord une facture d'acompte, le solde suit l'avancement et précède la livraison. Dans les deux cas, la fabrication commence à réception du paiement.",
       'Prix',
       'Tous les prix sont TTC. La TVA applicable est indiquée sur la confirmation de commande et sur la facture.',
       HINWEIS.fr,

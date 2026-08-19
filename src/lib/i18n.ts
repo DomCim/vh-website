@@ -72,6 +72,11 @@ const de = {
     optionPaypal: 'PayPal',
     paypalNote:
       'Mit PayPal-Konto, Karte oder Lastschrift — ein PayPal-Konto ist dafür nicht nötig. Ob Sie den Betrag auf einmal zahlen, später oder in Raten, vereinbaren Sie direkt mit PayPal.',
+    optionInvoice: 'Kauf auf Rechnung (Überweisung)',
+    invoiceNote:
+      'Sie erhalten die Rechnung per E-Mail — mit QR-Code zum Scannen mit der Banking-App. Bei Einzelanfertigungen zunächst die Anzahlungsrechnung; gefertigt wird nach Zahlungseingang.',
+    redirectNoteInvoice:
+      'Es wird nichts abgebucht: Sie erhalten die Rechnung per E-Mail und überweisen in Ruhe.',
     shipping: 'Versand',
     contactData: 'Ihre Kontaktdaten',
     name: 'Vor- und Nachname',
@@ -379,6 +384,11 @@ const fr: Dictionary = {
     optionPaypal: 'PayPal',
     paypalNote:
       "Avec un compte PayPal, une carte ou un prélèvement — un compte PayPal n'est pas nécessaire. Payer en une fois, plus tard ou en plusieurs fois : cela se règle directement avec PayPal.",
+    optionInvoice: 'Achat sur facture (virement)',
+    invoiceNote:
+      "Vous recevrez la facture par e-mail — avec un QR code à scanner avec votre application bancaire. Pour les pièces sur mesure, d'abord la facture d'acompte ; la fabrication démarre à réception du paiement.",
+    redirectNoteInvoice:
+      "Aucun prélèvement : vous recevez la facture par e-mail et effectuez le virement à votre rythme.",
     shipping: 'Livraison',
     contactData: 'Vos coordonnées',
     name: 'Nom et prénom',
@@ -683,6 +693,11 @@ const en: Dictionary = {
     optionPaypal: 'PayPal',
     paypalNote:
       'With a PayPal account, a card or direct debit — a PayPal account is not required. Whether you pay in one go, later or in instalments is something you arrange directly with PayPal.',
+    optionInvoice: 'Buy on invoice (bank transfer)',
+    invoiceNote:
+      'You will receive the invoice by email — with a QR code to scan with your banking app. For made-to-order pieces the deposit invoice comes first; production starts once payment has arrived.',
+    redirectNoteInvoice:
+      'Nothing is charged: you receive the invoice by email and transfer at your convenience.',
     shipping: 'Delivery',
     contactData: 'Your contact details',
     name: 'First and last name',

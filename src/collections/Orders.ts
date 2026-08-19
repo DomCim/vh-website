@@ -273,6 +273,7 @@ export const Orders: CollectionConfig = {
        */
       options: [
         { label: 'PayPal', value: 'paypal' },
+        { label: 'Rechnung (Überweisung)', value: 'rechnung' },
         { label: 'Stripe (nicht mehr in Gebrauch)', value: 'stripe' },
       ],
       admin: {

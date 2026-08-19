@@ -5,6 +5,7 @@ import { geplanteStufen } from '../lib/anzahlung'
 import { betraege } from '../lib/betraege'
 import { naechsteRechnungsBasis, naechsteRechnungsnummer, stufenNummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
+import { markOrderPaid } from '../lib/orderHooks'
 
 /**
  * Die Nummer einer Stufe: `RE-2026-0042-2/3`.
@@ -117,7 +118,49 @@ export const OutgoingInvoices: CollectionConfig = {
   },
   hooks: {
     afterDelete: liveHooks('rechnungen').afterDelete,
-    afterChange: liveHooks('rechnungen').afterChange,
+    afterChange: [
+      ...liveHooks('rechnungen').afterChange,
+      /*
+       * Kauf auf Rechnung: Die bezahlte Anzahlung (oder die bezahlte
+       * vollständige Rechnung) ist der Moment, in dem eine Rechnungs-
+       * Bestellung zur bezahlten Bestellung wird — Bestätigungsmail,
+       * Fertigungsstart, Ausbuchen der Lagerware. Bei PayPal übernimmt das
+       * der Rücksprung von PayPal; hier übernimmt es der Haken „bezahlt"
+       * an der Rechnung. `markOrderPaid` ist idempotent, doppelt passiert
+       * nichts.
+       */
+      async ({ doc, previousDoc, req }) => {
+        if (doc.status !== 'bezahlt' || previousDoc?.status === 'bezahlt') return doc
+        if (doc.stufe !== 'anzahlung' && doc.stufe !== 'vollstaendig') return doc
+
+        const auftragId = typeof doc.auftrag === 'object' ? doc.auftrag?.id : doc.auftrag
+        if (!auftragId) return doc
+        try {
+          const auftrag = await req.payload.findByID({
+            collection: 'jobs',
+            id: auftragId,
+            depth: 0,
+            overrideAccess: true,
+            req,
+          })
+          const bestellId = typeof auftrag?.order === 'object' ? auftrag.order?.id : auftrag?.order
+          if (!bestellId) return doc
+          const bestellung = await req.payload.findByID({
+            collection: 'orders',
+            id: bestellId,
+            depth: 0,
+            overrideAccess: true,
+            req,
+          })
+          if (bestellung?.paymentProvider === 'rechnung' && bestellung.status === 'pending') {
+            await markOrderPaid(req.payload, bestellId)
+          }
+        } catch (err) {
+          req.payload.logger.error({ err }, 'Rechnungskauf: Bestellung nicht auf bezahlt gezogen')
+        }
+        return doc
+      },
+    ],
     beforeChange: [
       async ({ data, originalDoc, req, operation }) => {
         // Summen immer neu rechnen — nie dem übergebenen Wert vertrauen

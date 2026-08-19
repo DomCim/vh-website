@@ -656,7 +656,7 @@ export interface Order {
     city?: string | null;
     country?: string | null;
   };
-  paymentProvider?: ('paypal' | 'stripe') | null;
+  paymentProvider?: ('paypal' | 'rechnung' | 'stripe') | null;
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
   paypalOrderId?: string | null;

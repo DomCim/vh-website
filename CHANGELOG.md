@@ -2,6 +2,14 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Kauf auf Rechnung im Shop
+
+- **Die Kasse bietet jetzt zwei Wege**: PayPal (sobald eingerichtet) und **Kauf auf Rechnung per Überweisung** — der funktioniert ohne jeden Zahlungsdienst. Der Kunde bekommt die Rechnung per E-Mail, mit GiroCode zum Scannen; gefertigt wird nach Zahlungseingang.
+- **Eine Rechnungs-Bestellung ist Projektgeschäft mit Shop-Herkunft.** Jedes Stück entsteht ohnehin einzeln: Es entsteht sofort der Fertigungsauftrag mit dem Zahlplan vom Artikel (Anzahlung, Zwischenrechnung), die Anzahlungsrechnung liegt dem Büro als Entwurf vor — dieselbe Maschinerie, kein zweiter Rechnungsweg. Artikel ohne Zahlplan bekommen eine vollständige Rechnung als Entwurf. Die Preise stehen dabei netto am Auftrag, sonst schlüge die Rechnung die Steuer doppelt drauf; Versand und Rabatt kommen als eigene Positionen mit.
+- **Der Kunde wird als Geschäftspartner angelegt** (gefunden über die bestätigte E-Mail-Adresse) — damit hat die Rechnung aus dem Büro eine Empfängeradresse und das Kundenportal findet die Vorgänge.
+- **Bezahlt heißt bezahlt:** Setzt das Büro die Anzahlung (oder die vollständige Rechnung) auf „bezahlt", springt die Bestellung auf „Bezahlt" — Bestätigungsmail, Fertigungsstart, Ausbuchen der Lagerware, wie bei PayPal auch.
+- Direkt nach der Bestellung geht eine kurze Eingangsbestätigung raus: „Die Rechnung folgt per E-Mail." In den AGB (drei Sprachen) steht der neue Weg mit drin.
+
 ## 19.08.2026 — Die Kasse bestätigt die E-Mail-Adresse, bevor sie bestellt
 
 - **Erst der Code, dann die Bestellung.** Beim Klick auf „Zahlungspflichtig bestellen" schickt die Kasse einen sechsstelligen Code an die angegebene Adresse; erst mit dem eingetragenen Code entsteht die Bestellung und geht es weiter zu PayPal. An dieser einen Adresse hängt alles — Bestätigung, Versandmeldung, der Zugang zum Kundenportal. Ein Tippfehler hieße: Der Kunde bekommt nichts davon, und wer die vertippte Adresse wirklich besitzt, könnte im Portal eine fremde Bestellung samt Anschrift sehen.

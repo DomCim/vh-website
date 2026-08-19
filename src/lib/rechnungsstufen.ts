@@ -124,11 +124,22 @@ export async function entwurfFuerStufe(
   if (!auftrag) return null
 
   /*
-   * Shop-Bestellungen sind bezahlt, bevor der Auftrag überhaupt entsteht —
-   * über PayPal, in einem Schritt. Eine Anzahlungsrechnung für Geld, das
-   * längst da ist, wäre schlicht falsch.
+   * PayPal-Bestellungen sind bezahlt, bevor der Auftrag überhaupt entsteht —
+   * eine Anzahlungsrechnung für Geld, das längst da ist, wäre schlicht
+   * falsch. Der Kauf auf Rechnung dagegen ist Projektgeschäft mit
+   * Shop-Herkunft: Jedes Stück entsteht einzeln, bezahlt wird in Stufen —
+   * für den läuft alles hier ganz normal durch.
    */
-  if (auftrag.source === 'shop') return null
+  if (auftrag.source === 'shop') {
+    const bestellId = typeof (auftrag as { order?: unknown }).order === 'object'
+      ? ((auftrag as { order?: { id?: number } }).order?.id)
+      : (auftrag as { order?: number }).order
+    if (!bestellId) return null
+    const bestellung = await payload
+      .findByID({ collection: 'orders', id: bestellId, depth: 0, overrideAccess: true, req })
+      .catch(() => null)
+    if (bestellung?.paymentProvider !== 'rechnung') return null
+  }
 
   const plan = auftrag.zahlplan ?? {}
   const stufen = geplanteStufen(plan)
