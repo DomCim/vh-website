@@ -9,7 +9,7 @@ import {
 } from '../../../../../lib/bereiche'
 import { payloadClient } from '../../../../../lib/data'
 import { firmenAngaben, getIntegrations } from '../../../../../lib/settings'
-import { darf } from '../../../../../lib/wache'
+import { darf, rechteFuer } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +51,7 @@ type BereichsAntwort = {
 async function rahmen(
   payload: Awaited<ReturnType<typeof payloadClient>>,
   benutzer: { email?: string; name?: string },
+  konto: unknown,
 ) {
   const rahmen = {
     benutzer: { email: benutzer.email ?? '', name: benutzer.name ?? '' },
@@ -59,6 +60,13 @@ async function rahmen(
     wunschaufschlag: 40,
     firma: { siret: '', vatId: '', iban: '' },
     platzFreigebenNachTagen: 21,
+    /*
+     * Die Rechte kommen mit ins Gerät, damit die Navigation auch ohne Netz
+     * weiß, was sie zeigen darf. Sie sind kein Schutz — der sitzt an den
+     * Schnittstellen —, sondern eine Frage der Ordnung: Ein Punkt, der beim
+     * Antippen „nicht erlaubt" sagt, ist ein Versprechen, das keines war.
+     */
+    rechte: (await rechteFuer(payload, konto)) as string[],
   }
   try {
     const integrationen = await getIntegrations(payload)
@@ -177,6 +185,6 @@ export async function POST(req: Request) {
     bereiche: antwort,
     // Diese Bereiche bitte vorher leeren — der bisherige Bestand ist zu alt
     voll: vollstaendig,
-    rahmen: await rahmen(payload, user as { email?: string; name?: string }),
+    rahmen: await rahmen(payload, user as { email?: string; name?: string }, user),
   })
 }

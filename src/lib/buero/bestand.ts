@@ -49,6 +49,8 @@ export type Rahmen = {
   firma: { siret: string; vatId: string; iban: string }
   /** Ab wie vielen Tagen offener Anzahlung nach dem Werkstattplatz gefragt wird */
   platzFreigebenNachTagen: number
+  /** Was der angemeldete Mensch darf — die Navigation richtet sich danach */
+  rechte: string[]
 }
 
 const RAHMEN_LEER: Rahmen = {
@@ -58,6 +60,7 @@ const RAHMEN_LEER: Rahmen = {
   wunschaufschlag: 40,
   firma: { siret: '', vatId: '', iban: '' },
   platzFreigebenNachTagen: 21,
+  rechte: [],
 }
 let rahmen: Rahmen = RAHMEN_LEER
 const rahmenHoerer = new Set<() => void>()

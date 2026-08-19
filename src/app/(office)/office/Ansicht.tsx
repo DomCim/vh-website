@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../lib/buero/bestand'
+import { useDarf } from '../../../lib/buero/rechte'
 import { datum, euro } from '../../../lib/format'
 
 /**
@@ -52,6 +53,7 @@ export function UebersichtAnsicht() {
   const belege = useBestand<Beleg>('belege')
   const inventar = useBestand<Posten>('inventar')
   const anfragen = useBestand<Anfrage>('anfragen')
+  const darf = useDarf()
 
   const jahr = new Date().getFullYear()
   const heute = Date.now()
@@ -119,6 +121,8 @@ export function UebersichtAnsicht() {
       </p>
 
       <div className="buero-kacheln">
+        {darf('zahlen.sehen') && (
+          <>
         <div className="buero-kachel">
           <div className="buero-kachel-titel">Einnahmen</div>
           <div className="buero-kachel-wert">
@@ -140,23 +144,30 @@ export function UebersichtAnsicht() {
           </div>
           <div className="buero-kachel-fuss">Einnahmen minus Ausgaben</div>
         </div>
-        <div className="buero-kachel">
-          <div className="buero-kachel-titel">Inventarwert</div>
-          <div className="buero-kachel-wert">{euro(inventarWert)}</div>
-          <div className="buero-kachel-fuss">{inventar.length} Posten</div>
-        </div>
+          </>
+        )}
+        {darf('inventar.pflegen') && (
+          <div className="buero-kachel">
+            <div className="buero-kachel-titel">Inventarwert</div>
+            <div className="buero-kachel-wert">{euro(inventarWert)}</div>
+            <div className="buero-kachel-fuss">{inventar.length} Posten</div>
+          </div>
+        )}
       </div>
 
-      {(zahlen.ohneBeleg > 0 ||
-        zahlen.ungeprueft > 0 ||
-        ueberfaellig.length > 0 ||
-        zuZahlen.length > 0 ||
-        knapp.length > 0 ||
-        offeneAnfragen > 0) && (
+      {/* Die Überschrift nur, wenn darunter auch etwas steht: Wer die Rechte
+          für Belege und Rechnungen nicht hat, sah sonst „Kümmern" über einer
+          leeren Fläche und suchte nach dem, was fehlt. */}
+      {((zahlen.ohneBeleg > 0 && darf('belege.erfassen')) ||
+        (zahlen.ungeprueft > 0 && darf('belege.erfassen')) ||
+        (ueberfaellig.length > 0 && darf('rechnungen.schreiben')) ||
+        (zuZahlen.length > 0 && darf('belege.erfassen')) ||
+        (knapp.length > 0 && darf('inventar.pflegen')) ||
+        (offeneAnfragen > 0 && darf('anfragen.bearbeiten'))) && (
         <>
           <h2>Kümmern</h2>
           <div className="buero-liste">
-            {zuZahlen.length > 0 && (
+            {zuZahlen.length > 0 && darf('belege.erfassen') && (
               <Link href="/office/belege?filter=offen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
@@ -182,7 +193,7 @@ export function UebersichtAnsicht() {
                 </span>
               </Link>
             )}
-            {ueberfaellig.length > 0 && (
+            {ueberfaellig.length > 0 && darf('rechnungen.schreiben') && (
               <Link href="/office/rechnungen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
@@ -195,7 +206,7 @@ export function UebersichtAnsicht() {
                 <span className="buero-marker warn">nachhaken</span>
               </Link>
             )}
-            {zahlen.ungeprueft > 0 && (
+            {zahlen.ungeprueft > 0 && darf('belege.erfassen') && (
               <Link href="/office/belege?filter=ungeprueft" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
@@ -206,7 +217,7 @@ export function UebersichtAnsicht() {
                 <span className="buero-marker offen">prüfen</span>
               </Link>
             )}
-            {zahlen.ohneBeleg > 0 && (
+            {zahlen.ohneBeleg > 0 && darf('belege.erfassen') && (
               <Link href="/office/belege?filter=ohne-beleg" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{zahlen.ohneBeleg} Ausgaben ohne Beleg</div>
@@ -217,7 +228,7 @@ export function UebersichtAnsicht() {
                 <span className="buero-marker warn">Beleg fehlt</span>
               </Link>
             )}
-            {knapp.length > 0 && (
+            {knapp.length > 0 && darf('inventar.pflegen') && (
               <Link href="/office/inventar" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
@@ -234,7 +245,7 @@ export function UebersichtAnsicht() {
                 <span className="buero-marker offen">nachbestellen</span>
               </Link>
             )}
-            {offeneAnfragen > 0 && (
+            {offeneAnfragen > 0 && darf('anfragen.bearbeiten') && (
               <Link href="/office/anfragen" className="buero-zeile">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{offeneAnfragen} neue Kundenanfragen</div>
@@ -247,6 +258,8 @@ export function UebersichtAnsicht() {
         </>
       )}
 
+      {darf('rechnungen.schreiben') && (
+        <>
       <h2>Offene Rechnungen</h2>
       <div className="buero-liste">
         {offeneRechnungen.length === 0 ? (
@@ -274,27 +287,43 @@ export function UebersichtAnsicht() {
           })
         )}
       </div>
+        </>
+      )}
 
       <h2>Schnell erledigen</h2>
       <div className="buero-kacheln">
-        <Link href="/office/belege/neu" className="buero-kachel">
-          <div className="buero-kachel-titel">Beleg</div>
-          <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
-            Foto hochladen, Rest liest die KI
-          </div>
-        </Link>
-        <Link href="/office/rechnungen/neu" className="buero-kachel">
-          <div className="buero-kachel-titel">Rechnung schreiben</div>
-          <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
-            Fürs Projektgeschäft
-          </div>
-        </Link>
-        <Link href="/office/steuer" className="buero-kachel">
-          <div className="buero-kachel-titel">Steuer-Export</div>
-          <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
-            Alles für den Steuerberater
-          </div>
-        </Link>
+        {darf('belege.erfassen') && (
+          <Link href="/office/belege/neu" className="buero-kachel">
+            <div className="buero-kachel-titel">Beleg</div>
+            <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
+              Foto hochladen, Rest liest die KI
+            </div>
+          </Link>
+        )}
+        {darf('rechnungen.schreiben') && (
+          <Link href="/office/rechnungen/neu" className="buero-kachel">
+            <div className="buero-kachel-titel">Rechnung schreiben</div>
+            <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
+              Fürs Projektgeschäft
+            </div>
+          </Link>
+        )}
+        {darf('zahlen.sehen') && (
+          <Link href="/office/steuer" className="buero-kachel">
+            <div className="buero-kachel-titel">Steuer-Export</div>
+            <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
+              Alles für den Steuerberater
+            </div>
+          </Link>
+        )}
+        {darf('auftraege.bearbeiten') && (
+          <Link href="/office/auftraege" className="buero-kachel">
+            <div className="buero-kachel-titel">Aufträge</div>
+            <div className="buero-kachel-fuss" style={{ marginTop: '.4rem' }}>
+              Was gerade in der Werkstatt steht
+            </div>
+          </Link>
+        )}
       </div>
     </>
   )

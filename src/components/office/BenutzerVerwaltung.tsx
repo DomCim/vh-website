@@ -17,16 +17,16 @@ type Konto = {
   email: string
   name: string
   role: string
+  rolleId: number | null
   mfaEnabled: boolean
   passkeys: { credentialId: string; label: string }[]
 }
 
-const ROLLEN: Record<string, string> = {
-  inhaber: 'Inhaber (alles)',
-  redaktion: 'Redaktion (nur Website)',
-}
+type Rolle = { id: number; name: string; schluessel: string; eingebaut: boolean }
 
 const FEHLERTEXT: Record<string, string> = {
+  'noch-belegt': 'An dieser Rolle hängen noch Konten — erst umhängen, dann löschen.',
+  eingebaut: 'Eingebaute Rollen lassen sich nicht löschen.',
   'nicht-sich-selbst': 'Das eigene Konto lässt sich hier nicht löschen.',
   'letzter-inhaber': 'Das ist der letzte Inhaber — sonst käme niemand mehr herein.',
   'email-vergeben': 'Diese E-Mail-Adresse gibt es schon.',
@@ -36,18 +36,40 @@ const FEHLERTEXT: Record<string, string> = {
 
 export function BenutzerVerwaltung() {
   const [konten, setKonten] = useState<Konto[] | null>(null)
+  const [rollen, setRollen] = useState<Rolle[]>([])
   const [ich, setIch] = useState<string | number | null>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
-  const [neu, setNeu] = useState({ email: '', name: '', role: 'redaktion', passwort: '' })
+  const [neu, setNeu] = useState<{ email: string; name: string; rolleId: number | ''; passwort: string }>(
+    { email: '', name: '', rolleId: '', passwort: '' },
+  )
 
   const holen = useCallback(async () => {
     try {
-      const antwort = await fetch('/api/office/benutzer', { credentials: 'include' })
+      const [antwort, rollenAntwort] = await Promise.all([
+        fetch('/api/office/benutzer', { credentials: 'include' }),
+        fetch('/api/office/rolle', { credentials: 'include' }),
+      ])
       if (!antwort.ok) throw new Error('nicht erreichbar')
       const daten = await antwort.json()
       setKonten(daten.benutzer)
       setIch(daten.ich)
+      if (rollenAntwort.ok) {
+        const r = await rollenAntwort.json()
+        setRollen(r.rollen ?? [])
+        // Vorbelegung fürs Anlegen: die erste Rolle, die nicht alles darf
+        setNeu((v) =>
+          v.rolleId === ''
+            ? {
+                ...v,
+                rolleId:
+                  (r.rollen ?? []).find((x: Rolle) => x.schluessel !== 'inhaber')?.id ??
+                  (r.rollen ?? [])[0]?.id ??
+                  '',
+              }
+            : v,
+        )
+      }
     } catch {
       setMeldung('Benutzerverwaltung braucht eine Verbindung.')
     }
@@ -105,7 +127,8 @@ export function BenutzerVerwaltung() {
               {String(k.id) === String(ich) ? ' — das bin ich' : ''}
             </div>
             <div className="buero-unterzeile">
-              {k.name || 'ohne Namen'} · {ROLLEN[k.role] ?? k.role}
+              {k.name || 'ohne Namen'} ·{' '}
+              {rollen.find((r) => r.id === k.rolleId)?.name ?? k.role}
               {k.mfaEnabled ? ' · Zwei-Faktor an' : ''}
               {k.passkeys.length ? ` · ${k.passkeys.length} Gerät(e)` : ''}
             </div>
@@ -127,15 +150,19 @@ export function BenutzerVerwaltung() {
               <label className="buero-feld">
                 <span>Rolle</span>
                 <select
-                  value={k.role}
+                  value={k.rolleId ?? ''}
                   disabled={laeuft}
                   onChange={(e) =>
-                    rufen({ aktion: 'aendern', id: k.id, role: e.target.value }, 'Rolle geändert.')
+                    rufen(
+                      { aktion: 'aendern', id: k.id, rolleId: Number(e.target.value) },
+                      'Rolle geändert.',
+                    )
                   }
                 >
-                  {Object.entries(ROLLEN).map(([wert, text]) => (
-                    <option key={wert} value={wert}>
-                      {text}
+                  {k.rolleId === null && <option value="">— ohne Rolle —</option>}
+                  {rollen.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
                     </option>
                   ))}
                 </select>
@@ -242,12 +269,12 @@ export function BenutzerVerwaltung() {
           <label className="buero-feld">
             <span>Rolle</span>
             <select
-              value={neu.role}
-              onChange={(e) => setNeu((v) => ({ ...v, role: e.target.value }))}
+              value={neu.rolleId}
+              onChange={(e) => setNeu((v) => ({ ...v, rolleId: Number(e.target.value) }))}
             >
-              {Object.entries(ROLLEN).map(([wert, text]) => (
-                <option key={wert} value={wert}>
-                  {text}
+              {rollen.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
                 </option>
               ))}
             </select>
@@ -267,7 +294,7 @@ export function BenutzerVerwaltung() {
           disabled={laeuft || !neu.email || neu.passwort.length < 8}
           onClick={async () => {
             const gut = await rufen({ aktion: 'anlegen', ...neu }, 'Konto angelegt.')
-            if (gut) setNeu({ email: '', name: '', role: 'redaktion', passwort: '' })
+            if (gut) setNeu((v) => ({ email: '', name: '', rolleId: v.rolleId, passwort: '' }))
           }}
         >
           Anlegen

@@ -2,77 +2,79 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+
+import { useRahmen } from '../../lib/buero/bestand'
 
 /**
  * Navigation im Büro.
  *
- * Am Rechner die gewohnte Leiste oben. Am Handy eine Tableiste unten mit dem
- * täglichen Handwerkszeug — dort kommt der Daumen hin, ohne das Gerät
- * umzugreifen. Alles Weitere steht hinter „Mehr", nach Arbeitsbereichen
- * geordnet; dreizehn Punkte in einer seitlich scrollenden Leiste findet sonst
- * niemand.
+ * Am Rechner vier Gruppen, die aufklappen. Am Handy eine Tableiste unten mit
+ * dem täglichen Handwerkszeug — dort kommt der Daumen hin, ohne das Gerät
+ * umzugreifen —, und alles Weitere hinter „Mehr".
+ *
+ * Beide zeigen dieselbe Ordnung nach Arbeitsbereichen. Achtzehn Punkte
+ * nebeneinander findet niemand: Sie liefen seitlich aus dem Bild, und gesucht
+ * wird ohnehin nicht alphabetisch, sondern nach „wo war das mit den
+ * Rechnungen".
  */
 
-const ALLE = [
-  { href: '/office', label: 'Übersicht' },
-  { href: '/office/post', label: 'Postfach' },
-  { href: '/office/anfragen', label: 'Anfragen' },
-  { href: '/office/bestellungen', label: 'Bestellungen' },
-  { href: '/office/angebote', label: 'Angebote' },
-  { href: '/office/auftraege', label: 'Aufträge' },
-  { href: '/office/kalender', label: 'Kalender' },
-  { href: '/office/rechnungen', label: 'Rechnungen' },
-  { href: '/office/belege', label: 'Belege' },
-  { href: '/office/artikel', label: 'Artikel' },
-  { href: '/office/inventar', label: 'Inventar' },
-  { href: '/office/inventur', label: 'Inventur' },
-  { href: '/office/partner', label: 'Partner' },
-  { href: '/office/steuer', label: 'Steuer' },
-  { href: '/office/newsletter', label: 'Newsletter' },
-  { href: '/office/sicherung', label: 'Sicherung' },
-  { href: '/office/einstellungen', label: 'Einstellungen' },
-  { href: '/office/neuerungen', label: 'Neuerungen' },
-]
+/*
+ * Was oben in der Leiste steht.
+ *
+ * Vorher standen dort achtzehn Punkte nebeneinander und liefen seitlich aus
+ * dem Bild. Gesucht wird aber nicht alphabetisch, sondern nach Arbeitsbereich
+ * — dieselbe Ordnung, die das Blatt am Handy schon hatte. Jetzt haben beide
+ * dieselbe: vier Gruppen, und was dahinter liegt, klappt auf.
+ *
+ * `recht` entscheidet, ob ein Punkt überhaupt erscheint. Das ist kein Schutz,
+ * der sitzt an den Schnittstellen — es ist eine Frage der Ordnung: Ein Punkt,
+ * der beim Antippen „nicht erlaubt" sagt, ist ein Versprechen, das keines war.
+ */
+type Punkt = { href: string; label: string; recht?: string }
 
-/** Fürs Blatt nach Arbeitsbereichen sortiert — so sucht man auch im Kopf */
-const BEREICHE: { titel: string; punkte: { href: string; label: string }[] }[] = [
+const UEBERSICHT: Punkt = { href: '/office', label: 'Übersicht' }
+
+/** Nach Arbeitsbereichen sortiert — so sucht man auch im Kopf */
+const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
   {
     titel: 'Kundschaft',
     punkte: [
-      { href: '/office/post', label: 'Postfach' },
-      { href: '/office/anfragen', label: 'Anfragen' },
-      { href: '/office/bestellungen', label: 'Bestellungen' },
-      { href: '/office/angebote', label: 'Angebote' },
-      { href: '/office/newsletter', label: 'Newsletter' },
+      { href: '/office/post', label: 'Postfach', recht: 'postfach.lesen' },
+      { href: '/office/anfragen', label: 'Anfragen', recht: 'anfragen.bearbeiten' },
+      { href: '/office/bestellungen', label: 'Bestellungen', recht: 'anfragen.bearbeiten' },
+      { href: '/office/angebote', label: 'Angebote', recht: 'angebote.schreiben' },
+      { href: '/office/newsletter', label: 'Newsletter', recht: 'newsletter.versenden' },
     ],
   },
   {
     titel: 'Werkstatt',
     punkte: [
-      { href: '/office/auftraege', label: 'Aufträge' },
-      { href: '/office/kalender', label: 'Kalender' },
-      { href: '/office/artikel', label: 'Artikel' },
-      { href: '/office/inventar', label: 'Inventar' },
-      { href: '/office/inventur', label: 'Inventur' },
+      { href: '/office/auftraege', label: 'Aufträge', recht: 'auftraege.bearbeiten' },
+      { href: '/office/kalender', label: 'Kalender', recht: 'auftraege.bearbeiten' },
+      { href: '/office/artikel', label: 'Artikel', recht: 'website.pflegen' },
+      { href: '/office/inventar', label: 'Inventar', recht: 'inventar.pflegen' },
+      { href: '/office/inventur', label: 'Inventur', recht: 'inventar.pflegen' },
     ],
   },
   {
     titel: 'Geld',
     punkte: [
-      { href: '/office/rechnungen', label: 'Rechnungen' },
-      { href: '/office/belege', label: 'Belege' },
-      { href: '/office/steuer', label: 'Steuer' },
-      { href: '/office/partner', label: 'Partner' },
+      { href: '/office/rechnungen', label: 'Rechnungen', recht: 'rechnungen.schreiben' },
+      { href: '/office/belege', label: 'Belege', recht: 'belege.erfassen' },
+      { href: '/office/steuer', label: 'Steuer', recht: 'zahlen.sehen' },
+      { href: '/office/partner', label: 'Partner', recht: 'partner.pflegen' },
     ],
   },
   {
     titel: 'Sonstiges',
     punkte: [
-      { href: '/office/sicherung', label: 'Sicherung' },
+      { href: '/office/sicherung', label: 'Sicherung', recht: 'sicherung.ausloesen' },
+      // Einstellungen und Neuerungen stehen jedem offen: Dort liegen das eigene
+      // Konto, die Meldungen dieses Geräts und der Änderungsverlauf.
       { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
-      { href: '/admin', label: 'Website-Verwaltung' },
+      { href: '/admin', label: 'Website-Verwaltung', recht: 'website.pflegen' },
     ],
   },
 ]
@@ -125,11 +127,47 @@ const istAktiv = (pfad: string | null, href: string) =>
 export function BueroNavigation() {
   const pfad = usePathname()
   const [blattOffen, setBlattOffen] = useState(false)
+  const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
+  const leiste = useRef<HTMLElement>(null)
+  const { rechte } = useRahmen()
+
+  /*
+   * Was jemand nicht darf, steht auch nicht in der Leiste.
+   *
+   * Solange der Rahmen noch nicht im Gerät liegt — der erste Aufruf, bevor der
+   * Abgleich durch ist —, wird nichts gefiltert. Eine Navigation, die beim
+   * Laden kurz zusammenschrumpft und dann wieder wächst, sieht kaputt aus.
+   */
+  const gruppen = useMemo(() => {
+    if (!rechte.length) return BEREICHE
+    return BEREICHE.map((b) => ({
+      ...b,
+      punkte: b.punkte.filter((p) => !p.recht || rechte.includes(p.recht)),
+    })).filter((b) => b.punkte.length > 0)
+  }, [rechte])
 
   // Beim Seitenwechsel schließen — sonst bliebe das Blatt über der neuen Seite
   useEffect(() => {
     setBlattOffen(false)
+    setOffeneGruppe(null)
   }, [pfad])
+
+  // Klick daneben schließt das Menü; sonst bliebe es beim Weiterarbeiten offen
+  useEffect(() => {
+    if (!offeneGruppe) return
+    const beiKlick = (e: MouseEvent) => {
+      if (!leiste.current?.contains(e.target as Node)) setOffeneGruppe(null)
+    }
+    const beiTaste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOffeneGruppe(null)
+    }
+    document.addEventListener('mousedown', beiKlick)
+    window.addEventListener('keydown', beiTaste)
+    return () => {
+      document.removeEventListener('mousedown', beiKlick)
+      window.removeEventListener('keydown', beiTaste)
+    }
+  }, [offeneGruppe])
 
   useEffect(() => {
     if (!blattOffen) return
@@ -145,12 +183,60 @@ export function BueroNavigation() {
 
   return (
     <>
-      <nav className="buero-nav" aria-label="Büro">
-        {ALLE.map((p) => (
-          <Link key={p.href} href={p.href} aria-current={istAktiv(pfad, p.href) ? 'page' : undefined}>
-            {p.label}
-          </Link>
-        ))}
+      <nav className="buero-nav" aria-label="Büro" ref={leiste}>
+        <Link
+          href={UEBERSICHT.href}
+          aria-current={istAktiv(pfad, UEBERSICHT.href) ? 'page' : undefined}
+        >
+          {UEBERSICHT.label}
+        </Link>
+
+        {gruppen.map((b) => {
+          const offen = offeneGruppe === b.titel
+          const drin = b.punkte.some((p) => istAktiv(pfad, p.href))
+          return (
+            <div
+              key={b.titel}
+              className="buero-nav-gruppe"
+              /*
+               * Aufklappen beim Drüberfahren, damit man am Rechner nicht erst
+               * klicken muss — und trotzdem ein echter Knopf darunter, weil
+               * Hovern auf einem Touchscreen und mit der Tastatur nichts tut.
+               */
+              onMouseEnter={() => setOffeneGruppe(b.titel)}
+              onMouseLeave={() => setOffeneGruppe((v) => (v === b.titel ? null : v))}
+            >
+              <button
+                type="button"
+                className={offen ? 'offen' : undefined}
+                aria-expanded={offen}
+                aria-current={drin ? 'page' : undefined}
+                onClick={() => setOffeneGruppe((v) => (v === b.titel ? null : b.titel))}
+              >
+                {b.titel}
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="buero-nav-pfeil">
+                  <path d="m7 10 5 5 5-5" />
+                </svg>
+              </button>
+
+              {offen && (
+                <div className="buero-nav-menue" role="menu" aria-label={b.titel}>
+                  {b.punkte.map((p) => (
+                    <Link
+                      key={p.href}
+                      href={p.href}
+                      role="menuitem"
+                      aria-current={istAktiv(pfad, p.href) ? 'page' : undefined}
+                      onClick={() => setOffeneGruppe(null)}
+                    >
+                      {p.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </nav>
 
       <nav className="buero-tableiste" aria-label="Büro">
@@ -186,7 +272,7 @@ export function BueroNavigation() {
           />
           <div className="buero-blatt" role="dialog" aria-label="Alle Bereiche">
             <div className="buero-blatt-griff" />
-            {BEREICHE.map((b) => (
+            {gruppen.map((b) => (
               <React.Fragment key={b.titel}>
                 <h3>{b.titel}</h3>
                 <div className="buero-blatt-punkte">

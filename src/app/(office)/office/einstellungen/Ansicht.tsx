@@ -9,6 +9,7 @@ import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwal
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
 import { Haengengebliebenes } from '../../../../components/office/Haengengebliebenes'
 import { MeinKonto } from '../../../../components/office/MeinKonto'
+import { RollenVerwaltung } from '../../../../components/office/RollenVerwaltung'
 import { useRahmen } from '../../../../lib/buero/bestand'
 
 /**
@@ -66,7 +67,12 @@ export function EinstellungenAnsicht() {
 
       {teil === 'konto' && <MeinKonto />}
 
-      {teil === 'benutzer' && <BenutzerVerwaltung />}
+      {teil === 'benutzer' && (
+        <>
+          <BenutzerVerwaltung />
+          <RollenVerwaltung />
+        </>
+      )}
 
       {teil === 'betrieb' && (
         <EinstellungenFormular bereich="betrieb" titel="Betrieb und Website" />

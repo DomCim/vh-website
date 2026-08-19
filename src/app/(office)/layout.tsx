@@ -3,6 +3,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import { AbgleichLeiste } from '../../components/office/AbgleichLeiste'
+import { AdminVerweis } from '../../components/office/AdminVerweis'
 import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
@@ -55,9 +56,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
           <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
             {/* Am Handy steht der Verweis im Blatt hinter „Mehr" — oben wäre
                 daneben kein Platz für Marke und Abmelden */}
-            <Link href="/admin" className="buero-marker buero-nur-breit">
-              Website-Verwaltung
-            </Link>
+            <AdminVerweis />
             <Abmelden />
           </div>
         </header>

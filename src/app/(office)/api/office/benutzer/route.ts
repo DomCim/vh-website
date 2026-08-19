@@ -86,6 +86,10 @@ export async function GET(req: Request) {
         email: konto.email,
         name: konto.name ?? '',
         role: konto.role ?? 'redaktion',
+        rolleId:
+          typeof konto.rolle === 'object'
+            ? ((konto.rolle as { id?: number })?.id ?? null)
+            : ((konto.rolle as number) ?? null),
         mfaEnabled: Boolean(konto.mfaEnabled),
         passkeys: ((konto.passkeys as { credentialId: string; label?: string }[]) ?? []).map(
           (p) => ({ credentialId: p.credentialId, label: p.label ?? 'Gerät' }),
@@ -106,15 +110,36 @@ export async function POST(req: Request) {
       email?: string
       name?: string
       role?: string
+      rolleId?: number | string
       passwort?: string
       mfaEnabled?: boolean
       credentialId?: string
+    }
+
+    /*
+     * Zugeordnet wird jetzt eine Rolle als Datensatz, nicht mehr ein fester
+     * Auswahlwert. Das alte Feld `role` läuft trotzdem mit: Es ist der Rückweg,
+     * falls an den Rollen etwas schiefgeht, und `hatRecht` sieht zuerst dorthin.
+     * „Inhaber" bleibt „Inhaber", alles andere zählt als Redaktion.
+     */
+    const rolleAufloesen = async (id?: number | string) => {
+      if (id === undefined || id === null || id === '') return null
+      const rolle = await payload
+        .findByID({ collection: 'roles', id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (!rolle) return null
+      return {
+        id: rolle.id as number,
+        schluessel: rolle.schluessel as string,
+        altwert: rolle.schluessel === 'inhaber' ? 'inhaber' : 'redaktion',
+      }
     }
 
     if (b.aktion === 'anlegen') {
       if (!b.email?.trim() || !b.passwort || b.passwort.length < 8) {
         return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
       }
+      const gewaehlt = await rolleAufloesen(b.rolleId)
       const doc = await payload.create({
         collection: 'users',
         overrideAccess: true,
@@ -122,8 +147,8 @@ export async function POST(req: Request) {
           email: b.email.trim(),
           password: b.passwort,
           name: b.name?.trim() || undefined,
-          role: (b.role as 'inhaber' | 'redaktion') || 'redaktion',
-          rolle: await rolleFuer(payload, b.role || 'redaktion'),
+          role: (gewaehlt?.altwert as 'inhaber' | 'redaktion') ?? 'redaktion',
+          rolle: gewaehlt?.id ?? (await rolleFuer(payload, 'redaktion')),
         },
       })
       return NextResponse.json({ ok: true, id: doc.id })
@@ -175,17 +200,19 @@ export async function POST(req: Request) {
     }
 
     if (b.aktion === 'aendern') {
+      const gewaehlt = b.rolleId !== undefined ? await rolleAufloesen(b.rolleId) : null
+
       // Sich selbst die Inhaberrolle zu nehmen, während man der letzte ist,
       // sperrt das Haus zu — dasselbe gilt für einen fremden letzten Inhaber.
-      if (b.role && b.role !== 'inhaber' && !(await andereInhaber(payload, b.id))) {
+      if (gewaehlt && gewaehlt.schluessel !== 'inhaber' && !(await andereInhaber(payload, b.id))) {
         return NextResponse.json({ error: 'letzter-inhaber' }, { status: 400 })
       }
 
       const daten: Record<string, unknown> = {}
       if (typeof b.name === 'string') daten.name = b.name.trim() || null
-      if (b.role) {
-        daten.role = b.role
-        daten.rolle = await rolleFuer(payload, b.role)
+      if (gewaehlt) {
+        daten.rolle = gewaehlt.id
+        daten.role = gewaehlt.altwert
       }
       if (typeof b.mfaEnabled === 'boolean' && b.mfaEnabled === false) {
         // Abschalten geht von hier — einschalten muss der Betroffene selbst,

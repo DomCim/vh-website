@@ -2,6 +2,12 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Rollen, und eine Navigation, die man wiederfindet
+
+- **Rollen lassen sich jetzt im Büro anlegen.** Unter Einstellungen → Benutzer stehen alle Rollen mit ihren Rechten zum Anhaken; eine neue Rolle darf zunächst nur das Büro öffnen, alles Weitere wird bewusst dazugegeben. Bisher gab es dafür nur „Inhaber" und „Redaktion" — wer eine Werkstattrolle ohne Umsätze wollte, hätte ins Admin-Panel wechseln müssen und wusste das nicht. Die Inhaberrolle bleibt unangetastet: Sie darf alles, weil sie an ihrem Schlüssel erkannt wird — das ist der Weg zurück, falls sich jemand beim Umbauen aussperrt.
+- **Was jemand nicht darf, sieht er auch nicht.** Die Navigation zeigt nur noch die Bereiche, für die das Recht da ist — und die Übersicht ebenso: Eine Werkstattrolle sieht Aufträge und Inventar, aber keine Jahresumsätze und keine offenen Rechnungen. Ein Menüpunkt, der beim Antippen „nicht erlaubt" sagt, ist ein Versprechen, das keines war. Der Schutz selbst sitzt weiterhin an den Schnittstellen; hier geht es um Ordnung.
+- **Die Leiste oben ist jetzt nach Arbeitsbereichen gruppiert.** Kundschaft, Werkstatt, Geld, Sonstiges — vier Knöpfe, die beim Drüberfahren aufklappen, statt achtzehn Punkte, die seitlich aus dem Bild liefen. Dieselbe Ordnung hatte das Blatt am Handy schon; gesucht wird ohnehin nicht alphabetisch, sondern nach „wo war das mit den Rechnungen".
+
 ## 19.08.2026 — Der Auftrag sagt, woran es hängt
 
 - **Zahlungsstand am Auftrag.** Über dem Formular steht jetzt, was eingegangen ist und was aussteht, mit jeder Rechnung des Auftrags in einer Zeile. Und der Satz, den sonst niemand zieht: Wird nicht gezahlt, wird nicht gearbeitet — die Fertigstellung verschiebt sich um genau die Tage, die das Geld ausbleibt. Ein Knopf trägt den neuen Termin ein. **Verschoben wird also sichtbar und von Hand**: Ein zugesagtes Datum, das sich still ändert, ist schlimmer als eines, das sich sichtbar ändert — der Kunde hat den alten im Kalender und muss es von einem Menschen erfahren.

@@ -96,7 +96,10 @@
 .buero-nav {
   display: flex;
   gap: 0.25rem;
-  overflow-x: auto;
+  /* Kein `overflow-x: auto` mehr: Ein scrollender Kasten schneidet das
+   * aufgeklappte Menü an seiner Unterkante ab. Mit vier Gruppen statt
+   * achtzehn Punkten braucht die Leiste das Scrollen auch nicht mehr. */
+  flex-wrap: wrap;
   padding: 0.5rem 1.25rem;
   background: var(--buero-flaeche);
   border-bottom: 1px solid var(--buero-linie);
@@ -126,6 +129,93 @@
 .buero-nav a[aria-current='page'] {
   background: var(--buero-tinte);
   color: var(--buero-auf-tinte);
+}
+
+/* ── Gruppen in der Hauptnavigation ─────────────────────────────────────── */
+/* Achtzehn Punkte nebeneinander liefen seitlich aus dem Bild und wurden nach
+ * dem dritten Blick nicht mehr gelesen. Jetzt vier Gruppen, die aufklappen —
+ * dieselbe Ordnung wie im Blatt am Handy. */
+.buero-nav-gruppe {
+  position: relative;
+}
+
+.buero-nav-gruppe > button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--buero-tinte-leise);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.buero-nav-gruppe > button:hover,
+.buero-nav-gruppe > button.offen {
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
+}
+
+.buero-nav-gruppe > button[aria-current='page'] {
+  background: var(--buero-tinte);
+  color: var(--buero-auf-tinte);
+}
+
+.buero-nav-pfeil {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s ease;
+}
+
+.buero-nav-gruppe > button.offen .buero-nav-pfeil {
+  transform: rotate(180deg);
+}
+
+/* Der Streifen zwischen Knopf und Menü: Ohne ihn schließt das Menü, sobald
+ * der Zeiger die Lücke überquert — und es lässt sich nichts anklicken. */
+.buero-nav-menue {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 40;
+  min-width: 12rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 0.75rem;
+  background: var(--buero-flaeche);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 12%);
+}
+
+.buero-nav-menue::before {
+  content: '';
+  position: absolute;
+  inset: -0.4rem 0 100% 0;
+}
+
+.buero-nav-menue a {
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.buero-nav-menue a:hover {
+  background: var(--buero-papier);
+  color: var(--buero-tinte);
 }
 
 /* ── Reiter innerhalb einer Seite ───────────────────────────────────────── */

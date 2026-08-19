@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 import { payloadClient } from './data'
-import { type Recht, hatRecht } from './rechte'
+import { type Recht, hatRecht, rechteVon } from './rechte'
 
 /**
  * Eine Wache für alle Büro-Schnittstellen.
@@ -85,4 +85,16 @@ export async function wache(req: Request, recht: Recht): Promise<Wachdienst> {
 export async function darf(payload: Payload, user: unknown, recht: Recht): Promise<boolean> {
   if (!user) return false
   return hatRecht(await mitRolle(payload, user), recht)
+}
+
+/**
+ * Alles, was dieser Mensch darf — für die Oberfläche.
+ *
+ * Dieselbe Auflösung wie bei `darf`, nur einmal für den ganzen Katalog. Die
+ * Navigation richtet sich danach; ein Schutz ist es nicht, der sitzt an den
+ * Schnittstellen.
+ */
+export async function rechteFuer(payload: Payload, user: unknown): Promise<Recht[]> {
+  if (!user) return []
+  return rechteVon(await mitRolle(payload, user))
 }
