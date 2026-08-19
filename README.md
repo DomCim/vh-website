@@ -111,8 +111,8 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 
 Zwei getrennte Oberflächen mit einer gemeinsamen Anmeldung:
 
-- **`/admin` ist die öffentliche Verwaltung** — Artikel, News, Referenzen, Kundenstimmen, Seitentexte, Mediathek, Einstellungen. Alles, was auf der Website landet. Für die Artikel ist es die Wahrheit: Titel, Preis, Bilder, Texte stehen nur hier.
-- **`/office` ist der Betrieb** — Aufträge, Angebote, Belege, Inventar, Postfach, Steuern. Alles, was niemand von außen sieht.
+- **`/admin` ist die öffentliche Verwaltung** — Artikel, News, Referenzen, Kundenstimmen, Seitentexte, Mediathek. Alles, was auf der Website landet. Für die Artikel ist es die Wahrheit: Titel, Preis, Bilder, Texte stehen nur hier.
+- **`/office` ist der Betrieb** — Aufträge, Angebote, Belege, Inventar, Postfach, Steuern, Einstellungen und Benutzer. Alles, was niemand von außen sieht.
 
 So hat jede Sache genau einen Platz. Die Büro-Daten sind im Admin bewusst ausgeblendet.
 
@@ -133,11 +133,27 @@ Angemeldet wird mit demselben Konto wie im Admin, inklusive Zwei-Faktor; Zugang 
 | **Inventar & Inventur** | Bestand mit Mindestmenge und Wert; die Inventur bringt die Zählliste fertig mit und schreibt die gezählten Mengen beim Abschließen zurück. |
 | **Partner** | Lieferanten, Kunden und Dienstleister in einer Kartei. |
 | **Steuer** | Jahresauszug für den Steuerberater, inklusive Belegen. |
-| **Einstellungen** | Benachrichtigungen dieses Geräts, Übersicht der Postfächer. |
+| **Einstellungen** | Fünf Blätter: Benachrichtigungen dieses Geräts, das eigene Konto (Zwei-Faktor, angemeldete Geräte), Benutzerverwaltung, Betrieb (Firmenangaben, Preise) und Integrationen (SMTP, Postfächer, Stripe, PayPal, KI, Takt, Sicherung). |
+
+### Ohne Netz arbeiten
+
+Das Büro führt seinen Bestand im Gerät mit — Belege, Rechnungen, Angebote, Aufträge, Bestellungen, Anfragen, Inventar, Partner, Artikel, Inventur. Daraus folgt dreierlei:
+
+- **Die Seiten rechnen im Browser.** Filter wechseln, Monate blättern, Summen bilden: alles ohne Anfrage an den Server. In der Werkstatt öffnet sich das Büro auch dann, wenn kein Netz da ist.
+- **Eine Leiste über den Seiten sagt, von wann der Stand ist**, sobald er nicht mehr von jetzt ist. Ein alter Stand ist brauchbar — ein alter Stand, der sich für den aktuellen ausgibt, ist gefährlich.
+- **Eingaben gehen nicht verloren.** Beleg fotografieren, Uhr starten, Inventur zählen: Das steht sofort da und geht raus, sobald wieder Netz ist. In der Leiste steht, wie viel noch wartet. Abgeschickt wird der Reihe nach — ein Beleg kann auf einen Lieferanten verweisen, den es beim Server noch gar nicht gibt.
+
+Aktuell gehalten wird das über eine offene Verbindung (`/ws/buero`): Was einer ändert, sehen die anderen ohne Nachladen. Fällt sie aus, gleicht das Gerät alle paar Minuten von selbst ab.
+
+**Beim Abmelden wird alles gelöscht** — Daten wie zwischengespeicherte Seiten. Ein Tablet in der Werkstatt soll keine Umsätze mit sich herumtragen, nachdem sich jemand abgemeldet hat.
+
+Drei Seiten arbeiten bewusst nicht offline, weil sie es ohnehin nicht könnten: Postfach, Steuer-Export und Sicherung. Die Einstellungen ebenfalls — Zugangsdaten im Gerät zwischenzuspeichern wäre falsch, und ein Zugangsdatum, das man ohne Netz ändert, wäre eine Falle.
+
+Betrieblich ändert sich dadurch nichts: Der Server ist derselbe, nur startet er über `server.mjs` statt über `next start` — er hält damit die offene Verbindung. Ein Prozess, ein Port, ein Container.
 
 ### Postfächer einrichten
 
-Im Admin unter **Integrationen → Postfächer** je Konto Bezeichnung, Adresse, IMAP-Server, Benutzername und Passwort eintragen; die Ordnernamen für „Gesendet" und „Papierkorb" heißen je nach Anbieter unterschiedlich (z.B. `Sent`, `INBOX.Sent`, `Gesendete Objekte`). Verschickt wird über den SMTP-Server aus demselben Bereich, sofern beim Postfach nichts Eigenes hinterlegt ist.
+Im Büro unter **Einstellungen → Integrationen → Postfächer** je Konto Bezeichnung, Adresse, IMAP-Server, Benutzername und Passwort eintragen; die Ordnernamen für „Gesendet" und „Papierkorb" heißen je nach Anbieter unterschiedlich (z.B. `Sent`, `INBOX.Sent`, `Gesendete Objekte`). Verschickt wird über den SMTP-Server aus demselben Bereich, sofern beim Postfach nichts Eigenes hinterlegt ist.
 
 Die Absenderadresse der Website (`noreply@…`) steht getrennt davon unter **Integrationen → E-Mail-Versand** und muss hier nicht eingetragen werden — dorthin antwortet ohnehin niemand.
 
@@ -252,7 +268,7 @@ Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist e
 
 Es gibt **keinen Cron einzurichten**. Der Server läuft ohnehin durch und sieht jede Minute selbst nach, ob etwas ansteht (`src/instrumentation.ts`) — ein zweiter Container, der ihm auf die Schulter tippt, wäre ein bewegliches Teil mehr und eine Anleitungszeile, die jemand überliest, bis das Backup fehlt.
 
-Eingestellt wird das im Admin unter **Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
+Eingestellt wird das im Büro unter **Einstellungen → Integrationen → Takt**, nicht über Umgebungsvariablen: Automatik an/aus, „Wartung alle … Minuten" (Standard 15), „Postfach alle … Minuten" (Standard 5) und wie lange das Ausgangsprotokoll aufgehoben wird. Änderungen greifen **binnen einer Minute**, ohne Neustart und ohne Zugriff auf den Server.
 
 Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet nichts, und die Arbeiten selbst laufen höchstens einmal am Tag. Der Wartungstakt bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei 60 um 04:00. Beim Postfach zahlt sich häufiger aus, weil IMAP sich nicht von allein meldet.
 
@@ -303,6 +319,8 @@ Die Anwendung schickt CSP, HSTS, `X-Frame-Options`, `Referrer-Policy` und `Permi
 ```bash
 pnpm benutzer
 ```
+
+Das braucht man nur einmal, für den allerersten Zugang — danach werden Konten im Büro unter **Einstellungen → Benutzer** angelegt und verwaltet.
 
 Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **Inhaber** an. Die Passwörter kommen aus `VH_PASSWORT` und `ADMIN_PASSWORT`; fehlen sie, würfelt das Skript je eines und gibt es **einmal** auf der Konsole aus. Ein zweiter Aufruf ändert an vorhandenen Konten nichts.
 
@@ -401,16 +419,16 @@ Das Admin-Panel ist responsiv und auch am Handy nutzbar. Die Inhaltsfelder (News
 - [ ] **Zwei-Faktor-Anmeldung** einrichten und die Ersatzcodes sicher ablegen
 - [ ] **Demo-Preise** der Produkte durch echte Preise ersetzen (Seed enthält Platzhalterwerte!)
 - [ ] Impressum, Datenschutzerklärung und AGB einpflegen (aktuell Platzhalter)
-- [ ] SMTP-Zugangsdaten eintragen (Admin → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
+- [ ] SMTP-Zugangsdaten eintragen (Büro → Einstellungen → Integrationen), damit Bestell- und Kontakt-Mails rausgehen
 - [ ] Büro-Zugänge anlegen (`pnpm benutzer`) und die Passwörter gleich ändern
-- [ ] Postfächer eintragen (Admin → Integrationen → Postfächer), damit `/office/post` Post zeigt
+- [ ] Postfächer eintragen (Büro → Einstellungen → Integrationen → Postfächer), damit `/office/post` Post zeigt
 - [ ] Büro auf dem Handy als App ablegen und dort die Benachrichtigungen anmelden
-- [ ] Unter Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
+- [ ] Unter Büro → Einstellungen → Integrationen → Takt nachsehen, ob die Automatik läuft (Standard: ja)
 - [ ] NAS unter Integrationen → Sicherung eintragen und einmal „Jetzt sichern" drücken
 - [ ] Bei hinterlegter Besucherstatistik: `CSP_EXTRA_SCRIPT` auf deren Herkunft setzen
-- [ ] Claude-Schlüssel eintragen (Admin → Integrationen), damit Belege ausgelesen werden können
-- [ ] Stripe-Keys + Webhook eintragen (Admin → Integrationen)
+- [ ] Claude-Schlüssel eintragen (Büro → Einstellungen → Integrationen), damit Belege ausgelesen werden können
+- [ ] Stripe-Keys + Webhook eintragen (Büro → Einstellungen → Integrationen)
 - [ ] Handarbeits-Hinweis und Standard-Fertigungszeit pflegen (Admin → Website-Einstellungen), danach je Produkt die eigene Fertigungszeit
-- [ ] Optional: Facebook-Token eintragen (Admin → Integrationen)
-- [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Admin → Integrationen)
+- [ ] Optional: Facebook-Token eintragen (Büro → Einstellungen → Integrationen)
+- [ ] Optional: MCP-Schlüssel erzeugen, wenn die Website per KI gepflegt werden soll (Büro → Einstellungen → Integrationen)
 - [ ] Optional: cookiefreie Besucherstatistik hinterlegen (Admin → Website-Einstellungen) und einen Satz dazu in die Datenschutzerklärung aufnehmen

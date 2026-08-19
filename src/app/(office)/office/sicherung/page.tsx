@@ -70,7 +70,7 @@ export default async function SicherungsSeite() {
           Es ist kein Netzwerkspeicher hinterlegt. Solange liegen die Sicherungen nur auf demselben
           Server wie die Daten — gegen ein versehentlich gelöschtes Feld hilft das, gegen einen
           verlorenen Server nicht.{' '}
-          <Link href="/admin/globals/integrations" style={{ textDecoration: 'underline' }}>
+          <Link href="/office/einstellungen?teil=integrationen" style={{ textDecoration: 'underline' }}>
             NAS eintragen
           </Link>
         </div>

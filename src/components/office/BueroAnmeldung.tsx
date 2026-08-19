@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { PasskeyAnmeldung } from './PasskeyAnmeldung'
+import { bestandFreigeben } from '../../lib/buero/bestand'
 
 /**
  * Anmeldung fürs Büro.
@@ -34,6 +35,10 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
       })
 
       if (res.ok) {
+        // Das Abmelden sperrt den Speicher im Gerät zu; hier wird er wieder
+        // aufgeschlossen. Ohne das bliebe der Bestand nach einem erneuten
+        // Anmelden leer, denn die Seite wird dabei nicht neu geladen.
+        bestandFreigeben()
         router.push(ziel)
         router.refresh()
         return
@@ -112,6 +117,7 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
       <PasskeyAnmeldung
         ziel={ziel}
         aufErfolg={() => {
+          bestandFreigeben()
           router.push(ziel)
           router.refresh()
         }}

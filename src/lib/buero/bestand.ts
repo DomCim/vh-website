@@ -6,6 +6,7 @@ import { ALLE_BEREICHE, type Bereich } from '../bereiche'
 import {
   allesVergessen,
   alleLesen,
+  speicherFreigeben,
   entfernen,
   leeren,
   merkenLesen,
@@ -263,6 +264,19 @@ export function abgleichen(nurBereiche?: Bereich[]): Promise<void> {
 
 export function netzZustandSetzen(online: boolean) {
   zustandSetzen({ online })
+}
+
+/**
+ * Beim Anmelden: Speicher wieder aufschließen und von vorn laden.
+ *
+ * Nötig, weil das Abmelden ihn absichtlich zusperrt und die Seite dabei nicht
+ * neu geladen wird — ohne diesen Handgriff bliebe der Bestand nach einem
+ * erneuten Anmelden leer.
+ */
+export function bestandFreigeben(): void {
+  speicherFreigeben()
+  ladeVorgang = null
+  geladen.clear()
 }
 
 /** Beim Abmelden: nichts von den Geschäftsdaten bleibt im Gerät zurück. */

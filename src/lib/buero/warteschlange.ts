@@ -310,6 +310,7 @@ export async function abarbeiten(): Promise<void> {
   laeuft = true
   zustandSetzen({ laeuft: true })
   try {
+    // Nach dem Abmelden ist der Speicher zu; dann gibt es hier nichts zu tun
     const alle = (await alleWartend()).sort((a, b) => (a.nummer ?? 0) - (b.nummer ?? 0))
     let abbildung = await abbildungLesen()
     const beruehrt = new Set<Bereich>()
@@ -355,6 +356,8 @@ export async function abarbeiten(): Promise<void> {
 
     await zaehlenUndMelden()
     if (beruehrt.size) await abgleichen([...beruehrt])
+  } catch {
+    // Etwa: der Speicher wurde beim Abmelden zugesperrt
   } finally {
     laeuft = false
     zustandSetzen({ laeuft: false })

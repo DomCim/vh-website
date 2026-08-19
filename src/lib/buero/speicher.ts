@@ -25,6 +25,17 @@ const BEHAELTER = [...ALLE_BEREICHE, MERKZETTEL, WARTESCHLANGE]
 
 let offen: Promise<IDBDatabase> | null = null
 
+/**
+ * Nach dem Abmelden bleibt der Speicher zu.
+ *
+ * Ohne diese Sperre könnte ein Abgleich, der beim Abmelden gerade unterwegs
+ * war, die Datenbank eine Wimper später wieder öffnen — und dann scheitert das
+ * Löschen, weil eine Verbindung offen ist. Zurück blieben Umsätze und Belege
+ * auf einem Gerät, an dem sich jemand abgemeldet hat. Aufgemacht wird erst
+ * wieder beim Anmelden (siehe `speicherFreigeben`).
+ */
+let gesperrt = false
+
 export function speicherVerfuegbar(): boolean {
   return typeof indexedDB !== 'undefined'
 }
@@ -44,6 +55,7 @@ function alsVersprechen<T>(anfrage: IDBRequest<T>): Promise<T> {
  * neu geöffnet. So bleibt eine neue Zeile in bereiche.ts wirklich eine Zeile.
  */
 export async function datenbank(): Promise<IDBDatabase> {
+  if (gesperrt) throw new Error('Speicher ist nach dem Abmelden zu')
   if (!speicherVerfuegbar()) throw new Error('Kein Speicher im Gerät')
   if (offen) return offen
 
@@ -169,9 +181,13 @@ export async function merkenSchreiben(schluessel: string, wert: unknown): Promis
  */
 export async function allesVergessen(): Promise<void> {
   if (!speicherVerfuegbar()) return
+  // Erst zusperren, dann leeren — sonst macht ein laufender Abgleich wieder auf
+  gesperrt = true
   try {
-    const db = await datenbank()
-    db.close()
+    // Die bestehende Verbindung schließen, ohne über `datenbank()` zu gehen:
+    // die ist jetzt zu, und ohne Schließen bliebe das Löschen blockiert.
+    const db = await offen
+    db?.close()
   } catch {
     // Auch eine nie geöffnete Datenbank darf gelöscht werden
   }
@@ -183,4 +199,9 @@ export async function allesVergessen(): Promise<void> {
     // Hält eine andere Lasche die Datenbank fest, warten wir nicht ewig
     anfrage.onblocked = () => fertig()
   })
+}
+
+/** Beim Anmelden wieder aufschließen. */
+export function speicherFreigeben(): void {
+  gesperrt = false
 }
