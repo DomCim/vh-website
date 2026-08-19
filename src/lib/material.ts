@@ -25,14 +25,24 @@ export type VariantenBezug = {
   variantTitle?: string | null
 }
 
+export type DienstleisterZeile = {
+  contact?: unknown
+  service?: string | null
+  cost?: number | null
+  leadTime?: string | null
+  note?: string | null
+}
+
 type ProduktMitVarianten = {
   billOfMaterials?: StuecklistenZeile[] | null
+  serviceProviders?: DienstleisterZeile[] | null
   productionMinutes?: number | null
   variants?:
     | {
         id?: string | null
         title?: string | null
         billOfMaterials?: StuecklistenZeile[] | null
+        serviceProviders?: DienstleisterZeile[] | null
         productionMinutes?: number | null
       }[]
     | null
@@ -77,6 +87,22 @@ export function variantenStueckliste(
   const variante = varianteFinden(produkt.variants, bezug)
   const eigene = variante?.billOfMaterials ?? []
   return eigene.length ? eigene : (produkt.billOfMaterials ?? [])
+}
+
+/**
+ * Welche Fremdleistung für diese Variante anfällt.
+ *
+ * Dieselbe Regel wie beim Material: die eigene Liste der Variante, sonst die
+ * des Artikels. Verzinken kostet nach Gewicht, Beschichten nach Fläche —
+ * beides ist bei einem großen Stück mehr als bei einem kleinen.
+ */
+export function variantenDienstleister(
+  produkt: ProduktMitVarianten,
+  bezug: VariantenBezug = {},
+): DienstleisterZeile[] {
+  const variante = varianteFinden(produkt.variants, bezug)
+  const eigene = variante?.serviceProviders ?? []
+  return eigene.length ? eigene : (produkt.serviceProviders ?? [])
 }
 
 /**

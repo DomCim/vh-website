@@ -21,6 +21,15 @@ type Artikel = {
         title?: string | null
         price?: number | null
         billOfMaterials?: { item?: unknown; quantity?: number | null; note?: string | null }[] | null
+        serviceProviders?:
+          | {
+              contact?: unknown
+              service?: string | null
+              cost?: number | null
+              leadTime?: string | null
+              note?: string | null
+            }[]
+          | null
         productionMinutes?: number | null
       }[]
     | null
@@ -126,6 +135,13 @@ export function ArtikelBearbeitenAnsicht() {
               item: kennung(z.item),
               quantity: z.quantity ?? 0,
               note: z.note,
+            })),
+            dienstleister: (v.serviceProviders ?? []).map((d) => ({
+              contact: kennung(d.contact),
+              service: d.service ?? '',
+              cost: d.cost,
+              leadTime: d.leadTime,
+              note: d.note,
             })),
             minuten: v.productionMinutes,
           }))}

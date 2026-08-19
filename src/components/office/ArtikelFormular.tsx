@@ -21,6 +21,7 @@ export type VariantenEingabe = {
   titel: string
   preis?: number | null
   stueckliste: StuecklistenZeile[]
+  dienstleister: DienstleisterZeile[]
   minuten?: number | null
 }
 
@@ -67,7 +68,7 @@ export function ArtikelFormular({
 }) {
   const [basis, setBasis] = useState<StuecklistenZeile[]>(stueckliste)
   const [basisMinuten, setBasisMinuten] = useState<number>(arbeitsminuten ?? 0)
-  const [dienste, setDienste] = useState<DienstleisterZeile[]>(dienstleister)
+  const [basisDienste, setBasisDienste] = useState<DienstleisterZeile[]>(dienstleister)
 
   // '' ist die Grundlage, sonst die Kennung der Variante
   const [gewaehlt, setGewaehlt] = useState<string>('')
@@ -76,6 +77,9 @@ export function ArtikelFormular({
   )
   const [minutenJe, setMinutenJe] = useState<Record<string, number>>(() =>
     Object.fromEntries(varianten.map((v) => [v.id, v.minuten ?? 0])),
+  )
+  const [diensteJe, setDiensteJe] = useState<Record<string, DienstleisterZeile[]>>(() =>
+    Object.fromEntries(varianten.map((v) => [v.id, v.dienstleister])),
   )
 
   const [laeuft, setLaeuft] = useState(false)
@@ -92,6 +96,15 @@ export function ArtikelFormular({
   const setZeilen = (aendern: (v: StuecklistenZeile[]) => StuecklistenZeile[]) => {
     if (!gewaehlt) return setBasis(aendern)
     setListen((v) => ({ ...v, [gewaehlt]: aendern(v[gewaehlt] ?? []) }))
+  }
+
+  const eigeneDienste = gewaehlt ? (diensteJe[gewaehlt] ?? []) : basisDienste
+  /** Zeigt diese Variante nur, was die Grundlage an Fremdleistung sagt? */
+  const erbtDienste = Boolean(gewaehlt) && eigeneDienste.length === 0
+  const dienste = erbtDienste ? basisDienste : eigeneDienste
+  const setDienste = (aendern: (v: DienstleisterZeile[]) => DienstleisterZeile[]) => {
+    if (!gewaehlt) return setBasisDienste(aendern)
+    setDiensteJe((v) => ({ ...v, [gewaehlt]: aendern(v[gewaehlt] ?? []) }))
   }
 
   const eigeneMinuten = gewaehlt ? (minutenJe[gewaehlt] ?? 0) : basisMinuten
@@ -130,9 +143,12 @@ export function ArtikelFormular({
     setLaeuft(true)
     setMeldung(null)
     const sauber = (v: StuecklistenZeile[]) => v.filter((z) => z.item && z.quantity)
+    const sauberDienste = (v: DienstleisterZeile[]) =>
+      v.filter((d) => d.contact && d.service?.trim())
     const variantenDaten = varianten.map((v) => ({
       id: v.id,
       zeilen: sauber(listen[v.id] ?? []),
+      dienstleister: sauberDienste(diensteJe[v.id] ?? []),
       minuten: minutenJe[v.id] || null,
     }))
     try {
@@ -142,7 +158,7 @@ export function ArtikelFormular({
         koerper: {
           produktId,
           zeilen: sauber(basis),
-          dienstleister: dienste.filter((d) => d.contact && d.service?.trim()),
+          dienstleister: sauberDienste(basisDienste),
           arbeitsminuten: basisMinuten || 0,
           varianten: variantenDaten,
         },
@@ -150,13 +166,14 @@ export function ArtikelFormular({
         vorschau: {
           id: produktId,
           billOfMaterials: sauber(basis),
-          serviceProviders: dienste.filter((d) => d.contact && d.service?.trim()),
+          serviceProviders: sauberDienste(basisDienste),
           productionMinutes: basisMinuten || 0,
           variants: varianten.map((v) => ({
             id: v.id,
             title: v.titel,
             price: v.preis,
             billOfMaterials: sauber(listen[v.id] ?? []),
+            serviceProviders: sauberDienste(diensteJe[v.id] ?? []),
             productionMinutes: minutenJe[v.id] || null,
           })),
         },
@@ -199,16 +216,18 @@ export function ArtikelFormular({
                 {/* Ein Haken für „hat eine eigene Liste". Wer nichts Eigenes
                     hat, braucht auch kein Zeichen — der Normalfall bleibt
                     unbeschriftet. */}
-                {(listen[v.id] ?? []).length > 0 ? ' ✓' : ''}
+                {(listen[v.id] ?? []).length > 0 || (diensteJe[v.id] ?? []).length > 0 ? ' ✓' : ''}
               </button>
             ))}
           </div>
           <p className="buero-unterzeile">
             {gewaehlt === ''
               ? 'Gilt für alle Varianten, die nichts Eigenes hinterlegt haben.'
-              : erbt
-                ? 'Diese Variante übernimmt die Grundlage.'
-                : 'Diese Variante rechnet mit ihrer eigenen Liste.'}
+              : erbt && erbtDienste
+                ? 'Diese Variante übernimmt Material, Fremdleistung und Zeit von der Grundlage.'
+                : `Eigenes hinterlegt: ${[!erbt && 'Material', !erbtDienste && 'Fremdleistung', eigeneMinuten > 0 && 'Zeit']
+                    .filter(Boolean)
+                    .join(', ')}. Der Rest kommt von der Grundlage.`}
           </p>
         </>
       )}
@@ -344,18 +363,61 @@ export function ArtikelFormular({
         </>
       )}
 
-      <h2>Externe Dienstleister</h2>
-      {varianten.length > 0 && (
-        <p className="buero-unterzeile">
-          Gelten für alle Varianten — wer je Größe unterschiedlich abrechnet, trägt den Unterschied
-          bis auf Weiteres in der Bemerkung fest.
-        </p>
-      )}
-      {dienste.length === 0 && (
+      <h2>
+        Externe Dienstleister{variante ? ` · ${variante.titel}` : ''}
+      </h2>
+      {dienste.length === 0 && !erbtDienste && (
         <p className="buero-unterzeile">
           Verzinkerei, Beschichter, Laserschneider — wer von außen mitarbeitet, gehört hierher.
+          {gewaehlt !== '' && ' Auch die Grundlage hat hier noch nichts stehen.'}
         </p>
       )}
+
+      {/*
+       * Wie beim Material: Was von der Grundlage kommt, wird gezeigt und nicht
+       * bearbeitet. Verzinken wird nach Gewicht abgerechnet und Beschichten
+       * nach Fläche — wer den Preis für die große Größe hier höher setzt,
+       * hätte ihn sonst für alle höher gesetzt.
+       */}
+      {erbtDienste ? (
+        <>
+          <div className="buero-liste">
+            {dienste.map((d, i) => {
+              const betrieb = partner.find((x) => x.id === Number(d.contact))
+              return (
+                <div key={i} className="buero-zeile">
+                  <div className="buero-zeile-haupt">
+                    <div className="buero-zeile-titel">
+                      {d.service || 'Leistung'}
+                      {betrieb ? ` · ${betrieb.name}` : ''}
+                    </div>
+                    <div className="buero-zeile-neben">
+                      {euro(d.cost ?? 0)} je Stück
+                      {d.leadTime ? ` · ${d.leadTime}` : ''}
+                    </div>
+                  </div>
+                  <span className="buero-marker offen">von der Grundlage</span>
+                </div>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            className="buero-knopf leise"
+            onClick={() =>
+              setDiensteJe((v) => ({
+                ...v,
+                [gewaehlt]: basisDienste.length
+                  ? basisDienste.map((d) => ({ ...d }))
+                  : [{ contact: '', service: '', cost: 0 }],
+              }))
+            }
+          >
+            Eigene Preise für „{variante?.titel}“ anlegen
+          </button>
+        </>
+      ) : (
+        <>
       {dienste.map((d, i) => (
         <div key={i} className="buero-reihe">
           <label className="buero-feld">
@@ -425,13 +487,26 @@ export function ArtikelFormular({
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="buero-knopf leise"
-        onClick={() => setDienste((v) => [...v, { contact: '', service: '', cost: 0 }])}
-      >
-        Dienstleister hinzufügen
-      </button>
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="buero-knopf leise"
+          onClick={() => setDienste((v) => [...v, { contact: '', service: '', cost: 0 }])}
+        >
+          Dienstleister hinzufügen
+        </button>
+        {gewaehlt !== '' && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            onClick={() => setDiensteJe((v) => ({ ...v, [gewaehlt]: [] }))}
+          >
+            Wieder die Grundlage verwenden
+          </button>
+        )}
+      </div>
+        </>
+      )}
 
       <h2 style={{ marginTop: '1.5rem' }}>
         Arbeitszeit{variante ? ` · ${variante.titel}` : ''}

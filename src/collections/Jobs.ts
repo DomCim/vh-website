@@ -142,12 +142,30 @@ export const Jobs: CollectionConfig = {
                 req,
               })
               if (!posten) continue
+              const rest = Math.round(((posten.quantity ?? 0) - zeile.quantity) * 100) / 100
               await req.payload.update({
                 collection: 'inventory-items',
                 id,
                 overrideAccess: true,
                 req,
-                data: { quantity: Math.round(((posten.quantity ?? 0) - zeile.quantity) * 100) / 100 },
+                data: {
+                  quantity: rest,
+                  /*
+                   * Auch die automatische Abbuchung gehört in den Verlauf.
+                   * Sonst stünden dort nur die Korrekturen von Hand, und der
+                   * größte Teil der Bewegungen fehlte — genau der, den man
+                   * beim Nachrechnen sucht.
+                   */
+                  movements: [
+                    ...(posten.movements ?? []),
+                    {
+                      day: new Date().toISOString(),
+                      delta: -zeile.quantity,
+                      rest,
+                      reason: `Auftrag ${doc.jobNumber}${doc.title ? ` — ${doc.title}` : ''}`,
+                    },
+                  ],
+                },
               })
             } catch (err) {
               req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Material ${id} nicht abgebucht`)

@@ -213,6 +213,39 @@ export const Products: CollectionConfig = {
             hidden: true,
           },
         },
+        {
+          /*
+           * Auch die Fremdleistung hängt an der Größe: Verzinken wird nach
+           * Gewicht abgerechnet, Beschichten nach Fläche. Ein großes Stück
+           * kostet dort mehr als ein kleines — mit einem gemeinsamen Preis
+           * rechnet die Kalkulation das kleine teuer und das große billig.
+           *
+           * Leer heißt wie überall hier: Es gilt die Grundlage am Artikel.
+           */
+          name: 'serviceProviders',
+          label: 'Dienstleister dieser Variante',
+          type: 'array',
+          labels: { singular: 'Dienstleister', plural: 'Dienstleister' },
+          admin: { hidden: true },
+          fields: [
+            {
+              name: 'contact',
+              label: 'Betrieb',
+              type: 'relationship',
+              relationTo: 'contacts',
+              required: true,
+            },
+            {
+              type: 'row',
+              fields: [
+                { name: 'service', label: 'Leistung', type: 'text', required: true },
+                { name: 'cost', label: 'Kosten netto je Stück (EUR)', type: 'number', min: 0 },
+                { name: 'leadTime', label: 'Vorlaufzeit', type: 'text' },
+              ],
+            },
+            { name: 'note', label: 'Bemerkung', type: 'text' },
+          ],
+        },
       ],
     },
     {

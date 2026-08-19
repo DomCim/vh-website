@@ -104,6 +104,46 @@ export const InventoryItems: CollectionConfig = {
       relationTo: 'products',
       admin: { description: 'Nur bei fertigen Stücken, die im Shop stehen.' },
     },
+    {
+      /*
+       * Der Verlauf des Bestands.
+       *
+       * Warum es das braucht: Der Bestand ändert sich nicht nur beim
+       * Fertigmelden eines Auftrags. Es wird etwas nachgeschweißt, ein Stück
+       * Blech verschnitten, zwei Meter Draht für eine Reparatur außerhalb
+       * gebraucht. Bisher blieb dafür nur, die Zahl im Feld zu überschreiben —
+       * und danach wusste niemand mehr, warum aus 50 plötzlich 48 wurden.
+       *
+       * Jede Korrektur steht deshalb als eigene Zeile: wie viel, warum, wann
+       * und von wem. Die Zahl im Feld `quantity` bleibt der Bestand; dieser
+       * Verlauf erklärt ihn.
+       */
+      name: 'movements',
+      label: 'Bestandsverlauf',
+      type: 'array',
+      labels: { singular: 'Bewegung', plural: 'Bewegungen' },
+      admin: {
+        readOnly: true,
+        description: 'Gebucht wird im Büro unter Inventar — hier steht nur, was passiert ist.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'day', label: 'Wann', type: 'date' },
+            {
+              name: 'delta',
+              label: 'Veränderung',
+              type: 'number',
+              admin: { description: 'Negativ ist ein Abgang, positiv ein Zugang.' },
+            },
+            { name: 'rest', label: 'Bestand danach', type: 'number' },
+          ],
+        },
+        { name: 'reason', label: 'Grund', type: 'text' },
+        { name: 'who', label: 'Von', type: 'text' },
+      ],
+    },
     { name: 'photo', label: 'Foto', type: 'upload', relationTo: 'media' },
     { name: 'notes', label: 'Notiz', type: 'textarea' },
   ],

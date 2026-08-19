@@ -40,6 +40,13 @@ export async function POST(req: Request) {
         id?: string
         zeilen?: { item?: number; quantity?: number; note?: string }[]
         minuten?: number | null
+        dienstleister?: {
+          contact?: number
+          service?: string
+          cost?: number
+          leadTime?: string
+          note?: string
+        }[]
       }[]
     }
     if (!b.produktId) return NextResponse.json({ error: 'produktId fehlt' }, { status: 400 })
@@ -48,6 +55,21 @@ export async function POST(req: Request) {
       (zeilen ?? [])
         .filter((z) => z.item && z.quantity)
         .map((z) => ({ item: z.item as number, quantity: z.quantity as number, note: z.note }))
+
+    const sauberDienste = (
+      dienste:
+        | { contact?: number; service?: string; cost?: number; leadTime?: string; note?: string }[]
+        | undefined,
+    ) =>
+      (dienste ?? [])
+        .filter((d) => d.contact && d.service?.trim())
+        .map((d) => ({
+          contact: d.contact as number,
+          service: d.service as string,
+          cost: d.cost,
+          leadTime: d.leadTime,
+          note: d.note,
+        }))
 
     /*
      * Varianten nur anfassen, wenn welche mitgeschickt wurden. Ein Formular,
@@ -69,6 +91,7 @@ export async function POST(req: Request) {
           title: v.title,
           price: v.price,
           billOfMaterials: neu ? sauber(neu.zeilen) : (v.billOfMaterials ?? []),
+          serviceProviders: neu ? sauberDienste(neu.dienstleister) : (v.serviceProviders ?? []),
           productionMinutes: neu
             ? neu.minuten
               ? Math.max(0, Math.round(neu.minuten))
@@ -88,15 +111,7 @@ export async function POST(req: Request) {
         productionMinutes:
           typeof b.arbeitsminuten === 'number' ? Math.max(0, Math.round(b.arbeitsminuten)) : undefined,
         billOfMaterials: sauber(b.zeilen),
-        serviceProviders: (b.dienstleister ?? [])
-          .filter((d) => d.contact && d.service?.trim())
-          .map((d) => ({
-            contact: d.contact as number,
-            service: d.service as string,
-            cost: d.cost,
-            leadTime: d.leadTime,
-            note: d.note,
-          })),
+        serviceProviders: sauberDienste(b.dienstleister),
       },
     })
 

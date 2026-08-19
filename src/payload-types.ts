@@ -256,6 +256,16 @@ export interface Product {
             }[]
           | null;
         productionMinutes?: number | null;
+        serviceProviders?:
+          | {
+              contact: number | Contact;
+              service: string;
+              cost?: number | null;
+              leadTime?: string | null;
+              note?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -435,6 +445,22 @@ export interface InventoryItem {
    * Nur bei fertigen Stücken, die im Shop stehen.
    */
   product?: (number | null) | Product;
+  /**
+   * Gebucht wird im Büro unter Inventar — hier steht nur, was passiert ist.
+   */
+  movements?:
+    | {
+        day?: string | null;
+        /**
+         * Negativ ist ein Abgang, positiv ein Zugang.
+         */
+        delta?: number | null;
+        rest?: number | null;
+        reason?: string | null;
+        who?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   photo?: (number | null) | Media;
   notes?: string | null;
   updatedAt: string;
@@ -1634,6 +1660,16 @@ export interface ProductsSelect<T extends boolean = true> {
               id?: T;
             };
         productionMinutes?: T;
+        serviceProviders?:
+          | T
+          | {
+              contact?: T;
+              service?: T;
+              cost?: T;
+              leadTime?: T;
+              note?: T;
+              id?: T;
+            };
         id?: T;
       };
   colorOptions?:
@@ -2136,6 +2172,16 @@ export interface InventoryItemsSelect<T extends boolean = true> {
   purchaseValue?: T;
   supplier?: T;
   product?: T;
+  movements?:
+    | T
+    | {
+        day?: T;
+        delta?: T;
+        rest?: T;
+        reason?: T;
+        who?: T;
+        id?: T;
+      };
   photo?: T;
   notes?: T;
   updatedAt?: T;

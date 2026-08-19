@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { varianteFinden, variantenMinuten, variantenStueckliste } from '../src/lib/material'
+import {
+  varianteFinden,
+  variantenDienstleister,
+  variantenMinuten,
+  variantenStueckliste,
+} from '../src/lib/material'
 
 /**
  * Welche Stückliste für ein bestelltes Stück gilt.
@@ -17,6 +22,7 @@ const ARTIKEL = {
     { item: 2, quantity: 4 },
   ],
   productionMinutes: 240,
+  serviceProviders: [{ contact: 7, service: 'Verzinken', cost: 60 }],
   variants: [
     // Klein: nimmt alles vom Artikel
     { id: 'v-klein', title: '60 × 30 cm' },
@@ -28,6 +34,7 @@ const ARTIKEL = {
         { item: 1, quantity: 5 },
         { item: 2, quantity: 4 },
       ],
+      serviceProviders: [{ contact: 7, service: 'Verzinken', cost: 145 }],
       productionMinutes: 420,
     },
   ],
@@ -100,5 +107,28 @@ test.describe('Welche Arbeitszeit gilt', () => {
   test('ohne jede Angabe null statt null Minuten', () => {
     expect(variantenMinuten({ variants: [{ id: 'a', title: 'A' }] }, { variantId: 'a' })).toBeNull()
     expect(variantenMinuten({ productionMinutes: 0 }, {})).toBeNull()
+  })
+})
+
+/*
+ * Fremdleistung hängt genauso an der Größe wie das Material: Verzinken wird
+ * nach Gewicht abgerechnet, Beschichten nach Fläche. Mit einem gemeinsamen
+ * Preis rechnet die Kalkulation das kleine Stück zu teuer und das große zu
+ * billig — und ausgerechnet beim großen fällt es ins Gewicht.
+ */
+test.describe('Welche Fremdleistung anfällt', () => {
+  test('die eigene der Variante, wenn sie eine hat', () => {
+    const dienste = variantenDienstleister(ARTIKEL, { variantId: 'v-gross' })
+    expect(dienste).toHaveLength(1)
+    expect(dienste[0].cost).toBe(145)
+  })
+
+  test('sonst die der Grundlage', () => {
+    expect(variantenDienstleister(ARTIKEL, { variantId: 'v-klein' })[0].cost).toBe(60)
+    expect(variantenDienstleister(ARTIKEL, {})[0].cost).toBe(60)
+  })
+
+  test('ohne alles bleibt die Liste leer statt undefiniert', () => {
+    expect(variantenDienstleister({}, { variantId: 'x' })).toEqual([])
   })
 })

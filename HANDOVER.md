@@ -128,7 +128,15 @@ dabei ausdrücklich „es gilt die Grundlage" und nicht „braucht kein Material
 sonst stünde jede neu angelegte Variante ohne Material da und die
 Bestandswarnung schwiege genau dann, wenn sie gebraucht wird. Die
 Bestellposition trägt dafür `variantId`; die Bezeichnung ist übersetzt und
-änderbar und taugt nur als Rückfallweg für Bestellungen von vorher.
+änderbar und taugt nur als Rückfallweg für Bestellungen von vorher. Dieselbe
+Regel gilt für Arbeitszeit und Fremdleistung der Variante.
+
+**Der Bestand wird als Veränderung gebucht, nicht gesetzt.** `/api/office/inventar`
+mit `aktion: 'korrektur'` rechnet `delta` auf den Bestand und hängt eine Zeile
+an `movements` — Grund, Zeit, Person, Rest. Das normale Speichern des
+Formulars fasst `movements` bewusst nicht an: Was das Formular nicht kennt,
+darf es nicht leeren. Ein negativer Bestand wird **nicht** auf null gedeckelt;
+er ist die Aussage „mehr verbraucht als gebucht" und gehört sichtbar.
 
 **Die Zahlungseingänge-Seite ist die einzige Büro-Seite ohne Offline-Betrieb.**
 Sie fragt den Server, weil die Zuordnung über Geld entscheidet und überall

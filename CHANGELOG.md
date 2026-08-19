@@ -2,6 +2,12 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Fremdleistung je Variante, Bestand korrigierbar
+
+- **Auch die Fremdleistung hängt jetzt an der Variante.** Verzinken wird nach Gewicht abgerechnet, Beschichten nach Fläche — ein großes Stück kostet dort mehr Farbe und mehr Geld. Mit einem gemeinsamen Preis rechnete die Kalkulation das kleine Stück zu teuer und das große zu billig, und ausgerechnet beim großen fällt es ins Gewicht. Im Büro steht das unter demselben Umschalter wie die Stückliste: Grundlage, dann jede Variante; ohne eigene Angabe gilt weiter die Grundlage.
+- **Der Bestand lässt sich korrigieren, mit Grund.** Zwei Meter Schweißdraht für eine Reparatur außerhalb eines Auftrags, ein verschnittenes Blech, eine Lieferung, für die es noch keinen Beleg gibt: Am Inventarposten wird jetzt die **Veränderung** gebucht — „2, verbraucht" — statt den neuen Stand auszurechnen und ins Feld zu schreiben. Genau beim Abziehen im Kopf entstehen die Zahlendreher, die eine Inventur später mühsam wieder einfängt.
+- **Jede Bewegung bleibt stehen**: wie viel, warum, wann, von wem und wie viel danach übrig war. Auch das automatische Abbuchen beim Fertigmelden eines Auftrags schreibt sich dort hinein — sonst stünde im Verlauf nur die Handarbeit und der größte Teil fehlte. Rutscht der Bestand rechnerisch unter null, bleibt das so stehen und die Seite sagt, was es bedeutet: Es wurde mehr verbraucht als je gebucht — da fehlt ein Wareneingang, oder es ist Zeit für eine Inventur.
+
 ## 19.08.2026 — Stückliste und Arbeitszeit je Variante
 
 - **Bisher galt eine Stückliste für den ganzen Artikel.** Ein Kübel in 100 × 50 braucht aber mehr Blech als derselbe in 60 × 30 — und dauert länger. Die gemeinsame Liste rechnete für den einen zu wenig und für den anderen zu viel; die Bestandswarnung war damit in beiden Fällen wertlos, und die Auslastung sagte für beide Größen dieselbe Stundenzahl.

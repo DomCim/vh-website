@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
+import { Bestandskorrektur, type Bewegung } from '../../../../../components/office/Bestandskorrektur'
 import { InventarFormular } from '../../../../../components/office/InventarFormular'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 
@@ -20,6 +21,7 @@ type Artikel = {
   id: number | string
   title?: string | null
   billOfMaterials?: { item?: unknown }[] | null
+  variants?: { billOfMaterials?: { item?: unknown }[] | null }[] | null
 }
 
 export function PostenAnsicht() {
@@ -37,18 +39,18 @@ export function PostenAnsicht() {
     [partner],
   )
 
-  const verwendet = useMemo(
-    () =>
-      artikel
-        .filter((p) =>
-          (p.billOfMaterials ?? []).some((z) => {
-            const zeilenId = typeof z.item === 'object' ? (z.item as { id?: number })?.id : z.item
-            return String(zeilenId) === String(id)
-          }),
-        )
-        .slice(0, 20),
-    [artikel, id],
-  )
+  const verwendet = useMemo(() => {
+    const trifft = (zeilen: { item?: unknown }[] | null | undefined) =>
+      (zeilen ?? []).some((z) => {
+        const zeilenId = typeof z.item === 'object' ? (z.item as { id?: number })?.id : z.item
+        return String(zeilenId) === String(id)
+      })
+    // Auch die Listen der Varianten: Ein Posten, der nur in der großen Größe
+    // steckt, wäre sonst scheinbar nirgends gebraucht.
+    return artikel
+      .filter((p) => trifft(p.billOfMaterials) || (p.variants ?? []).some((v) => trifft(v.billOfMaterials)))
+      .slice(0, 20)
+  }, [artikel, id])
 
   if (!i) {
     return (
@@ -99,6 +101,13 @@ export function PostenAnsicht() {
           notes: i.notes as string,
         }}
         lieferanten={lieferanten}
+      />
+
+      <Bestandskorrektur
+        postenId={i.id}
+        bestand={(i.quantity as number) ?? 0}
+        einheit={(i.unit as string) ?? ''}
+        verlauf={(i.movements as Bewegung[]) ?? []}
       />
     </>
   )
