@@ -58,10 +58,17 @@ async function rahmen(
     stundensatz: 65,
     wunschaufschlag: 40,
     firma: { siret: '', vatId: '', iban: '' },
+    platzFreigebenNachTagen: 21,
   }
   try {
     const integrationen = await getIntegrations(payload)
     rahmen.kiVerfuegbar = Boolean(integrationen.anthropic.apiKey)
+    // Die Frage nach dem Werkstattplatz stellt das Gerät selbst — also muss
+    // die Frist mit ins Gerät, sonst steht sie ohne Netz auf der Voreinstellung
+    const ziele = (await payload.findGlobal({ slug: 'integrations', depth: 0 })) as {
+      zahlungsziele?: { platzFreigebenNachTagen?: number | null } | null
+    }
+    rahmen.platzFreigebenNachTagen = ziele?.zahlungsziele?.platzFreigebenNachTagen ?? 21
   } catch {
     // Ohne KI läuft das Büro auch
   }

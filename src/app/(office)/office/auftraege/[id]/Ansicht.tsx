@@ -6,6 +6,7 @@ import React, { useMemo } from 'react'
 
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
+import { Zahlungsleiste } from '../../../../../components/office/Zahlungsleiste'
 import { Zeiterfassung } from '../../../../../components/office/Zeiterfassung'
 import { useAbgleich, useBestand, useDatensatz, useRahmen } from '../../../../../lib/buero/bestand'
 import { bestandsPruefung, type Posten } from '../../../../../lib/buero/material'
@@ -113,6 +114,13 @@ export function AuftragAnsicht() {
           {fehlend.map((f) => `${f.name} — ${f.fehlt} ${f.einheit} nachbestellen`).join(', ')}
         </p>
       )}
+
+      <Zahlungsleiste
+        auftragId={j.id}
+        auftragswert={auftragswert}
+        zahlplan={j.zahlplan as { anzahlungProzent?: number; zwischenProzent?: number }}
+        fertigBis={j.dueDate as string}
+      />
 
       <AuftragFormular
         werte={{

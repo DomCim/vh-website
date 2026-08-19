@@ -47,6 +47,8 @@ export type Rahmen = {
   stundensatz: number
   wunschaufschlag: number
   firma: { siret: string; vatId: string; iban: string }
+  /** Ab wie vielen Tagen offener Anzahlung nach dem Werkstattplatz gefragt wird */
+  platzFreigebenNachTagen: number
 }
 
 const RAHMEN_LEER: Rahmen = {
@@ -55,6 +57,7 @@ const RAHMEN_LEER: Rahmen = {
   stundensatz: 65,
   wunschaufschlag: 40,
   firma: { siret: '', vatId: '', iban: '' },
+  platzFreigebenNachTagen: 21,
 }
 let rahmen: Rahmen = RAHMEN_LEER
 const rahmenHoerer = new Set<() => void>()

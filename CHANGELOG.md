@@ -2,6 +2,13 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Der Auftrag sagt, woran es hängt
+
+- **Zahlungsstand am Auftrag.** Über dem Formular steht jetzt, was eingegangen ist und was aussteht, mit jeder Rechnung des Auftrags in einer Zeile. Und der Satz, den sonst niemand zieht: Wird nicht gezahlt, wird nicht gearbeitet — die Fertigstellung verschiebt sich um genau die Tage, die das Geld ausbleibt. Ein Knopf trägt den neuen Termin ein. **Verschoben wird also sichtbar und von Hand**: Ein zugesagtes Datum, das sich still ändert, ist schlimmer als eines, das sich sichtbar ändert — der Kunde hat den alten im Kalender und muss es von einem Menschen erfahren.
+- **Bei offener Anzahlung wird erinnert, nicht gemahnt.** Vorher ist nichts geleistet, und wer noch überlegt, bekommt keine Mahngebühr. Bleibt sie länger offen als in den Einstellungen hinterlegt (Vorgabe: 21 Tage), fragt das Büro nach dem Werkstattplatz — irgendwann muss die Entscheidung fallen, sonst blockiert ein Auftrag die Reihe, den es vielleicht gar nicht gibt.
+- **In der Auftragsliste steht „wartet auf Zahlung"** statt nur „überfällig". Das sind zwei verschiedene Dinge: Beim einen ist die Werkstatt zu spät, beim anderen wartet sie zu Recht.
+- Gerechnet wird das im Gerät, aus dem Bestand, der ohnehin dort liegt — die Leiste steht damit auch in der Werkstatt ohne Netz.
+
 ## 19.08.2026 — Der QR-Code auf der Rechnung
 
 - **Zahlen ohne Abtippen.** Unter der Bankverbindung steht jetzt ein GiroCode: Kamera drauf, die Banking-App schlägt Empfänger, Betrag und Verwendungszweck fertig vor. 22 Zeichen IBAN abzutippen bedeutet sonst, dass eine falsche Ziffer als Rückfrage zurückkommt — und bei einer Anzahlung, die vor dem Fertigungsbeginn eingehen soll, ist das der Unterschied zwischen „heute Abend" und „nächste Woche".

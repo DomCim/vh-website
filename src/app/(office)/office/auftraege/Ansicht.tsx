@@ -22,6 +22,12 @@ const HERKUNFT: Record<string, string> = {
   manuell: 'von Hand',
 }
 
+type Rechnung = {
+  auftrag?: unknown
+  status?: string | null
+  dueDate?: string | null
+}
+
 type Auftrag = {
   id: number | string
   jobNumber?: string | null
@@ -35,6 +41,27 @@ type Auftrag = {
 
 export function AuftraegeAnsicht() {
   const alle = useBestand<Auftrag>('auftraege')
+  const rechnungen = useBestand<Rechnung>('rechnungen')
+
+  /*
+   * Welche Aufträge auf Geld warten.
+   *
+   * Steht das nur in der Auftragsseite, sieht es niemand — geschaut wird auf
+   * die Liste. „Überfällig" wegen des Termins und „überfällig" wegen der
+   * Zahlung sind außerdem zwei verschiedene Dinge: Beim zweiten wartet die
+   * Werkstatt zu Recht, und der Termin verschiebt sich deshalb.
+   */
+  const wartetAufGeld = useMemo(() => {
+    const jetzt = Date.now()
+    const ids = new Set<string>()
+    for (const r of rechnungen) {
+      if (r.status !== 'gestellt' || !r.dueDate) continue
+      if (new Date(r.dueDate).getTime() >= jetzt) continue
+      const id = typeof r.auftrag === 'object' ? (r.auftrag as { id?: number })?.id : r.auftrag
+      if (id !== null && id !== undefined) ids.add(String(id))
+    }
+    return ids
+  }, [rechnungen])
   const auftraege = useMemo(
     () => [...alle].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')),
     [alle],
@@ -73,6 +100,7 @@ export function AuftraegeAnsicht() {
         ) : (
           auftraege.map((j) => {
             const s = STATUS[j.status ?? ''] ?? { text: j.status, art: '' }
+            const wartet = wartetAufGeld.has(String(j.id))
             const spaet =
               j.status !== 'fertig' &&
               j.status !== 'geliefert' &&
@@ -91,8 +119,8 @@ export function AuftraegeAnsicht() {
                     {j.dueDate ? ` · fertig bis ${datum(j.dueDate)}` : ''}
                   </div>
                 </div>
-                <span className={`buero-marker ${spaet ? 'warn' : s.art}`}>
-                  {spaet ? 'überfällig' : s.text}
+                <span className={`buero-marker ${wartet || spaet ? 'warn' : s.art}`}>
+                  {wartet ? 'wartet auf Zahlung' : spaet ? 'überfällig' : s.text}
                 </span>
               </Link>
             )

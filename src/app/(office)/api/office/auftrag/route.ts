@@ -15,6 +15,29 @@ export async function POST(req: Request) {
     }
 
     const b = (await req.json()) as Record<string, any>
+
+    /*
+     * Termin verschieben ist ein eigener, enger Weg.
+     *
+     * Alles darunter baut den vollständigen Datensatz und schreibt ihn. Wer
+     * von einer Leiste aus nur `{ id, dueDate }` schickte, träfe damit auch
+     * `positions: []` und `material: []` — und löschte Stückliste und
+     * Positionen des Auftrags. Ein Klick, und der Auftrag ist leer.
+     *
+     * Dieselbe Falle wie bei den Rechnungen; weitere schmale Änderungen
+     * gehören genauso hier oben angelegt und nicht unten drangehängt.
+     */
+    if (b.aktion === 'termin') {
+      if (!b.id || !b.dueDate) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      const doc = await payload.update({
+        collection: 'jobs',
+        id: b.id,
+        overrideAccess: true,
+        data: { dueDate: b.dueDate },
+      })
+      return NextResponse.json({ ok: true, id: doc.id })
+    }
+
     if (!b.title?.trim()) return NextResponse.json({ error: 'titel-fehlt' }, { status: 400 })
 
     const daten = {
