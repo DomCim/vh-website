@@ -85,9 +85,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'unbekannte-aktion' }, { status: 400 })
   } catch (err) {
     console.error('Sicherung fehlgeschlagen:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'fehlgeschlagen' },
-      { status: 500 },
+    return NextResponse.json({ error: verstaendlich(err) }, { status: 500 })
+  }
+}
+
+/**
+ * Aus einer Werkzeugmeldung eine Auskunft machen.
+ *
+ * `tar` sagt „Cannot open: Permission denied" und meint damit etwas sehr
+ * Konkretes: Das Volume gehört jemand anderem. Das ist genau einmal passiert
+ * — ein Sicherungs-Beiwagen aus einem Postgres-Abbild hatte das Volume zuerst
+ * angefasst und ihm seine Eigentümerschaft aufgeprägt — und hat eine
+ * Viertelstunde gekostet, weil in der Oberfläche nur der rohe Fehler stand.
+ *
+ * Die Originalmeldung bleibt darunter stehen. Sie ist unlesbar, aber sie ist
+ * die Wahrheit, und wer sie sucht, soll sie finden.
+ */
+function verstaendlich(err: unknown): string {
+  const text = err instanceof Error ? err.message : String(err)
+  if (/Permission denied|EACCES/i.test(text)) {
+    return (
+      'Der Ordner für die Sicherungen ist nicht beschreibbar. Das passiert, wenn das ' +
+      'Volume einem anderen Benutzer gehört — einmalig auf dem Server beheben:\n' +
+      'docker run --rm -v <stack>_backups:/v alpine chown -R 1000:1000 /v\n\n' +
+      text
     )
   }
+  if (/ENOSPC|No space left/i.test(text)) {
+    return `Kein Platz mehr auf dem Datenträger.\n\n${text}`
+  }
+  return text || 'fehlgeschlagen'
 }

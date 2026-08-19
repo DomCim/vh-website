@@ -5,6 +5,32 @@ set -e
 # Alles, was es genau einmal geben darf — Migrationen, Startdaten, Zugänge —,
 # erledigt der Web-Container. Liefe es in beiden, würden sie einander bei der
 # Schema-Änderung in die Quere kommen.
+
+# Sind die Volumes überhaupt beschreibbar?
+#
+# Ein Volume behält die Eigentümerschaft dessen, der es zuerst angefasst hat.
+# Hing früher ein anderer Container daran — etwa ein Sicherungs-Beiwagen aus
+# einem Postgres-Abbild —, gehört es dessen Benutzer, und dieser hier (node,
+# UID 1000) darf nicht hinein. Das fällt sonst erst auf, wenn jemand auf
+# „Jetzt sichern" drückt und einen tar-Fehler zu lesen bekommt, oder gar nicht:
+# Die nächtliche Sicherung scheitert still, und niemand vermisst sie, bis sie
+# gebraucht wird.
+pruefe_schreibbar() {
+  verzeichnis="$1"
+  zweck="$2"
+  mkdir -p "$verzeichnis" 2>/dev/null
+  if ! touch "$verzeichnis/.probe" 2>/dev/null; then
+    echo "WARNUNG: $verzeichnis ist nicht beschreibbar — $zweck wird scheitern." >&2
+    echo "         Einmalig auf dem Server beheben, der Stack darf dabei laufen:" >&2
+    echo "         docker run --rm -v <stack>_$(basename "$verzeichnis"):/v alpine chown -R 1000:1000 /v" >&2
+  else
+    rm -f "$verzeichnis/.probe"
+  fi
+}
+
+pruefe_schreibbar /app/backups "die Sicherung"
+pruefe_schreibbar /app/media "das Hochladen von Bildern"
+
 if [ "$ROLLE" = "buero" ]; then
   echo "Rolle buero: Migrationen und Startdaten macht der Web-Container."
   echo "Starte Server …"
