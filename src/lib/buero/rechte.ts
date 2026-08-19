@@ -18,6 +18,15 @@ import { useRahmen } from './bestand'
  * Abgleich stehen ohnehin keine Zahlen da, die man verbergen müsste.
  */
 export function useDarf(): (recht: string) => boolean {
-  const { rechte } = useRahmen()
-  return useCallback((recht: string) => rechte.length === 0 || rechte.includes(recht), [rechte])
+  const rahmen = useRahmen()
+  return useCallback(
+    (recht: string) => {
+      // `?? []` als doppelter Boden: Ein Rahmen aus einer älteren Fassung im
+      // Gerät kennt das Feld womöglich nicht, und ein Absturz hier reißt die
+      // ganze Seite mit.
+      const rechte = rahmen.rechte ?? []
+      return rechte.length === 0 || rechte.includes(recht)
+    },
+    [rahmen.rechte],
+  )
 }

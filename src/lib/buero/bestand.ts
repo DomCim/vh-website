@@ -145,7 +145,17 @@ export function bestandLaden(): Promise<void> {
     try {
       const gemerkt = await merkenLesen<Rahmen>('rahmen')
       if (gemerkt) {
-        rahmen = gemerkt
+        /*
+         * Über die Voreinstellungen legen, nie ersetzen.
+         *
+         * Der gespeicherte Rahmen ist so alt wie der letzte Abgleich — er kann
+         * von einer Fassung stammen, die neue Felder noch nicht kannte. Nach
+         * dem Rollen-Umbau lag in den Geräten ein Rahmen ohne `rechte`, die
+         * Navigation fragte `rechte.length`, und das ganze Büro stand mit
+         * „Application error" da — bis zum nächsten Abgleich, den es so nie
+         * gab. Deshalb: Was fehlt, kommt aus RAHMEN_LEER.
+         */
+        rahmen = { ...RAHMEN_LEER, ...gemerkt }
         for (const h of rahmenHoerer) h()
       }
     } catch {
@@ -247,7 +257,7 @@ export function abgleichen(nurBereiche?: Bereich[]): Promise<void> {
         }
 
         if (ergebnis.rahmen) {
-          rahmen = ergebnis.rahmen
+          rahmen = { ...RAHMEN_LEER, ...ergebnis.rahmen }
           for (const h of rahmenHoerer) h()
           if (speicherVerfuegbar()) {
             await merkenSchreiben('rahmen', ergebnis.rahmen).catch(() => undefined)

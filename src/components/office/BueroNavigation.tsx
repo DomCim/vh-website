@@ -129,7 +129,7 @@ export function BueroNavigation() {
   const [blattOffen, setBlattOffen] = useState(false)
   const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
   const leiste = useRef<HTMLElement>(null)
-  const { rechte } = useRahmen()
+  const rahmen = useRahmen()
 
   /*
    * Was jemand nicht darf, steht auch nicht in der Leiste.
@@ -139,12 +139,15 @@ export function BueroNavigation() {
    * Laden kurz zusammenschrumpft und dann wieder wächst, sieht kaputt aus.
    */
   const gruppen = useMemo(() => {
+    // `?? []` als doppelter Boden: Ein Rahmen aus einer älteren Fassung im
+    // Gerät kennt das Feld nicht — und die Navigation hängt an jeder Seite.
+    const rechte = rahmen.rechte ?? []
     if (!rechte.length) return BEREICHE
     return BEREICHE.map((b) => ({
       ...b,
       punkte: b.punkte.filter((p) => !p.recht || rechte.includes(p.recht)),
     })).filter((b) => b.punkte.length > 0)
-  }, [rechte])
+  }, [rahmen.rechte])
 
   // Beim Seitenwechsel schließen — sonst bliebe das Blatt über der neuen Seite
   useEffect(() => {
