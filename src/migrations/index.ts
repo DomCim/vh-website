@@ -22,6 +22,7 @@ import * as migration_20260818_230824_grabsteine from './20260818_230824_grabste
 import * as migration_20260819_092633_entwuerfe from './20260819_092633_entwuerfe';
 import * as migration_20260819_093716_rollen from './20260819_093716_rollen';
 import * as migration_20260819_101556_anzahlungen from './20260819_101556_anzahlungen';
+import * as migration_20260819_102635_rechnungsnummern from './20260819_102635_rechnungsnummern';
 
 export const migrations = [
   {
@@ -142,6 +143,11 @@ export const migrations = [
   {
     up: migration_20260819_101556_anzahlungen.up,
     down: migration_20260819_101556_anzahlungen.down,
-    name: '20260819_101556_anzahlungen'
+    name: '20260819_101556_anzahlungen',
+  },
+  {
+    up: migration_20260819_102635_rechnungsnummern.up,
+    down: migration_20260819_102635_rechnungsnummern.down,
+    name: '20260819_102635_rechnungsnummern'
   },
 ];

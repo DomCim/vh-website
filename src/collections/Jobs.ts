@@ -341,6 +341,42 @@ export const Jobs: CollectionConfig = {
         },
       ],
     },
+    {
+      /*
+       * Die gemeinsame Nummer aller Rechnungen zu diesem Auftrag.
+       *
+       * Vergeben wird sie einmal — wenn die erste Stufe gestellt wird — und
+       * danach nie wieder. Die einzelnen Rechnungen heißen dann
+       * `RE-2026-0042-1/3`, `-2/3`, `-3/3`.
+       */
+      name: 'rechnungsBasis',
+      label: 'Rechnungsnummer (gemeinsam)',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Entsteht mit der ersten Rechnung zu diesem Auftrag.',
+      },
+    },
+    {
+      /*
+       * Wie viele Rechnungen es zusammen sein werden — der Nenner.
+       *
+       * Eingefroren beim Stellen der ersten Stufe. Er darf sich danach nicht
+       * mehr ändern: Eine Rechnung, die beim Kunden liegt, behält ihre
+       * Nummer. Würde aus `-1/2` nachträglich `-1/3`, gäbe es zwei Papiere
+       * mit verschiedenen Nummern für denselben Vorgang, und beim Prüfen
+       * fehlt dann eines von beiden.
+       */
+      name: 'stufenGesamt',
+      label: 'Anzahl der Rechnungen',
+      type: 'number',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Steht fest, sobald die erste Rechnung gestellt ist.',
+      },
+    },
     { name: 'invoice', label: 'Rechnung', type: 'relationship', relationTo: 'outgoing-invoices' },
     { name: 'project', label: 'Referenz', type: 'relationship', relationTo: 'projects' },
   ],

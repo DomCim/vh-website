@@ -44,6 +44,47 @@ export async function naechsteRechnungsnummer(payload: Payload): Promise<string>
   return `RE-${jahr}-${String(nummer).padStart(4, '0')}`
 }
 
+/**
+ * Die gemeinsame Nummer eines gestuften Auftrags, z.B. RE-2026-0042.
+ *
+ * Alle Rechnungen zu einem Auftrag teilen sich diese Nummer und
+ * unterscheiden sich nur im Zusatz: `RE-2026-0042-1/3`, `-2/3`, `-3/3`. Wer
+ * eine davon in der Hand hält, sieht sofort, wozu sie gehört und wie viele
+ * es insgesamt sind — bei drei fortlaufenden Nummern quer durchs Jahr sieht
+ * man das nicht.
+ *
+ * Die drei verbrauchen zusammen **eine** Nummer aus der laufenden Reihe. Das
+ * ist die Absicht: Die Reihe bleibt lückenlos, und jede einzelne Rechnung
+ * bleibt trotzdem eindeutig bezeichnet.
+ */
+export const naechsteRechnungsBasis = naechsteRechnungsnummer
+
+/**
+ * Die Nummer einer einzelnen Stufe.
+ *
+ * Der Nenner steht fest, sobald die erste Stufe gestellt ist — er darf sich
+ * danach nicht mehr ändern. Eine Rechnung, die beim Kunden liegt, behält ihre
+ * Nummer; würde aus `-1/2` nachträglich `-1/3`, gäbe es zwei Papiere mit
+ * verschiedenen Nummern für denselben Vorgang, und beim Prüfen fehlt dann
+ * eines von beiden.
+ */
+export function stufenNummer(basis: string, nummer: number, gesamt: number): string {
+  return `${basis}-${nummer}/${gesamt}`
+}
+
+/**
+ * Dieselbe Nummer, aber als Dateiname brauchbar.
+ *
+ * Der Schrägstrich gehört auf das Blatt und darf nicht in einen Dateinamen:
+ * Dort trennt er Verzeichnisse. Aus `RE-2026-0042-1/3.pdf` würde sonst der
+ * Versuch, in ein Verzeichnis `RE-2026-0042-1` zu schreiben, das es nicht
+ * gibt — und im günstigen Fall scheitert das, im ungünstigen landet die Datei
+ * irgendwo anders.
+ */
+export function alsDateiname(nummer: string): string {
+  return nummer.replace(/\//g, '-von-')
+}
+
 /** Angebotsnummer, z.B. AN-2026-0003 */
 export async function naechsteAngebotsnummer(payload: Payload): Promise<string> {
   const jahr = new Date().getFullYear()

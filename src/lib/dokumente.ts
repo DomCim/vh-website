@@ -5,6 +5,7 @@ import { rechnungPdf } from './invoice'
 import { lieferscheinPdf } from './lieferschein'
 import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
 import { firmenAngaben } from './settings'
+import { alsDateiname } from './nummernkreis'
 
 /**
  * Kundendokumente an einer Stelle.
@@ -195,7 +196,7 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
 
   return {
     datei,
-    dateiname: `${r.invoiceNumber}.pdf`,
+    dateiname: `${alsDateiname(r.invoiceNumber)}.pdf`,
     betreff: `Rechnung ${r.invoiceNumber}`,
     an: await partnerMail(payload, r.customer),
     text:
@@ -225,7 +226,7 @@ export async function rechnungFacturX(
   const angaben = await firma(payload)
   return {
     xml: facturXml(facturxAusRechnung(r, angaben), angaben),
-    dateiname: `${r.invoiceNumber}-factur-x.xml`,
+    dateiname: `${alsDateiname(r.invoiceNumber)}-factur-x.xml`,
   }
 }
 
@@ -283,7 +284,7 @@ export async function mahnungDokument(
 
   return {
     datei,
-    dateiname: `${titel.replace(/ /g, '-')}-${r.invoiceNumber}.pdf`,
+    dateiname: `${titel.replace(/ /g, '-')}-${alsDateiname(r.invoiceNumber)}.pdf`,
     betreff: `${titel} zur Rechnung ${r.invoiceNumber}`,
     an: await partnerMail(payload, r.customer),
     text:

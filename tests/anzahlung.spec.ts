@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { abzugsZeilen, inStufen, stufenBerechnen } from '../src/lib/anzahlung'
+import { alsDateiname, stufenNummer } from '../src/lib/nummernkreis'
 
 /**
  * Zahlung in Stufen — die Rechenwege, an denen Geld hängt.
@@ -98,5 +99,31 @@ test.describe('Zahlung in Stufen', () => {
 
   test('Vorstufen ohne Betrag stehen nicht auf dem Blatt', () => {
     expect(abzugsZeilen([{ stufe: 'anzahlung', netto: 0 }])).toHaveLength(0)
+  })
+})
+
+test.describe('Rechnungsnummern in Stufen', () => {
+  test('teilen sich die Nummer und zählen nur den Zusatz hoch', () => {
+    const basis = 'RE-2026-0042'
+    expect(stufenNummer(basis, 1, 3)).toBe('RE-2026-0042-1/3')
+    expect(stufenNummer(basis, 2, 3)).toBe('RE-2026-0042-2/3')
+    expect(stufenNummer(basis, 3, 3)).toBe('RE-2026-0042-3/3')
+  })
+
+  test('bei nur zwei Stufen stimmt auch der Nenner', () => {
+    expect(stufenNummer('RE-2026-0007', 2, 2)).toBe('RE-2026-0007-2/2')
+  })
+
+  /*
+   * Der Schrägstrich gehört auf das Blatt und nicht in einen Dateinamen —
+   * dort trennt er Verzeichnisse. Aus `RE-2026-0042-1/3.pdf` würde der
+   * Versuch, in ein Verzeichnis zu schreiben, das es nicht gibt.
+   */
+  test('als Dateiname ohne Schrägstrich', () => {
+    expect(alsDateiname('RE-2026-0042-1/3')).toBe('RE-2026-0042-1-von-3')
+    expect(alsDateiname('RE-2026-0042-1/3')).not.toContain('/')
+    expect(alsDateiname('RE-2026-0007'), 'normale Nummern bleiben, wie sie sind').toBe(
+      'RE-2026-0007',
+    )
   })
 })

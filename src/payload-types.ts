@@ -936,6 +936,14 @@ export interface Job {
    * Bestellschein, Mail-Ausdruck oder Auftragsschreiben.
    */
   orderDocument?: (number | null) | Media;
+  /**
+   * Entsteht mit der ersten Rechnung zu diesem Auftrag.
+   */
+  rechnungsBasis?: string | null;
+  /**
+   * Steht fest, sobald die erste Rechnung gestellt ist.
+   */
+  stufenGesamt?: number | null;
   invoice?: (number | null) | OutgoingInvoice;
   project?: (number | null) | Project;
   updatedAt: string;
@@ -1850,6 +1858,8 @@ export interface JobsSelect<T extends boolean = true> {
   orderedAt?: T;
   confirmedAt?: T;
   orderDocument?: T;
+  rechnungsBasis?: T;
+  stufenGesamt?: T;
   invoice?: T;
   project?: T;
   updatedAt?: T;
