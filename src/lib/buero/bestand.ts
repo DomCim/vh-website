@@ -41,6 +41,7 @@ export type Datensatz = Record<string, unknown> & { id: number | string }
  * liegt ebenfalls im Gerät, damit es auch ohne Netz da ist.
  */
 export type Rahmen = {
+  benutzer: { email: string; name: string }
   kiVerfuegbar: boolean
   stundensatz: number
   wunschaufschlag: number
@@ -48,6 +49,7 @@ export type Rahmen = {
 }
 
 const RAHMEN_LEER: Rahmen = {
+  benutzer: { email: '', name: '' },
   kiVerfuegbar: false,
   stundensatz: 65,
   wunschaufschlag: 40,

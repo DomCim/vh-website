@@ -47,8 +47,12 @@ type BereichsAntwort = {
  * eine Seite ohne Netz etwa nicht, ob der KI-Zugang eingerichtet ist, und
  * bliebe bei einem ausgegrauten Knopf stehen, ohne zu sagen warum.
  */
-async function rahmen(payload: Awaited<ReturnType<typeof payloadClient>>) {
+async function rahmen(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+  benutzer: { email?: string; name?: string },
+) {
   const rahmen = {
+    benutzer: { email: benutzer.email ?? '', name: benutzer.name ?? '' },
     kiVerfuegbar: false,
     stundensatz: 65,
     wunschaufschlag: 40,
@@ -165,6 +169,6 @@ export async function POST(req: Request) {
     bereiche: antwort,
     // Diese Bereiche bitte vorher leeren — der bisherige Bestand ist zu alt
     voll: vollstaendig,
-    rahmen: await rahmen(payload),
+    rahmen: await rahmen(payload, user as { email?: string; name?: string }),
   })
 }
