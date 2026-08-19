@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation'
 import React from 'react'
 
 import { Benachrichtigungen } from '../../../../components/office/Benachrichtigungen'
+import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwaltung'
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
+import { MeinKonto } from '../../../../components/office/MeinKonto'
 import { useRahmen } from '../../../../lib/buero/bestand'
 
 /**
@@ -23,6 +25,8 @@ import { useRahmen } from '../../../../lib/buero/bestand'
 
 const TEILE = [
   { schluessel: 'geraet', label: 'Dieses Gerät' },
+  { schluessel: 'konto', label: 'Mein Konto' },
+  { schluessel: 'benutzer', label: 'Benutzer' },
   { schluessel: 'betrieb', label: 'Betrieb' },
   { schluessel: 'integrationen', label: 'Integrationen' },
 ] as const
@@ -55,20 +59,11 @@ export function EinstellungenAnsicht() {
         ))}
       </div>
 
-      {teil === 'geraet' && (
-        <>
-          <Benachrichtigungen />
+      {teil === 'geraet' && <Benachrichtigungen />}
 
-          <h2>Anmeldung</h2>
-          <p className="buero-unterzeile">
-            Zwei-Faktor und Passkeys (Face ID, Fingerabdruck) werden{' '}
-            <Link href="/admin/account" style={{ textDecoration: 'underline' }}>
-              im eigenen Benutzerkonto
-            </Link>{' '}
-            eingerichtet.
-          </p>
-        </>
-      )}
+      {teil === 'konto' && <MeinKonto />}
+
+      {teil === 'benutzer' && <BenutzerVerwaltung />}
 
       {teil === 'betrieb' && (
         <EinstellungenFormular bereich="betrieb" titel="Betrieb und Website" />
