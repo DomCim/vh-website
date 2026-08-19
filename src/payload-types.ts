@@ -865,6 +865,19 @@ export interface Job {
    */
   status: 'geplant' | 'inFertigung' | 'fertig' | 'geliefert' | 'abgebrochen';
   /**
+   * Anzahlung und Zwischenrechnung als Anteil am Auftragswert. Der Rest ist die Schlussrechnung.
+   */
+  zahlplan?: {
+    /**
+     * Fällig mit der Auftragsbestätigung, vor Fertigungsbeginn.
+     */
+    anzahlungProzent?: number | null;
+    /**
+     * Fällig, sobald der Meilenstein unten erreicht ist.
+     */
+    zwischenProzent?: number | null;
+  };
+  /**
    * Erreicht der Auftrag diesen Punkt, wird die Zwischenrechnung vorbereitet.
    */
   meilenstein?: {
@@ -1814,6 +1827,12 @@ export interface QuotesSelect<T extends boolean = true> {
 export interface JobsSelect<T extends boolean = true> {
   jobNumber?: T;
   status?: T;
+  zahlplan?:
+    | T
+    | {
+        anzahlungProzent?: T;
+        zwischenProzent?: T;
+      };
   meilenstein?:
     | T
     | {

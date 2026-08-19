@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { office } from '../access'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
+import { entwurfFuerStufe } from '../lib/rechnungsstufen'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -47,7 +48,39 @@ export const Jobs: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, req, operation }) => {
+        /*
+         * Die drei Auslöser der gestuften Zahlung. Jeder legt einen Entwurf an
+         * und sonst nichts — verschickt wird von Hand (siehe
+         * lib/rechnungsstufen.ts).
+         */
+        if (operation === 'create') {
+          // Der Auftrag entsteht: Das ist die Auftragsbestätigung.
+          await entwurfFuerStufe(req.payload, doc.id, 'anzahlung', req).catch((err) =>
+            req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Anzahlung nicht vorbereitet`),
+          )
+          return doc
+        }
         if (operation !== 'update') return doc
+
+        // Meilenstein erreicht — das Datum ist der Auslöser, nicht ein Status
+        if (doc.meilenstein?.erreichtAm && !previousDoc?.meilenstein?.erreichtAm) {
+          await entwurfFuerStufe(req.payload, doc.id, 'zwischen', req).catch((err) =>
+            req.payload.logger.error(
+              { err },
+              `Auftrag ${doc.jobNumber}: Zwischenrechnung nicht vorbereitet`,
+            ),
+          )
+        }
+
+        // Fertig heißt: Die Schlussrechnung gehört gestellt, bevor geliefert wird
+        if (doc.status === 'fertig' && previousDoc?.status !== 'fertig') {
+          await entwurfFuerStufe(req.payload, doc.id, 'schluss', req).catch((err) =>
+            req.payload.logger.error(
+              { err },
+              `Auftrag ${doc.jobNumber}: Schlussrechnung nicht vorbereitet`,
+            ),
+          )
+        }
 
         // Bestellung mitziehen: der Kunde erfährt vom Fertigungsstart
         const bestellId = typeof doc.order === 'object' ? doc.order?.id : doc.order
@@ -61,6 +94,7 @@ export const Jobs: CollectionConfig = {
                 id: bestellId,
                 depth: 0,
                 overrideAccess: true,
+                req,
               })
               // Versand nur, wenn eine Sendungsnummer vorliegt — sonst ginge
               // die Versandmail ohne Sendungsverfolgung raus
@@ -70,6 +104,7 @@ export const Jobs: CollectionConfig = {
                   collection: 'orders',
                   id: bestellId,
                   overrideAccess: true,
+                  req,
                   data: {
                     status: neuerStatus,
                     ...(doc.dueDate && neuerStatus === 'inProduction'
@@ -84,7 +119,15 @@ export const Jobs: CollectionConfig = {
           }
         }
 
-        // Material erst beim Abschluss abbuchen — vorher steht es nur als Plan
+        /*
+         * Material erst beim Abschluss abbuchen — vorher steht es nur als Plan.
+         *
+         * Alle Abfragen hier tragen `req`. Ohne das nimmt jede eine eigene
+         * Verbindung, und die letzte schreibt an den Auftrag zurück, der
+         * gerade geschrieben wird: Die zweite Verbindung wartet auf die Sperre
+         * der ersten, die erste wartet auf diesen Hook. Damit blieb jedes
+         * Fertigmelden hängen, bis irgendwann eine Zeitüberschreitung kam.
+         */
         const fertigJetzt = doc.status === 'fertig' && previousDoc?.status !== 'fertig'
         if (fertigJetzt && !doc.materialGebucht) {
           for (const zeile of doc.material ?? []) {
@@ -96,12 +139,14 @@ export const Jobs: CollectionConfig = {
                 id,
                 depth: 0,
                 overrideAccess: true,
+                req,
               })
               if (!posten) continue
               await req.payload.update({
                 collection: 'inventory-items',
                 id,
                 overrideAccess: true,
+                req,
                 data: { quantity: Math.round(((posten.quantity ?? 0) - zeile.quantity) * 100) / 100 },
               })
             } catch (err) {
@@ -112,6 +157,7 @@ export const Jobs: CollectionConfig = {
             collection: 'jobs',
             id: doc.id,
             overrideAccess: true,
+            req,
             data: { materialGebucht: true },
             context: { skipHooks: true },
           })
@@ -149,6 +195,46 @@ export const Jobs: CollectionConfig = {
         description:
           'Bei einer Shop-Bestellung löst „In Fertigung" die E-Mail an die Kundschaft aus.',
       },
+    },
+    {
+      /*
+       * Wie dieser Auftrag bezahlt wird.
+       *
+       * Die Sätze stehen am Artikel — dort gehören sie hin, weil ein Regal
+       * anders bezahlt wird als ein Sofa nach Maß. Hierher kommen sie als
+       * Abschrift beim Anlegen und werden dann nicht mehr nachgeführt: Was mit
+       * der Kundschaft vereinbart wurde, darf sich nicht ändern, weil jemand
+       * Monate später den Artikel im Shop anfasst.
+       *
+       * Beide auf 0 heißt: eine Rechnung am Ende, wie bisher.
+       */
+      name: 'zahlplan',
+      label: 'Zahlung in Stufen',
+      type: 'group',
+      admin: {
+        description:
+          'Anzahlung und Zwischenrechnung als Anteil am Auftragswert. Der Rest ist die Schlussrechnung.',
+      },
+      fields: [
+        {
+          name: 'anzahlungProzent',
+          label: 'Anzahlung (%)',
+          type: 'number',
+          min: 0,
+          max: 100,
+          defaultValue: 0,
+          admin: { description: 'Fällig mit der Auftragsbestätigung, vor Fertigungsbeginn.' },
+        },
+        {
+          name: 'zwischenProzent',
+          label: 'Zwischenrechnung (%)',
+          type: 'number',
+          min: 0,
+          max: 100,
+          defaultValue: 0,
+          admin: { description: 'Fällig, sobald der Meilenstein unten erreicht ist.' },
+        },
+      ],
     },
     {
       /*

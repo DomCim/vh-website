@@ -40,6 +40,20 @@ export async function POST(req: Request) {
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,
       orderedAt: b.orderedAt || undefined,
+      zahlplan: {
+        anzahlungProzent: Number(b.anzahlungProzent) || 0,
+        zwischenProzent: Number(b.zwischenProzent) || 0,
+      },
+      /*
+       * Das Datum am Meilenstein legt die Zwischenrechnung an. Es kommt
+       * deshalb genauso aus dem Formular wie alles andere — der Auslöser sitzt
+       * am Datenmodell, nicht hier, damit er auch greift, wenn die Änderung
+       * aus dem Admin oder vom KI-Zugang kommt.
+       */
+      meilenstein: {
+        bezeichnung: b.meilensteinBezeichnung || undefined,
+        erreichtAm: b.meilensteinErreichtAm || undefined,
+      },
     }
 
     const doc = b.id

@@ -2,6 +2,13 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Rechnungen entstehen von selbst, verschickt werden sie von Hand
+
+- **Drei Auslöser, drei Entwürfe.** Wer in Stufen zahlt, bekommt die Rechnungen nicht mehr abgetippt: Die Anzahlung entsteht mit dem Auftrag, die Zwischenrechnung, sobald am Meilenstein ein Datum steht, die Schlussrechnung, wenn der Auftrag auf „Fertig" springt. Jede davon liegt als **Entwurf** in der Liste, mit einer Meldung aufs Handy — abgeschickt wird sie von Hand. Ein versehentlich gesetzter Status kostet damit einen Entwurf und keine Rechnung beim Kunden.
+- **Die Schlussrechnung zieht die Vorstufen einzeln ab**, mit Nummer, Datum und ihrer Umsatzsteuer. Das ist der Teil, an dem es teuer wird: Ohne benannten Abzug ist dieselbe Steuer zweimal erklärt, und beim Finanzamt zählt die höhere. 1000 € Auftrag, 30 % Anzahlung, 20 % Zwischenrechnung ergeben eine Schlussrechnung über 500 € netto — mit beiden Vorstufen sichtbar auf dem Blatt.
+- **Die Anteile stehen am Auftrag**, nicht mehr nur am Artikel. Sie werden bei der Anlage vom Artikel abgeschrieben (über Anfrage und Angebot) und danach nicht mehr nachgeführt: Was mit der Kundschaft vereinbart wurde, darf sich nicht ändern, weil jemand Monate später den Artikel im Shop anfasst. Ab der ersten gestellten Rechnung sind sie festgeschrieben.
+- **Fertigmelden blieb hängen — behoben.** Beim Umstellen eines Auftrags auf „Fertig" schrieb das Abbuchen des Materials an denselben Auftrag zurück, aber auf einer zweiten Datenbankverbindung: Die wartete auf die Sperre der ersten, die erste auf das Ende des Abbuchens. Aufgefallen ist das erst beim Nachmessen mit einem echten Durchlauf.
+
 ## 19.08.2026 — Bezahlt wird über PayPal
 
 - **Stripe ist raus.** Karte, Apple Pay und Klarna liefen bisher über Stripe, PayPal stand als zweite Zahlart daneben. Geblieben ist PayPal — und darüber lässt sich ebenfalls mit Karte oder Lastschrift zahlen, auch ohne PayPal-Konto. Die Kasse fragt deshalb nicht mehr nach der Zahlungsart: Es gibt nur noch einen Weg, und der Betrag geht in einem Schritt raus. Der Webhook-Endpunkt entfällt ersatzlos — die Zahlung wird beim Rücksprung auf die Danke-Seite eingezogen, das braucht keinen Rückruf von außen.

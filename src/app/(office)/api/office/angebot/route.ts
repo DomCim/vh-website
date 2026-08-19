@@ -5,6 +5,38 @@ import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Die Zahlungsstufen des Artikels, über den die Anfrage lief.
+ *
+ * Ohne Anfrage oder ohne Artikel bleibt es bei null — dann wird der Auftrag am
+ * Ende in einem Stück abgerechnet, wie bisher. Das ist der häufigere Fall und
+ * der harmlosere: Eine vergessene Anzahlung kostet Vorfinanzierung, eine
+ * erfundene kostet Vertrauen.
+ */
+async function zahlplanAusAngebot(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+  anfrageId: unknown,
+): Promise<{ anzahlungProzent: number; zwischenProzent: number } | undefined> {
+  const id = typeof anfrageId === 'object' ? (anfrageId as { id?: number })?.id : anfrageId
+  if (typeof id !== 'number') return undefined
+  try {
+    const anfrage = await payload.findByID({
+      collection: 'inquiries',
+      id,
+      depth: 1,
+      overrideAccess: true,
+    })
+    const produkt = anfrage?.product
+    if (!produkt || typeof produkt !== 'object') return undefined
+    const anzahlung = Number(produkt.anzahlungProzent) || 0
+    const zwischen = Number(produkt.zwischenProzent) || 0
+    if (!anzahlung && !zwischen) return undefined
+    return { anzahlungProzent: anzahlung, zwischenProzent: zwischen }
+  } catch {
+    return undefined
+  }
+}
+
 /** Angebot anlegen, ändern oder in Auftrag bzw. Rechnung umwandeln. */
 export async function POST(req: Request) {
   try {
@@ -24,6 +56,14 @@ export async function POST(req: Request) {
       if (!angebot) return NextResponse.json({ error: 'nicht-gefunden' }, { status: 404 })
 
       if (b.aktion === 'in-auftrag') {
+        /*
+         * Die Zahlungsstufen kommen vom Artikel, über den gesprochen wurde:
+         * Anfrage → Angebot → Auftrag. Abgeschrieben, nicht verknüpft — was
+         * hier vereinbart ist, darf sich nicht ändern, weil jemand Monate
+         * später den Artikel im Shop anfasst.
+         */
+        const zahlplan = await zahlplanAusAngebot(payload, angebot.inquiry)
+
         const auftrag = await payload.create({
           collection: 'jobs',
           overrideAccess: true,
@@ -34,6 +74,7 @@ export async function POST(req: Request) {
             customerName: angebot.customerName ?? undefined,
             contact: (angebot.customer as number) ?? undefined,
             quote: angebot.id as number,
+            zahlplan,
             positions: (angebot.items ?? []).map((p) => ({
               description: p.description,
               quantity: p.quantity,

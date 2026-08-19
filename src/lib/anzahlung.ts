@@ -60,6 +60,37 @@ export function inStufen(plan: Zahlplan): boolean {
   return (Number(plan.anzahlungProzent) || 0) > 0 || (Number(plan.zwischenProzent) || 0) > 0
 }
 
+export type Stufe = 'anzahlung' | 'zwischen' | 'schluss'
+
+/**
+ * Welche Rechnungen es zu diesem Auftrag geben wird, in der Reihenfolge, in
+ * der sie gestellt werden.
+ *
+ * Die Schlussrechnung ist immer dabei — sie ist der Rest und wird nie
+ * eingetragen. Ohne Anzahlung und ohne Zwischenrechnung bleibt genau eine
+ * Rechnung übrig, und dann ist es gar keine gestufte Zahlung mehr: Die Liste
+ * ist dann leer, und alles Weitere läuft wie bei jeder anderen Rechnung.
+ */
+export function geplanteStufen(plan: Zahlplan | null | undefined): Stufe[] {
+  if (!plan || !inStufen(plan)) return []
+  const stufen: Stufe[] = []
+  if ((Number(plan.anzahlungProzent) || 0) > 0) stufen.push('anzahlung')
+  if ((Number(plan.zwischenProzent) || 0) > 0) stufen.push('zwischen')
+  stufen.push('schluss')
+  return stufen
+}
+
+/** Netto-Auftragswert aus den Positionen eines Auftrags. */
+export function auftragsWert(
+  positionen: { quantity?: number | null; price?: number | null }[] | null | undefined,
+): number {
+  const summe = (positionen ?? []).reduce(
+    (s, p) => s + (Number(p.quantity) || 0) * (Number(p.price) || 0),
+    0,
+  )
+  return aufCent(summe)
+}
+
 export type Vorstufe = {
   /** Rechnungsnummer, wie sie auf dem Papier steht */
   nummer?: string | null

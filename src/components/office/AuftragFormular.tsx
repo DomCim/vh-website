@@ -35,6 +35,11 @@ export type AuftragWerte = {
   customerOrderRef?: string | null
   orderedAt?: string | null
   confirmedAt?: string | null
+  anzahlungProzent?: number | null
+  zwischenProzent?: number | null
+  meilensteinBezeichnung?: string | null
+  meilensteinErreichtAm?: string | null
+  rechnungsBasis?: string | null
 }
 
 export type PostenAuswahl = { id: number; name: string; unit: string; quantity: number }
@@ -211,6 +216,54 @@ export function AuftragFormular({
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
           <VersandKnopf art="bestaetigung" id={w.id} leise />
         </div>
+      )}
+
+      <h2>Bezahlt wird in Stufen</h2>
+      <p className="buero-unterzeile">
+        Beide Felder leer oder 0: eine Rechnung am Ende. Sonst legt das Büro die Rechnungen von
+        selbst als <strong>Entwurf</strong> an — bei der Auftragsanlage, beim erreichten Meilenstein
+        und wenn der Auftrag auf „Fertig“ steht. Verschickt wird jede von Hand.
+      </p>
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Anzahlung (%)</span>
+          <input
+            inputMode="decimal"
+            value={w.anzahlungProzent ?? ''}
+            onChange={(e) => setzen({ anzahlungProzent: Number(e.target.value) || 0 })}
+            disabled={Boolean(w.rechnungsBasis)}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Zwischenrechnung (%)</span>
+          <input
+            inputMode="decimal"
+            value={w.zwischenProzent ?? ''}
+            onChange={(e) => setzen({ zwischenProzent: Number(e.target.value) || 0 })}
+            disabled={Boolean(w.rechnungsBasis)}
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Meilenstein</span>
+          <input
+            value={w.meilensteinBezeichnung ?? ''}
+            onChange={(e) => setzen({ meilensteinBezeichnung: e.target.value })}
+            placeholder="Rohbau fertig"
+          />
+        </label>
+        <label className="buero-feld">
+          <span>Erreicht am</span>
+          <input
+            type="date"
+            value={nurTag(w.meilensteinErreichtAm)}
+            onChange={(e) => setzen({ meilensteinErreichtAm: e.target.value })}
+          />
+        </label>
+      </div>
+      {w.rechnungsBasis && (
+        <p className="buero-unterzeile">
+          Erste Rechnung ist gestellt ({w.rechnungsBasis}) — die Anteile stehen damit fest.
+        </p>
       )}
 
       <h2>Was gefertigt wird</h2>

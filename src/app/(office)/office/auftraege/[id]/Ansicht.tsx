@@ -129,6 +129,11 @@ export function AuftragAnsicht() {
           customerOrderRef: j.customerOrderRef as string,
           orderedAt: j.orderedAt as string,
           confirmedAt: j.confirmedAt as string,
+          anzahlungProzent: (j.zahlplan as { anzahlungProzent?: number })?.anzahlungProzent ?? 0,
+          zwischenProzent: (j.zahlplan as { zwischenProzent?: number })?.zwischenProzent ?? 0,
+          meilensteinBezeichnung: (j.meilenstein as { bezeichnung?: string })?.bezeichnung ?? '',
+          meilensteinErreichtAm: (j.meilenstein as { erreichtAm?: string })?.erreichtAm ?? '',
+          rechnungsBasis: j.rechnungsBasis as string,
           positions: (j.positions ?? []).map((p) => ({
             description: p.description ?? '',
             quantity: p.quantity ?? 1,

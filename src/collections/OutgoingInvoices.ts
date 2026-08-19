@@ -1,9 +1,90 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Payload, PayloadRequest } from 'payload'
 
 import { office } from '../access'
+import { geplanteStufen } from '../lib/anzahlung'
 import { betraege } from '../lib/betraege'
-import { naechsteRechnungsnummer } from '../lib/nummernkreis'
+import { naechsteRechnungsBasis, naechsteRechnungsnummer, stufenNummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
+
+/**
+ * Die Nummer einer Stufe: `RE-2026-0042-2/3`.
+ *
+ * Basis und Nenner entstehen beim Stellen der **ersten** Stufe und werden am
+ * Auftrag eingefroren. Sie dürfen sich danach nicht mehr ändern: Eine Rechnung,
+ * die beim Kunden liegt, behält ihre Nummer — würde aus `-1/2` nachträglich
+ * `-1/3`, gäbe es zwei Papiere mit verschiedenen Nummern für denselben Vorgang.
+ *
+ * Der Zähler ist bewusst „die wievielte gestellte Rechnung", nicht die Stelle
+ * der Stufe im Plan. Der Plan kann sich zwischendurch ändern; die Reihenfolge,
+ * in der gestellt wurde, kann es nicht.
+ */
+async function stufenNummerVergeben(
+  payload: Payload,
+  auftragId: number | string,
+  req: PayloadRequest,
+): Promise<string> {
+  const id = typeof auftragId === 'object' ? (auftragId as { id?: number })?.id : auftragId
+  const auftrag = await payload
+    .findByID({ collection: 'jobs', id: id as number, depth: 0, overrideAccess: true, req })
+    .catch(() => null)
+  if (!auftrag) return naechsteRechnungsnummer(payload)
+
+  let basis = auftrag.rechnungsBasis
+  let gesamt = auftrag.stufenGesamt
+
+  if (!basis) {
+    basis = await naechsteRechnungsBasis(payload)
+    gesamt = geplanteStufen(auftrag.zahlplan).length || 1
+    await payload.update({
+      collection: 'jobs',
+      id: auftrag.id,
+      overrideAccess: true,
+      data: { rechnungsBasis: basis, stufenGesamt: gesamt },
+      context: { skipHooks: true },
+      req,
+    })
+  }
+
+  const { totalDocs } = await payload.count({
+    collection: 'outgoing-invoices',
+    where: {
+      auftrag: { equals: auftrag.id },
+      invoiceNumber: { exists: true },
+      stufe: { not_equals: 'vollstaendig' },
+    },
+    overrideAccess: true,
+    req,
+  })
+
+  const nenner = Math.max(gesamt || 1, totalDocs + 1)
+  return stufenNummer(basis, totalDocs + 1, nenner)
+}
+
+/** Fällig am — Vorgabe je Stufe aus den Einstellungen. */
+async function faelligAm(
+  payload: Payload,
+  stufe: string,
+  ab: string,
+  req: PayloadRequest,
+): Promise<string | undefined> {
+  try {
+    const integrationen = (await payload.findGlobal({ slug: 'integrations', depth: 0, req })) as {
+      zahlungsziele?: Record<string, number | null | undefined>
+    }
+    const tage =
+      stufe === 'anzahlung'
+        ? integrationen?.zahlungsziele?.anzahlungTage
+        : stufe === 'zwischen'
+          ? integrationen?.zahlungsziele?.zwischenTage
+          : integrationen?.zahlungsziele?.schlussTage
+    if (!tage) return undefined
+    const datum = new Date(ab)
+    datum.setDate(datum.getDate() + Number(tage))
+    return datum.toISOString()
+  } catch {
+    return undefined
+  }
+}
 
 /**
  * Ausgangsrechnungen fürs Projektgeschäft — alles, was nicht über den Shop
@@ -55,8 +136,20 @@ export const OutgoingInvoices: CollectionConfig = {
           data.status && data.status !== 'entwurf' && originalDoc?.status === 'entwurf'
         const istNeuUndFest = operation === 'create' && data.status && data.status !== 'entwurf'
         if ((wirdFestgeschrieben || istNeuUndFest) && !data.invoiceNumber) {
-          data.invoiceNumber = await naechsteRechnungsnummer(req.payload)
           if (!data.issueDate) data.issueDate = new Date().toISOString()
+
+          const stufe = data.stufe ?? originalDoc?.stufe
+          const auftragId = data.auftrag ?? originalDoc?.auftrag
+          const gestuft = stufe && stufe !== 'vollstaendig' && auftragId
+
+          data.invoiceNumber = gestuft
+            ? await stufenNummerVergeben(req.payload, auftragId, req)
+            : await naechsteRechnungsnummer(req.payload)
+
+          // Zahlungsziel je Stufe — an der Rechnung bleibt es änderbar
+          if (!data.dueDate && gestuft) {
+            data.dueDate = await faelligAm(req.payload, stufe, data.issueDate, req)
+          }
         }
         return data
       },
@@ -236,11 +329,20 @@ export const OutgoingInvoices: CollectionConfig = {
             { name: 'quantity', label: 'Menge', type: 'number', required: true, defaultValue: 1 },
             { name: 'unit', label: 'Einheit', type: 'text', defaultValue: 'Stück' },
             {
+              /*
+               * Ohne Untergrenze — und das ist Absicht.
+               *
+               * Die Schlussrechnung eines gestuften Auftrags führt die schon
+               * gestellten Anzahlungen einzeln auf und zieht sie ab; solche
+               * Zeilen sind negativ. Eine Untergrenze von 0 hat genau das
+               * verhindert: Der Entwurf der Schlussrechnung entstand nicht,
+               * und im Protokoll stand nur eine Validierungsmeldung, die
+               * niemand liest.
+               */
               name: 'unitPrice',
               label: 'Einzelpreis netto (EUR)',
               type: 'number',
               required: true,
-              min: 0,
             },
             {
               name: 'vatRate',
