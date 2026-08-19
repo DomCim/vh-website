@@ -1,9 +1,29 @@
 name: Prüfen (Typen, Lint, Build, Rauchtests)
 
+# Läuft bewusst NICHT bei jedem Push.
+#
+# Actions-Minuten kosten Geld, und `push:` ohne Einschränkung hieß: jeder
+# Commit auf jedem Arbeitszweig ein voller Lauf mit Postgres, Build und
+# Browser-Tests — bei einem Arbeitstag mit zehn Commits zehn Läufe, von denen
+# neun niemand ansieht. Das Kontingent war davon aufgebraucht.
+#
+# Geprüft wird stattdessen, wo es zählt: am Pull Request (dort steht das
+# Ergebnis vor dem Merge — HANDOVER: „CI abwarten, nicht vorher mergen"),
+# auf main nach dem Merge, und von Hand, wenn man es zwischendurch wissen
+# will. Lokal läuft dieselbe Strecke mit `pnpm typecheck && pnpm lint &&
+# pnpm exec playwright test`.
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
+
+# Ein neuer Stand bricht den laufenden Lauf desselben Zweigs ab — der alte
+# prüft etwas, das es schon nicht mehr gibt, und kostet trotzdem Minuten.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pruefen:
