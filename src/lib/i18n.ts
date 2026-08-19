@@ -96,6 +96,13 @@ const de = {
     vatIncluded: 'inkl. {rate} % MwSt.',
     backToCart: 'Zurück zum Warenkorb',
     error: 'Die Bestellung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.',
+    verifyTitle: 'E-Mail-Adresse bestätigen',
+    verifyIntro:
+      'Wir haben Ihnen einen sechsstelligen Code an {email} geschickt. Bitte tragen Sie ihn hier ein — erst dann wird die Bestellung ausgelöst.',
+    verifyCode: 'Sechsstelliger Code',
+    verifyWrong: 'Der Code stimmt nicht. Bitte prüfen Sie die Eingabe.',
+    verifyExpired: 'Der Code ist abgelaufen. Beim nächsten Klick auf „Bestellen" kommt ein neuer.',
+    verifyLocked: 'Zu viele Fehlversuche. Beim nächsten Klick auf „Bestellen" kommt ein neuer Code.',
     errorNoPayment:
       'Die Bezahlung ist derzeit nicht möglich. Bitte nehmen Sie kurz Kontakt mit uns auf — wir schließen Ihre Bestellung dann persönlich ab.',
   },
@@ -396,6 +403,13 @@ const fr: Dictionary = {
     vatIncluded: 'TVA de {rate} % incluse',
     backToCart: 'Retour au panier',
     error: "La commande n'a pas pu être lancée. Veuillez réessayer.",
+    verifyTitle: "Confirmer l'adresse e-mail",
+    verifyIntro:
+      "Nous venons d'envoyer un code à six chiffres à {email}. Merci de le saisir ici — la commande ne part qu'ensuite.",
+    verifyCode: 'Code à six chiffres',
+    verifyWrong: 'Le code est incorrect. Merci de vérifier votre saisie.',
+    verifyExpired: 'Le code a expiré. Un nouveau code partira au prochain clic sur « Commander ».',
+    verifyLocked: 'Trop de tentatives. Un nouveau code partira au prochain clic sur « Commander ».',
     errorNoPayment:
       "Le paiement n'est pas possible pour le moment. Contactez-nous brièvement — nous finaliserons votre commande personnellement.",
   },
@@ -693,6 +707,13 @@ const en: Dictionary = {
     vatIncluded: 'incl. {rate} % VAT',
     backToCart: 'Back to cart',
     error: 'The order could not be started. Please try again.',
+    verifyTitle: 'Confirm your email address',
+    verifyIntro:
+      'We have sent a six-digit code to {email}. Please enter it here — the order is only placed after that.',
+    verifyCode: 'Six-digit code',
+    verifyWrong: 'That code is not correct. Please check your entry.',
+    verifyExpired: 'The code has expired. A new one is sent the next time you click "Order".',
+    verifyLocked: 'Too many attempts. A new code is sent the next time you click "Order".',
     errorNoPayment:
       'Payment is currently unavailable. Please get in touch — we will complete your order personally.',
   },

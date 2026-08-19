@@ -37,6 +37,12 @@ type CheckoutDict = {
   backToCart: string
   error: string
   errorNoPayment: string
+  verifyTitle: string
+  verifyIntro: string
+  verifyCode: string
+  verifyWrong: string
+  verifyExpired: string
+  verifyLocked: string
 }
 
 type CartDict = {
@@ -103,6 +109,17 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false)
   // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an"
   const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung'>(null)
+  /*
+   * Die Kasse bestellt erst, wenn die E-Mail-Adresse bestätigt ist. Der
+   * Server schickt beim ersten Absenden einen Code und antwortet mit
+   * „code-noetig" — dann erscheint hier das Eingabefeld, und der zweite
+   * Absendeversuch trägt den Code mit. Wer schon im Kundenportal angemeldet
+   * ist, sieht davon nichts.
+   */
+  const [codeNoetig, setCodeNoetig] = useState(false)
+  const [codeAn, setCodeAn] = useState('')
+  const [emailCode, setEmailCode] = useState('')
+  const [codeFehler, setCodeFehler] = useState<string | null>(null)
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping')
   const [differentAddress, setDifferentAddress] = useState(false)
   const [zustimmung, setZustimmung] = useState(false)
@@ -174,6 +191,7 @@ export function CheckoutForm({
             country: data.country,
           },
           note: data.note || undefined,
+          emailCode: emailCode || undefined,
           // Was bestätigt wurde, gehört in die Bestellung — im Streitfall zählt
           // nicht, was auf der Seite stand, sondern was belegbar ist.
           consent: { terms: true, waiver: einzelanfertigung ? verzicht : undefined },
@@ -181,6 +199,29 @@ export function CheckoutForm({
       })
       const result = (await res.json()) as { url?: string; error?: string }
       if (!res.ok || !result.url) {
+        if (result.error === 'code-noetig') {
+          setCodeNoetig(true)
+          setCodeAn(data.email)
+          setCodeFehler(null)
+          setEmailCode('')
+          setSubmitting(false)
+          return
+        }
+        if (result.error?.startsWith('code-')) {
+          setCodeNoetig(true)
+          setCodeFehler(
+            result.error === 'code-falsch'
+              ? dict.verifyWrong
+              : result.error === 'code-gesperrt'
+                ? dict.verifyLocked
+                : dict.verifyExpired,
+          )
+          // Abgelaufen oder gesperrt: Feld leeren — der nächste Klick auf
+          // „Bestellen" geht ohne Code raus, und der Server schickt einen neuen.
+          if (result.error !== 'code-falsch') setEmailCode('')
+          setSubmitting(false)
+          return
+        }
         // 503 heißt: Die Bezahlung ist gar nicht eingerichtet. Ein zweiter
         // Versuch scheitert genauso — das muss dranstehen.
         setError(res.status === 503 ? 'keine-zahlung' : 'allgemein')
@@ -308,6 +349,28 @@ export function CheckoutForm({
         )}
 
         <textarea name="note" rows={3} placeholder={dict.note} className={inputClass} />
+
+        {codeNoetig && (
+          <div className="border-bronze bg-paper-soft border-l-2 p-4">
+            <h2 className="tracking-nav text-ink mb-2 text-sm font-semibold uppercase">
+              {dict.verifyTitle}
+            </h2>
+            <p className="text-ink-soft mb-3 text-sm">
+              {dict.verifyIntro.replace('{email}', codeAn)}
+            </p>
+            <input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder={dict.verifyCode}
+              value={emailCode}
+              onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
+              className={inputClass}
+              style={{ maxWidth: '14rem', letterSpacing: '.4em' }}
+            />
+            {codeFehler && <p className="text-accent mt-2 text-sm">{codeFehler}</p>}
+          </div>
+        )}
 
         {error && (
           <p className="text-accent text-sm">

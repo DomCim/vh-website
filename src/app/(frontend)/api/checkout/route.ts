@@ -9,8 +9,16 @@ import {
 } from '../../../../lib/checkout'
 import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
+import {
+  codeAnlegen,
+  codeEinloesen,
+  sitzungErzeugen,
+  sitzungLesen,
+  SITZUNGS_COOKIE,
+} from '../../../../lib/kundenportal'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
+import { sendMail } from '../../../../lib/sendMail'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +41,18 @@ type CheckoutBody = {
   }
   note?: string
   consent?: { terms?: boolean; waiver?: boolean }
+  /** Sechsstelliger Code aus der Bestätigungs-Mail */
+  emailCode?: string
+}
+
+/** Das vh-konto-Cookie aus dem Header, ohne next/headers zu bemühen. */
+function kontoCookie(req: Request): string | undefined {
+  const kopf = req.headers.get('cookie') ?? ''
+  for (const teil of kopf.split(';')) {
+    const [name, ...rest] = teil.trim().split('=')
+    if (name === SITZUNGS_COOKIE) return decodeURIComponent(rest.join('='))
+  }
+  return undefined
 }
 
 export async function POST(req: Request) {
@@ -59,6 +79,54 @@ export async function POST(req: Request) {
     )
 
     const payload = await payloadClient()
+
+    /*
+     * Erst die Adresse, dann die Bestellung.
+     *
+     * Die Bestätigungsmail, der Zugang zum Kundenportal, die Versandmeldung —
+     * alles hängt an dieser einen Adresse. Ein Tippfehler hieße: Der Kunde
+     * bekommt nichts davon, und wer die vertippte Adresse wirklich besitzt,
+     * könnte sich später im Portal anmelden und eine fremde Bestellung samt
+     * Anschrift sehen.
+     *
+     * Deshalb wird sie bestätigt, bevor eine Bestellung entsteht — mit
+     * derselben Code-Maschinerie wie die Portal-Anmeldung. Wer schon eine
+     * gültige Portal-Sitzung für genau diese Adresse hat, überspringt den
+     * Schritt: Bestätigt ist bestätigt.
+     */
+    const email = body.customer.email.trim().toLowerCase()
+    const schonBestaetigt = sitzungLesen(kontoCookie(req)) === email
+    let neueSitzung: ReturnType<typeof sitzungErzeugen> | null = null
+
+    if (!schonBestaetigt) {
+      if (!body.emailCode) {
+        // Kein Code dabei: einen schicken und die Kasse um die Eingabe bitten.
+        // 409, nicht 400 — die Anfrage ist nicht kaputt, es fehlt ein Schritt.
+        const code = await codeAnlegen(payload, email)
+        await sendMail(payload, {
+          to: email,
+          subject: `Ihr Bestätigungscode: ${code} – Vincent Hellmann`,
+          html: `
+            <div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:520px">
+              <h1 style="font-size:18px;letter-spacing:2px;text-transform:uppercase">Vincent Hellmann</h1>
+              <p>Ihr Code, um die Bestellung abzuschließen:</p>
+              <p style="font-size:30px;letter-spacing:8px;font-weight:bold;margin:18px 0">${code}</p>
+              <p style="color:#666;font-size:13px">Der Code gilt 10 Minuten. Wenn Sie nichts bestellt
+              haben, können Sie diese Nachricht einfach löschen — ohne den Code passiert nichts.</p>
+            </div>`,
+          art: 'zugangscode',
+        })
+        return NextResponse.json({ error: 'code-noetig' }, { status: 409 })
+      }
+
+      const pruefung = await codeEinloesen(payload, email, body.emailCode.replace(/\D/g, ''))
+      if (pruefung !== 'ok') {
+        return NextResponse.json({ error: `code-${pruefung}` }, { status: 400 })
+      }
+      // Bestätigt heißt angemeldet: Derselbe Nachweis öffnet das Kundenportal.
+      neueSitzung = sitzungErzeugen(email)
+    }
+
     const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod)
     const orderNumber = await nextOrderNumber(payload)
 
@@ -87,7 +155,7 @@ export async function POST(req: Request) {
         deliveryMethod,
         customer: {
           name: body.customer.name,
-          email: body.customer.email,
+          email,
           phone: body.customer.phone,
         },
         shippingAddress:
@@ -154,7 +222,17 @@ export async function POST(req: Request) {
       overrideAccess: true,
       data: { paypalOrderId: paypalOrder.id },
     })
-    return NextResponse.json({ url: paypalOrder.approveUrl })
+    const antwort = NextResponse.json({ url: paypalOrder.approveUrl })
+    if (neueSitzung) {
+      antwort.cookies.set(neueSitzung.name, neueSitzung.wert, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: neueSitzung.maxAge,
+      })
+    }
+    return antwort
   } catch (err) {
     console.error('Checkout fehlgeschlagen:', err)
 

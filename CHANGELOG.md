@@ -2,6 +2,11 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Die Kasse bestätigt die E-Mail-Adresse, bevor sie bestellt
+
+- **Erst der Code, dann die Bestellung.** Beim Klick auf „Zahlungspflichtig bestellen" schickt die Kasse einen sechsstelligen Code an die angegebene Adresse; erst mit dem eingetragenen Code entsteht die Bestellung und geht es weiter zu PayPal. An dieser einen Adresse hängt alles — Bestätigung, Versandmeldung, der Zugang zum Kundenportal. Ein Tippfehler hieße: Der Kunde bekommt nichts davon, und wer die vertippte Adresse wirklich besitzt, könnte im Portal eine fremde Bestellung samt Anschrift sehen.
+- **Wer bestätigt hat, ist damit im Kundenportal angemeldet** — derselbe Nachweis, dieselbe Sitzung. Und umgekehrt: Wer schon angemeldet ist, sieht in der Kasse keinen Code-Schritt. Beim zweiten Einkauf innerhalb von 30 Tagen fällt der Schritt also weg.
+
 ## 19.08.2026 — Anmelden mit Benutzernamen
 
 - **Das Werkstatt-Tablet braucht keine eigene E-Mail-Adresse mehr.** Konten lassen sich jetzt mit einem Benutzernamen anlegen — „werkbank" statt einer erfundenen Adresse. Das Anmeldefeld ist eines für beides: Wer seine E-Mail tippt, kommt genauso herein wie wer den Benutzernamen tippt. Ein Konto ohne E-Mail verzichtet dafür auf „Passwort vergessen" — das Zurücksetzen übernimmt dann die Benutzerverwaltung.
