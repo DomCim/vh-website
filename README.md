@@ -72,6 +72,28 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
 
 Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
 
+### Zwei Container: Website und Büro
+
+Beide laufen aus **demselben Abbild**, nur mit unterschiedlicher `ROLLE`:
+
+| Dienst  | `ROLLE`  | bedient                                          |
+| ------- | -------- | ------------------------------------------------ |
+| `web`   | `web`    | Website, Shop, Admin-Panel, alles Übrige         |
+| `buero` | `buero`  | `/office`, `/api/office`, `/ws/buero`            |
+
+Der Grund ist nüchtern: Vorher teilten sie sich einen Prozess, und ein Fehler im Büro riss den Shop mit. Getrennt kann das Büro abstürzen, neu starten oder ausgerollt werden, ohne dass ein Kunde etwas merkt.
+
+Was sich dadurch **nicht** ändert: dieselbe Adresse, dieselbe Anmeldung, dieselben Passkeys, dieselbe Datenbank, dasselbe Volume für die Mediathek. Wer wohin geleitet wird, entscheidet Traefik über die Pfade — der Router `vhbuero` hat die höhere Priorität und greift die Büro-Pfade ab, alles andere fällt an `vhweb`.
+
+Die Rolle steuert nur zweierlei:
+
+- **Was es genau einmal geben darf**, macht `web`: Datenbank-Migrationen und Startdaten beim Hochfahren, danach der Takt (nächtliche Sicherung, Erinnerungen, Postfach-Abruf). Liefe das in beiden, gäbe es jede Sicherung doppelt und jede Erinnerung zweimal aufs Handy.
+- **Offene Drähte hält `buero`.** Eine Änderung entsteht aber oft im Web-Container — eine bezahlte Bestellung legt dort einen Auftrag an. Weitergereicht wird sie über die Datenbank (`LISTEN`/`NOTIFY`); das kann Postgres von Haus aus, es braucht weder einen Nachrichtendienst noch eine Verbindung zwischen den Containern.
+
+Ohne gesetzte `ROLLE` macht ein Prozess alles — so laufen Entwicklung und Prüfung weiterhin mit einem einzigen Start.
+
+**Update:** Beide Container ziehen dasselbe Abbild. In Portainer „Re-pull image & redeploy" auf den Stack anwenden, dann starten sie gemeinsam neu; die Migrationen laufen dabei nur im Web-Container.
+
 ## Stripe einrichten
 
 1. [Stripe-Konto](https://dashboard.stripe.com) → API-Keys → `STRIPE_SECRET_KEY` setzen (erst Test-, später Live-Key).
@@ -149,7 +171,7 @@ Aktuell gehalten wird das über eine offene Verbindung (`/ws/buero`): Was einer 
 
 Drei Seiten arbeiten bewusst nicht offline, weil sie es ohnehin nicht könnten: Postfach, Steuer-Export und Sicherung. Die Einstellungen ebenfalls — Zugangsdaten im Gerät zwischenzuspeichern wäre falsch, und ein Zugangsdatum, das man ohne Netz ändert, wäre eine Falle.
 
-Betrieblich ändert sich dadurch nichts: Der Server ist derselbe, nur startet er über `server.mjs` statt über `next start` — er hält damit die offene Verbindung. Ein Prozess, ein Port, ein Container.
+Der Server startet über `server.mjs` statt über `next start` — er hält damit die offene Verbindung. Seit dem Umbau läuft er zweimal: einmal für die Website, einmal fürs Büro (siehe **Zwei Container** oben).
 
 ### Postfächer einrichten
 
