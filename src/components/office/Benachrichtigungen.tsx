@@ -47,7 +47,7 @@ export function Benachrichtigungen() {
       return
     }
     try {
-      const reg = await navigator.serviceWorker.getRegistration('/office/')
+      const reg = await navigator.serviceWorker.getRegistration('/office')
       const vorhanden = await reg?.pushManager.getSubscription()
       setStand(vorhanden ? 'an' : 'aus')
     } catch {
@@ -75,7 +75,7 @@ export function Benachrichtigungen() {
         return
       }
 
-      const reg = await navigator.serviceWorker.register('/office-sw.js', { scope: '/office/' })
+      const reg = await navigator.serviceWorker.register('/office-sw.js', { scope: '/office' })
       await navigator.serviceWorker.ready
 
       const res = await fetch('/api/office/push', { credentials: 'include' })
@@ -114,7 +114,7 @@ export function Benachrichtigungen() {
   async function abmelden() {
     setLaeuft(true)
     try {
-      const reg = await navigator.serviceWorker.getRegistration('/office/')
+      const reg = await navigator.serviceWorker.getRegistration('/office')
       const vorhanden = await reg?.pushManager.getSubscription()
       if (vorhanden) {
         await fetch('/api/office/push', {

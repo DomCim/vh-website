@@ -134,6 +134,16 @@ export function BestandAnbieter() {
     }
     const beiOffline = () => netzZustandSetzen(false)
 
+    // Der Service Worker hält das Gerüst bereit — ohne ihn zeigt der Browser
+    // ohne Netz seine eigene Fehlerseite, und der Bestand im Gerät nützt nichts.
+    // Bewusst hier und nicht erst beim Einschalten der Benachrichtigungen:
+    // Offline arbeiten will man auch ohne Meldungen aufs Handy.
+    if ('serviceWorker' in navigator) {
+      void navigator.serviceWorker.register('/office-sw.js', { scope: '/office' }).catch(() => {
+        // Ohne Worker läuft alles weiter, nur eben nicht ohne Netz
+      })
+    }
+
     netzZustandSetzen(navigator.onLine)
     void verbinden()
 

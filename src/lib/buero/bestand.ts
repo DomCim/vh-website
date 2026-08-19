@@ -274,6 +274,14 @@ export async function bestandVergessen(): Promise<void> {
   geladen.clear()
   zustandSetzen({ stand: null, bereit: false })
   await allesVergessen()
+
+  // Auch das Gerüst im Service Worker: Ein Gerät, an dem sich jemand
+  // abgemeldet hat, soll keine Büro-Seiten mehr aufmachen können.
+  try {
+    navigator.serviceWorker?.controller?.postMessage('aufraeumen')
+  } catch {
+    // Ohne Worker gibt es nichts wegzuräumen
+  }
 }
 
 // ── Zugriff aus den Seiten ──────────────────────────────────────────────────
