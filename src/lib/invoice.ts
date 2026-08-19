@@ -24,8 +24,8 @@ export type RechnungsPosition = {
 }
 
 export type RechnungsDaten = {
-  /** Angebot und Rechnung teilen sich dasselbe Layout */
-  art?: 'rechnung' | 'angebot'
+  /** Angebot, Rechnung und Storno teilen sich dasselbe Layout */
+  art?: 'rechnung' | 'angebot' | 'storno'
   nummer: string
   datum?: string | null
   faelligAm?: string | null
@@ -38,6 +38,14 @@ export type RechnungsDaten = {
   reverseCharge?: boolean
   /** Gewährter Nachlass auf die Nettosumme — anteilig auf alle Steuersätze */
   rabatt?: { bezeichnung: string; betrag: number } | null
+  /**
+   * Welche Rechnung hier storniert wird — nur bei `art: 'storno'`.
+   *
+   * Der Verweis gehört aufs Blatt und nicht nur in die Akte: Eine
+   * Gegenrechnung ohne Bezug ist für die Buchhaltung ein zweiter Vorgang mit
+   * negativen Zahlen, und niemand weiß, welchen sie aufhebt.
+   */
+  storniert?: { nummer: string; datum?: string | null } | null
   /** nur bei Angeboten */
   gueltigBis?: string | null
   fertigungszeit?: string | null
@@ -181,12 +189,28 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   const cortenStrich = briefkopf(doc, company)
 
   const istAngebot = daten.art === 'angebot'
+  const istStorno = daten.art === 'storno'
   doc.moveDown(1.5)
-  doc.fontSize(14).text(istAngebot ? 'Angebot' : 'Rechnung')
+  doc.fontSize(14).text(istAngebot ? 'Angebot' : istStorno ? 'Stornorechnung' : 'Rechnung')
   cortenStrich()
   doc.fontSize(10)
   doc.text(`${istAngebot ? 'Angebotsnummer' : 'Rechnungsnummer'}: ${daten.nummer}`)
   doc.text(`${istAngebot ? 'Angebotsdatum' : 'Rechnungsdatum'}: ${datum.toLocaleDateString('de-DE')}`)
+  /*
+   * Der Bezug aufs Original, gleich unter der Nummer.
+   *
+   * Ohne ihn stünde ein Blatt mit negativen Beträgen im Ordner, und beim
+   * Prüfen wäre unklar, welche Rechnung es aufhebt.
+   */
+  if (istStorno && daten.storniert) {
+    doc.text(
+      `Storniert Rechnung ${daten.storniert.nummer}${
+        daten.storniert.datum
+          ? ` vom ${new Date(daten.storniert.datum).toLocaleDateString('de-DE')}`
+          : ''
+      }`,
+    )
+  }
   if (istAngebot) {
     if ((daten.fassung ?? 1) > 1) {
       doc.text(`Fassung ${daten.fassung} — ersetzt die vorherige Fassung`)
@@ -195,6 +219,10 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
       doc.text(`Gültig bis: ${new Date(daten.gueltigBis).toLocaleDateString('de-DE')}`)
     }
     if (daten.fertigungszeit) doc.text(`Fertigungszeit: ${daten.fertigungszeit}`)
+  } else if (istStorno) {
+    // Kein Zahlungsziel: Eine Stornorechnung will kein Geld, sie nimmt eine
+    // Forderung zurück. Ein „Fällig am" darauf wäre eine Aufforderung.
+    doc.text('Diese Rechnung hebt die oben genannte auf. Es ist nichts zu zahlen.')
   } else if (daten.faelligAm) {
     doc.text(`Fällig am: ${new Date(daten.faelligAm).toLocaleDateString('de-DE')}`)
   } else if (company?.paymentTerms) {

@@ -123,7 +123,8 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       {festgeschrieben && (
         <p className="buero-hinweis">
           Rechnung <strong>{w.invoiceNumber}</strong> ist gestellt. Positionen und Beträge sollten
-          jetzt nicht mehr geändert werden — für Korrekturen eine Stornorechnung schreiben.
+          jetzt nicht mehr geändert werden — für Korrekturen oben auf „Stornieren“ tippen; das legt
+          die Gegenrechnung mit Verweis auf diese hier an.
         </p>
       )}
       {meldung && <p className="buero-hinweis">{meldung}</p>}

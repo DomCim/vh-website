@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React from 'react'
 
 import { RechnungFormular } from '../../../../../components/office/RechnungFormular'
+import { StornoKnopf } from '../../../../../components/office/StornoKnopf'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
 import { useAbgleich, useDatensatz, useRahmen } from '../../../../../lib/buero/bestand'
 import { MAHN_TITEL } from '../../../../../lib/listen'
@@ -55,6 +57,15 @@ export function RechnungAnsicht() {
 
   const mahnungen = r.reminders ?? []
 
+  // Beide Richtungen des Storno-Paares: Was hebt diese Rechnung auf, und
+  // gilt sie überhaupt noch?
+  const kennung = (wert: unknown) =>
+    typeof wert === 'object' && wert ? String((wert as { id?: number }).id ?? '') : wert ? String(wert) : ''
+  const stornoVon = kennung(r.stornoVon)
+  const storniertDurch = kennung(r.storniertDurch)
+  const istStorno = Boolean(stornoVon)
+  const stornierbar = Boolean(r.invoiceNumber) && !istStorno && !storniertDurch && r.status !== 'storniert'
+
   const fehlt = [
     !firma.siret && 'SIRET des eigenen Betriebs (Einstellungen)',
     !firma.vatId && 'eigene TVA-Nummer (Einstellungen)',
@@ -78,7 +89,32 @@ export function RechnungAnsicht() {
               XML herunterladen
             </a>
             {r.status === 'gestellt' && <VersandKnopf art="mahnung" id={r.id} leise />}
+            {stornierbar && <StornoKnopf id={r.id} nummer={r.invoiceNumber!} />}
           </div>
+
+          {istStorno && (
+            <div className="buero-hinweis">
+              <strong>Das ist eine Stornorechnung.</strong> Sie hebt eine andere Rechnung auf und
+              fordert nichts —{' '}
+              <Link href={`/office/rechnungen/${stornoVon}`} style={{ textDecoration: 'underline' }}>
+                zur stornierten Rechnung
+              </Link>
+              .
+            </div>
+          )}
+          {storniertDurch && (
+            <div className="buero-hinweis warn">
+              <strong>Diese Rechnung ist storniert</strong>
+              {r.stornoGrund ? ` — ${String(r.stornoGrund)}` : ''}. Sie gilt nicht mehr;{' '}
+              <Link
+                href={`/office/rechnungen/${storniertDurch}`}
+                style={{ textDecoration: 'underline' }}
+              >
+                zur Stornorechnung
+              </Link>
+              .
+            </div>
+          )}
 
           {mahnungen.length > 0 && (
             <p className="buero-unterzeile" style={{ marginTop: '-.6rem' }}>

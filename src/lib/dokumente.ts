@@ -127,6 +127,14 @@ function facturxAusRechnung(
     nummer: r.invoiceNumber,
     datum: r.issueDate ? new Date(r.issueDate) : new Date(),
     faelligAm: r.dueDate ? new Date(r.dueDate) : null,
+    /*
+     * 381 statt 380, sobald die Rechnung eine andere aufhebt.
+     *
+     * Der Typcode ist das, woran eine Plattform eine Gutschrift erkennt.
+     * Stünde dort 380, käme die Stornorechnung als zweite Forderung an —
+     * mit negativen Beträgen, die manche Prüfung rundweg ablehnt.
+     */
+    typ: r.stornoVon ? '381' : '380',
     kunde: {
       name: r.customerName || '—',
       anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
@@ -167,8 +175,31 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
 
   const angaben = await firma(payload)
 
+  /*
+   * Eine Stornorechnung ist dasselbe Blatt mit anderem Kopf: Sie heißt
+   * „Stornorechnung", nennt die aufgehobene Rechnung und fordert nichts.
+   * Welche das ist, steht am Datensatz — nachgeschlagen wird sie nur fürs
+   * Papier, denn dort gehört ihre Nummer hin und nicht ihre Kennung.
+   */
+  const storniertId =
+    typeof r.stornoVon === 'object' ? (r.stornoVon as { id?: number })?.id : r.stornoVon
+  const original = storniertId
+    ? await payload
+        .findByID({
+          collection: 'outgoing-invoices',
+          id: storniertId as number,
+          depth: 0,
+          overrideAccess: true,
+        })
+        .catch(() => null)
+    : null
+
   const datei = await rechnungPdf(
     {
+      art: original ? 'storno' : 'rechnung',
+      storniert: original
+        ? { nummer: original.invoiceNumber ?? '', datum: original.issueDate }
+        : null,
       nummer: r.invoiceNumber,
       datum: r.issueDate,
       faelligAm: r.dueDate,
@@ -193,6 +224,22 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
     },
     angaben,
   )
+
+  if (original) {
+    return {
+      datei,
+      dateiname: `${alsDateiname(r.invoiceNumber)}.pdf`,
+      betreff: `Stornorechnung ${r.invoiceNumber} zu ${original.invoiceNumber}`,
+      an: await partnerMail(payload, r.customer),
+      text:
+        `Guten Tag${r.customerName ? ` ${r.customerName}` : ''},\n\n` +
+        `anbei die Stornorechnung ${r.invoiceNumber}. Sie hebt die Rechnung ` +
+        `${original.invoiceNumber} vom ${datum(original.issueDate)} auf; ` +
+        `daraus ist nichts mehr zu zahlen.\n` +
+        (r.stornoGrund ? `\nGrund: ${r.stornoGrund}\n` : '') +
+        `\nEntschuldigen Sie die Umstände.`,
+    }
+  }
 
   return {
     datei,

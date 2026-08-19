@@ -1075,6 +1075,18 @@ export interface OutgoingInvoice {
    */
   project?: (number | null) | Project;
   /**
+   * Gesetzt, wenn diese Rechnung eine Stornorechnung ist.
+   */
+  stornoVon?: (number | null) | OutgoingInvoice;
+  /**
+   * Die Stornorechnung, die diese Rechnung aufhebt.
+   */
+  storniertDurch?: (number | null) | OutgoingInvoice;
+  /**
+   * Steht als Hinweis auf der Stornorechnung.
+   */
+  stornoGrund?: string | null;
+  /**
    * Wird beim Umwandeln eines Angebots gesetzt.
    */
   quote?: (number | null) | Quote;
@@ -1985,6 +1997,9 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   reverseCharge?: T;
   note?: T;
   project?: T;
+  stornoVon?: T;
+  storniertDurch?: T;
+  stornoGrund?: T;
   quote?: T;
   updatedAt?: T;
   createdAt?: T;

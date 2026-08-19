@@ -29,6 +29,7 @@ import * as migration_20260819_113245_zahlplan_am_auftrag from './20260819_11324
 import * as migration_20260819_125944_benutzername from './20260819_125944_benutzername';
 import * as migration_20260819_144742_rechnungskauf from './20260819_144742_rechnungskauf';
 import * as migration_20260819_172008_zahlungsabgleich from './20260819_172008_zahlungsabgleich';
+import * as migration_20260819_172805_storno from './20260819_172805_storno';
 
 export const migrations = [
   {
@@ -184,6 +185,11 @@ export const migrations = [
   {
     up: migration_20260819_172008_zahlungsabgleich.up,
     down: migration_20260819_172008_zahlungsabgleich.down,
-    name: '20260819_172008_zahlungsabgleich'
+    name: '20260819_172008_zahlungsabgleich',
+  },
+  {
+    up: migration_20260819_172805_storno.up,
+    down: migration_20260819_172805_storno.down,
+    name: '20260819_172805_storno'
   },
 ];

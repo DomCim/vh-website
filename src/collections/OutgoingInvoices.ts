@@ -485,6 +485,46 @@ export const OutgoingInvoices: CollectionConfig = {
       admin: { description: 'Optional — verbindet die Rechnung mit dem gezeigten Projekt.' },
     },
     {
+      /*
+       * Storno und Original zeigen aufeinander.
+       *
+       * Eine gestellte Rechnung wird nicht geändert — sie liegt beim Kunden
+       * und steht in dessen Buchhaltung. Korrigiert wird über eine
+       * Gegenrechnung, und die braucht den Bezug: Ohne ihn stehen zwei
+       * Vorgänge im Ordner, einer mit positiven und einer mit negativen
+       * Zahlen, und niemand weiß, dass sie zusammengehören.
+       *
+       * Beide Richtungen, weil beide Fragen vorkommen: „Was hebt diese
+       * Rechnung auf?" und „Gilt diese Rechnung noch?".
+       */
+      name: 'stornoVon',
+      label: 'Storniert die Rechnung',
+      type: 'relationship',
+      relationTo: 'outgoing-invoices',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Gesetzt, wenn diese Rechnung eine Stornorechnung ist.',
+      },
+    },
+    {
+      name: 'storniertDurch',
+      label: 'Storniert durch',
+      type: 'relationship',
+      relationTo: 'outgoing-invoices',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Die Stornorechnung, die diese Rechnung aufhebt.',
+      },
+    },
+    {
+      name: 'stornoGrund',
+      label: 'Grund der Stornierung',
+      type: 'text',
+      admin: { description: 'Steht als Hinweis auf der Stornorechnung.' },
+    },
+    {
       name: 'quote',
       label: 'Aus Angebot entstanden',
       type: 'relationship',

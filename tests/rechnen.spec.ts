@@ -61,3 +61,48 @@ test('Leere Rechnung bleibt bei null statt NaN', () => {
   expect(r.subtotal).toBe(0)
   expect(r.total).toBe(0)
 })
+
+/*
+ * Die Stornorechnung ist das Spiegelbild ihres Originals: dieselben
+ * Positionen, derselbe Nachlass, alles mit umgedrehtem Vorzeichen. Ohne
+ * Rücksicht darauf begrenzte die Nachlass-Zeile den Abzug auf „höchstens die
+ * Nettosumme" — bei einer negativen Summe wurde daraus „mindestens die ganze
+ * Summe", und das Storno stand mit netto null da. Es hätte also nichts
+ * aufgehoben.
+ */
+test.describe('Negative Beträge — die Stornorechnung', () => {
+  test('spiegelt eine einfache Rechnung genau', () => {
+    const rechnung = betraege([{ quantity: 2, unitPrice: 100, vatRate: 20 }])
+    const storno = betraege([{ quantity: 2, unitPrice: -100, vatRate: 20 }])
+    expect(storno.netTotal).toBe(-rechnung.netTotal)
+    expect(storno.vatTotal).toBe(-rechnung.vatTotal)
+    expect(storno.total).toBe(-rechnung.total)
+  })
+
+  test('spiegelt auch den prozentualen Nachlass', () => {
+    const rabatt = { discountKind: 'prozent', discountValue: 10 }
+    const rechnung = betraege([{ quantity: 1, unitPrice: 1000, vatRate: 20 }], rabatt)
+    const storno = betraege([{ quantity: 1, unitPrice: -1000, vatRate: 20 }], rabatt)
+    expect(storno.discountTotal).toBe(-rechnung.discountTotal)
+    expect(storno.netTotal).toBe(-rechnung.netTotal)
+    expect(storno.total).toBe(-rechnung.total)
+  })
+
+  test('ein fester Nachlassbetrag folgt der Richtung der Rechnung', () => {
+    const rabatt = { discountKind: 'betrag', discountValue: 150 }
+    const rechnung = betraege([{ quantity: 1, unitPrice: 1000, vatRate: 20 }], rabatt)
+    const storno = betraege([{ quantity: 1, unitPrice: -1000, vatRate: 20 }], rabatt)
+    expect(rechnung.netTotal).toBe(850)
+    expect(storno.netTotal).toBe(-850)
+    expect(storno.total).toBe(-rechnung.total)
+  })
+
+  test('mehr Nachlass als Rechnungswert bleibt auch negativ begrenzt', () => {
+    const storno = betraege([{ quantity: 1, unitPrice: -100, vatRate: 20 }], {
+      discountKind: 'betrag',
+      discountValue: 500,
+    })
+    expect(storno.discountTotal).toBe(-100)
+    expect(storno.netTotal).toBe(0)
+  })
+})

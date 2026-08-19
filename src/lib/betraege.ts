@@ -39,16 +39,31 @@ export function betraege(posten: Posten[], rabatt: RabattEingabe = {}): Betraege
   }))
   const subtotal = zeilen.reduce((s, z) => s + z.netto, 0)
 
+  /*
+   * Das Vorzeichen der Rechnung — und warum es hier auftaucht.
+   *
+   * Eine Stornorechnung ist das Spiegelbild ihres Originals: dieselben
+   * Positionen, dieselbe Zeile Nachlass, alles negativ. Ohne Rücksicht aufs
+   * Vorzeichen begrenzte die Zeile darunter den Nachlass auf „höchstens die
+   * Nettosumme" — bei einer negativen Summe wurde daraus „mindestens die
+   * ganze Summe", und der Storno stand mit netto null da.
+   *
+   * Gerechnet wird deshalb im Vorzeichen der Positionen: Ein fester
+   * Nachlassbetrag folgt der Richtung der Rechnung, ein Prozentsatz bringt
+   * sie ohnehin mit.
+   */
+  const vorzeichen = subtotal < 0 ? -1 : 1
+
   let nachlass = 0
   if (rabatt.discountKind === 'prozent') {
     nachlass = subtotal * ((rabatt.discountValue ?? 0) / 100)
   } else if (rabatt.discountKind === 'betrag') {
-    nachlass = rabatt.discountValue ?? 0
+    nachlass = (rabatt.discountValue ?? 0) * vorzeichen
   }
   // Mehr Nachlass als Auftragswert ergibt keinen Sinn
-  nachlass = Math.min(Math.max(nachlass, 0), subtotal)
+  nachlass = vorzeichen * Math.min(Math.max(nachlass * vorzeichen, 0), Math.abs(subtotal))
 
-  const anteil = subtotal > 0 ? (subtotal - nachlass) / subtotal : 1
+  const anteil = subtotal !== 0 ? (subtotal - nachlass) / subtotal : 1
   const vatTotal = zeilen.reduce((s, z) => s + z.netto * anteil * (z.satz / 100), 0)
   const netTotal = subtotal - nachlass
 
