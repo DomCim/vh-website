@@ -15,6 +15,15 @@ type Artikel = {
   price?: number | null
   productionMinutes?: number | null
   billOfMaterials?: { item?: unknown; quantity?: number | null; note?: string | null }[] | null
+  variants?:
+    | {
+        id?: string | null
+        title?: string | null
+        price?: number | null
+        billOfMaterials?: { item?: unknown; quantity?: number | null; note?: string | null }[] | null
+        productionMinutes?: number | null
+      }[]
+    | null
   serviceProviders?:
     | {
         contact?: unknown
@@ -105,6 +114,21 @@ export function ArtikelBearbeitenAnsicht() {
         posten={posten}
         partner={partner}
         arbeitsminuten={p.productionMinutes}
+        varianten={(p.variants ?? [])
+          // Ohne Kennung ließe sich die Liste später nicht zuordnen — solche
+          // Zeilen gibt es nur, solange die Variante noch nicht gespeichert ist
+          .filter((v) => v.id)
+          .map((v) => ({
+            id: String(v.id),
+            titel: v.title ?? 'Variante',
+            preis: v.price,
+            stueckliste: (v.billOfMaterials ?? []).map((z) => ({
+              item: kennung(z.item),
+              quantity: z.quantity ?? 0,
+              note: z.note,
+            })),
+            minuten: v.productionMinutes,
+          }))}
         stundensatz={stundensatz}
         wunschaufschlag={wunschaufschlag}
       />

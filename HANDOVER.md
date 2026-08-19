@@ -121,6 +121,15 @@ die Faustregel; abweichende Wochen stehen als eigene Datensätze
 stellt die Faustregel wieder her — eine Null bedeutet dagegen ausdrücklich
 „diese Woche geht nichts". Das ist nicht dasselbe, und beide Fälle kommen vor.
 
+**Stücklisten hängen an der Variante, nicht am Artikel.** Aufgelöst wird in
+`lib/material.ts` (`variantenStueckliste`, `variantenMinuten`): eigene Liste der
+Variante, sonst die Grundliste des Artikels. Eine **leere** Variantenliste ist
+dabei ausdrücklich „es gilt die Grundlage" und nicht „braucht kein Material" —
+sonst stünde jede neu angelegte Variante ohne Material da und die
+Bestandswarnung schwiege genau dann, wenn sie gebraucht wird. Die
+Bestellposition trägt dafür `variantId`; die Bezeichnung ist übersetzt und
+änderbar und taugt nur als Rückfallweg für Bestellungen von vorher.
+
 **Die Zahlungseingänge-Seite ist die einzige Büro-Seite ohne Offline-Betrieb.**
 Sie fragt den Server, weil die Zuordnung über Geld entscheidet und überall
 dieselbe sein soll — auch dann, wenn im Gerät der Bestand von gestern liegt.

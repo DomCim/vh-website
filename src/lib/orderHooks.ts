@@ -7,7 +7,7 @@ import {
   orderNotificationEmail,
   orderShippedEmail,
 } from './mail'
-import { bedarfFuerBestellung } from './material'
+import { bedarfFuerBestellung, variantenMinuten } from './material'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben, getIntegrations } from './settings'
@@ -109,6 +109,7 @@ async function auftragAusBestellung(
       | {
           product?: unknown
           titleSnapshot: string
+          variantId?: string | null
           variantTitle?: string | null
           color?: string | null
           quantity: number
@@ -153,7 +154,10 @@ async function auftragAusBestellung(
         .catch(() => null)
       if (!produkt?.readyMade) {
         zuFertigen.push(pos)
-        if (produkt?.productionMinutes) minuten += produkt.productionMinutes * (pos.quantity || 1)
+        // Die Zeit der bestellten Variante, nicht die des Artikels: Ein Stück
+        // in 100 × 50 dauert länger als dasselbe in 60 × 30.
+        const dauer = produkt ? variantenMinuten(produkt, pos) : null
+        if (dauer) minuten += dauer * (pos.quantity || 1)
         else alleBekannt = false
       }
     }

@@ -15,6 +15,15 @@ export type DienstleisterZeile = {
 export type PostenAuswahl = { id: number; name: string; unit: string; unitValue: number }
 export type PartnerAuswahl = { id: number; name: string }
 
+/** Eine Variante mit ihrer eigenen Liste — leere Liste heißt „erbt die Grundliste". */
+export type VariantenEingabe = {
+  id: string
+  titel: string
+  preis?: number | null
+  stueckliste: StuecklistenZeile[]
+  minuten?: number | null
+}
+
 const euro = (v: number) =>
   new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v)
 
@@ -24,6 +33,13 @@ const euro = (v: number) =>
  * Der Artikel selbst — Titel, Preis, Bilder — bleibt in der Website-Verwaltung.
  * Was ihn kostet und wer daran mitarbeitet, ist Sache des Betriebs und steht
  * deshalb hier.
+ *
+ * **Varianten haben ihre eigene Liste.** Ein Kübel in 100 × 50 braucht mehr
+ * Blech als derselbe in 60 × 30 und dauert länger — eine gemeinsame Liste
+ * rechnet für den einen zu wenig und für den anderen zu viel. Oben wird
+ * umgeschaltet: die Grundlage, dann jede Variante. Solange eine Variante keine
+ * eigene Liste hat, gilt die Grundlage; das ist bei Farbvarianten der
+ * Normalfall, und niemand soll dieselbe Liste dreimal pflegen.
  */
 export function ArtikelFormular({
   produktId,
@@ -33,6 +49,7 @@ export function ArtikelFormular({
   partner,
   verkaufspreis,
   arbeitsminuten,
+  varianten = [],
   stundensatz,
   wunschaufschlag,
 }: {
@@ -44,14 +61,47 @@ export function ArtikelFormular({
   verkaufspreis?: number | null
   /** Arbeitszeit je Stück in Minuten — steht am Artikel in der Verwaltung */
   arbeitsminuten?: number | null
+  varianten?: VariantenEingabe[]
   stundensatz: number
   wunschaufschlag: number
 }) {
-  const [zeilen, setZeilen] = useState<StuecklistenZeile[]>(stueckliste)
+  const [basis, setBasis] = useState<StuecklistenZeile[]>(stueckliste)
+  const [basisMinuten, setBasisMinuten] = useState<number>(arbeitsminuten ?? 0)
   const [dienste, setDienste] = useState<DienstleisterZeile[]>(dienstleister)
-  const [minuten, setMinuten] = useState<number>(arbeitsminuten ?? 0)
+
+  // '' ist die Grundlage, sonst die Kennung der Variante
+  const [gewaehlt, setGewaehlt] = useState<string>('')
+  const [listen, setListen] = useState<Record<string, StuecklistenZeile[]>>(() =>
+    Object.fromEntries(varianten.map((v) => [v.id, v.stueckliste])),
+  )
+  const [minutenJe, setMinutenJe] = useState<Record<string, number>>(() =>
+    Object.fromEntries(varianten.map((v) => [v.id, v.minuten ?? 0])),
+  )
+
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+
+  const variante = varianten.find((v) => v.id === gewaehlt)
+  const eigene = gewaehlt ? (listen[gewaehlt] ?? []) : basis
+  /** Zeigt diese Variante nur, was die Grundlage sagt? */
+  const erbt = Boolean(gewaehlt) && eigene.length === 0
+
+  // Was gerade bearbeitet wird — bei geerbter Liste ist es die Grundlage, und
+  // die wird dann nur angezeigt, nicht verändert.
+  const zeilen = erbt ? basis : eigene
+  const setZeilen = (aendern: (v: StuecklistenZeile[]) => StuecklistenZeile[]) => {
+    if (!gewaehlt) return setBasis(aendern)
+    setListen((v) => ({ ...v, [gewaehlt]: aendern(v[gewaehlt] ?? []) }))
+  }
+
+  const eigeneMinuten = gewaehlt ? (minutenJe[gewaehlt] ?? 0) : basisMinuten
+  const minuten = gewaehlt && !eigeneMinuten ? basisMinuten : eigeneMinuten
+  const setMinuten = (wert: number) => {
+    if (!gewaehlt) return setBasisMinuten(wert)
+    setMinutenJe((v) => ({ ...v, [gewaehlt]: wert }))
+  }
+
+  const preis = gewaehlt ? (variante?.preis ?? null) : (verkaufspreis ?? null)
 
   // Was ein Stück an Material und Fremdleistung kostet — die Grundlage dafür,
   // ob der Preis auf der Website den Aufwand überhaupt deckt
@@ -79,22 +129,36 @@ export function ArtikelFormular({
   async function speichern() {
     setLaeuft(true)
     setMeldung(null)
+    const sauber = (v: StuecklistenZeile[]) => v.filter((z) => z.item && z.quantity)
+    const variantenDaten = varianten.map((v) => ({
+      id: v.id,
+      zeilen: sauber(listen[v.id] ?? []),
+      minuten: minutenJe[v.id] || null,
+    }))
     try {
       const { sofort } = await absenden({
         pfad: '/api/office/stueckliste',
         bereich: 'artikel',
         koerper: {
           produktId,
-          zeilen: zeilen.filter((z) => z.item && z.quantity),
+          zeilen: sauber(basis),
           dienstleister: dienste.filter((d) => d.contact && d.service?.trim()),
-          arbeitsminuten: minuten || 0,
+          arbeitsminuten: basisMinuten || 0,
+          varianten: variantenDaten,
         },
         // Der Schlüssel heißt hier produktId — der Bestand kennt nur `id`
         vorschau: {
           id: produktId,
-          billOfMaterials: zeilen.filter((z) => z.item && z.quantity),
+          billOfMaterials: sauber(basis),
           serviceProviders: dienste.filter((d) => d.contact && d.service?.trim()),
-          productionMinutes: minuten || 0,
+          productionMinutes: basisMinuten || 0,
+          variants: varianten.map((v) => ({
+            id: v.id,
+            title: v.titel,
+            price: v.preis,
+            billOfMaterials: sauber(listen[v.id] ?? []),
+            productionMinutes: minutenJe[v.id] || null,
+          })),
         },
       })
       setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
@@ -109,12 +173,101 @@ export function ArtikelFormular({
     <div className="buero-karte">
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
-      <h2>Material je Stück</h2>
+      {/* Für welche Variante das alles gilt. Ohne Varianten fehlt die Reihe —
+          dann gibt es nichts umzuschalten. */}
+      {varianten.length > 0 && (
+        <>
+          <h2 style={{ marginTop: 0 }}>Wofür?</h2>
+          <div className="buero-reiter" style={{ marginBottom: '.4rem' }}>
+            <button
+              type="button"
+              className={gewaehlt === '' ? 'aktiv' : undefined}
+              aria-current={gewaehlt === '' ? 'page' : undefined}
+              onClick={() => setGewaehlt('')}
+            >
+              Grundlage
+            </button>
+            {varianten.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                className={gewaehlt === v.id ? 'aktiv' : undefined}
+                aria-current={gewaehlt === v.id ? 'page' : undefined}
+                onClick={() => setGewaehlt(v.id)}
+              >
+                {v.titel}
+                {/* Ein Haken für „hat eine eigene Liste". Wer nichts Eigenes
+                    hat, braucht auch kein Zeichen — der Normalfall bleibt
+                    unbeschriftet. */}
+                {(listen[v.id] ?? []).length > 0 ? ' ✓' : ''}
+              </button>
+            ))}
+          </div>
+          <p className="buero-unterzeile">
+            {gewaehlt === ''
+              ? 'Gilt für alle Varianten, die nichts Eigenes hinterlegt haben.'
+              : erbt
+                ? 'Diese Variante übernimmt die Grundlage.'
+                : 'Diese Variante rechnet mit ihrer eigenen Liste.'}
+          </p>
+        </>
+      )}
+
+      <h2>
+        Material je Stück
+        {variante ? ` · ${variante.titel}` : ''}
+      </h2>
       {zeilen.length === 0 && (
         <p className="buero-unterzeile">
           Ohne Stückliste kann das System bei einer Bestellung nicht prüfen, ob alles da ist.
         </p>
       )}
+
+      {/*
+       * Eine geerbte Liste wird gezeigt, nicht bearbeitet. Eingabefelder, die
+       * in Wahrheit die Grundlage ändern, wären eine Falle: Wer hier die Menge
+       * für die große Variante hochsetzt, hätte sie für alle hochgesetzt.
+       */}
+      {erbt ? (
+        <>
+          <div className="buero-liste">
+            {zeilen.length === 0 ? (
+              <div className="buero-leer">Auch die Grundlage hat noch keine Stückliste.</div>
+            ) : (
+              zeilen.map((z, i) => {
+                const p = posten.find((x) => x.id === Number(z.item))
+                return (
+                  <div key={i} className="buero-zeile">
+                    <div className="buero-zeile-haupt">
+                      <div className="buero-zeile-titel">{p?.name ?? 'unbekannter Posten'}</div>
+                      <div className="buero-zeile-neben">
+                        {z.quantity} {p?.unit ?? ''}
+                        {z.note ? ` · ${z.note}` : ''}
+                      </div>
+                    </div>
+                    <span className="buero-marker offen">von der Grundlage</span>
+                  </div>
+                )
+              })
+            )}
+          </div>
+          <button
+            type="button"
+            className="buero-knopf leise"
+            onClick={() =>
+              setListen((v) => ({
+                ...v,
+                [gewaehlt]: basis.length
+                  ? basis.map((z) => ({ ...z }))
+                  : [{ item: '', quantity: 1 }],
+              }))
+            }
+          >
+            Eigene Liste für „{variante?.titel}“ anlegen
+          </button>
+        </>
+      ) : (
+        <>
       {zeilen.map((z, i) => (
         <div key={i} className="buero-reihe">
           <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
@@ -170,15 +323,34 @@ export function ArtikelFormular({
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="buero-knopf leise"
-        onClick={() => setZeilen((v) => [...v, { item: '', quantity: 1 }])}
-      >
-        Material hinzufügen
-      </button>
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="buero-knopf leise"
+          onClick={() => setZeilen((v) => [...v, { item: '', quantity: 1 }])}
+        >
+          Material hinzufügen
+        </button>
+        {gewaehlt !== '' && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            onClick={() => setListen((v) => ({ ...v, [gewaehlt]: [] }))}
+          >
+            Wieder die Grundlage verwenden
+          </button>
+        )}
+      </div>
+        </>
+      )}
 
       <h2>Externe Dienstleister</h2>
+      {varianten.length > 0 && (
+        <p className="buero-unterzeile">
+          Gelten für alle Varianten — wer je Größe unterschiedlich abrechnet, trägt den Unterschied
+          bis auf Weiteres in der Bemerkung fest.
+        </p>
+      )}
       {dienste.length === 0 && (
         <p className="buero-unterzeile">
           Verzinkerei, Beschichter, Laserschneider — wer von außen mitarbeitet, gehört hierher.
@@ -261,16 +433,23 @@ export function ArtikelFormular({
         Dienstleister hinzufügen
       </button>
 
-      <h2 style={{ marginTop: '1.5rem' }}>Arbeitszeit</h2>
+      <h2 style={{ marginTop: '1.5rem' }}>
+        Arbeitszeit{variante ? ` · ${variante.titel}` : ''}
+      </h2>
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Minuten je Stück</span>
           <input
             inputMode="numeric"
-            value={minuten || ''}
+            value={eigeneMinuten || ''}
             onChange={(e) => setMinuten(Number(e.target.value.replace(/[^\d]/g, '')) || 0)}
-            placeholder="z.B. 240"
+            placeholder={gewaehlt ? `${basisMinuten || 240} (Grundlage)` : 'z.B. 240'}
           />
+          {gewaehlt !== '' && (
+            <span style={{ marginTop: '.4rem' }}>
+              Leer heißt: Es gilt die Zeit der Grundlage.
+            </span>
+          )}
         </label>
         <div className="buero-feld">
           <span>Stundensatz</span>
@@ -308,7 +487,7 @@ export function ArtikelFormular({
           <span>Einsatz je Stück</span>
           <span className="buero-betrag">{euro(kosten.summe)}</span>
         </div>
-        {typeof verkaufspreis === 'number' && verkaufspreis > 0 && (
+        {typeof preis === 'number' && preis > 0 && (
           <div
             style={{
               display: 'flex',
@@ -318,7 +497,7 @@ export function ArtikelFormular({
             }}
           >
             <span>bleibt vom Website-Preis</span>
-            <span className="buero-betrag">{euro(verkaufspreis - kosten.summe)}</span>
+            <span className="buero-betrag">{euro(preis - kosten.summe)}</span>
           </div>
         )}
         <div
@@ -332,9 +511,9 @@ export function ArtikelFormular({
           <span>Preisvorschlag (+{wunschaufschlag} %)</span>
           <span className="buero-betrag">{euro(kosten.vorschlag)}</span>
         </div>
-        {typeof verkaufspreis === 'number' &&
-          verkaufspreis > 0 &&
-          verkaufspreis < kosten.summe && (
+        {typeof preis === 'number' &&
+          preis > 0 &&
+          preis < kosten.summe && (
             <div className="buero-hinweis warn" style={{ marginTop: '.6rem' }}>
               Der Website-Preis liegt unter dem Einsatz. Jedes verkaufte Stück kostet die Werkstatt
               Geld.

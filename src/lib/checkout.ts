@@ -6,6 +6,8 @@ import { findBestPromotion, type PricedItem } from './promotions'
 
 export type CheckoutItemInput = {
   productId: number | string
+  /** Kennung der Variantenzeile — der verlässliche Weg */
+  variantId?: string
   variantTitle?: string
   color?: string
   quantity: number
@@ -16,6 +18,7 @@ export type DeliveryMethod = 'shipping' | 'pickup'
 export type PricedLine = {
   productId: number | string
   titleSnapshot: string
+  variantId?: string
   variantTitle?: string
   color?: string
   quantity: number
@@ -63,11 +66,22 @@ export async function priceCart(
 
     let unitPrice: number | undefined
     let variantTitle: string | undefined
+    let variantId: string | undefined
     if ((product.variants?.length ?? 0) > 0) {
-      const variant = product.variants!.find((v) => v.title === item.variantTitle)
+      /*
+       * Erst über die Kennung, dann über die Bezeichnung.
+       *
+       * Die Bezeichnung ist übersetzt: Wer auf Französisch bestellt, schickt
+       * den französischen Namen — und der Artikel wird hier in der Sprache des
+       * Hauses geladen. Über die Kennung ist das gleichgültig.
+       */
+      const variant =
+        (item.variantId && product.variants!.find((v) => v.id === item.variantId)) ||
+        product.variants!.find((v) => v.title === item.variantTitle)
       if (!variant) throw new Error(`Variante nicht gefunden: ${item.variantTitle}`)
       unitPrice = variant.price
       variantTitle = variant.title
+      variantId = variant.id ?? undefined
     } else {
       unitPrice = product.price ?? undefined
     }
@@ -80,6 +94,7 @@ export async function priceCart(
     lines.push({
       productId: product.id,
       titleSnapshot: product.title,
+      variantId,
       variantTitle,
       color,
       quantity,

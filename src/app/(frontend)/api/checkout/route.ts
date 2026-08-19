@@ -160,6 +160,7 @@ export async function POST(req: Request) {
         items: cart.lines.map((l) => ({
           product: typeof l.productId === 'string' ? Number(l.productId) : l.productId,
           titleSnapshot: l.titleSnapshot,
+          variantId: l.variantId,
           variantTitle: l.variantTitle,
           color: l.color,
           quantity: l.quantity,

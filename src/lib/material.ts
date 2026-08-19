@@ -6,7 +6,98 @@ import type { Payload } from 'payload'
  * Grundlage ist die Stückliste je Produkt (gepflegt im Büro). Damit lässt
  * sich zu jeder Bestellung sagen, ob das Material im Haus ist — und was
  * fehlt, bevor der Kunde auf sein Stück wartet.
+ *
+ * **Varianten haben ihre eigene Liste.** Ein Kübel in 100 × 50 braucht mehr
+ * Blech als derselbe in 60 × 30; eine gemeinsame Liste rechnet für den einen
+ * zu wenig und für den anderen zu viel — und die Bestandswarnung, die daraus
+ * entsteht, ist in beiden Fällen wertlos. Trägt eine Variante keine eigene
+ * Liste, gilt die Grundliste am Artikel; bei Farbvarianten ist das der
+ * Normalfall, und niemand soll dieselbe Liste dreimal pflegen.
  */
+
+export type StuecklistenZeile = { item?: unknown; quantity?: number | null; note?: string | null }
+
+/** Was eine Bestellposition über ihre Variante weiß. */
+export type VariantenBezug = {
+  /** Kennung der Variantenzeile am Artikel — überlebt Umbenennen und Sprachen */
+  variantId?: string | null
+  /** Die Bezeichnung, wie sie bei der Bestellung galt — der ältere Weg */
+  variantTitle?: string | null
+}
+
+type ProduktMitVarianten = {
+  billOfMaterials?: StuecklistenZeile[] | null
+  productionMinutes?: number | null
+  variants?:
+    | {
+        id?: string | null
+        title?: string | null
+        billOfMaterials?: StuecklistenZeile[] | null
+        productionMinutes?: number | null
+      }[]
+    | null
+}
+
+/**
+ * Die Variantenzeile zu einer Bestellposition.
+ *
+ * Gesucht wird zuerst über die Kennung: Die bleibt, auch wenn jemand die
+ * Bezeichnung ändert oder die Bestellung auf Französisch aufgegeben wurde.
+ * Die Bezeichnung ist der Rückfallweg für Bestellungen von vorher — dort
+ * steht keine Kennung, und dann ist der Name das Einzige, was da ist.
+ */
+export function varianteFinden<T extends { id?: string | null; title?: string | null }>(
+  varianten: T[] | null | undefined,
+  bezug: VariantenBezug,
+): T | undefined {
+  if (!varianten?.length) return undefined
+  if (bezug.variantId) {
+    const ueberKennung = varianten.find((v) => v.id && String(v.id) === String(bezug.variantId))
+    if (ueberKennung) return ueberKennung
+  }
+  if (bezug.variantTitle) {
+    return varianten.find((v) => v.title === bezug.variantTitle)
+  }
+  return undefined
+}
+
+/**
+ * Welche Stückliste für diese Position gilt.
+ *
+ * Die der Variante, wenn sie eine hat — sonst die des Artikels. Eine leere
+ * Variantenliste ist bewusst keine Aussage „braucht kein Material", sondern
+ * heißt „hier gilt die Grundliste": Alles andere hieße, dass jede neu
+ * angelegte Variante zunächst ohne Material dasteht und die Bestandswarnung
+ * schweigt.
+ */
+export function variantenStueckliste(
+  produkt: ProduktMitVarianten,
+  bezug: VariantenBezug = {},
+): StuecklistenZeile[] {
+  const variante = varianteFinden(produkt.variants, bezug)
+  const eigene = variante?.billOfMaterials ?? []
+  return eigene.length ? eigene : (produkt.billOfMaterials ?? [])
+}
+
+/**
+ * Wie lange diese Variante braucht — in Minuten.
+ *
+ * `null`, wenn weder Variante noch Artikel es wissen. Das ist etwas anderes
+ * als eine Null: Eine unbekannte Zeit darf in der Auslastung nicht als
+ * „kostet nichts" durchgehen (siehe lib/auslastung.ts).
+ */
+export function variantenMinuten(
+  produkt: ProduktMitVarianten,
+  bezug: VariantenBezug = {},
+): number | null {
+  const variante = varianteFinden(produkt.variants, bezug)
+  if (typeof variante?.productionMinutes === 'number' && variante.productionMinutes > 0) {
+    return variante.productionMinutes
+  }
+  return typeof produkt.productionMinutes === 'number' && produkt.productionMinutes > 0
+    ? produkt.productionMinutes
+    : null
+}
 
 export type Bedarfsposten = {
   itemId: number
@@ -25,7 +116,7 @@ const runden = (n: number) => Math.round(n * 1000) / 1000
  */
 export async function bedarfFuerProdukte(
   payload: Payload,
-  posten: { produktId: number; menge: number }[],
+  posten: ({ produktId: number; menge: number } & VariantenBezug)[],
 ): Promise<Bedarfsposten[]> {
   if (!posten.length) return []
 
@@ -41,8 +132,10 @@ export async function bedarfFuerProdukte(
   const bedarf = new Map<number, number>()
   for (const p of posten) {
     const produkt = produkte.find((x) => x.id === p.produktId)
-    for (const zeile of produkt?.billOfMaterials ?? []) {
-      const id = typeof zeile.item === 'object' ? zeile.item?.id : zeile.item
+    if (!produkt) continue
+    for (const zeile of variantenStueckliste(produkt, p)) {
+      const id =
+        typeof zeile.item === 'object' ? (zeile.item as { id?: number })?.id : zeile.item
       if (typeof id !== 'number' || !zeile.quantity) continue
       bedarf.set(id, runden((bedarf.get(id) ?? 0) + zeile.quantity * p.menge))
     }
@@ -117,12 +210,23 @@ export async function bestandsPruefung(
 /** Bedarf aus den Positionen einer Bestellung */
 export async function bedarfFuerBestellung(
   payload: Payload,
-  order: { items?: { product?: unknown; quantity: number }[] | null },
+  order: {
+    items?:
+      | ({ product?: unknown; quantity: number } & VariantenBezug)[]
+      | null
+  },
 ): Promise<Bedarfsposten[]> {
-  const posten: { produktId: number; menge: number }[] = []
+  const posten: ({ produktId: number; menge: number } & VariantenBezug)[] = []
   for (const p of order.items ?? []) {
     const id = typeof p.product === 'object' ? (p.product as { id?: number })?.id : p.product
-    if (typeof id === 'number') posten.push({ produktId: id, menge: p.quantity ?? 1 })
+    if (typeof id === 'number') {
+      posten.push({
+        produktId: id,
+        menge: p.quantity ?? 1,
+        variantId: p.variantId,
+        variantTitle: p.variantTitle,
+      })
+    }
   }
   return bedarfFuerProdukte(payload, posten)
 }

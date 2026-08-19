@@ -123,6 +123,20 @@ export const Orders: CollectionConfig = {
           type: 'text',
         },
         {
+          /*
+           * Die Kennung der Variantenzeile am Artikel.
+           *
+           * Die Bezeichnung allein reicht nicht: Sie ist übersetzt (eine
+           * französische Bestellung trägt den französischen Namen) und
+           * änderbar. Für die Frage „welche Stückliste gilt für dieses Stück?"
+           * braucht es etwas, das beides überlebt.
+           */
+          name: 'variantId',
+          label: 'Variantenkennung',
+          type: 'text',
+          admin: { readOnly: true, description: 'Zeigt auf die Variante am Artikel.' },
+        },
+        {
           name: 'color',
           label: 'Farbe',
           type: 'text',

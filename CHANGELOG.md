@@ -2,6 +2,13 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 19.08.2026 — Stückliste und Arbeitszeit je Variante
+
+- **Bisher galt eine Stückliste für den ganzen Artikel.** Ein Kübel in 100 × 50 braucht aber mehr Blech als derselbe in 60 × 30 — und dauert länger. Die gemeinsame Liste rechnete für den einen zu wenig und für den anderen zu viel; die Bestandswarnung war damit in beiden Fällen wertlos, und die Auslastung sagte für beide Größen dieselbe Stundenzahl.
+- **Jede Variante kann jetzt ihre eigene Liste und ihre eigene Arbeitszeit haben.** Im Büro unter Artikel steht oben ein Umschalter: Grundlage, dann jede Variante. Solange eine Variante nichts Eigenes hat, gilt die Grundlage — bei Farbvarianten ist das der Normalfall, und niemand pflegt dieselbe Liste dreimal. Ein Knopf legt eine eigene Liste an (mit der Grundlage als Anfang), ein zweiter macht das wieder rückgängig.
+- **Auftrag und Auslastung rechnen mit der bestellten Variante.** Aus einer Bestellung über das große Stück entsteht ein Auftrag mit dem Material des großen Stücks und dessen Stundenzahl. Auch die Kalkulation im Büro zeigt Einsatz und Preisvorschlag jetzt je Variante, gegen deren eigenen Preis.
+- **Die Bestellposition merkt sich, welche Variante gemeint war** — nicht nur ihren Namen. Der ist übersetzt und änderbar; wer eine Variante umbenennt, hätte sonst alle alten Bestellungen von ihrer Stückliste abgeschnitten.
+
 ## 19.08.2026 — Aufgeräumte Kopfleiste, sichtbares Kundenkonto, Wochenstunden
 
 - **Die Kopfleiste stand voll.** Neun Punkte nebeneinander, „Next Concept" und „Über uns" brachen auf zwei Zeilen um, und die Navigation saß irgendwo zwischen Schriftzug und Warenkorb statt in der Mitte. Jetzt liegen die Produktwelten unter **Kollektion** in einem Aufklappmenü — dort wächst künftig jede neue Kategorie, statt die Leiste zu verbreitern —, und drei Spalten halten Schriftzug links, Navigation mittig und die Zeichen rechts. Am Handy stehen die Kategorien eingerückt unter „Kollektion", damit nichts hinter einem zweiten Tipp verschwindet.

@@ -247,6 +247,15 @@ export interface Product {
     | {
         title: string;
         price: number;
+        billOfMaterials?:
+          | {
+              item: number | InventoryItem;
+              quantity: number;
+              note?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        productionMinutes?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -636,6 +645,10 @@ export interface Order {
     product?: (number | null) | Product;
     titleSnapshot: string;
     variantTitle?: string | null;
+    /**
+     * Zeigt auf die Variante am Artikel.
+     */
+    variantId?: string | null;
     color?: string | null;
     quantity: number;
     unitPrice: number;
@@ -1612,6 +1625,15 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         title?: T;
         price?: T;
+        billOfMaterials?:
+          | T
+          | {
+              item?: T;
+              quantity?: T;
+              note?: T;
+              id?: T;
+            };
+        productionMinutes?: T;
         id?: T;
       };
   colorOptions?:
@@ -1757,6 +1779,7 @@ export interface OrdersSelect<T extends boolean = true> {
         product?: T;
         titleSnapshot?: T;
         variantTitle?: T;
+        variantId?: T;
         color?: T;
         quantity?: T;
         unitPrice?: T;

@@ -55,6 +55,7 @@ export function CartView({ locale, dict }: { locale: Locale; dict: CartDict }) {
             code: code || undefined,
             items: items.map((i) => ({
               productId: i.productId,
+              variantId: i.variantId,
               variantTitle: i.variantTitle,
               quantity: i.quantity,
             })),

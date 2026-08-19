@@ -147,6 +147,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               null,
             readyMade: Boolean(product.readyMade),
             variants: (product.variants ?? []).map((v) => ({
+              id: v.id,
               title: v.title,
               price: v.price,
             })),

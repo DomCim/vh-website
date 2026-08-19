@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import { geplanteStufen, type Zahlplan } from './anzahlung'
 import type { Locale } from './i18n'
 import { rechnungskaufEmail, type CompanyInfo } from './mail'
+import { variantenMinuten } from './material'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben } from './settings'
@@ -51,6 +52,7 @@ type Bestellung = {
     | {
         product?: unknown
         titleSnapshot: string
+        variantId?: string | null
         variantTitle?: string | null
         color?: string | null
         quantity: number
@@ -141,8 +143,10 @@ async function geplanteMinuten(payload: Payload, bestellung: Bestellung): Promis
     const produkt = await payload
       .findByID({ collection: 'products', id, depth: 0, overrideAccess: true })
       .catch(() => null)
-    if (!produkt?.productionMinutes) return undefined
-    minuten += produkt.productionMinutes * (pos.quantity || 1)
+    // Die Zeit der bestellten Variante, sonst die des Artikels
+    const dauer = produkt ? variantenMinuten(produkt, pos) : null
+    if (!dauer) return undefined
+    minuten += dauer * (pos.quantity || 1)
   }
   return minuten > 0 ? minuten : undefined
 }

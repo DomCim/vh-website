@@ -188,6 +188,7 @@ export function CheckoutForm({
           paymentMethod,
           items: items.map((i) => ({
             productId: i.productId,
+            variantId: i.variantId,
             variantTitle: i.variantTitle,
             color: i.color,
             quantity: i.quantity,

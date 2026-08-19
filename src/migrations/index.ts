@@ -35,6 +35,7 @@ import * as migration_20260819_174511_wiedervorlagen from './20260819_174511_wie
 import * as migration_20260819_175115_angebotsannahme from './20260819_175115_angebotsannahme';
 import * as migration_20260819_175504_erechnung_plattform from './20260819_175504_erechnung_plattform';
 import * as migration_20260819_182142_werkstattwochen from './20260819_182142_werkstattwochen';
+import * as migration_20260819_193745_variantenstueckliste from './20260819_193745_variantenstueckliste';
 
 export const migrations = [
   {
@@ -220,6 +221,11 @@ export const migrations = [
   {
     up: migration_20260819_182142_werkstattwochen.up,
     down: migration_20260819_182142_werkstattwochen.down,
-    name: '20260819_182142_werkstattwochen'
+    name: '20260819_182142_werkstattwochen',
+  },
+  {
+    up: migration_20260819_193745_variantenstueckliste.up,
+    down: migration_20260819_193745_variantenstueckliste.down,
+    name: '20260819_193745_variantenstueckliste'
   },
 ];

@@ -17,7 +17,7 @@ type ProductProps = {
   available: boolean;
   productionTime?: string | null;
   readyMade?: boolean;
-  variants: { title: string; price: number }[];
+  variants: { id?: string | null; title: string; price: number }[];
   colorOptions: { name: string; hex?: string }[];
   images: {
     url: string;
@@ -93,6 +93,9 @@ export function ProductDetail({
       productId: product.id,
       slug: product.slug,
       title: product.title,
+      variantId: hasVariants
+        ? (product.variants[variantIndex]?.id ?? undefined)
+        : undefined,
       variantTitle: hasVariants
         ? product.variants[variantIndex]?.title
         : undefined,

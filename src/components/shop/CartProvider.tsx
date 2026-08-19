@@ -6,6 +6,8 @@ export type CartItem = {
   productId: number | string
   slug: string
   title: string
+  /** Kennung der Variantenzeile — die Bezeichnung ist übersetzt und änderbar */
+  variantId?: string
   variantTitle?: string
   color?: string
   /** Preis-Momentaufnahme für die Anzeige — verbindlich berechnet der Server beim Checkout */

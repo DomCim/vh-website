@@ -161,6 +161,58 @@ export const Products: CollectionConfig = {
           required: true,
           min: 0,
         },
+        {
+          /*
+           * Was diese Variante an Material braucht.
+           *
+           * Der Punkt, an dem eine gemeinsame Stückliste falsch wird: Ein
+           * Kübel in 100 × 50 braucht mehr Blech als derselbe in 60 × 30 —
+           * aber gleich viele Füße. Ein Faktor über die ganze Liste träfe
+           * deshalb beides falsch; hier steht die Liste, wie sie ist.
+           *
+           * Leer heißt: Es gilt die Grundliste am Artikel. Bei Varianten, die
+           * sich nur in der Farbe unterscheiden, ist das der Normalfall — und
+           * niemand pflegt dieselbe Liste dreimal.
+           */
+          name: 'billOfMaterials',
+          label: 'Stückliste dieser Variante',
+          type: 'array',
+          labels: { singular: 'Materialposten', plural: 'Stückliste' },
+          admin: {
+            // Gepflegt wird das im Büro unter /office/artikel, neben dem
+            // Inventar — in der Website-Verwaltung hat es nichts zu suchen.
+            hidden: true,
+          },
+          fields: [
+            {
+              name: 'item',
+              label: 'Posten aus dem Inventar',
+              type: 'relationship',
+              relationTo: 'inventory-items',
+              required: true,
+            },
+            {
+              type: 'row',
+              fields: [
+                { name: 'quantity', label: 'Menge je Stück', type: 'number', required: true, min: 0 },
+                { name: 'note', label: 'Bemerkung', type: 'text' },
+              ],
+            },
+          ],
+        },
+        {
+          /*
+           * Größer heißt meistens auch länger. Leer heißt: Es gilt die Zeit
+           * vom Artikel — sonst stünde bei jeder Farbvariante dieselbe Zahl.
+           */
+          name: 'productionMinutes',
+          label: 'Arbeitszeit dieser Variante (Minuten)',
+          type: 'number',
+          min: 0,
+          admin: {
+            hidden: true,
+          },
+        },
       ],
     },
     {
