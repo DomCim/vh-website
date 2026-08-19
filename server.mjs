@@ -19,7 +19,17 @@ import { WebSocketServer } from 'ws'
  */
 
 const port = Number(process.env.PORT || 3000)
-const entwicklung = process.env.NODE_ENV !== 'production'
+/*
+ * Entwicklung nur, wenn es ausdrücklich dasteht.
+ *
+ * Andersherum wäre es gefährlich: `next start` hat den Produktionsmodus selbst
+ * gesetzt, ein blankes `node server.mjs` tut das nicht. Mit der umgekehrten
+ * Annahme lief in der Pipeline ein Entwicklungsserver gegen einen fertigen
+ * Build — langsam, mit Übersetzung bei jeder Anfrage, und die ersten Aufrufe
+ * liefen in die Zeitüberschreitung. Auf einem Server ohne gesetzte Variable
+ * wäre dasselbe passiert, nur hätte es dort niemand gemerkt.
+ */
+const entwicklung = process.env.NODE_ENV === 'development'
 const PFAD = '/ws/buero'
 
 // ── Sammelstelle ────────────────────────────────────────────────────────────
