@@ -15,6 +15,10 @@
  * Gespeichert wird deshalb genau das Gerüst — keine Daten. Seiten holt der
  * Worker zuerst aus dem Netz und fällt erst dann auf den Zwischenspeicher
  * zurück; so bringt jeder Aufruf am Netz auch gleich den neuen Stand mit.
+ *
+ * Ein angenehmer Nebeneffekt: Next lädt verlinkte Seiten vorab, und die
+ * landen hier mit. Oft sind dadurch auch Ansichten offline da, die man noch
+ * nie geöffnet hat.
  */
 
 const CACHE = 'vh-buero-geruest'
@@ -32,23 +36,145 @@ const GERUEST = '/office'
  */
 const AUSKUNFT = '/office-nicht-geladen.html'
 
+/**
+ * Die Hüllen, die beim Installieren abgelegt werden.
+ *
+ * Warum nicht darauf warten, dass jemand die Seiten aufruft: Innerhalb der App
+ * wird seitenintern navigiert — ein Klick auf eine Zeile holt kein Dokument,
+ * also landet auch keines im Zwischenspeicher. Wer sich durchs Büro klickt,
+ * hätte am Ende fast nichts abgelegt und stünde ohne Netz vor leeren Händen.
+ *
+ * Das `_` steht für jede Kennung: Alle Detailseiten eines Bereichs teilen sich
+ * eine Hülle, ihren Inhalt holen sie aus dem Bestand im Gerät. Eine erfundene
+ * Kennung liefert also genau das Gerüst, das später jeder Beleg braucht.
+ */
+const BEREICHE = [
+  'anfragen',
+  'angebote',
+  'artikel',
+  'auftraege',
+  'belege',
+  'bestellungen',
+  'inventar',
+  'inventur',
+  'partner',
+  'rechnungen',
+]
+
+const MIT_NEU = ['angebote', 'auftraege', 'belege', 'inventar', 'inventur', 'partner', 'rechnungen']
+
+const VORRAT = [
+  GERUEST,
+  AUSKUNFT,
+  '/office/kalender',
+  '/office/einstellungen',
+  ...BEREICHE.map((b) => `/office/${b}`),
+  ...BEREICHE.map((b) => `/office/${b}/_`),
+  ...MIT_NEU.map((b) => `/office/${b}/neu`),
+]
+
+/**
+ * Legt eine Seite ab — samt dem, was sie zum Leben braucht.
+ *
+ * `cache.add` holt nur das Dokument. Ohne seine Skripte und Stile steht die
+ * Seite ohne Netz zwar da, bleibt aber leer: Das Gerüst ist da, die Anwendung
+ * dahinter nicht. Die Adressen tragen eine Prüfsumme im Namen, die niemand
+ * vorher kennt — also werden sie aus dem HTML gelesen.
+ */
+/**
+ * Beim Nachschlagen zählt die Adresse, sonst nichts.
+ *
+ * Die Antworten des Servers tragen `Vary: Sec-CH-Prefers-Color-Scheme,
+ * Accept-Encoding`. Ohne diesen Zusatz vergleicht der Browser beim
+ * Nachschlagen auch die genannten Kopfzeilen — und die stimmen nie überein:
+ * Abgelegt wurde die Datei von hier, angefragt wird sie von der Seite, und
+ * die schickt andere Kopfzeilen mit. Die Folge war ein Zwischenspeicher, der
+ * gut gefüllt aussah und trotzdem auf jede Frage „habe ich nicht" antwortete;
+ * ohne Netz lud dann kein einziges Skript, und die Seiten, die ihren Inhalt
+ * erst im Browser aufbauen, blieben leer.
+ *
+ * Die Adressen tragen ihre Prüfsumme im Namen — zwei Antworten unter
+ * derselben Adresse können sich gar nicht unterscheiden.
+ */
+const EGAL_WORAN = { ignoreVary: true }
+
+async function ablegen(cache, pfad) {
+  const antwort = await fetch(pfad, { credentials: 'same-origin' })
+  if (!antwort.ok) return
+
+  const text = await antwort.clone().text()
+  await cache.put(schluessel(new URL(pfad, self.location.origin).toString()), antwort)
+
+  /*
+   * Zwei Schreibweisen, und beide werden gebraucht.
+   *
+   * Im HTML stehen Skripte und Stile mit vollem Pfad. In Nexts Ladedaten
+   * stehen nachgeladene Teile dagegen relativ (`static/chunks/…`) — und
+   * genau die gehören zu den Seiten, die ihren Inhalt erst nachladen. Wurden
+   * sie übersehen, stand die Seite ohne Netz zwar da, blieb aber leer.
+   *
+   * Klammern gehören mit in den Pfad. Next legt die Teile einer Seite unter
+   * ihrem Ordner im Quelltext ab, und der heißt hier `(office)` — die Klammer
+   * ist Teil des Namens, nicht das Ende der Adresse. Wer sie als Ende liest,
+   * merkt sich `…/chunks/app/` statt der Datei; abgelegt wird dann nichts,
+   * und die Seite bleibt ohne Netz leer. (Genau daran hingen zuletzt Belege,
+   * Rechnungen und Kalender: Sie bringen nichts Fertiges mit, sondern bauen
+   * sich erst im Browser auf — ohne ihr Skript steht dort nichts.)
+   */
+  const zubehoer = new Set([
+    ...[...text.matchAll(/["'](\/_next\/static\/[^"'\s\\]+)/g)].map((t) => t[1]),
+    ...[...text.matchAll(/["'](static\/(?:chunks|css|media)\/[^"'\s\\]+)/g)].map(
+      (t) => `/_next/${t[1]}`,
+    ),
+    // Schriften und Bilder aus `url(…)` in eingebetteten Stilen; hier ist die
+    // schließende Klammer tatsächlich das Ende
+    ...[...text.matchAll(/url\(\s*["']?(\/_next\/static\/[^"')\s\\]+)/g)].map((t) => t[1]),
+  ])
+  await Promise.allSettled(
+    [...zubehoer].map(async (adresse) => {
+      if (await cache.match(adresse, EGAL_WORAN)) return
+      return cache.add(adresse)
+    }),
+  )
+}
+
 self.addEventListener('install', (event) => {
+  /*
+   * Beim Installieren nur das Nötigste, und zwar schnell.
+   *
+   * Der Vorrat wird erst nach dem Aktivieren gefüllt. Vorher stand er hier —
+   * mit dem Ergebnis, dass der Worker rund dreißig Seiten samt Zubehör holte,
+   * bevor er überhaupt zu arbeiten begann. In dieser Zeit bediente er nichts,
+   * und wer das Netz früh verlor, stand vor der Fehlerseite des Browsers.
+   */
   event.waitUntil(
     caches
       .open(CACHE)
-      /*
-       * Jeden Eintrag einzeln, und Fehlschläge einzeln verzeihen.
-       *
-       * `addAll` bricht beim ersten Fehlschlag ab und legt gar nichts ab. Beim
-       * Installieren steht man meist auf der Anmeldeseite, und was dort nicht
-       * abrufbar ist, riss bisher die Auskunftsseite mit — ausgerechnet die,
-       * die später erklären soll, warum etwas fehlt.
-       */
-      .then((cache) => Promise.allSettled([GERUEST, AUSKUNFT].map((pfad) => cache.add(pfad))))
+      .then((cache) => Promise.allSettled([GERUEST, AUSKUNFT].map((pfad) => ablegen(cache, pfad))))
       .catch(() => undefined)
       .then(() => self.skipWaiting()),
   )
 })
+
+/**
+ * Füllt den Vorrat, nachdem der Worker bereits arbeitet.
+ *
+ * Bewusst ohne `waitUntil`: Das Büro soll sofort bedient werden, der Vorrat
+ * darf sich in den nächsten Sekunden ansammeln. Was schon dasteht, wird nicht
+ * noch einmal geholt.
+ */
+async function vorratWaermen() {
+  try {
+    const cache = await caches.open(CACHE)
+    for (const pfad of VORRAT) {
+      if (await cache.match(schluessel(new URL(pfad, self.location.origin).toString()), EGAL_WORAN))
+        continue
+      await ablegen(cache, pfad).catch(() => undefined)
+    }
+  } catch {
+    // Ohne Vorrat läuft das Büro am Netz weiter — nur eben nicht ohne
+  }
+}
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -57,6 +183,9 @@ self.addEventListener('activate', (event) => {
       .then((namen) => Promise.all(namen.filter((n) => n !== CACHE).map((n) => caches.delete(n))))
       .then(() => self.clients.claim()),
   )
+
+  // Der Vorrat läuft nebenher — er darf die Aktivierung nicht aufhalten
+  vorratWaermen()
 })
 
 /**
@@ -106,7 +235,7 @@ self.addEventListener('fetch', (event) => {
   if (istGeruest(url)) {
     // Diese Dateien tragen eine Prüfsumme im Namen; was einmal da ist, stimmt.
     event.respondWith(
-      caches.match(anfrage).then(
+      caches.match(anfrage, EGAL_WORAN).then(
         (gefunden) =>
           gefunden ||
           fetch(anfrage).then((antwort) => {
@@ -146,8 +275,8 @@ self.addEventListener('fetch', (event) => {
          * ist die Auskunft besser als eine fremde Seite unter dieser Adresse.
          */
         return (
-          (await cache.match(schluessel(anfrage.url))) ||
-          (await cache.match(AUSKUNFT)) ||
+          (await cache.match(schluessel(anfrage.url), EGAL_WORAN)) ||
+          (await cache.match(AUSKUNFT, EGAL_WORAN)) ||
           new Response('Ohne Netz und ohne gespeicherte Fassung dieser Seite.', {
             status: 503,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
