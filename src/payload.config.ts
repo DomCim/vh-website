@@ -20,6 +20,7 @@ import { Roles } from './collections/Roles'
 import { MailLog } from './collections/MailLog'
 import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
+import { FollowUps } from './collections/FollowUps'
 import { Inquiries } from './collections/Inquiries'
 import { InventoryItems } from './collections/InventoryItems'
 import { Jobs } from './collections/Jobs'
@@ -90,6 +91,7 @@ export default buildConfig({
     BankTransactions,
     InventoryItems,
     Stocktakes,
+    FollowUps,
     Counters,
     Deletions,
     Drafts,

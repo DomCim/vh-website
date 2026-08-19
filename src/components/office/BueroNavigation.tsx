@@ -44,6 +44,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/anfragen', label: 'Anfragen', recht: 'anfragen.bearbeiten' },
       { href: '/office/bestellungen', label: 'Bestellungen', recht: 'anfragen.bearbeiten' },
       { href: '/office/angebote', label: 'Angebote', recht: 'angebote.schreiben' },
+      { href: '/office/wiedervorlagen', label: 'Wiedervorlagen' },
       { href: '/office/newsletter', label: 'Newsletter', recht: 'newsletter.versenden' },
     ],
   },

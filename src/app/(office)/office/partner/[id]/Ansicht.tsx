@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
 import { PartnerFormular } from '../../../../../components/office/PartnerFormular'
+import { Wiedervorlagen } from '../../../../../components/office/Wiedervorlagen'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../../lib/format'
 import { AUSGABEN_KATEGORIEN } from '../../../../../lib/listen'
@@ -84,6 +85,8 @@ export function PartnerBearbeitenAnsicht() {
         }}
         kategorien={AUSGABEN_KATEGORIEN.map((x) => ({ wert: x.value, text: x.label }))}
       />
+
+      <Wiedervorlagen bezug={{ contact: k.id }} />
 
       {belege.length > 0 && (
         <>

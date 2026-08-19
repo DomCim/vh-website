@@ -46,6 +46,12 @@ type Posten = {
   minQuantity?: number | null
 }
 type Anfrage = { status?: string | null }
+type Wiedervorlage = {
+  id: number | string
+  title?: string | null
+  dueDate?: string | null
+  done?: boolean | null
+}
 
 export function UebersichtAnsicht() {
   const bestellungen = useBestand<Bestellung>('bestellungen')
@@ -53,6 +59,7 @@ export function UebersichtAnsicht() {
   const belege = useBestand<Beleg>('belege')
   const inventar = useBestand<Posten>('inventar')
   const anfragen = useBestand<Anfrage>('anfragen')
+  const wiedervorlagen = useBestand<Wiedervorlage>('wiedervorlagen')
   const darf = useDarf()
 
   const jahr = new Date().getFullYear()
@@ -113,6 +120,19 @@ export function UebersichtAnsicht() {
   const laengstFaellig = zuZahlen[0]
   const offeneAnfragen = anfragen.filter((a) => a.status === 'neu').length
 
+  // Selbst gestellte Erinnerungen, deren Tag da ist. Sie stehen hier zwischen
+  // dem, was das Büro von allein gefunden hat — der Zettel am Monitor gehört
+  // auf dieselbe Liste wie die überfällige Rechnung.
+  const heuteStempel = new Date().toISOString().slice(0, 10)
+  const faelligeZettel = useMemo(
+    () =>
+      wiedervorlagen
+        .filter((w) => !w.done && (w.dueDate ?? '').slice(0, 10) <= heuteStempel)
+        .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? '')),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wiedervorlagen],
+  )
+
   return (
     <>
       <h1>Übersicht {jahr}</h1>
@@ -158,7 +178,8 @@ export function UebersichtAnsicht() {
       {/* Die Überschrift nur, wenn darunter auch etwas steht: Wer die Rechte
           für Belege und Rechnungen nicht hat, sah sonst „Kümmern" über einer
           leeren Fläche und suchte nach dem, was fehlt. */}
-      {((zahlen.ohneBeleg > 0 && darf('belege.erfassen')) ||
+      {(faelligeZettel.length > 0 ||
+        (zahlen.ohneBeleg > 0 && darf('belege.erfassen')) ||
         (zahlen.ungeprueft > 0 && darf('belege.erfassen')) ||
         (ueberfaellig.length > 0 && darf('rechnungen.schreiben')) ||
         (zuZahlen.length > 0 && darf('belege.erfassen')) ||
@@ -167,6 +188,24 @@ export function UebersichtAnsicht() {
         <>
           <h2>Kümmern</h2>
           <div className="buero-liste">
+            {faelligeZettel.length > 0 && (
+              <Link href="/office/wiedervorlagen" className="buero-zeile">
+                <div className="buero-zeile-haupt">
+                  <div className="buero-zeile-titel">
+                    {faelligeZettel.length} Wiedervorlage
+                    {faelligeZettel.length === 1 ? '' : 'n'} fällig
+                  </div>
+                  <div className="buero-zeile-neben">
+                    {faelligeZettel
+                      .slice(0, 2)
+                      .map((w) => w.title)
+                      .join(' · ')}
+                    {faelligeZettel.length > 2 ? ' …' : ''}
+                  </div>
+                </div>
+                <span className="buero-marker offen">ansehen</span>
+              </Link>
+            )}
             {zuZahlen.length > 0 && darf('belege.erfassen') && (
               <Link href="/office/belege?filter=offen" className="buero-zeile">
                 <div className="buero-zeile-haupt">

@@ -85,6 +85,7 @@ export interface Config {
     'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
     stocktakes: Stocktake;
+    'follow-ups': FollowUp;
     counters: Counter;
     deletions: Deletion;
     drafts: Draft;
@@ -119,6 +120,7 @@ export interface Config {
     'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
+    'follow-ups': FollowUpsSelect<false> | FollowUpsSelect<true>;
     counters: CountersSelect<false> | CountersSelect<true>;
     deletions: DeletionsSelect<false> | DeletionsSelect<true>;
     drafts: DraftsSelect<false> | DraftsSelect<true>;
@@ -1158,44 +1160,24 @@ export interface Stocktake {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "counters".
+ * via the `definition` "follow-ups".
  */
-export interface Counter {
+export interface FollowUp {
   id: number;
-  key: string;
-  lastNumber: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "deletions".
- */
-export interface Deletion {
-  id: number;
-  bereich: string;
-  datensatz: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "drafts".
- */
-export interface Draft {
-  id: number;
-  benutzer: number | User;
-  schluessel: string;
-  stand:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  geraet?: string | null;
+  title: string;
+  /**
+   * An diesem Tag meldet sich das Büro aufs Handy.
+   */
+  dueDate: string;
+  done?: boolean | null;
+  note?: string | null;
+  contact?: (number | null) | Contact;
+  job?: (number | null) | Job;
+  quote?: (number | null) | Quote;
+  invoice?: (number | null) | OutgoingInvoice;
+  doneAt?: string | null;
+  remindedAt?: string | null;
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -1299,6 +1281,49 @@ export interface Role {
    * Eingebaute Rollen lassen sich nicht löschen.
    */
   eingebaut?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "counters".
+ */
+export interface Counter {
+  id: number;
+  key: string;
+  lastNumber: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deletions".
+ */
+export interface Deletion {
+  id: number;
+  bereich: string;
+  datensatz: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "drafts".
+ */
+export interface Draft {
+  id: number;
+  benutzer: number | User;
+  schluessel: string;
+  stand:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  geraet?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1448,6 +1473,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stocktakes';
         value: number | Stocktake;
+      } | null)
+    | ({
+        relationTo: 'follow-ups';
+        value: number | FollowUp;
       } | null)
     | ({
         relationTo: 'counters';
@@ -2070,6 +2099,25 @@ export interface StocktakesSelect<T extends boolean = true> {
       };
   totalValue?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "follow-ups_select".
+ */
+export interface FollowUpsSelect<T extends boolean = true> {
+  title?: T;
+  dueDate?: T;
+  done?: T;
+  note?: T;
+  contact?: T;
+  job?: T;
+  quote?: T;
+  invoice?: T;
+  doneAt?: T;
+  remindedAt?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

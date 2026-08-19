@@ -278,6 +278,65 @@ export async function offeneRechnungenMelden(payload: Payload): Promise<number> 
 }
 
 /**
+ * Fällige Wiedervorlagen melden.
+ *
+ * Der Unterschied zu allem anderen hier: Diese Erinnerung hat sich jemand
+ * selbst gestellt. Deshalb wird sie einzeln gemeldet und nicht gesammelt —
+ * „drei Wiedervorlagen fällig" ist eine Zahl, „Herrn Müller wegen des zweiten
+ * Kübels anrufen" ist ein Auftrag, den man im Vorbeigehen erledigt.
+ *
+ * Höchstens einmal je Zettel und Tag: Der Takt klopft viermal in der Stunde,
+ * und eine Erinnerung, die zur Tapete wird, erinnert an nichts mehr.
+ */
+export async function wiedervorlagenMelden(payload: Payload): Promise<number> {
+  const heute = tagesStempel(new Date())
+  const bisEndeHeute = new Date()
+  bisEndeHeute.setHours(23, 59, 59, 999)
+
+  const { docs } = await payload.find({
+    collection: 'follow-ups',
+    where: {
+      and: [
+        { done: { equals: false } },
+        { dueDate: { less_than_equal: bisEndeHeute.toISOString() } },
+      ],
+    },
+    sort: 'dueDate',
+    limit: 25,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  let gemeldet = 0
+  for (const zettel of docs as Record<string, any>[]) {
+    if (zettel.remindedAt && tagesStempel(new Date(zettel.remindedAt)) >= heute) continue
+
+    const tage = tageBis(zettel.dueDate)
+    await benachrichtige(payload, {
+      titel: 'Wiedervorlage',
+      text:
+        tage < 0
+          ? `${zettel.title} — seit ${Math.abs(tage)} ${Math.abs(tage) === 1 ? 'Tag' : 'Tagen'} liegengeblieben.`
+          : zettel.title,
+      url: '/office/wiedervorlagen',
+      tag: `wiedervorlage-${zettel.id}`,
+    })
+
+    await payload
+      .update({
+        collection: 'follow-ups',
+        id: zettel.id,
+        overrideAccess: true,
+        data: { remindedAt: new Date().toISOString() },
+      })
+      .catch(() => undefined)
+    gemeldet += 1
+  }
+
+  return gemeldet
+}
+
+/**
  * Nach der Lieferung um eine Kundenstimme bitten.
  *
  * Die Kundenstimmen auf der Website waren bisher ein Sammelproblem: Es gab
@@ -468,6 +527,7 @@ export type WartungsBericht = {
   belege: number
   angebote: number
   rechnungen: number
+  wiedervorlagen: number
   kundenstimmen: number
   aufgeraeumt: Record<string, number>
   stillstand: string[]
@@ -480,6 +540,7 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     belege: 0,
     angebote: 0,
     rechnungen: 0,
+    wiedervorlagen: 0,
     kundenstimmen: 0,
     aufgeraeumt: {},
     stillstand: [],
@@ -507,6 +568,12 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     bericht.rechnungen = await offeneRechnungenMelden(payload)
   } catch (err) {
     payload.logger.error({ err }, 'Wartung: offene Rechnungen fehlgeschlagen')
+  }
+
+  try {
+    bericht.wiedervorlagen = await wiedervorlagenMelden(payload)
+  } catch (err) {
+    payload.logger.error({ err }, 'Wartung: Wiedervorlagen fehlgeschlagen')
   }
 
   try {

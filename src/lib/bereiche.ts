@@ -23,6 +23,7 @@ export const BEREICHE = {
   newsletter: 'newsletter-subscribers',
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',
+  wiedervorlagen: 'follow-ups',
 } as const
 
 /** Ein Bereich, hinter dem eine Sammlung steht. */

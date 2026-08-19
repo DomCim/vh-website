@@ -7,6 +7,7 @@ import React, { useMemo } from 'react'
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
 import { Zahlungsleiste } from '../../../../../components/office/Zahlungsleiste'
+import { Wiedervorlagen } from '../../../../../components/office/Wiedervorlagen'
 import { Zeiterfassung } from '../../../../../components/office/Zeiterfassung'
 import { useAbgleich, useBestand, useDatensatz, useRahmen } from '../../../../../lib/buero/bestand'
 import { bestandsPruefung, type Posten } from '../../../../../lib/buero/material'
@@ -169,6 +170,11 @@ export function AuftragAnsicht() {
         auftragswert={auftragswert}
         materialkosten={materialkosten}
       />
+
+      {/* Nur der Auftrag als Bezug: Was am Partner hängt, steht beim Partner.
+          Beides zusammen zeigte hier auch Zettel, die mit diesem Stück nichts
+          zu tun haben. */}
+      <Wiedervorlagen bezug={{ job: j.id }} />
     </>
   )
 }

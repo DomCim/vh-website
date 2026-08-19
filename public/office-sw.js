@@ -69,6 +69,7 @@ const VORRAT = [
   '/office/kalender',
   '/office/auslastung',
   '/office/nachkalkulation',
+  '/office/wiedervorlagen',
   '/office/einstellungen',
   ...BEREICHE.map((b) => `/office/${b}`),
   ...BEREICHE.map((b) => `/office/${b}/_`),
