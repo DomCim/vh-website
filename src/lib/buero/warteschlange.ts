@@ -3,7 +3,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
 import type { Bereich } from '../bereiche'
-import { abgleichen, oertlichEntfernen, oertlichMerken } from './bestand'
+import { abgleichen, istErreichbar, oertlichEntfernen, oertlichMerken } from './bestand'
 import {
   WARTESCHLANGE,
   datenbank,
@@ -182,8 +182,18 @@ export async function absenden(auftrag: {
   const merken = (id: string | number) =>
     oertlichMerken(auftrag.bereich, { ...vorschau, id, updatedAt: new Date().toISOString() })
 
-  const kannDirekt =
-    (typeof navigator === 'undefined' || navigator.onLine) && zustand.wartend === 0
+  /*
+   * Direkt zum Server, solange nichts wartet und die letzte Anfrage
+   * durchkam — nur so bleiben dessen Einwände und die Nummern erhalten, die
+   * er vergibt.
+   *
+   * Gefragt wird dabei nicht der Browser, ob er online sei (darauf ist kein
+   * Verlass), sondern der eigene Merker aus dem letzten Abgleich. Das ist auch
+   * aus einem zweiten Grund wichtig: Ein vergeblicher Versuch dauert, und wer
+   * in der Werkstatt auf Speichern tippt und sofort weiterblättert, verlöre
+   * die Eingabe, wenn sie erst nach dem Fehlschlag in die Schlange käme.
+   */
+  const kannDirekt = zustand.wartend === 0 && istErreichbar()
 
   if (kannDirekt) {
     let antwort: Response
@@ -299,10 +309,10 @@ function spaeterNochmal() {
  */
 export async function abarbeiten(): Promise<void> {
   if (!speicherVerfuegbar()) return
-  // Läuft schon einer, oder ist gerade kein Netz da: später nochmal. Das
-  // Nachfassen hier nicht zu vergessen ist wichtig — sonst bliebe die Schlange
-  // liegen, bis jemand die App neu öffnet.
-  if (laeuft || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+  // Läuft schon einer: später nochmal. Das Nachfassen hier nicht zu vergessen
+  // ist wichtig — sonst bliebe die Schlange liegen, bis jemand die App neu
+  // öffnet. Ob Netz da ist, wird nicht gefragt: Der Versuch beantwortet das.
+  if (laeuft) {
     spaeterNochmal()
     return
   }

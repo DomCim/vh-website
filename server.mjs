@@ -82,10 +82,23 @@ const bedienen = app.getRequestHandler()
 await app.prepare()
 
 const server = createServer((anfrage, antwort) => {
-  bedienen(anfrage, antwort)
+  /*
+   * Das `.catch` ist nicht Zierde: `bedienen` liefert ein Versprechen, und
+   * Node beendet sich bei einer unbehandelten Ablehnung. Nexts eigener Server
+   * fängt das ab — dieser hier muss es selbst tun, sonst reißt eine einzige
+   * missratene Anfrage den ganzen Betrieb mit.
+   */
+  bedienen(anfrage, antwort).catch((err) => {
+    console.error('Anfrage fehlgeschlagen:', err)
+    if (!antwort.headersSent) antwort.writeHead(500)
+    antwort.end()
+  })
 })
 
 const wss = new WebSocketServer({ noServer: true })
+
+// Ein Fehler ohne Zuhörer beendet in Node den Prozess — auch hier
+wss.on('error', (err) => console.error('WebSocket-Server:', err.message))
 
 /**
  * Nimmt eine neue Verbindung an — nachdem die Eintrittskarte gestimmt hat.
@@ -138,6 +151,13 @@ server.emit = (name, ...rest) => {
     return true
   }
 
+  /*
+   * Zuhörer vor dem Handschlag: Fällt die Leitung mitten im Aufbau aus — ein
+   * Handy, das in den Fahrstuhl fährt —, meldet der rohe Socket einen Fehler.
+   * Ohne Zuhörer wäre das das Ende des Prozesses.
+   */
+  socket.on('error', () => socket.destroy())
+
   verbindungAnnehmen(anfrage, socket, kopf, benutzerId)
   return true
 }
@@ -162,6 +182,21 @@ const herzschlag = setInterval(() => {
   }
 }, 30_000)
 herzschlag.unref?.()
+
+/*
+ * Letzte Rettungsleine.
+ *
+ * Ein Webserver darf nicht sterben, weil eine Anfrage oder ein Socket sich
+ * danebenbenimmt. Ohne diese beiden Zeilen beendet Node den Prozess bei jedem
+ * unbehandelten Fehler — und dann ist nicht eine Seite kaputt, sondern alles,
+ * bis jemand den Container neu startet.
+ */
+process.on('uncaughtException', (err) => {
+  console.error('Unbehandelter Fehler:', err)
+})
+process.on('unhandledRejection', (grund) => {
+  console.error('Unbehandelte Ablehnung:', grund)
+})
 
 server.listen(port, () => {
   console.log(

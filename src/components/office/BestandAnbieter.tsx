@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
 import { istBereich } from '../../lib/bereiche'
-import { abgleichen, bestandLaden, netzZustandSetzen } from '../../lib/buero/bestand'
+import { abgleichen, bestandLaden, netzWegMelden } from '../../lib/buero/bestand'
 import { abarbeiten, warteschlangeLaden } from '../../lib/buero/warteschlange'
 
 /**
@@ -134,14 +134,16 @@ export function BestandAnbieter() {
       }
     }
 
+    // „Netz ist wieder da" ist nur ein Anstoß, kein Beweis — bewiesen wird es
+    // dadurch, dass eine Anfrage ankommt.
     const beiOnline = () => {
-      netzZustandSetzen(true)
       // Zuerst das Eigene loswerden, dann nachsehen was fremd dazugekommen ist
       void abarbeiten()
       void abgleichen()
       void verbinden()
     }
-    const beiOffline = () => netzZustandSetzen(false)
+    // In dieser Richtung stimmt die Auskunft des Browsers fast immer
+    const beiOffline = () => netzWegMelden()
 
     // Der Service Worker hält das Gerüst bereit — ohne ihn zeigt der Browser
     // ohne Netz seine eigene Fehlerseite, und der Bestand im Gerät nützt nichts.
@@ -153,7 +155,7 @@ export function BestandAnbieter() {
       })
     }
 
-    netzZustandSetzen(navigator.onLine)
+    if (!navigator.onLine) netzWegMelden()
     void verbinden()
 
     const uhr = window.setInterval(() => {

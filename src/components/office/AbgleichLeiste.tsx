@@ -26,18 +26,20 @@ function vorZeit(zeitpunkt: number): string {
 }
 
 export function AbgleichLeiste() {
-  const { online, stand, fehler, bereit } = useAbgleich()
+  const { erreichbar, stand, fehler, bereit } = useAbgleich()
   const { wartend, fehlerhaft } = useWarteschlange()
 
   if (!bereit) return null
-  if (online && !fehler && !wartend && !fehlerhaft) return null
+  if (erreichbar && !fehler && !wartend && !fehlerhaft) return null
 
   const teile: string[] = []
-  if (!online) teile.push(stand ? `Ohne Netz — Stand ${vorZeit(stand)}` : 'Ohne Netz')
+  if (!erreichbar) teile.push(stand ? `Ohne Netz — Stand ${vorZeit(stand)}` : 'Ohne Netz')
   else if (fehler) teile.push(`Abgleich hakt${stand ? ` — Stand ${vorZeit(stand)}` : ''}`)
 
   if (wartend > 0) {
-    teile.push(`${wartend} Änderung${wartend === 1 ? '' : 'en'} ${online ? 'gehen raus' : 'warten'}`)
+    teile.push(
+      `${wartend} Änderung${wartend === 1 ? '' : 'en'} ${erreichbar ? 'gehen raus' : 'warten'}`,
+    )
   }
   if (fehlerhaft > 0) {
     teile.push(`${fehlerhaft} abgelehnt — bitte nachsehen`)

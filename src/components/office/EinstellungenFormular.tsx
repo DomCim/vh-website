@@ -226,6 +226,8 @@ export function EinstellungenFormular({
 }) {
   const [felder, setFelder] = useState<FeldBeschreibung[] | null>(null)
   const [werte, setWerte] = useState<Werte>({})
+  /** Der Stand beim Öffnen — daran wird gemessen, was wirklich geändert wurde. */
+  const [urspruenglich, setUrspruenglich] = useState<Werte>({})
   const [meldung, setMeldung] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
 
@@ -241,6 +243,7 @@ export function EinstellungenFormular({
         if (abgebrochen) return
         setFelder(daten.felder)
         setWerte(daten.werte ?? {})
+        setUrspruenglich(daten.werte ?? {})
       } catch {
         if (!abgebrochen) setMeldung('Einstellungen brauchen eine Verbindung.')
       }
@@ -256,6 +259,26 @@ export function EinstellungenFormular({
   }, [])
 
   async function speichern() {
+    /*
+     * Nur das Geänderte schicken, nicht das ganze Blatt.
+     *
+     * Sonst überschriebe ein Speichern hier still, was jemand anderes in der
+     * Zwischenzeit an einer anderen Stelle geändert hat — und dieses Formular
+     * kann lange offen stehen. Payload übernimmt, was mitkommt, und lässt den
+     * Rest, wie er ist.
+     */
+    const geaendert: Werte = {}
+    for (const schluessel of Object.keys(werte)) {
+      if (JSON.stringify(werte[schluessel]) !== JSON.stringify(urspruenglich[schluessel])) {
+        geaendert[schluessel] = werte[schluessel]
+      }
+    }
+
+    if (!Object.keys(geaendert).length) {
+      setMeldung('Nichts geändert.')
+      return
+    }
+
     setLaeuft(true)
     setMeldung(null)
     try {
@@ -263,9 +286,14 @@ export function EinstellungenFormular({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ bereich, werte }),
+        body: JSON.stringify({ bereich, werte: geaendert }),
       })
-      setMeldung(antwort.ok ? 'Gespeichert.' : 'Das hat nicht geklappt.')
+      if (antwort.ok) {
+        setUrspruenglich(werte)
+        setMeldung('Gespeichert.')
+      } else {
+        setMeldung('Das hat nicht geklappt.')
+      }
     } catch {
       setMeldung('Einstellungen brauchen eine Verbindung.')
     } finally {

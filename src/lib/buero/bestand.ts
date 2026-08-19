@@ -72,8 +72,15 @@ export type AbgleichZustand = {
   laeuft: boolean
   /** Wann zuletzt erfolgreich abgeglichen wurde */
   stand: number | null
-  /** Ist das Gerät nach eigener Auskunft am Netz? */
-  online: boolean
+  /**
+   * Kam die letzte Anfrage durch?
+   *
+   * Bewusst nicht `navigator.onLine`: Ein Handy am Rand der Funkzelle gilt dem
+   * Browser durchgehend als „online", während jede Anfrage ins Leere läuft —
+   * und umgekehrt meldet nicht jeder Browser zuverlässig, wenn das Netz zurück
+   * ist. Was zählt, ist, ob eine Anfrage ankommt.
+   */
+  erreichbar: boolean
   /** Der letzte Fehlschlag, falls einer ansteht */
   fehler: string | null
   /** Wurde der Bestand aus dem Gerät schon geladen? */
@@ -83,7 +90,7 @@ export type AbgleichZustand = {
 let zustand: AbgleichZustand = {
   laeuft: false,
   stand: null,
-  online: true,
+  erreichbar: true,
   fehler: null,
   bereit: false,
 }
@@ -205,12 +212,20 @@ export function abgleichen(nurBereiche?: Bereich[]): Promise<void> {
         const staendeFuerFrage: Record<string, string | null> = {}
         for (const bereich of offen) staendeFuerFrage[bereich] = staende.get(bereich) ?? null
 
-        const antwort = await fetch('/api/office/abgleich', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ staende: staendeFuerFrage, bereiche: offen }),
-        })
+        let antwort: Response
+        try {
+          antwort = await fetch('/api/office/abgleich', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ staende: staendeFuerFrage, bereiche: offen }),
+          })
+        } catch {
+          // Nicht durchgekommen — das ist kein Fehler, das ist kein Netz
+          zustandSetzen({ erreichbar: false, fehler: null })
+          return
+        }
+        zustandSetzen({ erreichbar: true })
         // Nicht angemeldet ist kein Fehler, den man anzeigen müsste — auf der
         // Anmeldeseite läuft dieselbe Hülle, und dort gibt es nichts zu holen.
         if (antwort.status === 401 || antwort.status === 403) {
@@ -262,8 +277,20 @@ export function abgleichen(nurBereiche?: Bereich[]): Promise<void> {
   })
 }
 
-export function netzZustandSetzen(online: boolean) {
-  zustandSetzen({ online })
+/** Kam die letzte Anfrage durch? Für Entscheidungen außerhalb von React. */
+export function istErreichbar(): boolean {
+  return zustand.erreichbar
+}
+
+/**
+ * Meldung des Browsers, dass das Netz weg ist.
+ *
+ * Nur in dieser Richtung wird ihm geglaubt: „offline" stimmt fast immer,
+ * „online" oft nicht. Dass es wieder geht, zeigt sich daran, dass eine
+ * Anfrage ankommt.
+ */
+export function netzWegMelden() {
+  zustandSetzen({ erreichbar: false })
 }
 
 /**
@@ -401,7 +428,7 @@ export function useAbgleich(): AbgleichZustand {
     }
   }, [])
   const ruhend: AbgleichZustand = useMemo(
-    () => ({ laeuft: false, stand: null, online: true, fehler: null, bereit: false }),
+    () => ({ laeuft: false, stand: null, erreichbar: true, fehler: null, bereit: false }),
     [],
   )
   return useSyncExternalStore(
