@@ -11,6 +11,11 @@ on:
         type: choice
         options: ['ja', 'nein']
         default: 'ja'
+      alslatest:
+        description: 'Auch als latest veröffentlichen? (sonst nur die Nummer)'
+        type: choice
+        options: ['nein', 'ja']
+        default: 'nein'
 
 env:
   REGISTRY: ghcr.io
@@ -144,6 +149,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.abbild }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            # Von Hand nur, wenn ausdrücklich gewollt: `latest` ist der Stand,
+            # den der Stack zieht — ein Versuchsbau darf ihn nicht überschreiben.
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && inputs.alslatest == 'ja' }}
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=raw,value=${{ steps.fassung.outputs.nummer }},enable=${{ github.event_name == 'workflow_dispatch' }}
