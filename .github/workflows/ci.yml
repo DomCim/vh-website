@@ -74,9 +74,14 @@ jobs:
       - name: Browser für die Rauchtests
         run: pnpm exec playwright install --with-deps chromium
 
+      # NODE_ENV bewusst gesetzt: Ohne das hält Payload den Lauf für
+      # Entwicklung und gleicht das Schema selbst ab, statt sich auf die
+      # Migrationen zu verlassen. Auf einer frisch migrierten Datenbank
+      # endete das ohne eine Zeile Ausgabe — und ohne Zugänge.
       - name: Zugang für die Oberflächen-Prüfung anlegen
         run: pnpm benutzer
         env:
+          NODE_ENV: production
           ADMIN_PASSWORT: pruef-geheim-123
           VH_PASSWORT: pruef-geheim-123
 
@@ -84,6 +89,23 @@ jobs:
         run: |
           pnpm start &
           npx --yes wait-on http://localhost:3000/api/healthz --timeout 90000
+
+      # Nachsehen, ob der Zugang wirklich steht. Ohne diese Probe scheitern
+      # später alle Büro-Prüfungen an derselben Stelle, und im Protokoll
+      # steht nur „Received: false" — die Ursache liegt dann Schritte vorher.
+      - name: Prüfzugang nachmessen
+        run: |
+          code=$(curl -s -o /tmp/anmeldung.json -w '%{http_code}' \
+            -X POST http://localhost:3000/api/users/login \
+            -H 'Content-Type: application/json' \
+            -H 'Origin: http://localhost:3000' \
+            -d '{"email":"admin@vincent-hellmann.com","password":"pruef-geheim-123"}')
+          if [ "$code" != "200" ]; then
+            echo "::error::Der Prüfzugang meldet sich nicht an ($code) — siehe Schritt 'Zugang ... anlegen'."
+            cat /tmp/anmeldung.json
+            exit 1
+          fi
+          echo "Prüfzugang steht."
 
       - name: Rauchtests
         run: pnpm test
