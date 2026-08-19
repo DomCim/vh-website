@@ -68,8 +68,15 @@ jobs:
       - name: Bauen
         run: pnpm build
 
+      # Auch hier NODE_ENV, und aus demselben Grund: Ohne das steht der
+      # Postgres-Adapter auf `push` — er gleicht das Schema dann selbst ab
+      # und überspringt die Migrationen wortlos. Die Tabellen entstanden
+      # bisher nur zufällig, weil der nächste Schritt ebenfalls in diesem
+      # Modus lief; fiel das weg, fehlte auf einmal `users`.
       - name: Datenbank migrieren
         run: pnpm migrate
+        env:
+          NODE_ENV: production
 
       - name: Browser für die Rauchtests
         run: pnpm exec playwright install --with-deps chromium
