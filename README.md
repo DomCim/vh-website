@@ -92,6 +92,15 @@ Die Rolle steuert nur zweierlei:
 
 Ohne gesetzte `ROLLE` macht ein Prozess alles — so laufen Entwicklung und Prüfung weiterhin mit einem einzigen Start.
 
+**Welcher Stand läuft wo?** Jeder Container hat seine eigene Auskunft, und die muss man getrennt fragen — sonst antwortet immer nur die Website:
+
+```
+curl https://vh.dominikdill.com/api/healthz         → Web-Container
+curl https://vh.dominikdill.com/api/office/healthz  → Büro-Container
+```
+
+Beide melden unter `version` den Commit, mit dem ihr Abbild gebaut wurde. Stehen dort zwei verschiedene Nummern, ist beim Ausrollen nur einer der beiden getauscht worden. Sieht die Büro-Oberfläche alt aus, ist das die erste Frage — nicht die letzte.
+
 **Update:** Beide Container ziehen dasselbe Abbild. In Portainer „Re-pull image & redeploy" auf den Stack anwenden, dann starten sie gemeinsam neu; die Migrationen laufen dabei nur im Web-Container.
 
 ### Welche Fassung der Stack fährt
