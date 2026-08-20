@@ -27,11 +27,30 @@ function tiefLesen(werte: Werte, pfad: string[]): unknown {
   )
 }
 
-function tiefSetzen(werte: Werte, pfad: string[], wert: unknown): Werte {
+/**
+ * Einen Wert tief in der Struktur setzen — und die Struktur dabei lassen, wie
+ * sie ist.
+ *
+ * Der Haken sitzt bei den Listen. `{ ...stand, [kopf]: … }` macht aus einem
+ * Array ein gewöhnliches Objekt: Aus `[{…}]` wird `{ '0': {…} }`. Beim
+ * Anzeigen fragt das Formular `Array.isArray` — und findet nichts mehr.
+ *
+ * Genau das passierte beim Anlegen eines Postfachs: Der neue Eintrag stand
+ * da, und beim ersten Buchstaben war er wieder verschwunden. Nicht der Knopf
+ * hatte zugeklappt — die Liste war keine mehr.
+ */
+function tiefSetzen(stand: unknown, pfad: string[], wert: unknown): unknown {
   const [kopf, ...rest] = pfad
-  if (!rest.length) return { ...werte, [kopf]: wert }
-  const darunter = (werte[kopf] ?? {}) as Werte
-  return { ...werte, [kopf]: tiefSetzen(darunter, rest, wert) }
+
+  if (Array.isArray(stand)) {
+    const kopie = stand.slice()
+    const i = Number(kopf)
+    kopie[i] = rest.length ? tiefSetzen(kopie[i] ?? {}, rest, wert) : wert
+    return kopie
+  }
+
+  const alt = (stand && typeof stand === 'object' ? stand : {}) as Werte
+  return { ...alt, [kopf]: rest.length ? tiefSetzen(alt[kopf], rest, wert) : wert }
 }
 
 function Geheimfeld({
@@ -172,7 +191,14 @@ function Feld({
         {feld.pflicht ? ' *' : ''}
       </span>
 
-      {feld.art === 'absatz' ? (
+      {/*
+        Geheim geht vor Bauart: Ein mehrzeiliges Feld, das ein Geheimnis
+        trägt, bleibt verdeckt. Sonst stünde der private DKIM-Schlüssel
+        offen im Blatt.
+      */}
+      {feld.geheim ? (
+        <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(eigenerPfad, neu)} />
+      ) : feld.art === 'absatz' ? (
         <textarea
           rows={3}
           value={(wert as string) ?? ''}
@@ -190,11 +216,6 @@ function Feld({
             </option>
           ))}
         </select>
-      ) : feld.geheim ? (
-        <Geheimfeld
-          wert={(wert as string) ?? ''}
-          aendern={(neu) => setzen(eigenerPfad, neu)}
-        />
       ) : (
         <input
           type={feld.art === 'zahl' ? 'number' : feld.art === 'email' ? 'email' : 'text'}
@@ -255,7 +276,7 @@ export function EinstellungenFormular({
   }, [bereich])
 
   const setzen = useCallback((pfad: string[], wert: unknown) => {
-    setWerte((v) => tiefSetzen(v, pfad, wert))
+    setWerte((v) => tiefSetzen(v, pfad, wert) as Werte)
     setMeldung(null)
   }, [])
 
@@ -293,7 +314,16 @@ export function EinstellungenFormular({
         setUrspruenglich(werte)
         setMeldung('Gespeichert.')
       } else {
-        setMeldung('Das hat nicht geklappt.')
+        /*
+         * Sagen, woran es lag. „Das hat nicht geklappt." ist beim Anlegen
+         * eines Postfachs mit fünf Pflichtfeldern keine Auskunft, sondern
+         * ein Ratespiel — Payload weiß genau, welches Feld fehlt.
+         */
+        const grund = await antwort
+          .json()
+          .then((d: { grund?: string }) => d?.grund)
+          .catch(() => undefined)
+        setMeldung(grund ? `Das hat nicht geklappt — ${grund}` : 'Das hat nicht geklappt.')
       }
     } catch {
       setMeldung('Einstellungen brauchen eine Verbindung.')

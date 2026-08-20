@@ -60,6 +60,63 @@ test.describe('Einstellungen im Büro', () => {
   })
 
   /**
+   * Ein neues Postfach anlegen.
+   *
+   * Der Fehler dahinter war hässlich und leicht zu übersehen: Beim Setzen
+   * eines Werts wurde die Liste mit `{ ...liste }` kopiert — und damit aus
+   * `[{…}]` ein `{ '0': {…} }`. Beim Anzeigen fragt das Formular
+   * `Array.isArray` und fand nichts mehr. Für den Menschen davor sah es aus,
+   * als klappte der Eintrag beim ersten Buchstaben wieder zu.
+   *
+   * Geprüft wird deshalb genau der Ablauf von Hand: hinzufügen, tippen, und
+   * der Eintrag muss stehen bleiben — mit dem, was schon getippt war.
+   */
+  test('ein Postfach anlegen: der Eintrag bleibt beim Tippen stehen', async ({ page }) => {
+    await page.goto('/office/login')
+    await page.waitForLoadState('networkidle')
+    await page.fill('input[autocomplete="username"]', EMAIL)
+    await page.fill('input[type="password"]', PASSWORT!)
+    await page.locator('form button[type="submit"]').first().click()
+    await page.waitForURL(/\/office$/, { timeout: 30_000 })
+
+    await page.goto('/office/einstellungen?teil=integrationen')
+    await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
+
+    const postfaecher = page.locator('fieldset.buero-karte', { has: page.locator('legend', { hasText: 'Postfächer' }) })
+    await expect(postfaecher).toBeVisible({ timeout: 15_000 })
+    await postfaecher.getByRole('button', { name: 'Hinzufügen' }).click()
+
+    const bezeichnung = postfaecher.locator('label.buero-feld', { hasText: 'Bezeichnung' }).locator('input')
+    await expect(bezeichnung).toBeVisible()
+
+    // Buchstabe für Buchstabe — genau hier verschwand der Eintrag
+    await bezeichnung.pressSequentially('Info', { delay: 60 })
+    await expect(bezeichnung).toHaveValue('Info')
+    await expect(postfaecher.getByRole('button', { name: 'Entfernen' })).toHaveCount(1)
+
+    // Und die übrigen Felder des Eintrags stehen auch noch da
+    for (const feld of ['E-Mail-Adresse', 'IMAP-Server', 'Benutzername']) {
+      await expect(
+        postfaecher.locator('label.buero-feld', { hasText: feld }).first(),
+      ).toBeVisible()
+    }
+
+    /*
+     * Unvollständig speichern muss sagen, was fehlt. Vorher stand da nur
+     * „Das hat nicht geklappt." — bei fünf Pflichtfeldern ein Ratespiel.
+     */
+    await page.getByRole('button', { name: 'Speichern' }).click()
+    await expect(page.locator('.buero-hinweis')).toContainText('nicht geklappt', {
+      timeout: 20_000,
+    })
+    await expect(page.locator('.buero-hinweis')).not.toHaveText('Das hat nicht geklappt.')
+
+    // Wieder weg damit — der Prüfstand soll nichts hinterlassen
+    await postfaecher.getByRole('button', { name: 'Entfernen' }).click()
+    await expect(postfaecher.getByRole('button', { name: 'Entfernen' })).toHaveCount(0)
+  })
+
+  /**
    * Am Telefon war die Seite eine Sackgasse.
    *
    * Die Reiter liehen sich die Klasse der Hauptnavigation, und die wird unter
