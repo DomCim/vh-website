@@ -53,10 +53,54 @@
 #
 # ── Was das kostet ──────────────────────────────────────────────────────────
 #
-# ClickHouse ist die schwerste Zutat. Mit der Sparfassung unten (ein Thread,
-# kleiner Cache, keine Bewegungsprotokolle) kommt der Stack mit rund 1 GB
-# Arbeitsspeicher aus. Ohne sie legt ClickHouse für sich allein gern das
-# Doppelte an.
+# ClickHouse ist die schwerste Zutat und legt für sich allein gern 2 GB
+# Arbeitsspeicher an. Zähmen lässt sich das (siehe unten) — aber erst, wenn
+# der Stack überhaupt läuft.
+#
+# ── Sparsamer stellen (erst, wenn alles läuft) ──────────────────────────────
+#
+# Hier steht die nackte Fassung: Abbild, Volumes, Healthcheck. Kein Feintuning,
+# keine Ulimits, keine eingebetteten Einstellungsdateien. Das ist Absicht — mit
+# `depends_on: service_healthy` hält ein ClickHouse, das nicht hochkommt, den
+# ganzen Stack auf, und dann sucht man den Fehler in vier Dingen gleichzeitig.
+#
+# Läuft der Stack, kann man ClickHouse an die kurze Leine nehmen. Dazu beim
+# Dienst `plausible_events_db` ergänzen:
+#
+#     configs:
+#       - source: clickhouse_sparsam
+#         target: /etc/clickhouse-server/config.d/low-resources.xml
+#
+# und am Ende der Datei, auf oberster Ebene:
+#
+#     configs:
+#       clickhouse_sparsam:
+#         content: |
+#           <clickhouse>
+#               <mark_cache_size>524288000</mark_cache_size>
+#               <profiles>
+#                   <default>
+#                       <max_threads>1</max_threads>
+#                       <max_block_size>8192</max_block_size>
+#                       <max_download_threads>1</max_download_threads>
+#                       <input_format_parallel_parsing>0</input_format_parallel_parsing>
+#                       <output_format_parallel_formatting>0</output_format_parallel_formatting>
+#                   </default>
+#               </profiles>
+#           </clickhouse>
+#
+# Danach neu ausrollen und nachsehen, ob ClickHouse wieder „healthy" wird.
+# Wird es das nicht, kann die Compose-Fassung von Portainer mit `content:`
+# nichts anfangen — dann bleibt es eben bei der nackten Fassung. Sie läuft,
+# sie braucht nur mehr Platz.
+#
+# Der Abschnitt heißt `profiles`, im Plural. Im Singular überliest ClickHouse
+# ihn wortlos, und man wundert sich, warum das Sparen nichts bringt.
+#
+# Eine Einstellung, die hier früher stand, fehlt mit Absicht: die Umstellung
+# auf reines IPv4. Das Abbild bringt sie längst selbst mit — es lauscht auf
+# beiden Adressfamilien und verzeiht, wenn eine davon fehlt. Meine Fassung war
+# eine Lösung für ein Problem, das es nicht mehr gibt.
 
 services:
   plausible:
@@ -109,6 +153,13 @@ services:
       timeout: 5s
       retries: 10
 
+  # ClickHouse — hier liegen die Seitenaufrufe.
+  #
+  # Bewusst nackt gehalten: Abbild, Volumes, Healthcheck, sonst nichts. Jede
+  # Zusatzeinstellung ist eine weitere Stelle, an der der Start scheitern kann,
+  # und ein Container, der nicht hochkommt, hält über `depends_on` den ganzen
+  # Stack auf. Erst laufen lassen, dann feilen — siehe „Sparsamer stellen"
+  # unten.
   plausible_events_db:
     image: clickhouse/clickhouse-server:24.12-alpine
     restart: unless-stopped
@@ -117,53 +168,17 @@ services:
     volumes:
       - event-data:/var/lib/clickhouse
       - event-logs:/var/log/clickhouse-server
-    configs:
-      - source: clickhouse_ipv4
-        target: /etc/clickhouse-server/config.d/ipv4-only.xml
-      - source: clickhouse_sparsam
-        target: /etc/clickhouse-server/config.d/low-resources.xml
     networks:
       - statistik
     healthcheck:
       test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1']
-      start_period: 1m
+      # Reichlich Geduld beim ersten Start: ClickHouse legt sein Datenverzeichnis
+      # an, und auf einer langsamen Platte dauert das. Läuft es einmal, ist der
+      # Healthcheck in Sekunden durch — die Wartezeit kostet also nur einmal.
+      start_period: 3m
       interval: 10s
       timeout: 5s
-      retries: 10
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
-
-# Zwei Einstellungsdateien für ClickHouse, direkt hier im Stack.
-#
-# Sie stehen inline und nicht als Datei daneben, weil dieser Stack im
-# Portainer-Editor gepflegt wird — dort gibt es kein Verzeichnis, in das man
-# eine zweite Datei legen könnte.
-configs:
-  clickhouse_ipv4:
-    # Der Container läuft ohne IPv6; ohne diese Zeile versucht ClickHouse,
-    # auf :: zu lauschen, und bricht beim Start ab.
-    content: |
-      <clickhouse>
-          <listen_host>0.0.0.0</listen_host>
-      </clickhouse>
-  clickhouse_sparsam:
-    # Die Sparfassung des Herstellers für Server mit wenig Arbeitsspeicher.
-    # Für eine Werkstatt-Website ist selbst das noch reichlich.
-    content: |
-      <clickhouse>
-          <mark_cache_size>524288000</mark_cache_size>
-          <profiles>
-              <default>
-                  <max_threads>1</max_threads>
-                  <max_block_size>8192</max_block_size>
-                  <max_download_threads>1</max_download_threads>
-                  <input_format_parallel_parsing>0</input_format_parallel_parsing>
-                  <output_format_parallel_formatting>0</output_format_parallel_formatting>
-              </default>
-          </profiles>
-      </clickhouse>
+      retries: 12
 
 networks:
   # Unter sich: Plausible und seine beiden Datenbanken.
