@@ -53,6 +53,23 @@ export function sitzungLesen(cookieWert: string | undefined): string | null {
 export const SITZUNGS_COOKIE = COOKIE
 
 /**
+ * Die bestätigte Adresse aus dem Cookie einer Anfrage — oder `null`.
+ *
+ * Steht hier und nicht in einer der Routen, weil inzwischen mehrere danach
+ * fragen: die Kasse, die Bestätigung vor dem nächsten Schritt, das Portal.
+ * Zwei Fassungen, die einen Cookie-Kopf zerlegen, sind eine zu viel — die
+ * eine bekäme irgendwann eine Verbesserung und die andere nicht.
+ */
+export function sitzungAusAnfrage(req: Request): string | null {
+  const kopf = req.headers.get('cookie') ?? ''
+  for (const teil of kopf.split(';')) {
+    const [name, ...rest] = teil.trim().split('=')
+    if (name === COOKIE) return sitzungLesen(decodeURIComponent(rest.join('=')))
+  }
+  return null
+}
+
+/**
  * Legt einen sechsstelligen Anmeldecode an und gibt ihn im Klartext zurück
  * (nur zum Versenden — gespeichert wird ausschließlich der Hash).
  *

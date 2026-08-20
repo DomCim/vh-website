@@ -1499,3 +1499,101 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-tinte-leise);
   flex: 0 0 auto;
 }
+
+/* ── Schritt-für-Schritt-Formulare ──────────────────────────────────────── */
+/*
+ * Die Leiste über einem langen Formular. Am Handy stehen nur die Nummern —
+ * für Wörter ist dort kein Platz, und darunter steht ohnehin, wie der Schritt
+ * heißt und wie viele es noch sind.
+ */
+.buero-schrittleiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid var(--buero-linie);
+}
+
+.buero-schrittmarke {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  background: none;
+  border: 0;
+  color: var(--buero-tinte-leise);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+/* Ein Schritt, der noch nicht dran war, ist kein Ziel — das muss man sehen
+   und nicht erst durch Klicken merken. */
+.buero-schrittmarke:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.buero-schrittmarke.ist-fertig {
+  color: var(--buero-tinte);
+}
+
+.buero-schrittmarke.ist-hier {
+  color: var(--buero-tinte);
+  font-weight: 650;
+  background: color-mix(in srgb, var(--buero-bronze) 12%, transparent);
+}
+
+.buero-schrittnummer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--buero-linie);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.buero-schrittmarke.ist-hier .buero-schrittnummer {
+  border-color: var(--buero-bronze);
+  color: var(--buero-bronze);
+}
+
+.buero-schrittzaehler {
+  color: var(--buero-tinte-leise);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+/*
+ * Die Hülle um einen Schritt. Ein `fieldset` bringt von Haus aus Rand,
+ * Abstand und `min-width: min-content` mit — Letzteres sprengt jedes Raster,
+ * in dem etwas Breites steht.
+ */
+.buero-schrittfeld {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.buero-schrittknoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+/* Am Handy steht in der Leiste nur die Nummer */
+@media (max-width: 720px) {
+  .buero-schritttext {
+    display: none;
+  }
+}
