@@ -347,6 +347,60 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      /*
+       * Die eigene Besucherzählung.
+       *
+       * Plausible läuft im internen Netz und ist von außen nicht erreichbar —
+       * gezählt wird über die eigenen Routen der Website, ausgewertet wird im
+       * Büro. Deshalb steht hier eine Adresse wie `http://plausible:8000` und
+       * keine, die man im Browser aufrufen könnte.
+       *
+       * Ob überhaupt gezählt wird, entscheidet der Haken in den
+       * Website-Einstellungen unter „Besucherstatistik". Hier stehen nur die
+       * Zugangsdaten — die gehören zu den Geheimnissen und nicht in eine
+       * Einstellung, die jeder Seitenaufruf mitliest.
+       */
+      name: 'plausible',
+      label: 'Besucherzählung (Plausible)',
+      type: 'group',
+      admin: {
+        description:
+          'Zugang zur eigenen Statistik. Eingeschaltet wird die Zählung in den Website-Einstellungen unter „Besucherstatistik"; hier steht nur, wo sie läuft und womit das Büro sie abfragen darf.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'url',
+              label: 'Adresse im internen Netz',
+              type: 'text',
+              admin: {
+                description:
+                  'z.B. http://plausible:8000 — der Containername, nicht eine Adresse von außen.',
+              },
+            },
+            {
+              name: 'seite',
+              label: 'Name der Website in Plausible',
+              type: 'text',
+              admin: { description: 'Genau so, wie die Seite dort angelegt ist, z.B. vincent-hellmann.com' },
+            },
+          ],
+        },
+        {
+          name: 'apiKey',
+          label: 'Schlüssel für die Auswertung',
+          type: 'text',
+          admin: {
+            description:
+              'In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
+        },
+      ],
+    },
+    {
       name: 'paypal',
       label: 'PayPal (Zahlungen)',
       type: 'group',

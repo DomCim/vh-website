@@ -1410,3 +1410,92 @@ html.tastatur-offen .buero-inhalt {
 .buero-abgleich.streng {
   background: var(--buero-rot);
 }
+
+/* ── Statistik ──────────────────────────────────────────────────────────── */
+/*
+ * Die Auswertung der Besuche. Bewusst ohne Diagramm-Bibliothek: Balken sind
+ * Flächen mit einer Höhe in Prozent, und dafür braucht es kein Paket, das im
+ * Browser des Handys ein halbes Megabyte kostet.
+ */
+.buero-statistik-spalten {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.buero-verlauf {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 7rem;
+  margin-top: 0.9rem;
+}
+
+.buero-verlauf-balken {
+  flex: 1 1 0;
+  min-width: 2px;
+  background: var(--buero-bronze);
+  border-radius: 2px 2px 0 0;
+  /* Ohne das rutscht ein Balken mit Höhe 2 % optisch unter die Grundlinie */
+  align-self: flex-end;
+}
+
+.buero-verlauf-achse {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--buero-tinte-leise);
+  font-variant-numeric: tabular-nums;
+}
+
+.buero-statistik-liste {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.buero-statistik-zeile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/*
+ * Der Balken liegt **hinter** dem Namen, nicht neben ihm. Daneben bliebe für
+ * „/de/kollektion/tisch-eiche-stahl" ein Streifen von zwei Zentimetern übrig;
+ * dahinter darf der Name die ganze Breite haben und der Balken trotzdem
+ * zeigen, wie viel es war.
+ */
+.buero-statistik-balken {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--buero-bronze) 16%, transparent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.buero-statistik-name {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.buero-statistik-wert {
+  position: relative;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--buero-tinte-leise);
+  flex: 0 0 auto;
+}

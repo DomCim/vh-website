@@ -116,14 +116,39 @@ export default async function LocaleLayout({ children, params }: Args) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: orgJsonLd }}
         />
-        {/* Cookiefreie Besucherstatistik (z.B. Plausible/Umami) — nur wenn hinterlegt */}
-        {settings?.analytics?.scriptUrl && (
+        {/*
+          * Besucherzählung — cookiefrei, deshalb ohne Banner.
+          *
+          * Der Normalfall ist die eigene Zählung: Skript und Zähladresse
+          * liegen auf dieser Domain (`/js/zaehler.js` und `/api/zaehler`) und
+          * reichen nach innen weiter an das selbst betriebene Plausible. Für
+          * den Besucher ist das eine Datei von dieser Website wie jede
+          * andere — kein fremder Server, keine Ausnahme in der
+          * Sicherheitsrichtlinie, und kein Werbeblocker, der sie an ihrem
+          * Namen erkennt.
+          *
+          * `data-api` muss dabeistehen: Ohne die Angabe schickt das Skript
+          * seine Meldungen dorthin, woher es geladen wurde — und das ist
+          * hier nicht die Statistik, sondern die Website.
+          *
+          * Der Ausweichweg darunter bleibt für eine Statistik außerhalb
+          * dieses Servers. Beide gleichzeitig ergäbe doppelte Zählung, also
+          * gewinnt die eigene.
+          */}
+        {settings?.analytics?.eigeneZaehlung && settings.analytics.domain ? (
+          <script
+            defer
+            src="/js/zaehler.js"
+            data-domain={settings.analytics.domain}
+            data-api="/api/zaehler"
+          />
+        ) : settings?.analytics?.scriptUrl ? (
           <script
             defer
             src={settings.analytics.scriptUrl}
             {...(settings.analytics.domain ? { 'data-domain': settings.analytics.domain } : {})}
           />
-        )}
+        ) : null}
         <CartProvider>
           <SmoothScroll />
           <Header locale={locale} categories={categories} dict={dict} />

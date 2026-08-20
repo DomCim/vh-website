@@ -283,20 +283,44 @@ export const SiteSettings: GlobalConfig = {
       type: 'group',
       admin: {
         description:
-          'Für cookiefreie Statistik wie selbst gehostetes Plausible oder Umami — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.',
+          'Cookiefreie Statistik — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.',
       },
       fields: [
         {
-          name: 'scriptUrl',
-          label: 'Skript-URL',
-          type: 'text',
-          admin: { description: 'z.B. https://statistik.example.com/script.js' },
+          /*
+           * Der eine Schalter, der die Zählung an- und ausmacht.
+           *
+           * Er steht hier und nicht bei den Zugangsdaten, weil ihn jeder
+           * Seitenaufbau lesen muss: Die Website-Einstellungen holt das
+           * Grundgerüst ohnehin, die Zugangsdaten wären eine zweite Abfrage
+           * je Seite — und sie sind geheim, das hier ist es nicht.
+           */
+          name: 'eigeneZaehlung',
+          label: 'Eigene Zählung einschalten',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description:
+              'Zählt über die eigene Adresse mit selbst betriebenem Plausible: keine Cookies, keine Daten außer Haus, kein Banner. Wo die Statistik läuft, steht im Admin unter Integrationen → Besucherzählung. Ist dort nichts hinterlegt, passiert nichts.',
+          },
         },
         {
           name: 'domain',
           label: 'Erfasste Domain',
           type: 'text',
-          admin: { description: 'z.B. vincent-hellmann.com' },
+          admin: {
+            description:
+              'z.B. vincent-hellmann.com — muss genauso heißen wie die Seite in Plausible, sonst kommen die Aufrufe dort nirgends an.',
+          },
+        },
+        {
+          name: 'scriptUrl',
+          label: 'Fremdes Statistik-Skript (Ausweichweg)',
+          type: 'text',
+          admin: {
+            description:
+              'Nur für eine Statistik außerhalb dieses Servers, z.B. https://statistik.example.com/script.js. Die eigene Zählung oben ist der Normalfall — dann bleibt dieses Feld leer.',
+          },
         },
       ],
     },

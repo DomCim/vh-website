@@ -33,9 +33,21 @@ test.describe('Verwaltung', () => {
   })
 
   test('Integrationen zeigen alle Einstellungen', async ({ page }) => {
-    await page.goto('/admin/globals/integrations')
-    await page.waitForTimeout(5000)
+    await page.goto('/admin/globals/integrations', { waitUntil: 'networkidle' })
 
+    /*
+     * Erst die Gruppe ins Bild holen, dann nachsehen.
+     *
+     * Payload baut die Felder eines langen Formulars erst, wenn sie in Sicht
+     * kommen. Solange das Formular in einen Bildschirm passte, fiel das nicht
+     * auf; seit es um DKIM und die Besucherzählung gewachsen ist, liegt die
+     * Sicherung darunter und steht noch gar nicht im Dokument. Länger warten
+     * half deshalb nicht — es kommt von selbst nichts nach.
+     *
+     * Ein Mensch scrollt dorthin, bevor er etwas vermisst. Der Test tut
+     * jetzt dasselbe, und prüft damit weiterhin, was er prüfen soll: dass
+     * ein Feld überhaupt erscheint, wenn man hinsieht.
+     */
     for (const id of [
       'field-wartung__aktiv',
       'field-wartung__intervalMinuten',
@@ -49,6 +61,9 @@ test.describe('Verwaltung', () => {
       'field-sicherung__behaltenLokal',
       'field-sicherung__behaltenNas',
     ]) {
+      // Aus `field-sicherung__uhrzeit` wird `field-sicherung` — die Gruppe,
+      // die im Bild stehen muss, damit ihre Felder gebaut werden
+      await page.locator(`#${id.replace(/__.*$/, '')}`).scrollIntoViewIfNeeded()
       await expect(page.locator(`#${id}`), id).toBeVisible()
     }
 

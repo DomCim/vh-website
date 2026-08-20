@@ -44,6 +44,7 @@ import * as migration_20260820_092646_uebergabemappen from './20260820_092646_ue
 import * as migration_20260820_095931_beigestelltes_material from './20260820_095931_beigestelltes_material';
 import * as migration_20260820_135217_dkim from './20260820_135217_dkim';
 import * as migration_20260820_145936_postfach_dkim from './20260820_145936_postfach_dkim';
+import * as migration_20260820_154207_statistik from './20260820_154207_statistik';
 
 export const migrations = [
   {
@@ -274,6 +275,11 @@ export const migrations = [
   {
     up: migration_20260820_145936_postfach_dkim.up,
     down: migration_20260820_145936_postfach_dkim.down,
-    name: '20260820_145936_postfach_dkim'
+    name: '20260820_145936_postfach_dkim',
+  },
+  {
+    up: migration_20260820_154207_statistik.up,
+    down: migration_20260820_154207_statistik.down,
+    name: '20260820_154207_statistik'
   },
 ];

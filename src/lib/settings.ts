@@ -56,6 +56,12 @@ export type ResolvedIntegrations = {
     apiKey?: string
     readonlyKey?: string
   }
+  /** Zugang zur eigenen Besucherzählung — siehe `statistik.ts` */
+  plausible: {
+    url?: string
+    seite?: string
+    apiKey?: string
+  }
   anthropic: {
     apiKey?: string
     model: string
@@ -132,6 +138,11 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     mcp: {
       apiKey: val(doc?.mcp?.apiKey, process.env.MCP_API_KEY),
       readonlyKey: val(doc?.mcp?.readonlyKey, process.env.MCP_READONLY_API_KEY),
+    },
+    plausible: {
+      url: val(doc?.plausible?.url, process.env.PLAUSIBLE_URL),
+      seite: val(doc?.plausible?.seite, process.env.PLAUSIBLE_SITE),
+      apiKey: val(doc?.plausible?.apiKey, process.env.PLAUSIBLE_API_KEY),
     },
     anthropic: {
       apiKey: val(doc?.anthropic?.apiKey, process.env.ANTHROPIC_API_KEY),

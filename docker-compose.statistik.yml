@@ -1,0 +1,183 @@
+# Portainer-Stack: Besucherzählung (Plausible)
+#
+# Ein **eigener** Stack, nicht Teil des Website-Stacks. Der Grund ist nüchtern:
+# Die Website wird bei jedem Push neu ausgerollt, die Statistik so gut wie nie.
+# Lägen beide zusammen, könnte ein Fehler in der Statistik das Ausrollen des
+# Shops verhindern — und ein Ladengeschäft steht nicht still, weil der
+# Besucherzähler hakt.
+#
+# ── Wie es zusammenhängt ────────────────────────────────────────────────────
+#
+# Plausible ist von außen **nicht** erreichbar: kein Traefik-Label, keine
+# Portfreigabe, kein Zertifikat. Erreichbar ist es nur aus dem internen Netz
+# des Website-Stacks. Das genügt, weil beides über die Website läuft:
+#
+#   Besucher → vincent-hellmann.com/js/zaehler.js  → Website → Plausible
+#   Besucher → vincent-hellmann.com/api/zaehler    → Website → Plausible
+#   Vincent  → vincent-hellmann.com/office/statistik → Büro  → Plausible
+#
+# Damit gibt es keine zweite Anmeldung, keine zweite Adresse und nichts, was
+# ein Werbeblocker an seinem Namen erkennt.
+#
+# ── Vor dem ersten Start ────────────────────────────────────────────────────
+#
+# 1. Den Namen des internen Netzes des Website-Stacks heraussuchen:
+#
+#        docker network ls | grep internal
+#
+#    In Portainer heißt es nach dem Muster `<stackname>_internal`, bei einem
+#    Stack namens „vh" also `vh_internal`. Diesen Namen unten als
+#    WEBSITE_NETZ eintragen.
+#
+# 2. SECRET_KEY_BASE und TOTP_VAULT_KEY erzeugen (je einmal, dann behalten):
+#
+#        openssl rand -base64 48        # SECRET_KEY_BASE
+#        openssl rand -base64 32        # TOTP_VAULT_KEY
+#
+# 3. Stack starten, https://vincent-hellmann.com ist noch nicht nötig.
+#    Danach **einmalig** ein Konto anlegen. Weil Plausible von außen nicht
+#    erreichbar ist, geht das über einen Tunnel vom eigenen Rechner:
+#
+#        ssh -L 8000:localhost:8000 server
+#        # dann im Browser: http://localhost:8000
+#
+#    Dafür muss der Port kurz auf dem Server liegen — die Zeile `ports:` unten
+#    einmal aktivieren, Konto und Website anlegen, API-Schlüssel erzeugen,
+#    Zeile wieder auskommentieren, Stack neu ausrollen.
+#
+# 4. Im Admin der Website unter Integrationen → Besucherzählung eintragen:
+#      Adresse      http://plausible:8000
+#      Seite        vincent-hellmann.com
+#      Schlüssel    der API-Schlüssel aus Schritt 3
+#    Und in den Website-Einstellungen unter Besucherstatistik den Haken setzen.
+#
+# ── Was das kostet ──────────────────────────────────────────────────────────
+#
+# ClickHouse ist die schwerste Zutat. Mit der Sparfassung unten (ein Thread,
+# kleiner Cache, keine Bewegungsprotokolle) kommt der Stack mit rund 1 GB
+# Arbeitsspeicher aus. Ohne sie legt ClickHouse für sich allein gern das
+# Doppelte an.
+
+services:
+  plausible:
+    image: ghcr.io/plausible/community-edition:v3.0.1
+    restart: unless-stopped
+    depends_on:
+      plausible_db:
+        condition: service_healthy
+      plausible_events_db:
+        condition: service_healthy
+    # Datenbanken anlegen, wandern lassen, starten — genau so steht es in der
+    # Vorlage des Herstellers. Beim zweiten Start tun die ersten beiden nichts.
+    command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    environment:
+      # Muss gesetzt sein, wird aber nur für Links in Mails gebraucht. Von
+      # außen ist diese Adresse nicht erreichbar — das ist Absicht.
+      BASE_URL: ${PLAUSIBLE_BASE_URL:-http://plausible:8000}
+      SECRET_KEY_BASE: ${PLAUSIBLE_SECRET_KEY_BASE:?openssl rand -base64 48}
+      TOTP_VAULT_KEY: ${PLAUSIBLE_TOTP_VAULT_KEY:?openssl rand -base64 32}
+      # Nach dem ersten Konto zu: Es gibt nur einen, der hier hineinschaut.
+      DISABLE_REGISTRATION: ${PLAUSIBLE_DISABLE_REGISTRATION:-true}
+      DATABASE_URL: postgres://postgres:${PLAUSIBLE_DB_PASSWORT:?Passwort für die Statistik-Datenbank}@plausible_db:5432/plausible_db
+      CLICKHOUSE_DATABASE_URL: http://plausible_events_db:8123/plausible_events_db
+    # Nur für die Ersteinrichtung (Schritt 3 oben) — danach wieder zu.
+    # ports:
+    #   - '127.0.0.1:8000:8000'
+    volumes:
+      - plausible-data:/var/lib/plausible
+    networks:
+      - statistik
+      - website
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  plausible_db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${PLAUSIBLE_DB_PASSWORT:?Passwort für die Statistik-Datenbank}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - statistik
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      start_period: 1m
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  plausible_events_db:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_SKIP_USER_SETUP: 1
+    volumes:
+      - event-data:/var/lib/clickhouse
+      - event-logs:/var/log/clickhouse-server
+    configs:
+      - source: clickhouse_ipv4
+        target: /etc/clickhouse-server/config.d/ipv4-only.xml
+      - source: clickhouse_sparsam
+        target: /etc/clickhouse-server/config.d/low-resources.xml
+    networks:
+      - statistik
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1']
+      start_period: 1m
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+# Zwei Einstellungsdateien für ClickHouse, direkt hier im Stack.
+#
+# Sie stehen inline und nicht als Datei daneben, weil dieser Stack im
+# Portainer-Editor gepflegt wird — dort gibt es kein Verzeichnis, in das man
+# eine zweite Datei legen könnte.
+configs:
+  clickhouse_ipv4:
+    # Der Container läuft ohne IPv6; ohne diese Zeile versucht ClickHouse,
+    # auf :: zu lauschen, und bricht beim Start ab.
+    content: |
+      <clickhouse>
+          <listen_host>0.0.0.0</listen_host>
+      </clickhouse>
+  clickhouse_sparsam:
+    # Die Sparfassung des Herstellers für Server mit wenig Arbeitsspeicher.
+    # Für eine Werkstatt-Website ist selbst das noch reichlich.
+    content: |
+      <clickhouse>
+          <mark_cache_size>524288000</mark_cache_size>
+          <profile>
+              <default>
+                  <max_threads>1</max_threads>
+                  <max_block_size>8192</max_block_size>
+                  <max_download_threads>1</max_download_threads>
+                  <input_format_parallel_parsing>0</input_format_parallel_parsing>
+                  <output_format_parallel_formatting>0</output_format_parallel_formatting>
+              </default>
+          </profile>
+      </clickhouse>
+
+networks:
+  # Unter sich: Plausible und seine beiden Datenbanken.
+  statistik:
+  # Die Brücke zum Website-Stack. Angelegt wird das Netz **dort**, hier wird
+  # es nur mitbenutzt — deshalb `external`. So kann dieser Stack den anderen
+  # nicht aufhalten: Fehlt das Netz, startet die Statistik nicht, die Website
+  # läuft weiter.
+  website:
+    external: true
+    name: ${WEBSITE_NETZ:-vh_internal}
+
+volumes:
+  db-data:
+  event-data:
+  event-logs:
+  plausible-data:
