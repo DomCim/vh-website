@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { admins, anyone } from '../access'
 import { autoSlug } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
+import { arbeitsplanFeld } from '../lib/arbeitsplan'
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -245,6 +246,12 @@ export const Products: CollectionConfig = {
             hidden: true,
           },
         },
+        arbeitsplanFeld(
+          false,
+          'Die Reihenfolge, in der dieses Stück entsteht — eigene Arbeit und Fremdleistung ' +
+            'im Wechsel. Wird beim Anlegen eines Auftrags als Vorlage übernommen und dort ' +
+            'abgehakt. Leer heißt: kein fester Ablauf.',
+        ),
         {
           /*
            * Auch die Fremdleistung hängt an der Größe: Verzinken wird nach

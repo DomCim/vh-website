@@ -72,6 +72,25 @@ export async function POST(req: Request) {
           quantity: Number(m.quantity) || 0,
           beigestellt: Boolean(m.beigestellt),
         })),
+      /*
+       * Der Ablauf kommt vollständig aus dem Formular, wie Positionen und
+       * Material. Die Reihenfolge ist die Aussage — deshalb wird die Liste
+       * ersetzt und nicht ergänzt.
+       */
+      arbeitsplan: (b.arbeitsplan ?? [])
+        .filter((s: { was?: string }) => s.was?.trim())
+        .map((s: Record<string, unknown>) => ({
+          was: s.was,
+          art: s.art === 'fremd' ? 'fremd' : 'eigen',
+          minuten: s.minuten === '' || s.minuten == null ? null : Number(s.minuten) || 0,
+          dienstleister: Number(s.dienstleister) || undefined,
+          kosten: s.kosten === '' || s.kosten == null ? null : Number(s.kosten) || 0,
+          vorlaufTage:
+            s.vorlaufTage === '' || s.vorlaufTage == null ? null : Number(s.vorlaufTage) || 0,
+          stand: ['offen', 'laeuft', 'erledigt'].includes(String(s.stand)) ? s.stand : 'offen',
+          erledigtAm: s.erledigtAm || undefined,
+          notiz: s.notiz || undefined,
+        })),
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,
       orderedAt: b.orderedAt || undefined,

@@ -269,6 +269,27 @@ export interface Product {
             }[]
           | null;
         productionMinutes?: number | null;
+        /**
+         * Die Reihenfolge, in der dieses Stück entsteht — eigene Arbeit und Fremdleistung im Wechsel. Wird beim Anlegen eines Auftrags als Vorlage übernommen und dort abgehakt. Leer heißt: kein fester Ablauf.
+         */
+        arbeitsplan?:
+          | {
+              /**
+               * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+               */
+              was: string;
+              art: 'eigen' | 'fremd';
+              minuten?: number | null;
+              dienstleister?: (number | null) | Contact;
+              kosten?: number | null;
+              /**
+               * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+               */
+              vorlaufTage?: number | null;
+              notiz?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         serviceProviders?:
           | {
               contact: number | Contact;
@@ -1012,6 +1033,29 @@ export interface Job {
       }[]
     | null;
   materialGebucht?: boolean | null;
+  /**
+   * Was mit diesem Stück nacheinander passiert — auch bei Lohnfertigung und Maßanfertigung, wo keine Variante dahintersteht. Stammt der Auftrag aus einem Artikel mit hinterlegtem Ablauf, steht dessen Vorlage schon hier. Rein intern; auf keinem Papier für die Kundschaft.
+   */
+  arbeitsplan?:
+    | {
+        /**
+         * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+         */
+        was: string;
+        art: 'eigen' | 'fremd';
+        minuten?: number | null;
+        dienstleister?: (number | null) | Contact;
+        kosten?: number | null;
+        /**
+         * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+         */
+        vorlaufTage?: number | null;
+        stand?: ('offen' | 'laeuft' | 'erledigt') | null;
+        erledigtAm?: string | null;
+        notiz?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Grundlage der Wochen-Auslastung. Bei Shop-Bestellungen aus der Fertigungszeit der Artikel vorbelegt.
    */
@@ -1832,6 +1876,18 @@ export interface ProductsSelect<T extends boolean = true> {
               id?: T;
             };
         productionMinutes?: T;
+        arbeitsplan?:
+          | T
+          | {
+              was?: T;
+              art?: T;
+              minuten?: T;
+              dienstleister?: T;
+              kosten?: T;
+              vorlaufTage?: T;
+              notiz?: T;
+              id?: T;
+            };
         serviceProviders?:
           | T
           | {
@@ -2230,6 +2286,20 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  arbeitsplan?:
+    | T
+    | {
+        was?: T;
+        art?: T;
+        minuten?: T;
+        dienstleister?: T;
+        kosten?: T;
+        vorlaufTage?: T;
+        stand?: T;
+        erledigtAm?: T;
+        notiz?: T;
+        id?: T;
+      };
   plannedMinutes?: T;
   runningSince?: T;
   timeEntries?:

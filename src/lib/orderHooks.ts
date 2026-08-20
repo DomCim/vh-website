@@ -7,7 +7,12 @@ import {
   orderNotificationEmail,
   orderShippedEmail,
 } from './mail'
-import { bedarfFuerBestellung, variantenMinuten } from './material'
+import {
+  bedarfFuerBestellung,
+  type Planschritt,
+  variantenArbeitsplan,
+  variantenMinuten,
+} from './material'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben, getIntegrations } from './settings'
@@ -142,6 +147,7 @@ async function auftragAusBestellung(
      */
     let minuten = 0
     let alleBekannt = true
+    let plan: Planschritt[] = []
     for (const pos of order.items ?? []) {
       const produktId = typeof pos.product === 'object' ? (pos.product as { id?: number })?.id : pos.product
       if (typeof produktId !== 'number') {
@@ -154,6 +160,16 @@ async function auftragAusBestellung(
         .catch(() => null)
       if (!produkt?.readyMade) {
         zuFertigen.push(pos)
+        /*
+         * Der Ablauf der ersten zu fertigenden Position gilt für den Auftrag.
+         *
+         * Nicht ganz sauber, aber ehrlich: Eine Bestellung mit zwei ganz
+         * verschiedenen Stücken hätte zwei Abläufe, und die kann ein Auftrag
+         * nicht führen. In der Praxis kommt so etwas als ein Vorgang durch die
+         * Werkstatt — und ein Ablauf, den man von Hand ergänzt, ist besser als
+         * gar keiner. Wer es genauer braucht, legt zwei Aufträge an.
+         */
+        if (!plan.length && produkt) plan = variantenArbeitsplan(produkt, pos)
         // Die Zeit der bestellten Variante, nicht die des Artikels: Ein Stück
         // in 100 × 50 dauert länger als dasselbe in 60 × 30.
         const dauer = produkt ? variantenMinuten(produkt, pos) : null
@@ -183,6 +199,7 @@ async function auftragAusBestellung(
           price: p.unitPrice,
         })),
         material: bedarf.map((b) => ({ item: b.itemId, quantity: b.benoetigt })),
+        ...(plan.length ? { arbeitsplan: plan } : {}),
       },
     })
     payload.logger.info(`Auftrag ${auftrag.jobNumber} aus Bestellung ${order.orderNumber} angelegt`)

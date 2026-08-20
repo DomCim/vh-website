@@ -12,6 +12,7 @@ import { Wiedervorlagen } from '../../../../../components/office/Wiedervorlagen'
 import { Zeiterfassung } from '../../../../../components/office/Zeiterfassung'
 import { useAbgleich, useBestand, useDatensatz, useRahmen } from '../../../../../lib/buero/bestand'
 import { bestandsPruefung, type Posten } from '../../../../../lib/buero/material'
+import type { Arbeitsschritt } from '../../../../../lib/arbeitsplan'
 
 /**
  * Ein Auftrag mit allem, was daran hängt.
@@ -29,6 +30,7 @@ type Auftrag = {
     | { description?: string | null; quantity?: number | null; price?: number | null; product?: unknown }[]
     | null
   material?: { item?: unknown; quantity?: number | null }[] | null
+  arbeitsplan?: Arbeitsschritt[] | null
   [feld: string]: unknown
 }
 
@@ -158,6 +160,7 @@ export function AuftragAnsicht() {
             quantity: m.quantity ?? 0,
             beigestellt: Boolean((m as { beigestellt?: boolean }).beigestellt),
           })),
+          arbeitsplan: (j.arbeitsplan as Arbeitsschritt[] | null) ?? [],
         }}
         posten={posten.map((p) => ({
           id: Number(p.id),

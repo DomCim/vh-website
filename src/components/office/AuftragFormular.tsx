@@ -9,6 +9,8 @@ import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { Ablauf } from './Ablauf'
+import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 
 export type AuftragPosition = {
   description: string
@@ -38,6 +40,7 @@ export type AuftragWerte = {
   plannedMinutes?: number | null
   positions?: AuftragPosition[]
   material?: AuftragMaterial[]
+  arbeitsplan?: Arbeitsschritt[]
   notes?: string | null
   materialGebucht?: boolean
   customerOrderRef?: string | null
@@ -81,6 +84,7 @@ export function AuftragFormular({
     status: 'geplant',
     positions: [{ description: '', quantity: 1 }],
     material: [],
+    arbeitsplan: [],
     ...werte,
   }))
   const [w, setW] = useState<AuftragWerte>(anfang)
@@ -358,6 +362,31 @@ export function AuftragFormular({
       >
         Position hinzufügen
       </button>
+
+      {/*
+        * Der Ablauf steht über dem Material: In der Werkstatt fragt man
+        * zuerst „was ist jetzt dran?" und erst dann „was brauche ich dafür?".
+        */}
+      <h2>Ablauf</h2>
+      <Ablauf
+        plan={w.arbeitsplan ?? []}
+        aendern={(index, stand) =>
+          setzen({
+            arbeitsplan: (w.arbeitsplan ?? []).map((s, i) =>
+              i === index
+                ? {
+                    ...s,
+                    stand,
+                    // Das Datum wird mitgeführt, nicht getippt: Wer abhakt,
+                    // hat gerade fertiggemacht, und ein leeres Datumsfeld
+                    // bliebe für immer leer.
+                    erledigtAm: stand === 'erledigt' ? new Date().toISOString() : null,
+                  }
+                : s,
+            ),
+          })
+        }
+      />
 
       <h2>Geplantes Material</h2>
       {w.materialGebucht && (

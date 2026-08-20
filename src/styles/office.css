@@ -1908,3 +1908,77 @@ html.tastatur-offen .buero-inhalt {
     display: none;
   }
 }
+
+/* ── Ablauf eines Auftrags ─────────────────────────────────────────────────
+   Was schon war, was läuft, was kommt. Der laufende Schritt steht oben und
+   groß — er beantwortet die einzige Frage, die man in der Werkstatt stellt. */
+
+.buero-ablauf-kopf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--buero-bronze);
+  border-radius: 12px;
+  margin-bottom: 0.8rem;
+}
+
+.buero-ablauf-kopf strong {
+  font-size: 1.05rem;
+}
+
+.buero-ablauf-kopf .buero-marker {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+}
+
+.buero-ablauf-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.buero-ablauf-zeile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-ablauf-nummer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--buero-linie);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Erledigtes tritt zurück, ohne zu verschwinden: Man will nachsehen können,
+   was schon war — aber nicht dauernd darüber stolpern. */
+.ist-erledigt .buero-ablauf-nummer {
+  border-color: var(--buero-gruen);
+  color: var(--buero-gruen);
+}
+
+.ist-erledigt .buero-zeile-titel {
+  color: var(--buero-tinte-leise);
+  text-decoration: line-through;
+}
+
+.ist-laeuft .buero-ablauf-nummer {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+}
+
+.buero-ablauf-zeile select {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 6rem;
+}

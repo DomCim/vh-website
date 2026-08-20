@@ -4,6 +4,7 @@ import { office } from '../access'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
+import { arbeitsplanFeld } from '../lib/arbeitsplan'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -411,6 +412,13 @@ export const Jobs: CollectionConfig = {
       defaultValue: false,
       admin: { hidden: true },
     },
+    arbeitsplanFeld(
+      true,
+      'Was mit diesem Stück nacheinander passiert — auch bei Lohnfertigung und ' +
+        'Maßanfertigung, wo keine Variante dahintersteht. Stammt der Auftrag aus einem ' +
+        'Artikel mit hinterlegtem Ablauf, steht dessen Vorlage schon hier. Rein intern; ' +
+        'auf keinem Papier für die Kundschaft.',
+    ),
     {
       /*
        * Wie viele Werkstattstunden dieser Auftrag zusagt.
