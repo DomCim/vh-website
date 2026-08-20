@@ -48,7 +48,20 @@ export type Nachricht = Kopfzeile & {
   dateien: { name: string; groesse: number; typ: string }[]
 }
 
-export type Ordner = { pfad: string; name: string; ungelesen: number; art: string }
+export type Ordner = {
+  pfad: string
+  name: string
+  ungelesen: number
+  art: string
+  /**
+   * Das Zeichen, mit dem der Anbieter Ebenen trennt — bei IONOS ein Punkt,
+   * bei anderen ein Schrägstrich. Es kommt aus der Auskunft des Servers und
+   * wird nicht geraten: Ein neuer Unterordner mit dem falschen Trenner landet
+   * nicht eine Ebene tiefer, sondern als eigener Ordner mit einem Sonderzeichen
+   * im Namen.
+   */
+  trenner: string
+}
 
 /** Alle eingerichteten Postfächer. */
 export async function postfaecher(payload: Payload): Promise<MailboxKonfiguration[]> {
@@ -108,7 +121,13 @@ export async function ordnerListe(fach: MailboxKonfiguration): Promise<Ordner[]>
       } catch {
         // Manche Ordner lassen sich nicht abfragen — dann eben ohne Zähler
       }
-      ordner.push({ pfad: o.path, name: o.name, ungelesen, art: o.specialUse ?? '' })
+      ordner.push({
+        pfad: o.path,
+        name: o.name,
+        ungelesen,
+        art: o.specialUse ?? '',
+        trenner: o.delimiter || '/',
+      })
     }
     return ordner
   })
@@ -269,6 +288,57 @@ export async function nachrichtAendern(
       else await client.messageFlagsRemove(String(uid), [fahne], { uid: true })
     } finally {
       schloss.release()
+    }
+  })
+}
+
+/**
+ * Eine Nachricht in einen anderen Ordner legen.
+ *
+ * `messageMove` ist eine einzige IMAP-Anweisung — Kopieren und Löschen in
+ * einem Zug. Von Hand nachgebaut (kopieren, dann löschen) bliebe bei einem
+ * Abbruch dazwischen eine Doppelung zurück, und zwar stillschweigend.
+ */
+export async function nachrichtVerschieben(
+  fach: MailboxKonfiguration,
+  ordner: string,
+  uid: number,
+  ziel: string,
+): Promise<void> {
+  if (ziel === ordner) return
+  await mitVerbindung(fach, async (client) => {
+    const schloss = await client.getMailboxLock(ordner)
+    try {
+      await client.messageMove(String(uid), ziel, { uid: true })
+    } finally {
+      schloss.release()
+    }
+  })
+}
+
+/**
+ * Einen Ordner anlegen.
+ *
+ * Der Name wird vom Anbieter eingeordnet: Bei manchen liegen eigene Ordner
+ * unter `INBOX.`, bei anderen daneben. Deshalb wird hier **nicht** geraten,
+ * sondern der Pfad genommen, wie er hereinkommt — die Oberfläche stellt ihn
+ * aus dem gerade offenen Ordner zusammen, und der stammt vom Anbieter selbst.
+ *
+ * Gibt den angelegten Pfad zurück; existiert er schon, ist das kein Fehler,
+ * sondern das gewünschte Ergebnis.
+ */
+export async function ordnerAnlegen(
+  fach: MailboxKonfiguration,
+  pfad: string,
+): Promise<string> {
+  return mitVerbindung(fach, async (client) => {
+    try {
+      const ergebnis = await client.mailboxCreate(pfad)
+      return ergebnis.path
+    } catch (err) {
+      const text = err instanceof Error ? err.message : String(err)
+      if (/already exists|ALREADYEXISTS/i.test(text)) return pfad
+      throw err
     }
   })
 }

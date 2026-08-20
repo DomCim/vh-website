@@ -1536,3 +1536,192 @@ html.tastatur-offen .buero-inhalt {
   gap: 0.6rem;
   margin-top: 1.25rem;
 }
+
+/* ══ Postfach ═══════════════════════════════════════════════════════════════
+
+   Die Knöpfe im Büro sind absichtlich groß (48px, siehe oben) — bedient wird
+   das mit Handschuh. Im Postfach standen davon aber fünf nebeneinander, und
+   am Telefon fraßen sie die halbe Seite, bevor die erste Nachricht kam.
+
+   Die Antwort ist nicht, sie kleiner zu machen: Dann wäre die Regel für alle
+   anderen Seiten auch nicht mehr wahr. Die Antwort ist, **weniger große** zu
+   zeigen. Eine Handlung ist die naheliegende und bleibt groß und beschriftet
+   („Antworten", „Schreiben"). Der Rest wird zu quadratischen Zeichenknöpfen:
+   Sie behalten ihre 44 Pixel Trefferfläche, brauchen aber ein Viertel der
+   Breite und passen zu viert in eine Zeile statt in drei. */
+
+.buero-werkzeuge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+/* Quadratisch, nur ein Zeichen — die Beschriftung liest der Screenreader */
+.buero-symbolknopf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 2px solid var(--buero-rahmen);
+  border-radius: 10px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.buero-symbolknopf:hover {
+  border-color: var(--buero-bronze);
+  color: var(--buero-bronze);
+}
+
+.buero-symbolknopf:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+}
+
+.buero-symbolknopf:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Rot bleibt dem Wegnehmen vorbehalten — dieselbe Regel wie bei den Knöpfen */
+.buero-symbolknopf.gefahr:hover {
+  border-color: var(--buero-rot);
+  color: var(--buero-rot);
+}
+
+.buero-symbolknopf.ist-an {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+}
+
+.buero-symbolknopf svg {
+  width: 20px;
+  height: 20px;
+  /* Das Zeichen folgt der Schriftfarbe des Knopfes, auch im Umschlag */
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+ * Die Ordner als Reihe, nicht als Auswahlfeld.
+ *
+ * Ein `<select>` verbirgt, wie viele Ordner es gibt und wo ungelesene Post
+ * liegt — man muss es erst aufklappen, um zu sehen, ob sich das Aufklappen
+ * lohnt. Als Reihe steht beides sofort da. Sie rollt seitwärts, damit auch
+ * zwölf Ordner die Seite nicht nach unten schieben.
+ */
+.buero-ordnerleiste {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.9rem;
+  scrollbar-width: none;
+}
+
+.buero-ordnerleiste::-webkit-scrollbar {
+  display: none;
+}
+
+.buero-ordner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 999px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  /* Ordnernamen brechen nicht um — sonst wird aus der Reihe ein Absatz */
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.buero-ordner:hover {
+  border-color: var(--buero-bronze);
+}
+
+.buero-ordner.ist-hier {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-weight: 600;
+}
+
+/* Die Zahl der ungelesenen — der eigentliche Grund, warum die Leiste offen ist */
+.buero-ordner-zahl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Im offenen Ordner sitzt die Zahl auf Bronze — dann muss sie andersherum */
+.buero-ordner.ist-hier .buero-ordner-zahl {
+  background: var(--buero-auf-bronze);
+  color: var(--buero-bronze);
+}
+
+/* Der Anlegen-Knopf am Ende der Reihe */
+.buero-ordner.ist-zugabe {
+  border-style: dashed;
+  padding: 0.35rem 0.7rem;
+}
+
+.buero-ordner-neu {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.buero-ordner-neu input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+/* „Zurück" ist kein Knopf, sondern ein Weg — und braucht keine Fläche dafür */
+.buero-ruecken {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--buero-bronze);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.buero-ruecken:hover {
+  text-decoration: underline;
+}

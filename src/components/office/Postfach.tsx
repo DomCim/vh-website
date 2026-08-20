@@ -2,8 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 
+import { ordnernameGueltig } from '../../lib/ordnerpfad'
+
 type Fach = { id: string; label: string; address: string }
-type Ordner = { pfad: string; name: string; ungelesen: number; art: string }
+type Ordner = { pfad: string; name: string; ungelesen: number; art: string; trenner: string }
 type Kopfzeile = {
   uid: number
   betreff: string
@@ -39,6 +41,48 @@ const groesse = (b: number) =>
   b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`
 
 /**
+ * Die Zeichen für die schmalen Knöpfe.
+ *
+ * Bewusst als Striche gezeichnet und nicht als Schriftzeichen oder Emoji:
+ * Emoji sehen auf jedem Gerät anders aus und tragen Farben, die nichts
+ * bedeuten. Diese hier folgen der Schriftfarbe des Knopfes und drehen im
+ * dunklen Thema von selbst mit.
+ */
+const ZEICHEN: Record<string, React.ReactNode> = {
+  neuLaden: <path d="M3 10a7 7 0 0 1 12-4.9L18 8M18 3v5h-5M18 10a7 7 0 0 1-12 4.9L3 12M3 17v-5h5" />,
+  ungelesen: <path d="M2 5.5h16v10H2zM2 6l8 5.5L18 6" />,
+  markieren: (
+    <path d="M10 2.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 8.2l5.4-.8z" />
+  ),
+  verschieben: <path d="M2 5.5h5.5l1.5 2H18v9H2zM2 5.5V16" />,
+  loeschen: <path d="M3 5.5h14M8 5.5V3h4v2.5M5 5.5l1 11h8l1-11M8.5 8.5v5M11.5 8.5v5" />,
+  zurueck: <path d="M12 4l-6 6 6 6" />,
+  plus: <path d="M10 4v12M4 10h12" />,
+}
+
+function Zeichen({ was }: { was: keyof typeof ZEICHEN }) {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      {ZEICHEN[was]}
+    </svg>
+  )
+}
+
+/** Kurzer, sprechender Name statt des rohen IMAP-Pfads */
+function ordnerName(o: Ordner): string {
+  const nachArt: Record<string, string> = {
+    '\\Inbox': 'Posteingang',
+    '\\Sent': 'Gesendet',
+    '\\Drafts': 'Entwürfe',
+    '\\Trash': 'Papierkorb',
+    '\\Junk': 'Spam',
+    '\\Archive': 'Archiv',
+  }
+  if (o.pfad.toUpperCase() === 'INBOX') return 'Posteingang'
+  return nachArt[o.art] ?? o.name
+}
+
+/**
  * Postfach im Büro.
  *
  * Bewusst zwei Ansichten statt drei Spalten: Liste oder Nachricht. Am Handy
@@ -60,6 +104,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [laeuft, setLaeuft] = useState(true)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [nichtEingerichtet, setNichtEingerichtet] = useState(false)
+  /** Offen, während ein neuer Ordner benannt wird — leer heißt: zu */
+  const [neuerOrdner, setNeuerOrdner] = useState<string | null>(null)
 
   const laden = useCallback(
     async (fachId?: string | null, ordnerPfad?: string) => {
@@ -142,6 +188,57 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         v.map((n) => (n.uid === uid ? { ...n, markiert: was === 'markiert' } : n)),
       )
     }
+  }
+
+  async function verschieben(uid: number, ziel: string) {
+    const res = await fetch('/api/office/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ aktion: 'verschieben', uid, ordner, ziel, fach }),
+    })
+    if (!res.ok) {
+      setMeldung('Verschieben hat nicht geklappt.')
+      return
+    }
+    // Aus dieser Liste ist sie weg — sie liegt jetzt woanders
+    setListe((v) => v.filter((n) => n.uid !== uid))
+    setOffen(null)
+    const zielName = ordnerAlle.find((o) => o.pfad === ziel)
+    setMeldung(`Verschoben nach ${zielName ? ordnerName(zielName) : ziel}.`)
+  }
+
+  async function ordnerAnlegen(name: string) {
+    if (!ordnernameGueltig(name)) {
+      setMeldung('Der Name darf keinen Punkt und keinen Schrägstrich enthalten.')
+      return
+    }
+    const hier = ordnerAlle.find((o) => o.pfad === ordner)
+    const res = await fetch('/api/office/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      // Der Server baut den Pfad selbst — hier geht nur mit, woraus
+      body: JSON.stringify({
+        aktion: 'ordner-anlegen',
+        name,
+        ordner,
+        trenner: hier?.trenner || '/',
+        fach,
+      }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setMeldung(
+        j?.error === 'name-ungueltig'
+          ? 'Der Name darf keinen Punkt und keinen Schrägstrich enthalten.'
+          : 'Der Ordner ließ sich nicht anlegen.',
+      )
+      return
+    }
+    setNeuerOrdner(null)
+    await laden(fach, ordner)
+    setMeldung(`Ordner „${name}" angelegt.`)
   }
 
   async function senden() {
@@ -253,42 +350,81 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   if (offen) {
     return (
       <div className="buero-karte">
-        <button type="button" className="buero-knopf leise" onClick={() => setOffen(null)}>
-          Zurück
+        <button type="button" className="buero-ruecken" onClick={() => setOffen(null)}>
+          <Zeichen was="zurueck" /> Zurück
         </button>
-        <h2 style={{ marginTop: '1rem' }}>{offen.betreff}</h2>
+        <h2 style={{ marginTop: '.5rem' }}>{offen.betreff}</h2>
         <p className="buero-unterzeile">
           {offen.von} · {zeit(offen.datum)}
           {offen.an ? ` · an ${offen.an}` : ''}
         </p>
 
-        <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        {/*
+          * Eine große Handlung, der Rest als Zeichen.
+          *
+          * „Antworten" ist das, was man hier zu neunzig Prozent will — das
+          * bleibt beschriftet. Ungelesen, Markieren, Verschieben und Löschen
+          * passen daneben in eine Zeile, statt drei zu füllen. Jeder behält
+          * seine 44 Pixel; nur die Beschriftung wandert zum Screenreader.
+          */}
+        <div className="buero-werkzeuge">
           <button type="button" className="buero-knopf" onClick={() => antworten(offen)}>
             Antworten
           </button>
           <button
             type="button"
-            className="buero-knopf leise"
+            className="buero-symbolknopf"
+            title="Als ungelesen zurücklegen"
+            aria-label="Als ungelesen zurücklegen"
             onClick={() => void aktion(offen.uid, 'ungelesen')}
           >
-            Ungelesen
+            <Zeichen was="ungelesen" />
           </button>
           <button
             type="button"
-            className="buero-knopf leise"
+            className={`buero-symbolknopf${offen.markiert ? ' ist-an' : ''}`}
+            title={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
+            aria-label={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
+            aria-pressed={offen.markiert}
             onClick={() => void aktion(offen.uid, offen.markiert ? 'unmarkiert' : 'markiert')}
           >
-            {offen.markiert ? 'Markierung weg' : 'Markieren'}
+            <Zeichen was="markieren" />
           </button>
+          {/*
+            * Verschieben als Auswahlfeld und nicht als eigenes Menü: Das
+            * Zielverzeichnis ist die Frage, nicht das Verschieben selbst. Am
+            * Telefon öffnet das native Rad, das man ohnehin kennt.
+            */}
+          {ordnerAlle.length > 1 && (
+            <select
+              className="buero-fach-wahl"
+              aria-label="In einen anderen Ordner verschieben"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) void verschieben(offen.uid, e.target.value)
+              }}
+            >
+              <option value="">Verschieben nach …</option>
+              {ordnerAlle
+                .filter((o) => o.pfad !== ordner)
+                .map((o) => (
+                  <option key={o.pfad} value={o.pfad}>
+                    {ordnerName(o)}
+                  </option>
+                ))}
+            </select>
+          )}
           <button
             type="button"
-            className="buero-knopf leise"
+            className="buero-symbolknopf gefahr"
+            title="In den Papierkorb legen"
+            aria-label="In den Papierkorb legen"
             onClick={() => {
               if (window.confirm('Diese Nachricht in den Papierkorb legen?'))
                 void aktion(offen.uid, 'loeschen')
             }}
           >
-            Löschen
+            <Zeichen was="loeschen" />
           </button>
         </div>
 
@@ -329,38 +465,17 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   // ── Liste ─────────────────────────────────────────────────────────────────
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          gap: '.6rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
+      <div className="buero-werkzeuge">
         {faecher.length > 1 && (
           <select
             className="buero-fach-wahl"
+            aria-label="Postfach"
             value={fach ?? ''}
             onChange={(e) => void laden(e.target.value, 'INBOX')}
           >
             {faecher.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label} — {f.address}
-              </option>
-            ))}
-          </select>
-        )}
-        {ordnerAlle.length > 1 && (
-          <select
-            className="buero-fach-wahl"
-            value={ordner}
-            onChange={(e) => void laden(fach, e.target.value)}
-          >
-            {ordnerAlle.map((o) => (
-              <option key={o.pfad} value={o.pfad}>
-                {o.name}
-                {o.ungelesen ? ` (${o.ungelesen})` : ''}
               </option>
             ))}
           </select>
@@ -374,13 +489,72 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         </button>
         <button
           type="button"
-          className="buero-knopf leise"
+          className="buero-symbolknopf"
           disabled={laeuft}
+          title="Neu laden"
+          aria-label="Neu laden"
           onClick={() => void laden(fach, ordner)}
         >
-          {laeuft ? 'Lädt …' : 'Neu laden'}
+          <Zeichen was="neuLaden" />
         </button>
       </div>
+
+      {/*
+        * Die Ordner offen als Reihe, mit der Zahl der ungelesenen daneben.
+        *
+        * Als Auswahlfeld musste man erst aufklappen, um zu sehen, ob sich das
+        * Aufklappen lohnt — und wie viele Ordner es überhaupt gibt. Hier steht
+        * beides sofort da.
+        */}
+      {ordnerAlle.length > 0 && (
+        <div className="buero-ordnerleiste" role="tablist" aria-label="Ordner">
+          {ordnerAlle.map((o) => (
+            <button
+              key={o.pfad}
+              type="button"
+              role="tab"
+              aria-selected={o.pfad === ordner}
+              className={`buero-ordner${o.pfad === ordner ? ' ist-hier' : ''}`}
+              onClick={() => void laden(fach, o.pfad)}
+            >
+              {ordnerName(o)}
+              {o.ungelesen > 0 && <span className="buero-ordner-zahl">{o.ungelesen}</span>}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="buero-ordner ist-zugabe"
+            title="Ordner anlegen"
+            aria-label="Ordner anlegen"
+            onClick={() => setNeuerOrdner('')}
+          >
+            <Zeichen was="plus" />
+          </button>
+        </div>
+      )}
+
+      {neuerOrdner !== null && (
+        <form
+          className="buero-ordner-neu"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (neuerOrdner.trim()) void ordnerAnlegen(neuerOrdner.trim())
+          }}
+        >
+          <input
+            autoFocus
+            value={neuerOrdner}
+            placeholder="Name des Ordners"
+            onChange={(e) => setNeuerOrdner(e.target.value)}
+          />
+          <button type="submit" className="buero-knopf" disabled={!neuerOrdner.trim()}>
+            Anlegen
+          </button>
+          <button type="button" className="buero-knopf stumm" onClick={() => setNeuerOrdner(null)}>
+            Abbrechen
+          </button>
+        </form>
+      )}
 
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 

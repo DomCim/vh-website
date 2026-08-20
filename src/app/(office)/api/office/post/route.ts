@@ -6,10 +6,13 @@ import {
   nachrichtLesen,
   nachrichtenListe,
   nachrichtSenden,
+  nachrichtVerschieben,
+  ordnerAnlegen,
   ordnerListe,
   postfachFinden,
   postfaecher,
 } from '../../../../../lib/postfach'
+import { ordnernameGueltig, ordnerPfadNeben } from '../../../../../lib/ordnerpfad'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -59,9 +62,17 @@ export async function GET(req: Request) {
     }
 
     const vor = url.searchParams.get('vor')
+    /*
+     * Die Ordnerliste kommt immer mit, nicht nur beim ersten Aufruf.
+     *
+     * Vorher hing sie an „kein ?ordner= gesetzt", verschwand also, sobald man
+     * einen Ordner öffnete — und die Ungelesen-Zähler blieben auf dem Stand
+     * des Seitenaufrufs stehen. Die paar STATUS-Abfragen kosten weniger als
+     * eine Leiste, der man nicht glauben kann.
+     */
     const [liste, ordnerAlle] = await Promise.all([
       nachrichtenListe(fach, ordner, 40, vor ? Number(vor) : undefined),
-      url.searchParams.get('ordner') ? Promise.resolve(null) : ordnerListe(fach),
+      ordnerListe(fach),
     ])
 
     return NextResponse.json({
@@ -96,6 +107,29 @@ export async function POST(req: Request) {
         antwortAufMessageId: b.antwortAufMessageId || undefined,
       })
       return NextResponse.json({ ok: true })
+    }
+
+    if (b.aktion === 'verschieben') {
+      if (!b.uid) return NextResponse.json({ error: 'uid-fehlt' }, { status: 400 })
+      if (!b.ziel?.trim()) return NextResponse.json({ error: 'ziel-fehlt' }, { status: 400 })
+      await nachrichtVerschieben(fach, b.ordner || 'INBOX', Number(b.uid), b.ziel)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.aktion === 'ordner-anlegen') {
+      const name = String(b.name ?? '').trim()
+      if (!ordnernameGueltig(name)) {
+        return NextResponse.json({ error: 'name-ungueltig' }, { status: 400 })
+      }
+      /*
+       * Der Pfad wird hier nochmal gebaut, nicht vom Browser übernommen.
+       * Was von dort kommt, ist ein Vorschlag — und ein Vorschlag, der einen
+       * Ordner an einer beliebigen Stelle des Postfachs anlegen könnte, ist
+       * keiner, dem man ungeprüft folgt.
+       */
+      const pfad = ordnerPfadNeben(String(b.ordner ?? 'INBOX'), String(b.trenner ?? '/'), name)
+      const angelegt = await ordnerAnlegen(fach, pfad)
+      return NextResponse.json({ ok: true, pfad: angelegt })
     }
 
     const erlaubt = ['gelesen', 'ungelesen', 'markiert', 'unmarkiert', 'loeschen']
