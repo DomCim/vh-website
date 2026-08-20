@@ -37,7 +37,7 @@ Nach Schema-Änderungen an Collections: `pnpm generate:types` und `pnpm payload 
 
 ## Deployment (Portainer + Traefik + Nginx Proxy Manager)
 
-Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzwerk `edge`) → Container**
+Die Kette: **vincent-hellmann.com → Nginx Proxy Manager (TLS) → Traefik (Netzwerk `edge`) → Container**
 
 1. **Image**: Der GitHub-Actions-Workflow (`.github/workflows/docker.yml`) baut bei jedem Push auf `main` das Image und pusht es nach `ghcr.io/domcim/vh-website:latest`.
    Ist das GitHub-Package privat, in Portainer eine Registry-Anmeldung für `ghcr.io` hinterlegen (GitHub-Token mit `read:packages`).
@@ -47,8 +47,109 @@ Die Kette: **vh.dominikdill.com → Nginx Proxy Manager (TLS) → Traefik (Netzw
    - `POSTGRES_PASSWORD`
    - `SEED=true` **nur beim allerersten Start** (spielt Kategorien, Produkte, Bilder usw. ein; danach wieder auf `false`)
    - optional: SMTP-, PayPal- und Facebook-Variablen (siehe `.env.example`)
-4. **NPM-Weiterleitung**: `vh.dominikdill.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vh.dominikdill.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`).
-5. **Erster Login**: `https://vh.dominikdill.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
+4. **NPM-Weiterleitung**: `vincent-hellmann.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vincent-hellmann.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`). Die anderen Domains kommen als Weiterleitung dazu — siehe **Domains** gleich darunter.
+5. **Erster Login**: `https://vincent-hellmann.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
+
+### Domains
+
+Vincent hat drei: **.com**, **.de** und **.fr**. Maßgeblich ist genau eine —
+`https://vincent-hellmann.com`, ohne `www`. Alles andere leitet mit **301**
+dorthin um, unter Beibehaltung des Pfades.
+
+Warum nur eine: Dieselben Inhalte unter mehreren Adressen teilen ihre
+Sichtbarkeit bei Google auf, statt sie zu bündeln — und beim Kundenportal wäre
+es schlimmer als das. Anmeldung, Warenkorb und Übergabelinks hängen an Cookies,
+und Cookies gelten je Adresse. Wer sich auf `.de` anmeldet und auf `.com`
+weitersurft, ist dort wieder ausgeloggt.
+
+**Im Nginx Proxy Manager** (die Umleitung passiert dort und nicht in Traefik —
+sie kostet dann keinen Weg durch die ganze Kette):
+
+| Domain | Typ im NPM | Ziel |
+| --- | --- | --- |
+| `vincent-hellmann.com` | Proxy Host | Traefik |
+| `www.vincent-hellmann.com` | Redirection Host, 301 | `https://vincent-hellmann.com` |
+| `vincent-hellmann.de`, `www.vincent-hellmann.de` | Redirection Host, 301 | `https://vincent-hellmann.com` |
+| `vincent-hellmann.fr`, `www.vincent-hellmann.fr` | Redirection Host, 301 | `https://vincent-hellmann.com` |
+
+Bei jedem Redirection Host: **„Preserve Path" an** (sonst landet
+`…de/de/kollektion` auf der Startseite statt auf der Kollektion),
+**HTTP-Code 301** (dauerhaft — 302 sagt Google „kommt wieder zurück") und ein
+eigenes Zertifikat je Domain, damit auch `https://…de` ohne Warnung umleitet.
+
+Beim Proxy Host für `.com` zusätzlich:
+
+- **Websockets Support** an — die Live-Verbindung des Büros läuft über `/ws/buero`.
+- Unter *Advanced* → `client_max_body_size 512m;` — die Übergabemappe nimmt
+  Dateien bis 500 MB an. Ohne das antwortet Nginx mit **413**, bevor überhaupt
+  etwas bei der Anwendung ankommt, und die Fehlermeldung im Browser sagt nur
+  „nicht übertragen".
+- `X-Forwarded-Proto: https` muss durchgereicht werden (NPM macht das von
+  selbst) — sonst baut die Anwendung `http`-Links.
+
+**Traefik** kennt nur `vincent-hellmann.com` (Label `Host(...)`, gesetzt über
+`DOMAIN`). Kommt dort eine andere Adresse an, antwortet es mit 404. Das ist
+Absicht: ein sichtbarer Fehler ist besser als dieselbe Seite unter vier
+Adressen.
+
+### Reihenfolge beim Umzug
+
+Der Stolperstein zuerst: Payload prüft die Herkunft jeder angemeldeten
+Anfrage gegen `serverURL` — und die kommt aus `NEXT_PUBLIC_SERVER_URL`.
+Stimmen Adresse und Variable nicht überein, antwortet **jede** angemeldete
+Anfrage mit 403: Das Büro lädt, bleibt aber leer, und im Admin geht nichts
+mehr. Beides gehört deshalb in denselben Schritt.
+
+1. **DNS** für `.com`, `.de`, `.fr` (jeweils mit und ohne `www`) auf den
+   Server zeigen lassen. Erst danach kann der NPM Zertifikate holen.
+2. Im NPM den **Proxy Host für `.com`** anlegen (Traefik als Ziel,
+   Websockets an, `client_max_body_size 512m`) und ein Zertifikat ausstellen.
+3. Im Stack **`NEXT_PUBLIC_SERVER_URL=https://vincent-hellmann.com`** und
+   **`DOMAIN=vincent-hellmann.com`** setzen, dann neu ausrollen. Ab hier ist
+   die Seite unter der neuen Adresse erreichbar.
+4. Prüfen: `curl -I https://vincent-hellmann.com/api/healthz`, einmal im Büro
+   anmelden, eine Seite im Admin speichern.
+5. Die **Redirection Hosts** für `.de`, `.fr` und `www` anlegen.
+6. Prüfen, dass jede Umleitung 301 liefert und den Pfad behält:
+   `curl -I https://vincent-hellmann.de/de/kollektion` → `location:
+   https://vincent-hellmann.com/de/kollektion`
+7. Erst zum Schluss die alte Adresse abschalten.
+
+Ein **neues Abbild ist dafür nicht nötig**. Das klingt nach einer
+Selbstverständlichkeit, ist bei Next aber keine: Variablen mit dem Vorsatz
+`NEXT_PUBLIC_` werden normalerweise beim Bauen fest eingesetzt. Hier nicht —
+der Bau (`.github/workflows/docker.yml`) gibt die Variable gar nicht mit, und
+was beim Bauen fehlt, lässt Next als Abfrage stehen. Sie wird deshalb erst
+beim Start gelesen. Nachgemessen an einem Abbild, das ohne die Variable
+gebaut und mit ihr gestartet wurde: kanonische Links, Sitemap und robots.txt
+tragen die Adresse aus dem Stack.
+
+### Was ein Adresswechsel mitnimmt
+
+`NEXT_PUBLIC_SERVER_URL` ist nicht nur Kosmetik. Wer sie ändert, muss wissen:
+
+- **Passkeys werden ungültig.** Der Browser bindet sie an die Adresse (RP-ID).
+  Nach dem Wechsel meldet man sich einmal mit Passwort an und legt den Passkey
+  neu an — im Büro unter *Mein Konto*.
+- **Alle sind abgemeldet.** Büro-Anmeldung, Kundenportal und offene
+  Übergabe-Sitzungen hängen an Cookies der alten Adresse.
+- **Schon verschickte Übergabelinks zeigen ins Leere**, wenn die alte Adresse
+  abgeschaltet wird. Läuft noch eine Mappe, im Büro einen neuen Link erzeugen
+  (die Mappe bleibt dieselbe).
+- **PayPal**: Rücksprung-Adressen entstehen aus der Variablen, in der
+  PayPal-App muss die neue Domain aber freigeschaltet sein.
+- **Facebook/Instagram**: verknüpfte Domain im Meta-Business-Konto anpassen,
+  sonst scheitert das automatische Veröffentlichen.
+- **E-Mail**: SPF, DKIM und DMARC gelten für die Absenderdomain in
+  `EMAIL_FROM`. Zieht die mit um, gehören die DNS-Einträge angepasst — sonst
+  landet Post im Spam.
+- **HSTS**: Die Anwendung sendet `max-age=63072000; includeSubDomains`. Ab dem
+  ersten Aufruf besteht der Browser also zwei Jahre lang auf HTTPS — für die
+  Domain **und jede Unterdomäne**. Vorher sicherstellen, dass es keine
+  Unterdomäne ohne Zertifikat gibt.
+- **Google Search Console**: neue Property anlegen und
+  `https://vincent-hellmann.com/sitemap.xml` einreichen. Sitemap, robots.txt,
+  kanonische Links und hreflang entstehen automatisch aus der Variablen.
 
 **Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`, die fertigen Sicherungen im Volume `backups` (`/app/backups`). Alle drei überleben Updates. Gesichert wird nicht von Hand, sondern über **Büro → Sicherung** (siehe unten).
 
@@ -110,8 +211,8 @@ Ohne gesetzte `ROLLE` macht ein Prozess alles — so laufen Entwicklung und Prü
 **Welcher Stand läuft wo?** Jeder Container hat seine eigene Auskunft, und die muss man getrennt fragen — sonst antwortet immer nur die Website:
 
 ```
-curl https://vh.dominikdill.com/api/healthz         → Web-Container
-curl https://vh.dominikdill.com/api/office/healthz  → Büro-Container
+curl https://vincent-hellmann.com/api/healthz         → Web-Container
+curl https://vincent-hellmann.com/api/office/healthz  → Büro-Container
 ```
 
 Beide melden unter `version` den Commit, mit dem ihr Abbild gebaut wurde. Stehen dort zwei verschiedene Nummern, ist beim Ausrollen nur einer der beiden getauscht worden. Sieht die Büro-Oberfläche alt aus, ist das die erste Frage — nicht die letzte.
@@ -382,7 +483,7 @@ Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet n
 Beides lässt sich zusätzlich von außen anstoßen — etwa aus Home Assistant, das ohnehin das Ausrollen auslöst. Dafür (und nur dafür) gibt es `CRON_SECRET`:
 
 ```sh
-curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vh.dominikdill.com/api/wartung
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vincent-hellmann.com/api/wartung
 ```
 
 Ohne gesetztes `CRON_SECRET` sind diese Endpunkte von außen geschlossen; der eigene Takt läuft trotzdem.
@@ -449,7 +550,7 @@ Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inh
 1. Im Admin unter **Verwaltung → Integrationen → KI-Assistent** einen Schlüssel erzeugen und **speichern**. Dort steht darunter die fertige Verbindungs-URL zum Kopieren.
 2. Verbinden:
    - **claude.ai / Cowork** (Custom Connector, ohne Header-Support): die kopierte URL mit `?key=…` eintragen.
-   - **Claude Code**: `claude mcp add --transport http vh-website https://vh.dominikdill.com/api/mcp --header "Authorization: Bearer <Schlüssel>"`
+   - **Claude Code**: `claude mcp add --transport http vh-website https://vincent-hellmann.com/api/mcp --header "Authorization: Bearer <Schlüssel>"`
 
 Alternativ lassen sich die Schlüssel weiterhin als Umgebungsvariablen `MCP_API_KEY` / `MCP_READONLY_API_KEY` setzen — sie greifen nur, wenn im Admin nichts hinterlegt ist. Ohne jeden Schlüssel antwortet der Endpunkt mit 503.
 
@@ -502,7 +603,7 @@ Ab dann erscheint auf der Anmeldeseite ein zusätzliches Feld für den Code. Una
 
 ## Inhalte pflegen (Kurzanleitung Redaktion)
 
-Alles unter `https://vh.dominikdill.com/admin` — das ist die Verwaltung dessen, was auf der Website steht. Bestellungen, Anfragen, Aufträge und Zahlen liegen im **Büro** unter `/office` (siehe oben).
+Alles unter `https://vincent-hellmann.com/admin` — das ist die Verwaltung dessen, was auf der Website steht. Bestellungen, Anfragen, Aufträge und Zahlen liegen im **Büro** unter `/office` (siehe oben).
 
 | Bereich | Was |
 |---|---|

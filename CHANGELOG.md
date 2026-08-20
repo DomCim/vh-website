@@ -1,10 +1,14 @@
 # Changelog
 
-Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
+Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
 ## Noch nicht ausgerollt
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
+
+- **In der robots.txt stand als Sitemap-Adresse `http://localhost:3000`.** Aufgefallen beim Umzug. Die Datei wurde beim Bauen festgelegt — und beim Bauen gibt es die Serveradresse noch nicht, die steht erst im Stack. Google liest die robots.txt als Erstes und findet dort den Wegweiser zur Sitemap; dieser zeigte auf eine Adresse, die kein Suchdienst der Welt abrufen kann. Die Sitemap selbst war immer richtig, nur der Weg dorthin nicht. Sie wird jetzt bei jedem Abruf gerechnet. Das ist der einzige Fall dieser Art: Alle öffentlichen Seiten entstehen ohnehin je Abruf, ihre kanonischen Links waren korrekt — nachgemessen an einem Abbild, das wie in der CI ohne die Variable gebaut wurde.
+
+- **Die Seite zieht auf ihre eigene Adresse.** Maßgeblich ist ab jetzt `https://vincent-hellmann.com` — ohne `www`. Die anderen beiden Domains (.de und .fr) und alle `www`-Schreibweisen leiten dauerhaft dorthin um, mit Pfad. Nur eine Adresse deshalb, weil sich dieselben Inhalte unter mehreren sonst bei Google die Sichtbarkeit teilen, statt sie zu bündeln — und weil Anmeldung, Warenkorb und Übergabelinks an Cookies hängen, die je Adresse gelten: Wer sich auf `.de` anmeldet und auf `.com` weiterklickt, wäre dort wieder ausgeloggt. Kanonische Links, hreflang, Sitemap und robots.txt richten sich automatisch danach. Der Umzug samt Reihenfolge, NPM-Einstellungen und dem, was dabei ungültig wird (Passkeys, offene Anmeldungen, schon verschickte Übergabelinks), steht im README unter „Domains".
 
 - **Am Rechner lief „Kollektion" in den Schriftzug hinein.** Genau an der Schwelle, ab der die Navigation erscheint (1280 Pixel), ging es um 33 Pixel nicht aus: Schriftzug 286, Navigation 658, Werkzeuge 257, dazu zweimal 32 Pixel Abstand. Ein Raster gibt dann nicht nach — es lässt die mittlere Spalte über die äußere laufen. Weil eine Grafik mit fester Höhe nicht schmaler wird, gibt jetzt der Abstand nach: bis 1400 Pixel knapp bemessen, darüber wieder weit. Gemessen in allen drei Sprachen, bei jeder Breite von 1280 bis 1536 — vorher 1 Pixel Luft, jetzt mindestens 30.
 

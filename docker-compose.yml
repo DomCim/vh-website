@@ -2,8 +2,39 @@
 #
 # Voraussetzungen:
 #  - Externes Docker-Netzwerk "edge" (dort läuft Traefik)
-#  - Nginx Proxy Manager leitet vh.dominikdill.com an Traefik weiter (TLS terminiert im NPM)
+#  - Nginx Proxy Manager leitet vincent-hellmann.com an Traefik weiter
+#    (TLS terminiert im NPM)
 #  - Umgebungsvariablen im Stack setzen (siehe .env.example)
+#
+# ── Die drei Domains ────────────────────────────────────────────────────────
+#
+# Vincent hat .com, .de und .fr. Maßgeblich ist **eine** davon:
+# https://vincent-hellmann.com. Alles andere leitet dorthin um.
+#
+# Die Umleitung passiert im Nginx Proxy Manager und **nicht** hier. Der Grund
+# ist nüchtern: Eine Umleitung ist eine Kopfzeile, keine Rechenaufgabe. Im NPM
+# kostet sie einen Redirection Host je Domain und endet dort; über Traefik
+# gedreht liefe jeder Aufruf von .de und .fr erst durch die ganze Kette, nur
+# um dann doch eine Zeile Antwort zu bekommen.
+#
+#   NPM: vincent-hellmann.com     → Proxy Host   → Traefik → diese Container
+#        vincent-hellmann.de      → Redirect 301 → https://vincent-hellmann.com
+#        vincent-hellmann.fr      → Redirect 301 → https://vincent-hellmann.com
+#        www.vincent-hellmann.*   → Redirect 301 → https://vincent-hellmann.com
+#
+# Traefik kennt deshalb nur die eine Adresse. Taucht hier trotzdem eine andere
+# auf, antwortet Traefik mit 404 — das ist Absicht: ein sichtbarer Fehler ist
+# besser als dieselbe Seite unter vier Adressen, die Google gegeneinander
+# ausspielt.
+#
+# Wer gleich mehrere Domains bis hierher durchreichen will, setzt DOMAIN auf
+# eine Traefik-Regel mit mehreren Hosts — siehe .env.example.
+#
+# Wichtig für den Proxy-Host im NPM:
+#  - client_max_body_size auf 512m (die Übergabemappe nimmt 500-MB-Dateien an;
+#    ohne das endet der Upload mit 413, bevor überhaupt etwas ankommt)
+#  - Websockets aktivieren (die Live-Verbindung des Büros unter /ws/buero)
+#  - X-Forwarded-Proto muss https sein, sonst baut die Anwendung http-Links
 services:
   web:
     # Zwei Abbilder aus demselben Quelltext: Dieses hier enthält Website, Shop
@@ -20,7 +51,7 @@ services:
       # einmal geben darf: Migrationen, Startdaten, nächtliche Sicherung,
       # Erinnerungen, Postfach-Blick.
       ROLLE: web
-      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vh.dominikdill.com}
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vincent-hellmann.com}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
       DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
       SMTP_HOST: ${SMTP_HOST:-}
@@ -76,14 +107,14 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=edge
-      - traefik.http.routers.vhweb.rule=Host(`${DOMAIN:-vh.dominikdill.com}`)
+      - traefik.http.routers.vhweb.rule=Host(`${DOMAIN:-vincent-hellmann.com}`)
       - traefik.http.routers.vhweb.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       # Niedrigere Priorität als das Büro: Bei zwei passenden Regeln gewinnt
       # die höhere, und /office soll ausdrücklich beim Büro landen.
       #
       # Warum die Zahl so groß ist: Ohne Angabe vergibt Traefik die Priorität
-      # nach der *Länge der Regel*. `Host(`vh.dominikdill.com`)` allein kommt
-      # damit auf 26. Wer hier 1 und 10 einträgt, stellt seine beiden Router
+      # nach der *Länge der Regel*. `Host(`vincent-hellmann.com`)` allein kommt
+      # damit auf 27. Wer hier 1 und 10 einträgt, stellt seine beiden Router
       # also hinter jeden anderen, der keine Angabe macht — etwa einen
       # übriggebliebenen Container aus dem vorigen Stack. Der bediente dann
       # weiter alles, auch /office, und man sieht den alten Stand.
@@ -114,7 +145,7 @@ services:
       # Kein Takt, keine Migrationen — die macht der Web-Container. Dafür hält
       # dieser hier die offenen Live-Verbindungen.
       ROLLE: buero
-      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vh.dominikdill.com}
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vincent-hellmann.com}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
       DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
       SMTP_HOST: ${SMTP_HOST:-}
@@ -152,7 +183,7 @@ services:
       - traefik.enable=true
       - traefik.docker.network=edge
       # Das Büro, seine eigenen Schnittstellen und die Live-Verbindung
-      - traefik.http.routers.vhbuero.rule=Host(`${DOMAIN:-vh.dominikdill.com}`) && (PathPrefix(`/office`) || PathPrefix(`/api/office`) || PathPrefix(`/ws/buero`))
+      - traefik.http.routers.vhbuero.rule=Host(`${DOMAIN:-vincent-hellmann.com}`) && (PathPrefix(`/office`) || PathPrefix(`/api/office`) || PathPrefix(`/ws/buero`))
       - traefik.http.routers.vhbuero.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       # Höher als die Website — siehe die Erklärung dort
       - traefik.http.routers.vhbuero.priority=200

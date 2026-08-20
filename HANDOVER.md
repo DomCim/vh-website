@@ -417,8 +417,21 @@ das zurückkommt.
 2. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
    („Den Stand Ihres Auftrags sehen Sie unter …/konto"). Vorgeschlagen, noch
    nicht entschieden.
-3. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
-4. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
+3. **Umzug auf `vincent-hellmann.com`.** Entschieden: maßgeblich ist die
+   Adresse **ohne `www`**; `.de`, `.fr` und alle `www`-Schreibweisen leiten
+   dauerhaft dorthin um, und zwar als Redirection Hosts im Nginx Proxy Manager
+   (nicht in Traefik — sonst liefe jede Umleitung erst durch die ganze Kette).
+   `vh.dominikdill.com` wird abgeschaltet. Der Stack trägt die neuen Vorgaben
+   bereits; zu tun bleibt die Arbeit am Server. Reihenfolge, NPM-Einstellungen
+   und die Fallen stehen im README unter **Domains** — insbesondere:
+   `NEXT_PUBLIC_SERVER_URL` und der NPM-Host müssen im **selben** Schritt
+   umgestellt werden, sonst prüft Payload die Herkunft gegen die alte Adresse
+   und jede angemeldete Anfrage endet mit 403 (das Büro lädt und bleibt leer).
+   Ungültig werden dabei: alle Passkeys (der Browser bindet sie an die
+   Adresse), alle offenen Anmeldungen, und schon verschickte Übergabelinks,
+   sobald die alte Adresse weg ist.
+4. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
+5. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
    Volumes gehören dem falschen Benutzer (`chown 1000:1000`), `SEED=true`
    steht noch im Stack, `MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe
    Wert, übriggebliebener Container `vincent-hellmann-backup-1`.

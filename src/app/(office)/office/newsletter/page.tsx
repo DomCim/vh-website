@@ -6,7 +6,7 @@ import { bueroBenutzer } from '../../../../lib/office'
 
 export const dynamic = 'force-dynamic'
 
-const BASIS = (process.env.NEXT_PUBLIC_SERVER_URL || 'https://www.vincent-hellmann.com').replace(
+const BASIS = (process.env.NEXT_PUBLIC_SERVER_URL || 'https://vincent-hellmann.com').replace(
   /\/$/,
   '',
 )
