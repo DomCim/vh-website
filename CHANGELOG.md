@@ -2,6 +2,10 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## 20.08.2026 — Schriftzug folgt dem Hero, nicht dem Thema
+
+- **Über einem hellen Hero-Bild war der Schriftzug im dunklen Thema unsichtbar.** Die Kopfleiste nimmt über dem Hero die Farbe des Bildes an — welche Schrift darauf lesbar ist, hängt damit am Bild und nicht daran, ob das Gerät hell oder dunkel eingestellt ist. Abgedeckt war bisher nur der Fall „dunkles Bild"; beim hellen blieb die helle Schrift des dunklen Themas stehen und stand auf hellem Grund. Vorher fiel das nicht auf, weil das Logo ein schwarzes Bild war und sich um Themen nicht scherte.
+
 ## 20.08.2026 — Bauunterlagen an der Variante, Bilder auf den Papieren, Zeichen in der Leiste
 
 - **Jede Artikelvariante trägt ihre Bauunterlagen bei sich.** Laserdatei, Fräsprogramm, Zusammenbauzeichnung, NC-Code — was zum Bauen gebraucht wird, lag bisher in einem Ordner auf einem Rechner, den einer kennt. Jetzt hängt es an der Variante, die es betrifft: Ein Kübel in 100 × 50 hat eine andere Laserdatei als derselbe in 60 × 30, und wo beide zusammenliegen, wird irgendwann das falsche Blech geschnitten.

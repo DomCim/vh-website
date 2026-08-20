@@ -122,6 +122,30 @@ body {
 .site-header .site-logo {
   transition: color 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/*
+ * Der Farbton des Heros entscheidet, nicht das Thema.
+ *
+ * Die Kopfleiste nimmt über dem Hero die Farbe des Bildes an. Welche Schrift
+ * darauf lesbar ist, hängt damit am **Bild** und nicht daran, ob das Gerät
+ * hell oder dunkel eingestellt ist. Ohne diesen Block stand im dunklen Thema
+ * der helle Schriftzug auf einem hellen Hero — also unsichtbar. Vorher fiel
+ * das nicht auf, weil das Logo ein schwarzes Bild war und sich um nichts
+ * scherte; jetzt trägt es `currentColor` und folgt diesen Werten.
+ */
+:root[data-hero-tint='light'] .site-header-bar {
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #4b4b4d;
+  --color-line: rgba(0, 0, 0, 0.18);
+  --color-accent: #1d1d1f;
+  --color-bronze: #1d1d1f;
+  --color-on-ink: #ffffff;
+}
+
+:root[data-hero-tint='light'] .site-header-bar .bg-accent,
+:root[data-hero-tint='light'] .site-header-bar .bg-bronze {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
 :root[data-hero-tint='dark'] .site-header-bar {
   --color-ink: #ffffff;
   --color-ink-soft: rgba(255, 255, 255, 0.78);
