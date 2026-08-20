@@ -6,7 +6,9 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
-*(gerade nichts)*
+- **Die Website hat ein eigenes Zeichen fürs Browsertab.** Sie hatte nie eins — im Tab stand die graue Weltkugel, auf dem Startbildschirm eines iPhones ein Bildschirmfoto der Seite. Ausgerechnet das, was Kundschaft sieht, war das einzige ohne; Admin und Büro hatten längst welche. Jetzt trägt sie dasselbe VH-Monogramm mit Corten-Strich.
+  - **In zwei Zuschnitten, und das ist der Punkt.** Der Zuschnitt von Admin und Büro ist für 192 Pixel gezeichnet; bei 16 Pixeln im Tab wird daraus ein grauer Fleck, weil die Striche schmaler als ein Pixel sind. Fürs Tab gibt es deshalb eine kräftigere Zeichnung, deren Maße alle auf dem Pixelraster liegen — dadurch wird jeder Strich genau zwei Pixel breit und voll deckend statt halb. Der Corten-Strich fällt dort weg: 0,3 Pixel sind kein Strich mehr, sondern eine schmutzige Zeile. Auf dem Startbildschirm, wo Platz ist, steht er wieder drin.
+  - Vier Fassungen, weil jede woanders gebraucht wird: SVG fürs Tab (in jeder Größe scharf), PNG als Rückfall, eine echte `favicon.ico` mit 16, 32 und 48 Pixeln für alles, was stur die Wurzel abfragt (Feedleser, Vorschaudienste), und das Apple-Touch-Icon für den Startbildschirm.
 
 ## 20.08.2026 — Übergabemappe, Unterlagen am Vorgang, eigene Adresse
 

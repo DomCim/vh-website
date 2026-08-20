@@ -44,6 +44,28 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
     },
     description: settings?.seo?.metaDescription || undefined,
     alternates: alternatesFor(locale, ''),
+    /*
+     * Das Zeichen fürs Browsertab.
+     *
+     * Die Website hatte keines — im Tab stand die graue Weltkugel, und auf
+     * dem Startbildschirm eines iPhones ein Bildschirmfoto der Seite. Admin
+     * und Büro hatten längst eigene; ausgerechnet das, was Kundschaft zu
+     * sehen bekommt, hatte keins.
+     *
+     * Vier Fassungen, weil jede woanders gebraucht wird: das SVG ist in
+     * jeder Größe scharf und wird von allem Aktuellen bevorzugt, das PNG ist
+     * der Rückfall für ältere Browser, die `.ico` bedient alles, was stur
+     * `/favicon.ico` an der Wurzel abfragt (Feedleser, Vorschaudienste), und
+     * das Apple-Touch-Icon landet auf dem Startbildschirm.
+     */
+    icons: {
+      icon: [
+        { url: '/site-icon.svg', type: 'image/svg+xml' },
+        { url: '/site-icon-32.png', type: 'image/png', sizes: '32x32' },
+        { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    },
     openGraph: {
       siteName: settings?.siteName || 'Vincent Hellmann',
       locale,
