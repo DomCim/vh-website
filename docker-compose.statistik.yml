@@ -34,22 +34,33 @@
 #        openssl rand -base64 48        # SECRET_KEY_BASE
 #        openssl rand -base64 32        # TOTP_VAULT_KEY
 #
-# 3. Stack starten, https://vincent-hellmann.com ist noch nicht nötig.
-#    Danach **einmalig** ein Konto anlegen. Weil Plausible von außen nicht
-#    erreichbar ist, geht das über einen Tunnel vom eigenen Rechner:
+# 3. **Für die Einrichtung** die Oberfläche kurz erreichbar machen: die Zeile
+#    `ports:` unten aktivieren, und diese beiden Variablen setzen —
 #
-#        ssh -L 8000:localhost:8000 server
-#        # dann im Browser: http://localhost:8000
+#        PLAUSIBLE_BASE_URL              http://192.168.178.129:8001
+#        PLAUSIBLE_DISABLE_REGISTRATION  false
 #
-#    Dafür muss der Port kurz auf dem Server liegen — die Zeile `ports:` unten
-#    einmal aktivieren, Konto und Website anlegen, API-Schlüssel erzeugen,
-#    Zeile wieder auskommentieren, Stack neu ausrollen.
+#    Die Adresse muss die sein, die du im Browser eintippst; steht dort etwas
+#    anderes, bleiben Plausibles Formulare tot (Näheres bei BASE_URL unten).
+#    Und ohne `false` kann sich niemand anmelden — auch der erste nicht.
 #
-# 4. Im Admin der Website unter Integrationen → Besucherzählung eintragen:
+#    Dann im Browser: Konto anlegen, Seite `vincent-hellmann.com` eintragen,
+#    unter Settings → API Keys einen Schlüssel erzeugen.
+#
+# 4. **Nach der Einrichtung** wieder zumachen:
+#      PLAUSIBLE_DISABLE_REGISTRATION  auf true
+#      die Zeile `ports:` auskommentieren
+#    und neu ausrollen. Ab dann läuft alles über die Website.
+#
+# 5. Im Admin der Website unter Integrationen → Besucherzählung eintragen:
 #      Adresse      http://plausible:8000
 #      Seite        vincent-hellmann.com
 #      Schlüssel    der API-Schlüssel aus Schritt 3
 #    Und in den Website-Einstellungen unter Besucherstatistik den Haken setzen.
+#
+#    Hier steht `http://plausible:8000` und nicht die Adresse aus Schritt 3:
+#    Die Website spricht Plausible über das interne Netz an, unter seinem
+#    Dienstnamen. Das ist ein anderer Weg als der durch deinen Browser.
 #
 # ── Was das kostet ──────────────────────────────────────────────────────────
 #
@@ -115,13 +126,30 @@ services:
     # Vorlage des Herstellers. Beim zweiten Start tun die ersten beiden nichts.
     command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     environment:
-      # Muss gesetzt sein, wird aber nur für Links in Mails gebraucht. Von
-      # außen ist diese Adresse nicht erreichbar — das ist Absicht.
-      BASE_URL: ${PLAUSIBLE_BASE_URL:-http://plausible:8000}
+      # **Muss die Adresse sein, die im Browser steht** — nicht die, unter der
+      # die Website Plausible erreicht.
+      #
+      # Das klingt nach Erbsenzählerei und ist es nicht: Plausibles Formulare
+      # sind LiveViews. Die bauen eine Websocket-Verbindung auf und lassen sie
+      # nur zu, wenn die Adresse im Browser zu BASE_URL passt. Tut sie das
+      # nicht, wird die Verbindung stillschweigend abgewiesen — die Seite
+      # erscheint, aber kein Knopf tut mehr etwas. Man sucht dann stundenlang
+      # nach einem Fehler, der eine Zeile weiter oben steht.
+      #
+      # Während der Einrichtung also die Adresse eintragen, unter der du die
+      # Oberfläche aufrufst, z.B. http://192.168.178.129:8001
+      BASE_URL: ${PLAUSIBLE_BASE_URL:?die Adresse, unter der du die Oberfläche im Browser aufrufst}
       SECRET_KEY_BASE: ${PLAUSIBLE_SECRET_KEY_BASE:?openssl rand -base64 48}
       TOTP_VAULT_KEY: ${PLAUSIBLE_TOTP_VAULT_KEY:?openssl rand -base64 32}
-      # Nach dem ersten Konto zu: Es gibt nur einen, der hier hineinschaut.
-      DISABLE_REGISTRATION: ${PLAUSIBLE_DISABLE_REGISTRATION:-true}
+      # **Beim ersten Start `false`, danach `true`.** In dieser Reihenfolge, und
+      # nicht andersherum: Steht hier von Anfang an `true`, kann sich niemand
+      # anmelden — auch der erste nicht. Die Tür ist dann abgeschlossen und der
+      # Schlüssel liegt dahinter.
+      #
+      # Sobald das Konto steht, auf `true` stellen und neu ausrollen. Es gibt
+      # genau einen, der hier hineinschaut; ab dann soll sich niemand mehr
+      # eintragen können.
+      DISABLE_REGISTRATION: ${PLAUSIBLE_DISABLE_REGISTRATION:-false}
       DATABASE_URL: postgres://postgres:${PLAUSIBLE_DB_PASSWORT:?Passwort für die Statistik-Datenbank}@plausible_db:5432/plausible_db
       CLICKHOUSE_DATABASE_URL: http://plausible_events_db:8123/plausible_events_db
     # Nur für die Ersteinrichtung (Schritt 3 oben) — danach wieder zu.
