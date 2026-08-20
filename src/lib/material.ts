@@ -256,3 +256,38 @@ export async function bedarfFuerBestellung(
   }
   return bedarfFuerProdukte(payload, posten)
 }
+
+/**
+ * Neue Variantenliste auf die bestehenden Zeilen abbilden.
+ *
+ * An der Kennung einer Variante hängt alles, was zu ihr gehört: Stückliste,
+ * Fremdleistung, Arbeitszeit, die Werkstattdateien samt Ordnern — und die
+ * Bestellpositionen, die sagen, welche Größe jemand gekauft hat. Wird eine
+ * Variantenliste ohne Kennungen geschrieben, legt Payload für jede Zeile eine
+ * neue an, und ein bloßes Umbenennen hängt die Zeichnungen und die Stückliste
+ * stillschweigend ab.
+ *
+ * Gesucht wird deshalb in drei Stufen:
+ *
+ * 1. **Die mitgegebene Kennung** — eindeutig, und der Weg für Übersetzungen.
+ * 2. **Der bisherige Name** — der Normalfall, wenn nur ein Preis sich ändert.
+ * 3. **Die Position in der Liste**, solange die Anzahl gleich bleibt. Das ist
+ *    der Fall beim Übersetzen ohne Kennung: Dort ändert sich jeder Name, aber
+ *    die Reihenfolge bleibt.
+ *
+ * Bleibt alles drei ohne Treffer, ist es eine neue Variante und bekommt eine
+ * neue Zeile.
+ */
+export function variantenZuordnen<
+  A extends { id?: string | null; title?: string | null },
+  N extends { kennung?: string | null; titel: string },
+>(bisher: A[], neu: N[]): (N & { id?: string })[] {
+  const gleicheAnzahl = neu.length === bisher.length
+  return neu.map((v, i) => {
+    const alt =
+      (v.kennung && bisher.find((b) => String(b.id) === String(v.kennung))) ||
+      bisher.find((b) => b.title === v.titel) ||
+      (gleicheAnzahl ? bisher[i] : undefined)
+    return alt?.id ? { ...v, id: String(alt.id) } : { ...v }
+  })
+}

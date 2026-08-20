@@ -5,6 +5,7 @@ import {
   variantenDienstleister,
   variantenMinuten,
   variantenStueckliste,
+  variantenZuordnen,
 } from '../src/lib/material'
 
 /**
@@ -130,5 +131,57 @@ test.describe('Welche Fremdleistung anfällt', () => {
 
   test('ohne alles bleibt die Liste leer statt undefiniert', () => {
     expect(variantenDienstleister({}, { variantId: 'x' })).toEqual([])
+  })
+})
+
+/**
+ * Varianten behalten ihre Kennung.
+ *
+ * Daran hängt alles, was zur Variante gehört: Stückliste, Fremdleistung,
+ * Arbeitszeit, Werkstattdateien samt Ordnern — und die Bestellpositionen, die
+ * sagen, welche Größe jemand gekauft hat. Wird eine Variantenliste ohne
+ * Kennungen geschrieben, vergibt Payload neue, und ein bloßes Umbenennen
+ * hängt die Zeichnungen stillschweigend ab.
+ */
+test.describe('Varianten wiederfinden', () => {
+  const bisher = [
+    { id: 'a1', title: '60 × 30 cm' },
+    { id: 'a2', title: '100 × 50 cm' },
+  ]
+
+  test('die mitgegebene Kennung gewinnt — auch bei neuem Namen', () => {
+    const raus = variantenZuordnen(bisher, [
+      { kennung: 'a2', titel: 'Groß (100 × 50)' },
+      { kennung: 'a1', titel: 'Klein (60 × 30)' },
+    ])
+    expect(raus.map((v) => v.id)).toEqual(['a2', 'a1'])
+  })
+
+  test('sonst der bisherige Name — der Normalfall beim Preisändern', () => {
+    const raus = variantenZuordnen(bisher, [
+      { titel: '60 × 30 cm' },
+      { titel: '100 × 50 cm' },
+    ])
+    expect(raus.map((v) => v.id)).toEqual(['a1', 'a2'])
+  })
+
+  test('beim Übersetzen zählt die Reihenfolge, solange die Anzahl stimmt', () => {
+    // Auf Französisch heißt keine Zeile mehr wie vorher — die Liste ist aber
+    // dieselbe, nur übersetzt
+    const raus = variantenZuordnen(bisher, [{ titel: '60 × 30 cm (petit)' }, { titel: 'grand' }])
+    expect(raus.map((v) => v.id)).toEqual(['a1', 'a2'])
+  })
+
+  test('eine hinzugekommene Variante bekommt keine fremde Kennung', () => {
+    const raus = variantenZuordnen(bisher, [
+      { titel: '60 × 30 cm' },
+      { titel: '100 × 50 cm' },
+      { titel: '150 × 80 cm' },
+    ])
+    expect(raus.map((v) => v.id)).toEqual(['a1', 'a2', undefined])
+  })
+
+  test('ohne bestehende Varianten bleibt alles neu', () => {
+    expect(variantenZuordnen([], [{ titel: 'Einzige' }])[0].id).toBeUndefined()
   })
 })

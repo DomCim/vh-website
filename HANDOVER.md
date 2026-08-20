@@ -288,6 +288,33 @@ bleibt die Stelle einfach leer, es bricht nichts.
 
 ---
 
+## Die Kennung einer Variante trägt alles
+
+`products.variants[].id` — die Zeilenkennung, die Payload beim Anlegen vergibt
+— ist der Anker für Stückliste, Fremdleistung, Arbeitszeit, Werkstattdateien
+samt Ordnern und für die Bestellpositionen, die sagen, welche Größe jemand
+gekauft hat. Der **Name** ist nur Anzeige und Rückfallweg für alte
+Bestellungen.
+
+Das trägt, solange jede Schreiboperation die Kennungen mitschickt. Payload
+vergibt sonst neue, und zwar lautlos: Die Variante heißt danach gleich, aber
+Stückliste, Minuten und Zeichnungen sind ab. Gemessen am laufenden Stand —
+dieselbe Liste ohne Kennungen geschrieben:
+
+    vorher   6a860739…c201 | 60 × 30 cm | Stückliste: 1 | Minuten: 42
+    nachher  6a86bcf1…7be3 | 60 × 30 cm | Stückliste: 0 | Minuten: null
+             die Werkstattdatei zeigt weiter auf 6a860739…c201 — ins Leere
+
+Wer `variants` schreibt, ordnet deshalb über `variantenZuordnen`
+(`lib/material.ts`) zu: erst die mitgegebene Kennung, dann der bisherige Name,
+dann die Position, solange die Anzahl gleich bleibt (das ist der
+Übersetzungsfall — dort ändert sich jeder Name). Das Büro (`/api/office/
+stueckliste`) liest die bestehenden Zeilen und schreibt sie mit ihrer Kennung
+zurück; der KI-Zugang (`produkt_varianten_setzen`) nimmt zusätzlich eine
+`kennung` entgegen, die `produkt_lesen` mitliefert.
+
+---
+
 ## Offen
 
 1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit

@@ -1,6 +1,7 @@
 import type { Where } from 'payload'
 import { z } from 'zod'
 
+import { variantenZuordnen } from '../material'
 import { richText } from '../richtext'
 import {
   bestaetigen,
@@ -87,7 +88,13 @@ export function registerProdukte(server: McpServer) {
         versandkosten: p.shippingCost ?? 0,
         kurzbeschreibung: p.shortDescription ?? null,
         beschreibung: richTextZuText(p.description),
-        varianten: (p.variants ?? []).map((v: any) => ({ titel: v.title, preis: v.price })),
+        // Die Kennung mitgeben: Damit kann produkt_varianten_setzen eine
+        // bestehende Variante eindeutig treffen, statt über den Namen zu raten
+        varianten: (p.variants ?? []).map((v: any) => ({
+          kennung: v.id,
+          titel: v.title,
+          preis: v.price,
+        })),
         farboptionen: (p.colorOptions ?? []).map((c: any) => ({ name: c.name, hex: c.hex })),
         bildIds: (p.images ?? []).map((b: any) => (typeof b === 'object' ? b.id : b)),
         fertigungszeit: p.productionTime ?? null,
@@ -280,7 +287,20 @@ export function registerProdukte(server: McpServer) {
         slug: z.string(),
         sprache,
         varianten: z
-          .array(z.object({ titel: z.string(), preis: z.number().nonnegative() }))
+          .array(
+            z.object({
+              titel: z.string(),
+              preis: z.number().nonnegative(),
+              kennung: z
+                .string()
+                .optional()
+                .describe(
+                  'Die Kennung einer bestehenden Variante (aus produkt_lesen). Damit bleibt sie ' +
+                    'beim Umbenennen oder Übersetzen dieselbe — daran hängen Stückliste, ' +
+                    'Werkstattdateien und die Bestellungen.',
+                ),
+            }),
+          )
           .optional()
           .describe('z.B. [{titel: "Größe M", preis: 890}]'),
         farboptionen: z
@@ -291,16 +311,41 @@ export function registerProdukte(server: McpServer) {
     },
     async ({ slug, sprache: locale, varianten, farboptionen }) => {
       const payload = await db()
-      const produkt = await findeNachSlug<{ id: number }>(payload, 'products', slug)
+      const produkt = await findeNachSlug<{
+        id: number
+        variants?: { id?: string | null; title?: string | null }[] | null
+      }>(payload, 'products', slug, { locale })
       if (!produkt) return fehler(`Produkt "${slug}" nicht gefunden`)
+
+      /*
+       * Bestehende Varianten behalten ihre Kennung.
+       *
+       * An dieser Kennung hängt alles, was zur Variante gehört: ihre
+       * Stückliste, ihre Fremdleistung, ihre Arbeitszeit, ihre
+       * Werkstattdateien samt Ordnern — und die Bestellpositionen, die
+       * sagen, welche Größe jemand gekauft hat.
+       *
+       * Ohne dieses Zuordnen legte Payload für jede Zeile eine neue Kennung
+       * an, und ein bloßes Umbenennen der Variante hätte die Zeichnungen und
+       * die Stückliste stillschweigend abgehängt. Gefunden wird über den
+       * bisherigen Namen — mehr gibt die Schnittstelle nicht her —, und was
+       * dort neu ist, bekommt eine neue Zeile.
+       */
+      // Bestehende Varianten behalten ihre Kennung — siehe variantenZuordnen
+      const zugeordnet = varianten
+        ? variantenZuordnen(produkt.variants ?? [], varianten).map((v) => ({
+            ...(v.id ? { id: v.id } : {}),
+            title: v.titel,
+            price: v.preis,
+          }))
+        : undefined
+
       await payload.update({
         collection: 'products',
         id: produkt.id,
         locale,
         data: {
-          ...(varianten !== undefined && {
-            variants: varianten.map((v) => ({ title: v.titel, price: v.preis })),
-          }),
+          ...(zugeordnet !== undefined && { variants: zugeordnet }),
           ...(farboptionen !== undefined && {
             colorOptions: farboptionen.map((c) => ({ name: c.name, hex: c.hex })),
           }),
