@@ -8,6 +8,7 @@ import { AdminVerweis } from '../../components/office/AdminVerweis'
 import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
+import { Haptik } from '../../components/office/Haptik'
 import { Kopftitel } from '../../components/office/Kopftitel'
 import { Scrollstart } from '../../components/office/Scrollstart'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
@@ -47,6 +48,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
     <html lang="de">
       <body className="buero">
         <Scrollstart />
+        <Haptik />
         <SitzungVerlaengern />
         <Tastaturwache />
         <BestandAnbieter />

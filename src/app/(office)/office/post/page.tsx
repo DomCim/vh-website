@@ -37,7 +37,12 @@ export default async function PostSeite({
         </Link>
       </p>
 
-      <Postfach vorgabe={an ? { an, betreff: betreff ?? '', text: '' } : null} />
+      {/*
+        * Der Rumpf bleibt leer: Die Signatur legt das Schreibfeld selbst
+        * hinein, sobald es weiß, über welches Postfach verschickt wird — und
+        * das entscheidet sich erst im Browser.
+        */}
+      <Postfach vorgabe={an ? { an, betreff: betreff ?? '', text: '', html: '' } : null} />
     </>
   )
 }

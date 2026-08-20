@@ -3,8 +3,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
+import { Schreibfeld } from './Schreibfeld'
 
-type Fach = { id: string; label: string; address: string }
+type Fach = { id: string; label: string; address: string; signatur?: string | null }
 type Ordner = { pfad: string; name: string; ungelesen: number; art: string; trenner: string }
 type Kopfzeile = {
   uid: number
@@ -25,7 +26,20 @@ type Nachricht = Kopfzeile & {
   dateien: { name: string; groesse: number; typ: string }[]
 }
 
-type Entwurf = { an: string; betreff: string; text: string; antwortAufMessageId?: string }
+/**
+ * Ein Entwurf trägt HTML, nicht mehr bloß Text.
+ *
+ * `text` bleibt als Rückfallebene: Lädt das Schreibfeld nicht, wird dort
+ * einfacher Text getippt, und der Server setzt ihn wie früher auf den
+ * Briefbogen.
+ */
+type Entwurf = {
+  an: string
+  betreff: string
+  text: string
+  html: string
+  antwortAufMessageId?: string
+}
 
 const zeit = (v: string | null) => {
   if (!v) return ''
@@ -66,6 +80,26 @@ function Zeichen({ was }: { was: keyof typeof ZEICHEN }) {
       {ZEICHEN[was]}
     </svg>
   )
+}
+
+/** Zeilen einer Signatur zu Absätzen — sie kommt als Klartext aus den Einstellungen */
+function signaturAlsHtml(signatur?: string | null): string {
+  const sauber = (signatur ?? '').trim()
+  if (!sauber) return ''
+  const zeilen = sauber
+    .split('\n')
+    .map((z) =>
+      z
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;'),
+    )
+    .join('<br>')
+  /*
+   * Zwei leere Absätze davor: Der Zeiger steht beim Öffnen oben, und man soll
+   * lostippen können, ohne sich erst Platz zu schaffen.
+   */
+  return `<p><br></p><p><br></p><p style="color: #666666">${zeilen}</p>`
 }
 
 /** Kurzer, sprechender Name statt des rohen IMAP-Pfads */
@@ -147,6 +181,22 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   useEffect(() => {
     void laden()
   }, [laden])
+
+  /*
+   * Die Signatur kommt erst, wenn die Postfächer da sind.
+   *
+   * Beim Aufruf über `/office/post?an=…` steht der Entwurf schon, bevor der
+   * Server geantwortet hat — die Signatur gehört aber zum Postfach und ist zu
+   * dem Zeitpunkt noch unbekannt. Nachgelegt wird nur in einen leeren Rumpf:
+   * Was jemand schon getippt hat, wird nicht angefasst.
+   */
+  useEffect(() => {
+    if (!entwurf || entwurf.html.trim()) return
+    const signatur = signaturAlsHtml(faecher.find((f) => f.id === fach)?.signatur)
+    if (signatur) setEntwurf({ ...entwurf, html: signatur })
+    // Nur an den Postfächern hängen — sonst liefe es bei jedem Buchstaben
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [faecher, fach])
 
   async function oeffnen(uid: number) {
     setLaeuft(true)
@@ -246,6 +296,16 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
       setMeldung('Eine Empfängeradresse wird gebraucht.')
       return
     }
+    /*
+     * Leere Mails gar nicht erst losschicken. Quill hinterlässt beim Leeren
+     * ein `<p><br></p>` — wer nur darauf prüft, ob etwas dasteht, schickt
+     * genau das raus.
+     */
+    const inhalt = (entwurf.html || entwurf.text).replace(/<[^>]+>/g, '').replace(/\s|&nbsp;/g, '')
+    if (!inhalt) {
+      setMeldung('Die Nachricht ist leer.')
+      return
+    }
     setLaeuft(true)
     try {
       const res = await fetch('/api/office/post', {
@@ -267,16 +327,34 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
   }
 
+  /** Die Signatur des gerade gewählten Postfachs, als HTML für das Schreibfeld */
+  function signaturJetzt(): string {
+    return signaturAlsHtml(faecher.find((f) => f.id === fach)?.signatur)
+  }
+
   function antworten(n: Nachricht) {
+    /*
+     * Das Zitat kommt als Blockzitat, nicht als „> "-Zeilen.
+     *
+     * Die Größer-Zeichen sind eine Krücke aus der Zeit reiner Textmails; in
+     * einer gestalteten Mail sehen sie aus wie ein Fehler. Ein eingerücktes,
+     * graues Blockzitat sagt dasselbe und wird von jedem Mailprogramm richtig
+     * dargestellt.
+     */
     const zitat = n.text
       .split('\n')
       .slice(0, 40)
-      .map((z) => `> ${z}`)
-      .join('\n')
+      .map((z) => z.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+      .join('<br>')
+
     setEntwurf({
       an: n.antwortAn || n.vonAdresse,
       betreff: n.betreff.startsWith('Re:') ? n.betreff : `Re: ${n.betreff}`,
-      text: `\n\n---\nAm ${zeit(n.datum)} schrieb ${n.von}:\n${zitat}`,
+      text: '',
+      html:
+        signaturJetzt() +
+        `<p><br></p><p style="color: #666666">Am ${zeit(n.datum)} schrieb ${n.von}:</p>` +
+        `<blockquote style="color: #666666">${zitat}</blockquote>`,
       antwortAufMessageId: n.messageId,
     })
     setOffen(null)
@@ -315,10 +393,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         </label>
         <label className="buero-feld">
           <span>Nachricht</span>
-          <textarea
-            rows={14}
-            value={entwurf.text}
-            onChange={(e) => setEntwurf({ ...entwurf, text: e.target.value })}
+          <Schreibfeld
+            wert={entwurf.html}
+            aendern={(html) => setEntwurf((v) => (v ? { ...v, html } : v))}
           />
         </label>
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
@@ -483,7 +560,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         <button
           type="button"
           className="buero-knopf"
-          onClick={() => setEntwurf({ an: '', betreff: '', text: '' })}
+          onClick={() =>
+            setEntwurf({ an: '', betreff: '', text: '', html: signaturJetzt() })
+          }
         >
           Schreiben
         </button>

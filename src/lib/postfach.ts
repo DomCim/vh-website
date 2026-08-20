@@ -8,6 +8,7 @@ import MailComposer from 'nodemailer/lib/mail-composer'
 import type { Payload } from 'payload'
 
 import { dkimFuer } from './dkim'
+import { htmlAlsText, mailHtmlSaeubern } from './mailhtml'
 import { briefbogen as briefbogenVorlage, pflichtangaben, type CompanyInfo } from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
@@ -369,6 +370,22 @@ export function briefbogen(rumpf: string, signatur: string, firma?: CompanyInfo)
   )
 }
 
+/**
+ * Derselbe Briefbogen, aber der Rumpf ist schon HTML.
+ *
+ * Der Unterschied zu oben ist genau einer: Hier wird **nicht** escaped, weil
+ * die Auszeichnung gewollt ist. Dafür ist sie vorher durch `mailHtmlSaeubern`
+ * gegangen — ungeprüftes HTML einzusetzen wäre die teuerste Zeile der ganzen
+ * Datei.
+ *
+ * Eine Signatur wird hier nicht angehängt: Wenn im Schreibfeld gestaltet wird,
+ * steht sie schon im Text, und der Mensch davor hat sie gesehen. Zweimal
+ * dieselbe Grußformel ist peinlicher als gar keine.
+ */
+export function briefbogenAusHtml(rumpf: string, firma?: CompanyInfo): string {
+  return briefbogenVorlage(mailHtmlSaeubern(rumpf), firma)
+}
+
 /** Signatur aus dem Postfach, sonst aus Absendername und Kontaktdaten */
 function signaturText(
   fach: MailboxKonfiguration,
@@ -393,7 +410,10 @@ export async function nachrichtSenden(
   eingabe: {
     an: string
     betreff: string
+    /** Nur-Text-Fassung; wird aus `html` abgeleitet, wenn dieses da ist */
     text: string
+    /** Gestalteter Rumpf aus dem Schreibfeld — samt Signatur, falls gesetzt */
+    html?: string
     antwortAufMessageId?: string
     dateien?: { name: string; inhalt: Buffer; typ?: string }[]
   },
@@ -440,13 +460,31 @@ export async function nachrichtSenden(
     ? [{ filename: 'logo.png', path: logoDatei, cid: 'vh-logo' }]
     : []
 
+  /*
+   * Zwei Wege in denselben Briefbogen.
+   *
+   * Kommt gestaltetes HTML aus dem Schreibfeld, wird es eingesetzt und die
+   * Signatur **nicht** noch einmal angehängt — sie steht dann schon drin, weil
+   * das Schreibfeld sie beim Öffnen hineinlegt. Die Nur-Text-Fassung entsteht
+   * aus demselben HTML, damit beide Fassungen dasselbe sagen.
+   *
+   * Kommt keins (etwa von einem anderen Aufrufer im Haus), bleibt alles wie
+   * bisher: getippter Text, Signatur darunter.
+   */
+  const gestaltet = eingabe.html?.trim() ? mailHtmlSaeubern(eingabe.html) : null
+  const nurText = gestaltet ? htmlAlsText(gestaltet) : eingabe.text
+
   const nachricht = {
     from: `"${email.fromName}" <${fach.address}>`,
     to: eingabe.an,
     subject: eingabe.betreff,
     // Nur-Text-Fassung bleibt dabei: Manche lesen so, und Spamfilter mögen es
-    text: [eingabe.text, signatur, angaben.join(' · ')].filter(Boolean).join('\n\n--\n'),
-    html: briefbogen(eingabe.text, signatur, firma),
+    text: [nurText, gestaltet ? null : signatur, angaben.join(' · ')]
+      .filter(Boolean)
+      .join('\n\n--\n'),
+    html: gestaltet
+      ? briefbogenAusHtml(gestaltet, firma)
+      : briefbogen(eingabe.text, signatur, firma),
     inReplyTo: eingabe.antwortAufMessageId,
     references: eingabe.antwortAufMessageId,
     attachments: [

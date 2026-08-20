@@ -1740,3 +1740,109 @@ html.tastatur-offen .buero-inhalt {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ══ Schreibfeld (Quill) ════════════════════════════════════════════════════
+
+   Quills Standardaussehen ist hell: weißer Grund, graue Rahmen, dunkle
+   Zeichen. Im Büro gibt es aber beide Themen, und im dunklen sähe das aus wie
+   ein Fremdkörper, den jemand vergessen hat.
+
+   Umgefärbt wird deshalb über dieselben Variablen wie überall — dann dreht das
+   Schreibfeld beim Themenwechsel von selbst mit, ohne zweite Farbliste. */
+
+.buero-schreibfeld .ql-toolbar.ql-snow,
+.buero-schreibfeld .ql-container.ql-snow {
+  border-color: var(--buero-rahmen);
+}
+
+.buero-schreibfeld .ql-toolbar.ql-snow {
+  border-radius: 9px 9px 0 0;
+  background: var(--buero-flaeche);
+}
+
+.buero-schreibfeld .ql-container.ql-snow {
+  border-radius: 0 0 9px 9px;
+  background: var(--buero-papier);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.buero-schreibfeld .ql-editor {
+  min-height: 14rem;
+  color: inherit;
+}
+
+.buero-schreibfeld .ql-editor.ql-blank::before {
+  color: var(--buero-tinte-leise);
+  font-style: normal;
+}
+
+/* Die Zeichen in der Leiste sind SVG-Striche — die müssen der Schrift folgen */
+.buero-schreibfeld .ql-snow .ql-stroke {
+  stroke: var(--buero-tinte);
+}
+.buero-schreibfeld .ql-snow .ql-fill {
+  fill: var(--buero-tinte);
+}
+.buero-schreibfeld .ql-snow .ql-picker {
+  color: var(--buero-tinte);
+}
+
+.buero-schreibfeld .ql-snow .ql-active .ql-stroke,
+.buero-schreibfeld .ql-snow button:hover .ql-stroke {
+  stroke: var(--buero-bronze);
+}
+.buero-schreibfeld .ql-snow .ql-active .ql-fill,
+.buero-schreibfeld .ql-snow button:hover .ql-fill {
+  fill: var(--buero-bronze);
+}
+.buero-schreibfeld .ql-snow .ql-picker-label:hover,
+.buero-schreibfeld .ql-snow .ql-picker-item:hover,
+.buero-schreibfeld .ql-snow .ql-picker-label.ql-active {
+  color: var(--buero-bronze);
+}
+
+/* Die aufklappbaren Listen (Überschrift, Farbe) haben eigene Flächen */
+.buero-schreibfeld .ql-snow .ql-picker-options {
+  background: var(--buero-flaeche);
+  border-color: var(--buero-rahmen);
+  border-radius: 9px;
+}
+
+/*
+ * Die Farbfelder bleiben, wie sie sind — hier ist die Farbe der Inhalt.
+ * Sie umzufärben hieße, dem Schreibenden etwas anderes zu zeigen, als beim
+ * Empfänger ankommt.
+ */
+
+/* Der Link-Dialog von Quill */
+.buero-schreibfeld .ql-snow .ql-tooltip {
+  background: var(--buero-flaeche);
+  border-color: var(--buero-rahmen);
+  border-radius: 9px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+  color: inherit;
+}
+
+.buero-schreibfeld .ql-snow .ql-tooltip input[type='text'] {
+  background: var(--buero-papier);
+  border-color: var(--buero-rahmen);
+  color: inherit;
+  border-radius: 6px;
+}
+
+/*
+ * Am Telefon darf die Leiste umbrechen statt seitwärts zu verschwinden.
+ * Ein Knopf, den man nicht sieht, ist keiner — und scrollen kann man in einer
+ * Werkzeugleiste schlecht, ohne den Text mitzuziehen.
+ */
+@media (max-width: 560px) {
+  .buero-schreibfeld .ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem;
+  }
+  .buero-schreibfeld .ql-editor {
+    min-height: 11rem;
+  }
+}
