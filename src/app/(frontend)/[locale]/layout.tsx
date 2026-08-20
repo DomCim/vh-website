@@ -44,6 +44,28 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
     },
     description: settings?.seo?.metaDescription || undefined,
     alternates: alternatesFor(locale, ''),
+    /*
+     * Das Zeichen fürs Browsertab.
+     *
+     * Die Website hatte keines — im Tab stand die graue Weltkugel, und auf
+     * dem Startbildschirm eines iPhones ein Bildschirmfoto der Seite. Admin
+     * und Büro hatten längst eigene; ausgerechnet das, was Kundschaft zu
+     * sehen bekommt, hatte keins.
+     *
+     * Vier Fassungen, weil jede woanders gebraucht wird: das SVG ist in
+     * jeder Größe scharf und wird von allem Aktuellen bevorzugt, das PNG ist
+     * der Rückfall für ältere Browser, die `.ico` bedient alles, was stur
+     * `/favicon.ico` an der Wurzel abfragt (Feedleser, Vorschaudienste), und
+     * das Apple-Touch-Icon landet auf dem Startbildschirm.
+     */
+    icons: {
+      icon: [
+        { url: '/site-icon.svg', type: 'image/svg+xml' },
+        { url: '/site-icon-32.png', type: 'image/png', sizes: '32x32' },
+        { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    },
     openGraph: {
       siteName: settings?.siteName || 'Vincent Hellmann',
       locale,
@@ -94,14 +116,39 @@ export default async function LocaleLayout({ children, params }: Args) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: orgJsonLd }}
         />
-        {/* Cookiefreie Besucherstatistik (z.B. Plausible/Umami) — nur wenn hinterlegt */}
-        {settings?.analytics?.scriptUrl && (
+        {/*
+          * Besucherzählung — cookiefrei, deshalb ohne Banner.
+          *
+          * Der Normalfall ist die eigene Zählung: Skript und Zähladresse
+          * liegen auf dieser Domain (`/js/zaehler.js` und `/api/zaehler`) und
+          * reichen nach innen weiter an das selbst betriebene Plausible. Für
+          * den Besucher ist das eine Datei von dieser Website wie jede
+          * andere — kein fremder Server, keine Ausnahme in der
+          * Sicherheitsrichtlinie, und kein Werbeblocker, der sie an ihrem
+          * Namen erkennt.
+          *
+          * `data-api` muss dabeistehen: Ohne die Angabe schickt das Skript
+          * seine Meldungen dorthin, woher es geladen wurde — und das ist
+          * hier nicht die Statistik, sondern die Website.
+          *
+          * Der Ausweichweg darunter bleibt für eine Statistik außerhalb
+          * dieses Servers. Beide gleichzeitig ergäbe doppelte Zählung, also
+          * gewinnt die eigene.
+          */}
+        {settings?.analytics?.eigeneZaehlung && settings.analytics.domain ? (
+          <script
+            defer
+            src="/js/zaehler.js"
+            data-domain={settings.analytics.domain}
+            data-api="/api/zaehler"
+          />
+        ) : settings?.analytics?.scriptUrl ? (
           <script
             defer
             src={settings.analytics.scriptUrl}
             {...(settings.analytics.domain ? { 'data-domain': settings.analytics.domain } : {})}
           />
-        )}
+        ) : null}
         <CartProvider>
           <SmoothScroll />
           <Header locale={locale} categories={categories} dict={dict} />

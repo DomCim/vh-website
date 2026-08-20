@@ -1,3 +1,5 @@
+@import './schritte.css';
+
 /* Büro-Oberfläche — eigenständiges, ruhiges Layout mit derselben
    Formensprache wie die Website: viel Weißraum, Corten als einziger Akzent. */
 
@@ -63,6 +65,18 @@
 }
 
 .buero {
+  /*
+   * Der Browser gibt dem Körper von sich aus 8 Pixel Rand.
+   *
+   * Auf der Website nimmt Tailwind ihn weg, das Büro bringt sein eigenes
+   * Stylesheet mit und hatte ihn deshalb noch — genau wie damals beim
+   * `box-sizing` ein paar Zeilen weiter oben. Zu sehen war er als schmaler
+   * Streifen in Hintergrundfarbe oben und an beiden Seiten: Die Kopfleiste
+   * klebt zwar bei `top: 0`, saß aber 8 Pixel tiefer und 8 Pixel schmaler
+   * als der Bildschirm. Am Handy fällt das auf, sobald man ganz nach oben
+   * scrollt.
+   */
+  margin: 0;
   min-height: 100vh;
   background: var(--buero-papier);
   color: var(--buero-tinte);
@@ -101,6 +115,79 @@
 
 .buero-marke .buero-marke-zusatz {
   color: var(--buero-bronze);
+}
+
+/* ── Name der Seite in der Kopfleiste (nur Handy) ─────────────────────────
+   Steht dort, wo am Rechner der Schriftzug steht. Lange Namen werden
+   abgeschnitten statt umgebrochen — eine zweizeilige Kopfleiste wäre genau
+   das, was hier abgeschafft werden sollte. */
+.buero-kopftitel {
+  display: none;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Abgleich als Punkt ───────────────────────────────────────────────────
+   Immer an derselben Stelle, kostet keine Zeile. Die Farbe sagt die Art, das
+   Antippen den Klartext — auf einem Handy gibt es kein Überfahren mit der
+   Maus. */
+.buero-abgleichpunkt-huelle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.buero-abgleichpunkt {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Die Fläche zum Antippen ist 44 Pixel, der Punkt darin 10 — bedient wird das
+   mit dem Daumen, gesehen werden soll ein Punkt und kein Knopf. */
+.buero-abgleichpunkt::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--buero-tinte-leise);
+}
+
+.buero-abgleichpunkt.ist-wartet::after,
+.buero-abgleichpunkt.ist-haengt::after {
+  background: var(--buero-bronze);
+}
+
+.buero-abgleichpunkt.ist-abgelehnt::after {
+  background: var(--buero-rot);
+}
+
+.buero-abgleichpunkt-text {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 21;
+  width: max-content;
+  max-width: min(19rem, 80vw);
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten, 0 6px 22px rgb(0 0 0 / 14%));
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
 .nur-schmal {
@@ -470,6 +557,16 @@
   gap: 0.4rem;
 }
 
+/* „Abmelden" steht im Blatt „Sonstiges" unter den Punkten, abgesetzt durch
+   eine Linie: Es ist keine Seite, sondern das Ende der Sitzung. */
+.buero-blatt-abmelden {
+  margin-top: 0.6rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--buero-linie);
+  display: flex;
+  justify-content: flex-start;
+}
+
 .buero-blatt-punkte a {
   display: flex;
   align-items: center;
@@ -504,6 +601,23 @@
     display: none;
   }
 
+  .buero-kopftitel {
+    display: block;
+  }
+
+  /* Die Überschrift steht jetzt oben in der Leiste — im Inhalt wäre sie
+     dieselbe Zeile ein zweites Mal. Ausgeblendet wird sie erst, wenn der
+     Name oben wirklich angekommen ist (`titel-oben` setzt `Kopftitel`);
+     ohne Skript bleibt sie stehen, wo sie war.
+
+     Ohne Kindschafts-Zeichen, weil die Überschrift nicht überall direkt im
+     Inhalt steht: Fünf von sieben Seiten packen sie mit ihrer Unterzeile in
+     ein eigenes Kästchen. Mit `>` blieb sie dort stehen und stand doppelt.
+     Nachgezählt: Jede Seite hat genau eine. */
+  html.titel-oben .buero-inhalt h1 {
+    display: none;
+  }
+
   .buero-tableiste {
     display: flex;
     position: fixed;
@@ -515,11 +629,6 @@
     background: var(--buero-flaeche);
     border-top: 1px solid var(--buero-linie);
     padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Platz, damit die Leiste nichts verdeckt */
-  .buero-inhalt {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 
   /* Die Hauptaktion klebt über der Tableiste, dort wo der Daumen liegt.
@@ -581,6 +690,30 @@ html.tastatur-offen .buero-inhalt {
   margin: 0 auto;
   padding: 1.5rem 1.25rem 4rem;
   padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+/* Platz, damit die Tableiste nichts verdeckt.
+ *
+ * Diese Regel stand vorher oben im Handy-Block — und war dort wirkungslos.
+ * Beide Regeln sprechen dieselbe Klasse an, haben also dieselbe Spezifität;
+ * bei Gleichstand gewinnt die spätere, und das war die Grundregel darüber.
+ * Am Handy blieb es deshalb bei 4rem = 64 Pixeln.
+ *
+ * Aufgefallen ist das erst am Gerät: Am Rechner ist
+ * `env(safe-area-inset-bottom)` null, die Leiste misst 55 Pixel, und 64
+ * reichten knapp. Auf einem iPhone kommen 34 Pixel Sicherheitsrand dazu —
+ * die Leiste wird 89 Pixel hoch, das Polster bleibt bei 64, und die unterste
+ * Karte verschwindet zu 17 Pixeln darunter.
+ *
+ * Nachgemessen mit nachgestelltem Rand: vorher 64 Pixel Polster und die
+ * Karte „Aufträge" zu 17 Pixeln verdeckt, danach 88 und nichts mehr
+ * angeschnitten. Am Gerät sind es 122, weil dort der Sicherheitsrand in die
+ * Rechnung eingeht — im Browser am Rechner ist er null.
+ */
+@media (max-width: 719px) {
+  .buero-inhalt {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 .buero h1 {
@@ -1278,4 +1411,128 @@ html.tastatur-offen .buero-inhalt {
 /* Etwas ist dauerhaft abgelehnt worden — das muss jemand ansehen */
 .buero-abgleich.streng {
   background: var(--buero-rot);
+}
+
+/* ── Statistik ──────────────────────────────────────────────────────────── */
+/*
+ * Die Auswertung der Besuche. Bewusst ohne Diagramm-Bibliothek: Balken sind
+ * Flächen mit einer Höhe in Prozent, und dafür braucht es kein Paket, das im
+ * Browser des Handys ein halbes Megabyte kostet.
+ */
+.buero-statistik-spalten {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.buero-verlauf {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 7rem;
+  margin-top: 0.9rem;
+}
+
+.buero-verlauf-balken {
+  flex: 1 1 0;
+  min-width: 2px;
+  background: var(--buero-bronze);
+  border-radius: 2px 2px 0 0;
+  /* Ohne das rutscht ein Balken mit Höhe 2 % optisch unter die Grundlinie */
+  align-self: flex-end;
+}
+
+.buero-verlauf-achse {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--buero-tinte-leise);
+  font-variant-numeric: tabular-nums;
+}
+
+.buero-statistik-liste {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.buero-statistik-zeile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/*
+ * Der Balken liegt **hinter** dem Namen, nicht neben ihm. Daneben bliebe für
+ * „/de/kollektion/tisch-eiche-stahl" ein Streifen von zwei Zentimetern übrig;
+ * dahinter darf der Name die ganze Breite haben und der Balken trotzdem
+ * zeigen, wie viel es war.
+ */
+.buero-statistik-balken {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--buero-bronze) 16%, transparent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.buero-statistik-name {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.buero-statistik-wert {
+  position: relative;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--buero-tinte-leise);
+  flex: 0 0 auto;
+}
+
+/* ── Schritt-für-Schritt-Formulare ──────────────────────────────────────── */
+/*
+ * Die Leiste selbst steht in `schritte.css` — Form für Shop und Büro
+ * gemeinsam. Hier stehen nur die Farben und das, was das Büro drumherum
+ * braucht.
+ */
+.buero {
+  --schritt-linie: var(--buero-linie);
+  --schritt-aktiv: var(--buero-bronze);
+  --schritt-auf-aktiv: var(--buero-auf-bronze);
+  --schritt-grund: var(--buero-flaeche);
+  --schritt-text: var(--buero-tinte);
+  --schritt-text-leise: var(--buero-tinte-leise);
+}
+
+/*
+ * Die Hülle um einen Schritt. Ein `fieldset` bringt von Haus aus Rand,
+ * Abstand und `min-width: min-content` mit — Letzteres sprengt jedes Raster,
+ * in dem etwas Breites steht.
+ */
+.buero-schrittfeld {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.buero-schrittknoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
 }

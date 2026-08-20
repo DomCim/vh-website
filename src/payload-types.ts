@@ -2913,17 +2913,21 @@ export interface SiteSetting {
     defaultProductionTime?: string | null;
   };
   /**
-   * Für cookiefreie Statistik wie selbst gehostetes Plausible oder Umami — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.
+   * Cookiefreie Statistik — dann ist kein Cookie-Banner nötig. Leer lassen = keine Statistik.
    */
   analytics?: {
     /**
-     * z.B. https://statistik.example.com/script.js
+     * Zählt über die eigene Adresse mit selbst betriebenem Plausible: keine Cookies, keine Daten außer Haus, kein Banner. Wo die Statistik läuft, steht im Admin unter Integrationen → Besucherzählung. Ist dort nichts hinterlegt, passiert nichts.
      */
-    scriptUrl?: string | null;
+    eigeneZaehlung?: boolean | null;
     /**
-     * z.B. vincent-hellmann.com
+     * z.B. vincent-hellmann.com — muss genauso heißen wie die Seite in Plausible, sonst kommen die Aufrufe dort nirgends an.
      */
     domain?: string | null;
+    /**
+     * Nur für eine Statistik außerhalb dieses Servers, z.B. https://statistik.example.com/script.js. Die eigene Zählung oben ist der Normalfall — dann bleibt dieses Feld leer.
+     */
+    scriptUrl?: string | null;
   };
   /**
    * Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.
@@ -3072,6 +3076,23 @@ export interface Integration {
      */
     fromName?: string | null;
     /**
+     * Signiert ausgehende Mails, damit sie nicht im Spam landen — die der Website und die Antworten aus den Postfächern weiter unten, sofern deren Adresse auf dieser Domain liegt. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.
+     */
+    dkim?: {
+      /**
+       * z.B. vincent-hellmann.com — leer = keine Signatur
+       */
+      domain?: string | null;
+      /**
+       * Name des DNS-Eintrags, z.B. „vh" → vh._domainkey.vincent-hellmann.com
+       */
+      selector?: string | null;
+      /**
+       * Beginnt mit -----BEGIN. Der zugehörige öffentliche Schlüssel muss als DNS-TXT-Eintrag veröffentlicht sein.
+       */
+      privateKey?: string | null;
+    };
+    /**
      * Empfängt Kontaktanfragen und Bestell-Benachrichtigungen
      */
     notificationEmail?: string | null;
@@ -3131,9 +3152,43 @@ export interface Integration {
         smtpPort?: number | null;
         smtpUser?: string | null;
         smtpPass?: string | null;
+        /**
+         * Nur nötig, wenn dieses Postfach auf einer anderen Domain liegt als die allgemeine DKIM-Angabe oben. Leer = die allgemeine wird verwendet, sofern die Domain zur Adresse passt.
+         */
+        dkim?: {
+          /**
+           * Die Domain der Adresse dieses Postfachs
+           */
+          domain?: string | null;
+          /**
+           * Name des DNS-Eintrags, z.B. „vh"
+           */
+          selector?: string | null;
+          /**
+           * Beginnt mit -----BEGIN. Der öffentliche Schlüssel muss im DNS dieser Domain stehen.
+           */
+          privateKey?: string | null;
+        };
         id?: string | null;
       }[]
     | null;
+  /**
+   * Zugang zur eigenen Statistik. Eingeschaltet wird die Zählung in den Website-Einstellungen unter „Besucherstatistik"; hier steht nur, wo sie läuft und womit das Büro sie abfragen darf.
+   */
+  plausible?: {
+    /**
+     * z.B. http://plausible:8000 — der Containername, nicht eine Adresse von außen.
+     */
+    url?: string | null;
+    /**
+     * Genau so, wie die Seite dort angelegt ist, z.B. vincent-hellmann.com
+     */
+    seite?: string | null;
+    /**
+     * In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.
+     */
+    apiKey?: string | null;
+  };
   paypal?: {
     /**
      * Aus dem PayPal-Developer-Dashboard (REST-App)
@@ -3381,8 +3436,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   analytics?:
     | T
     | {
-        scriptUrl?: T;
+        eigeneZaehlung?: T;
         domain?: T;
+        scriptUrl?: T;
       };
   pinterestVerification?: T;
   seo?:
@@ -3424,6 +3480,13 @@ export interface IntegrationsSelect<T extends boolean = true> {
         smtpPass?: T;
         fromAddress?: T;
         fromName?: T;
+        dkim?:
+          | T
+          | {
+              domain?: T;
+              selector?: T;
+              privateKey?: T;
+            };
         notificationEmail?: T;
       };
   push?:
@@ -3451,7 +3514,21 @@ export interface IntegrationsSelect<T extends boolean = true> {
         smtpPort?: T;
         smtpUser?: T;
         smtpPass?: T;
+        dkim?:
+          | T
+          | {
+              domain?: T;
+              selector?: T;
+              privateKey?: T;
+            };
         id?: T;
+      };
+  plausible?:
+    | T
+    | {
+        url?: T;
+        seite?: T;
+        apiKey?: T;
       };
   paypal?:
     | T

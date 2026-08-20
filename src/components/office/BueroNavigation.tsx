@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRahmen } from '../../lib/buero/bestand'
+import { Abmelden } from './Abmelden'
 
 /**
  * Navigation im Büro.
@@ -84,6 +85,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
   {
     titel: 'Sonstiges',
     punkte: [
+      { href: '/office/statistik', label: 'Statistik', recht: 'website.pflegen' },
       { href: '/office/sicherung', label: 'Sicherung', recht: 'sicherung.ausloesen' },
       // Einstellungen und Neuerungen stehen jedem offen: Dort liegen das eigene
       // Konto, die Meldungen dieses Geräts und der Änderungsverlauf.
@@ -275,6 +277,15 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <rect x="5" y="3.5" width="14" height="17" rx="2" />
       <path d="M8.5 7.5h7" />
       <path d="M9 11.5h.01M12 11.5h.01M15 11.5h.01M9 14.5h.01M12 14.5h.01M15 14.5h.01M9 17.5h.01M12 17.5h.01M15 17.5h.01" />
+    </>
+  ),
+  /* Statistik: drei Balken, die steigen — der Verlauf der Besuche */
+  '/office/statistik': (
+    <>
+      <path d="M4.5 20.5h15" />
+      <rect x="6" y="12" width="3.4" height="6" rx="1" />
+      <rect x="10.8" y="8" width="3.4" height="10" rx="1" />
+      <rect x="15.6" y="4.5" width="3.4" height="13.5" rx="1" />
     </>
   ),
   '/office/steuer': (
@@ -535,6 +546,13 @@ export function BueroNavigation() {
                   {p.label}
                 </Link>
               ))}
+              {/* Abmelden steht am Handy hier, weil oben in der Leiste kein
+                  Platz dafür ist — sie trägt dort den Namen der Seite. */}
+              {offenesBlatt === 'Sonstiges' && (
+                <div className="buero-blatt-abmelden">
+                  <Abmelden />
+                </div>
+              )}
             </div>
           </div>
         </>

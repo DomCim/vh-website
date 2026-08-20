@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { type DkimAngaben, dkimAus } from './dkim'
+
 /**
  * Ein Postfach, das im Büro gelesen wird.
  *
@@ -23,6 +25,8 @@ export type MailboxKonfiguration = {
   smtpPort?: number
   smtpUser?: string
   smtpPass?: string
+  /** Eigene Unterschrift — leer heißt: die allgemeine, falls sie zur Adresse passt */
+  dkim?: DkimAngaben
 }
 
 export type ResolvedIntegrations = {
@@ -34,6 +38,8 @@ export type ResolvedIntegrations = {
     fromAddress: string
     fromName: string
     notificationEmail?: string
+    /** Nur gesetzt, wenn alle drei Angaben da sind — halb signiert gibt es nicht */
+    dkim?: DkimAngaben
   }
   mailboxes: MailboxKonfiguration[]
   paypal: {
@@ -49,6 +55,12 @@ export type ResolvedIntegrations = {
   mcp: {
     apiKey?: string
     readonlyKey?: string
+  }
+  /** Zugang zur eigenen Besucherzählung — siehe `statistik.ts` */
+  plausible: {
+    url?: string
+    seite?: string
+    apiKey?: string
   }
   anthropic: {
     apiKey?: string
@@ -75,6 +87,11 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
   }
 
   const smtpPort = val(doc?.email?.smtpPort, process.env.SMTP_PORT)
+  const dkim = dkimAus(
+    val(doc?.email?.dkim?.domain, process.env.DKIM_DOMAIN),
+    val(doc?.email?.dkim?.selector, process.env.DKIM_SELECTOR),
+    val(doc?.email?.dkim?.privateKey, process.env.DKIM_PRIVATE_KEY),
+  )
 
   return {
     email: {
@@ -85,6 +102,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromAddress: val(doc?.email?.fromAddress, process.env.EMAIL_FROM) || 'noreply@localhost',
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
+      dkim,
     },
     mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])
       .filter((m) => m?.imapHost && m?.user && m?.pass && m?.address)
@@ -105,6 +123,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
         smtpPort: m.smtpPort ? Number(m.smtpPort) : undefined,
         smtpUser: m.smtpUser || undefined,
         smtpPass: m.smtpPass || undefined,
+        dkim: dkimAus(m.dkim?.domain, m.dkim?.selector, m.dkim?.privateKey),
       })),
     paypal: {
       clientId: val(doc?.paypal?.clientId, process.env.PAYPAL_CLIENT_ID),
@@ -119,6 +138,11 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     mcp: {
       apiKey: val(doc?.mcp?.apiKey, process.env.MCP_API_KEY),
       readonlyKey: val(doc?.mcp?.readonlyKey, process.env.MCP_READONLY_API_KEY),
+    },
+    plausible: {
+      url: val(doc?.plausible?.url, process.env.PLAUSIBLE_URL),
+      seite: val(doc?.plausible?.seite, process.env.PLAUSIBLE_SITE),
+      apiKey: val(doc?.plausible?.apiKey, process.env.PLAUSIBLE_API_KEY),
     },
     anthropic: {
       apiKey: val(doc?.anthropic?.apiKey, process.env.ANTHROPIC_API_KEY),

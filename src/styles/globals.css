@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './schritte.css';
 
 @theme {
   /* Farbwelt eng am Original: viel Weiß, Anthrazit-Text, dunkler Footer */
@@ -64,6 +65,22 @@ html {
 
 body {
   @apply bg-paper text-ink font-sans antialiased;
+}
+
+/*
+ * Farben für die Schrittleiste (Form siehe `schritte.css`).
+ *
+ * Bronze als aktive Farbe — derselbe Corten-Ton, der auf der ganzen Seite den
+ * Akzent setzt. Die Werte kommen aus dem Thema und drehen im Dunkeln von
+ * selbst mit; hier stehen nur die Rollen.
+ */
+:root {
+  --schritt-linie: var(--color-line);
+  --schritt-aktiv: var(--color-bronze);
+  --schritt-auf-aktiv: var(--color-on-ink);
+  --schritt-grund: var(--color-paper);
+  --schritt-text: var(--color-ink);
+  --schritt-text-leise: var(--color-ink-soft);
 }
 
 /* Fließtext aus dem CMS (Lexical-RichText) */

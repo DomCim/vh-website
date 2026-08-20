@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { RichText } from '../../../../../components/RichText'
-import { getLegal } from '../../../../../lib/data'
+import { Besucherzaehlung } from '../../../../../components/shop/Besucherzaehlung'
+import { getLegal, getSiteSettings } from '../../../../../lib/data'
 import { isLocale, t } from '../../../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ export default async function LegalPage({
   if (!field) notFound()
 
   const dict = t(locale)
-  const legal = await getLegal(locale)
+  const [legal, settings] = await Promise.all([getLegal(locale), getSiteSettings(locale)])
   const content = legal?.[field]
 
   const titles: Record<typeof field, string> = {
@@ -44,6 +45,16 @@ export default async function LegalPage({
         {titles[field]}
       </h1>
       {content ? <RichText data={content} /> : <p className="text-ink-soft">—</p>}
+
+      {/*
+        Der Abschnitt zur Besucherzählung entsteht aus der Einstellung, nicht
+        aus dem Textfeld: Wird gezählt, steht er da — wird nicht gezählt,
+        steht er nicht da. Ein von Hand gepflegter Absatz wäre irgendwann das
+        eine, während die Website längst das andere tut.
+      */}
+      {field === 'datenschutz' && settings?.analytics?.eigeneZaehlung ? (
+        <Besucherzaehlung locale={locale} />
+      ) : null}
 
       {/* Das Muster-Widerrufsformular gehört unter die Belehrung, nicht auf eine
           eigene Seite, die niemand findet. */}

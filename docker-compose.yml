@@ -77,9 +77,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-vh}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
       POSTGRES_DB: ${POSTGRES_DB:-vh}
-      # Herkunft der Besucherstatistik für die Sicherheitsrichtlinie (CSP),
-      # z.B. https://plausible.io — sonst blockt der Browser das Skript
+      # Herkunft einer **fremden** Besucherstatistik für die
+      # Sicherheitsrichtlinie (CSP), z.B. https://plausible.io. Für die eigene
+      # Zählung nicht nötig: Die läuft über /js/zaehler.js auf dieser Domain
+      # und ist damit 'self'.
       CSP_EXTRA_SCRIPT: ${CSP_EXTRA_SCRIPT:-}
+      # Eigene Besucherzählung — normalerweise im Admin unter Integrationen
+      # gepflegt, hier nur als Notweg. Siehe docker-compose.statistik.yml.
+      PLAUSIBLE_URL: ${PLAUSIBLE_URL:-}
+      PLAUSIBLE_SITE: ${PLAUSIBLE_SITE:-}
+      PLAUSIBLE_API_KEY: ${PLAUSIBLE_API_KEY:-}
       # Beim allerersten Start auf "true" setzen, um Startdaten einzuspielen
       SEED: ${SEED:-false}
       # Einmalig auf "true" setzen, um die englischen Übersetzungen
@@ -161,6 +168,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
       POSTGRES_DB: ${POSTGRES_DB:-vh}
       CSP_EXTRA_SCRIPT: ${CSP_EXTRA_SCRIPT:-}
+      # Das Büro liest die Zahlen unter /office/statistik
+      PLAUSIBLE_URL: ${PLAUSIBLE_URL:-}
+      PLAUSIBLE_SITE: ${PLAUSIBLE_SITE:-}
+      PLAUSIBLE_API_KEY: ${PLAUSIBLE_API_KEY:-}
     volumes:
       # Dieselben Volumes wie die Website: Belege und Sicherungen sind
       # dieselben Dateien, nicht zwei Sätze davon.

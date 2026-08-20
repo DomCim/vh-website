@@ -12,9 +12,8 @@ import { isLocale, type Locale } from '../../../../lib/i18n'
 import {
   codeAnlegen,
   codeEinloesen,
+  sitzungAusAnfrage,
   sitzungErzeugen,
-  sitzungLesen,
-  SITZUNGS_COOKIE,
 } from '../../../../lib/kundenportal'
 import { zugangscodeEmail, type CompanyInfo } from '../../../../lib/mail'
 import { createPayPalOrder, paypalConfig } from '../../../../lib/paypal'
@@ -65,16 +64,6 @@ async function firmaLesen(
   }
 }
 
-/** Das vh-konto-Cookie aus dem Header, ohne next/headers zu bemühen. */
-function kontoCookie(req: Request): string | undefined {
-  const kopf = req.headers.get('cookie') ?? ''
-  for (const teil of kopf.split(';')) {
-    const [name, ...rest] = teil.trim().split('=')
-    if (name === SITZUNGS_COOKIE) return decodeURIComponent(rest.join('='))
-  }
-  return undefined
-}
-
 export async function POST(req: Request) {
   try {
     // Jede Kasse legt eine Bestellung an und ruft PayPal — ohne Bremse ließe
@@ -121,7 +110,7 @@ export async function POST(req: Request) {
      * Schritt: Bestätigt ist bestätigt.
      */
     const email = body.customer.email.trim().toLowerCase()
-    const schonBestaetigt = sitzungLesen(kontoCookie(req)) === email
+    const schonBestaetigt = sitzungAusAnfrage(req) === email
     let neueSitzung: ReturnType<typeof sitzungErzeugen> | null = null
 
     if (!schonBestaetigt) {

@@ -336,6 +336,78 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 2. Code im Admin unter **Website-Einstellungen → Pinterest-Verifizierungscode** eintragen — das Meta-Tag erscheint automatisch auf allen Seiten.
 3. In Pinterest die Verifizierung abschließen und Produktbilder pinnen bzw. pinnen lassen.
 
+## Besucherzählung einrichten (Plausible, ohne Cookie-Banner)
+
+Gezählt wird mit **selbst betriebenem Plausible**. Kein Cookie, keine Kennung, keine Daten außer Haus — und deshalb auch **kein Banner**: Wo nichts auf dem Gerät des Besuchers gespeichert oder ausgelesen wird, gibt es nichts, wozu er einwilligen müsste.
+
+### Wie es zusammenhängt
+
+Plausible läuft im internen Netz und ist von außen **nicht** erreichbar — kein Traefik-Label, keine Portfreigabe, kein Zertifikat. Alles läuft über die eigene Adresse:
+
+```
+Besucher → vincent-hellmann.com/js/zaehler.js    → Website → Plausible
+Besucher → vincent-hellmann.com/api/zaehler      → Website → Plausible
+Vincent  → vincent-hellmann.com/office/statistik → Büro    → Plausible
+```
+
+Das hat drei Gründe, und alle drei zählen:
+
+- **Keine zweite Anmeldung.** Die Zahlen stehen im Büro, hinter der Anmeldung, die es ohnehin gibt. Ein zweites Passwort, das man einmal setzt und nie wieder ändert, ist auf Dauer die größere Lücke.
+- **Werbeblocker greifen nicht.** Die Filterlisten kennen Adressen, nicht Verhalten. Ein Skript, das `plausible` im Pfad trägt, wird geschluckt — dann zählt man nur noch Besucher ohne Blocker, und das ist keine Statistik, sondern eine Stichprobe mit Schlagseite.
+- **Keine Ausnahme in der Sicherheitsrichtlinie.** Das Skript kommt von der eigenen Adresse, `CSP_EXTRA_SCRIPT` bleibt leer.
+
+Plausible kann **nicht** unter einem Unterpfad wie `/statistic` laufen — die Community-Fassung kennt keinen und hat auch keine Anmeldung, die sich mit der des Büros verbinden ließe (SSO gibt es nur in der bezahlten Fassung). Der Weg über `/office/statistik` löst dasselbe Problem und ist der bequemere.
+
+### Einrichten
+
+1. **Netzname heraussuchen.** Die Statistik hängt sich ans interne Netz des Website-Stacks:
+
+   ```bash
+   docker network ls | grep internal      # z.B. vh_internal
+   ```
+
+2. **Schlüssel erzeugen** (je einmal, dann behalten):
+
+   ```bash
+   openssl rand -base64 48      # PLAUSIBLE_SECRET_KEY_BASE
+   openssl rand -base64 32      # PLAUSIBLE_TOTP_VAULT_KEY
+   ```
+
+3. **Stack anlegen** aus `docker-compose.statistik.yml` — als **eigener** Stack, nicht im Website-Stack. Der Shop wird bei jedem Push neu ausgerollt, die Statistik so gut wie nie; zusammengelegt könnte ein Fehler im Zähler das Ausrollen des Ladens verhindern.
+
+4. **Konto anlegen.** Plausible ist von außen nicht erreichbar, also einmalig die Zeile `ports:` im Stack aktivieren und über einen Tunnel hineinschauen:
+
+   ```bash
+   ssh -L 8000:localhost:8000 server
+   # dann im Browser: http://localhost:8000
+   ```
+
+   Dort Konto anlegen, Website `vincent-hellmann.com` eintragen, unter **Settings → API Keys** einen Schlüssel erzeugen. Danach `ports:` wieder auskommentieren und den Stack neu ausrollen.
+
+5. **Eintragen** im Admin unter **Integrationen → Besucherzählung**:
+
+   | Feld | Wert |
+   | --- | --- |
+   | Adresse im internen Netz | `http://plausible:8000` |
+   | Name der Website | `vincent-hellmann.com` |
+   | Schlüssel | der aus Schritt 4 |
+
+6. **Einschalten** unter **Website-Einstellungen → Besucherstatistik**: Haken bei „Eigene Zählung einschalten", Domain `vincent-hellmann.com`.
+
+Ab dann steht die Auswertung im Büro unter **Statistik**.
+
+### Was der Besucher davon sieht
+
+Auf der Datenschutzseite erscheint automatisch ein Abschnitt „Besucherzählung" in allen drei Sprachen — er kommt aus dem Haken, nicht aus einem Textfeld. Wird die Zählung abgeschaltet, verschwindet er wieder. Der umgekehrte Fall — gezählt wird, der Absatz fehlt — kann damit gar nicht erst eintreten.
+
+Der Text beschreibt, was tatsächlich passiert; wie die übrigen Pflichttexte gehört er einmal anwaltlich durchgesehen.
+
+### Wenn nichts gezählt wird
+
+- **Im Büro steht „Noch nicht eingerichtet".** Dann fehlen die Angaben unter Integrationen. Gezählt wird davon unabhängig — die Meldung betrifft nur das Lesen der Zahlen.
+- **Die Auswertung ist leer, obwohl Besucher da waren.** Meist stimmt der Name der Website nicht mit dem in Plausible überein. Er muss auf beiden Seiten Zeichen für Zeichen gleich sein.
+- **Alle Besucher kommen aus demselben Land und sehen aus wie einer.** Dann erreicht `X-Forwarded-For` den Server nicht. Im Nginx Proxy Manager muss die Kopfzeile durchgereicht werden.
+
 ## Büro (`/office`) — Betrieb, Zahlen, Postfach
 
 Zwei getrennte Oberflächen mit einer gemeinsamen Anmeldung:

@@ -99,7 +99,12 @@ export function felderLesen(felder: Field[]): FeldBeschreibung[] {
         ergebnis.push({ ...gemeinsam, art: 'email' })
         break
       case 'textarea':
-        ergebnis.push({ ...gemeinsam, art: 'absatz' })
+        /*
+         * Auch ein mehrzeiliges Feld kann ein Geheimnis sein — der private
+         * DKIM-Schlüssel ist eines. Stünde er hier offen im Blatt, läge er
+         * lesbar auf dem Telefon, das in der Werkstatt herumliegt.
+         */
+        ergebnis.push({ ...gemeinsam, art: 'absatz', geheim: istGeheim(feld) || undefined })
         break
       case 'select':
         ergebnis.push({

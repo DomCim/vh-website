@@ -76,6 +76,60 @@ export const Integrations: GlobalConfig = {
           ],
         },
         {
+          /*
+           * DKIM — die Unterschrift unter der Mail.
+           *
+           * Ohne sie landet Post von einer eigenen Domain regelmäßig im Spam:
+           * Der empfangende Server sieht eine Mail, die vorgibt, von
+           * vincent-hellmann.com zu kommen, und hat nichts, womit er das
+           * prüfen könnte. Mit DKIM signiert der Absender, und im DNS steht
+           * der öffentliche Schlüssel dazu.
+           *
+           * Drei Angaben gehören zusammen und wirken nur gemeinsam. Fehlt
+           * eine, wird gar nicht signiert — eine halbe Unterschrift ist
+           * schlimmer als keine, denn sie schlägt beim Prüfen fehl.
+           */
+          name: 'dkim',
+          label: 'DKIM-Signatur (optional)',
+          type: 'group',
+          admin: {
+            description:
+              'Signiert ausgehende Mails, damit sie nicht im Spam landen — die der Website und die Antworten aus den Postfächern weiter unten, sofern deren Adresse auf dieser Domain liegt. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.',
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'domain',
+                  label: 'Domain der Absender-Adresse',
+                  type: 'text',
+                  admin: { description: 'z.B. vincent-hellmann.com — leer = keine Signatur' },
+                },
+                {
+                  name: 'selector',
+                  label: 'Selector',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Name des DNS-Eintrags, z.B. „vh" → vh._domainkey.vincent-hellmann.com',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'privateKey',
+              label: 'Privater Schlüssel (PEM)',
+              type: 'textarea',
+              admin: {
+                description:
+                  'Beginnt mit -----BEGIN. Der zugehörige öffentliche Schlüssel muss als DNS-TXT-Eintrag veröffentlicht sein.',
+                components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+              },
+            },
+          ],
+        },
+        {
           name: 'notificationEmail',
           label: 'Benachrichtigungen an',
           type: 'email',
@@ -241,6 +295,108 @@ export const Integrations: GlobalConfig = {
               admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
             },
           ],
+        },
+        {
+          /*
+           * Eigene Unterschrift für dieses Postfach.
+           *
+           * Der Normalfall braucht das nicht: Steht die Adresse auf derselben
+           * Domain wie die allgemeine DKIM-Angabe oben, wird die genommen.
+           * Nötig wird es, wenn ein Postfach auf einer anderen Domain liegt —
+           * eine Mail von einer .fr-Adresse mit dem .com-Schlüssel zu
+           * unterschreiben nützt nichts, weil DMARC verlangt, dass Absender
+           * und signierende Domain zusammenpassen.
+           */
+          name: 'dkim',
+          label: 'Eigene DKIM-Signatur (optional)',
+          type: 'group',
+          admin: {
+            description:
+              'Nur nötig, wenn dieses Postfach auf einer anderen Domain liegt als die allgemeine DKIM-Angabe oben. Leer = die allgemeine wird verwendet, sofern die Domain zur Adresse passt.',
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'domain',
+                  label: 'Domain',
+                  type: 'text',
+                  admin: { description: 'Die Domain der Adresse dieses Postfachs' },
+                },
+                {
+                  name: 'selector',
+                  label: 'Selector',
+                  type: 'text',
+                  admin: { description: 'Name des DNS-Eintrags, z.B. „vh"' },
+                },
+              ],
+            },
+            {
+              name: 'privateKey',
+              label: 'Privater Schlüssel (PEM)',
+              type: 'textarea',
+              admin: {
+                description:
+                  'Beginnt mit -----BEGIN. Der öffentliche Schlüssel muss im DNS dieser Domain stehen.',
+                components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      /*
+       * Die eigene Besucherzählung.
+       *
+       * Plausible läuft im internen Netz und ist von außen nicht erreichbar —
+       * gezählt wird über die eigenen Routen der Website, ausgewertet wird im
+       * Büro. Deshalb steht hier eine Adresse wie `http://plausible:8000` und
+       * keine, die man im Browser aufrufen könnte.
+       *
+       * Ob überhaupt gezählt wird, entscheidet der Haken in den
+       * Website-Einstellungen unter „Besucherstatistik". Hier stehen nur die
+       * Zugangsdaten — die gehören zu den Geheimnissen und nicht in eine
+       * Einstellung, die jeder Seitenaufruf mitliest.
+       */
+      name: 'plausible',
+      label: 'Besucherzählung (Plausible)',
+      type: 'group',
+      admin: {
+        description:
+          'Zugang zur eigenen Statistik. Eingeschaltet wird die Zählung in den Website-Einstellungen unter „Besucherstatistik"; hier steht nur, wo sie läuft und womit das Büro sie abfragen darf.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'url',
+              label: 'Adresse im internen Netz',
+              type: 'text',
+              admin: {
+                description:
+                  'z.B. http://plausible:8000 — der Containername, nicht eine Adresse von außen.',
+              },
+            },
+            {
+              name: 'seite',
+              label: 'Name der Website in Plausible',
+              type: 'text',
+              admin: { description: 'Genau so, wie die Seite dort angelegt ist, z.B. vincent-hellmann.com' },
+            },
+          ],
+        },
+        {
+          name: 'apiKey',
+          label: 'Schlüssel für die Auswertung',
+          type: 'text',
+          admin: {
+            description:
+              'In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
         },
       ],
     },

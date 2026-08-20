@@ -7,6 +7,7 @@ import nodemailer from 'nodemailer'
 import MailComposer from 'nodemailer/lib/mail-composer'
 import type { Payload } from 'payload'
 
+import { dkimFuer } from './dkim'
 import { briefbogen as briefbogenVorlage, pflichtangaben, type CompanyInfo } from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
@@ -335,11 +336,23 @@ export async function nachrichtSenden(
   const benutzer = fach.smtpHost ? fach.smtpUser : email.smtpUser
   const passwort = fach.smtpHost ? fach.smtpPass : email.smtpPass
 
+  /*
+   * Auch die Post aus dem Büro wird unterschrieben, nicht nur das, was die
+   * Website selbst verschickt — sonst landet ausgerechnet die persönliche
+   * Antwort an die Kundschaft im Spam. Am Postfach eingetragene Angaben
+   * gelten; sonst die allgemeine, sofern ihre Domain zur Absenderadresse
+   * dieses Postfachs passt (siehe `dkim.ts`).
+   */
+  const dkim = dkimFuer(fach.address, fach.dkim, email.dkim, (grund) =>
+    payload.logger.warn({ postfach: fach.address }, grund),
+  )
+
   const transport = nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
     auth: benutzer ? { user: benutzer, pass: passwort } : undefined,
+    ...(dkim ? { dkim } : {}),
   })
 
   // Briefbogen zusammenstellen — Pflichtangaben kommen aus den

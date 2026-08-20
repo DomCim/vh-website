@@ -28,8 +28,38 @@ const BEREICHE = {
 
 type Bereichsname = keyof typeof BEREICHE
 
+/*
+ * `name in BEREICHE` wäre hier falsch: `in` sucht auch in der Prototypkette,
+ * und damit gälte `?bereich=constructor` als gültiger Bereich. Danach stünde
+ * in `global` eine Funktion, und die Route stürbe mit 500 statt mit einem
+ * ordentlichen 400. `Object.hasOwn` fragt nur die Einträge selbst.
+ */
 function pruefen(name: string | null): Bereichsname | null {
-  return name && name in BEREICHE ? (name as Bereichsname) : null
+  return name && Object.hasOwn(BEREICHE, name) ? (name as Bereichsname) : null
+}
+
+/**
+ * Warum es nicht geklappt hat — in einem Satz, den man lesen kann.
+ *
+ * Payload weist unvollständige Eingaben ab und sagt genau, welches Feld fehlt.
+ * Diese Auskunft blieb bisher im Log und der Mensch sah „Das hat nicht
+ * geklappt." — beim Anlegen eines Postfachs mit seinen fünf Pflichtfeldern ist
+ * das keine Hilfe, sondern ein Ratespiel.
+ */
+function fehlergrund(err: unknown): string | undefined {
+  const daten = (err as { data?: { errors?: unknown } } | undefined)?.data?.errors
+  if (Array.isArray(daten) && daten.length) {
+    const texte = daten
+      .map((e) => {
+        const eintrag = e as { message?: string; path?: string; field?: string }
+        const wo = eintrag.path || eintrag.field
+        return wo ? `${wo}: ${eintrag.message ?? 'fehlt'}` : eintrag.message
+      })
+      .filter(Boolean)
+    if (texte.length) return texte.join(' · ')
+  }
+  const text = (err as { message?: string } | undefined)?.message
+  return typeof text === 'string' && text ? text : undefined
 }
 
 async function wachePassieren(req: Request) {
@@ -74,6 +104,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Einstellungen speichern fehlgeschlagen:', err)
-    return NextResponse.json({ error: 'fehlgeschlagen' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'fehlgeschlagen', grund: fehlergrund(err) },
+      { status: 500 },
+    )
   }
 }
