@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+*(gerade nichts)*
+
+## 20.08.2026 — Übergabemappe, Unterlagen am Vorgang, eigene Adresse
+
 - **In der robots.txt stand als Sitemap-Adresse `http://localhost:3000`.** Aufgefallen beim Umzug. Die Datei wurde beim Bauen festgelegt — und beim Bauen gibt es die Serveradresse noch nicht, die steht erst im Stack. Google liest die robots.txt als Erstes und findet dort den Wegweiser zur Sitemap; dieser zeigte auf eine Adresse, die kein Suchdienst der Welt abrufen kann. Die Sitemap selbst war immer richtig, nur der Weg dorthin nicht. Sie wird jetzt bei jedem Abruf gerechnet. Das ist der einzige Fall dieser Art: Alle öffentlichen Seiten entstehen ohnehin je Abruf, ihre kanonischen Links waren korrekt — nachgemessen an einem Abbild, das wie in der CI ohne die Variable gebaut wurde.
 
 - **Die Seite zieht auf ihre eigene Adresse.** Maßgeblich ist ab jetzt `https://vincent-hellmann.com` — ohne `www`. Die anderen beiden Domains (.de und .fr) und alle `www`-Schreibweisen leiten dauerhaft dorthin um, mit Pfad. Nur eine Adresse deshalb, weil sich dieselben Inhalte unter mehreren sonst bei Google die Sichtbarkeit teilen, statt sie zu bündeln — und weil Anmeldung, Warenkorb und Übergabelinks an Cookies hängen, die je Adresse gelten: Wer sich auf `.de` anmeldet und auf `.com` weiterklickt, wäre dort wieder ausgeloggt. Kanonische Links, hreflang, Sitemap und robots.txt richten sich automatisch danach. Der Umzug samt Reihenfolge, NPM-Einstellungen und dem, was dabei ungültig wird (Passkeys, offene Anmeldungen, schon verschickte Übergabelinks), steht im README unter „Domains".
