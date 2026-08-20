@@ -129,13 +129,20 @@ export function Header({
       animate={reduceMotion ? undefined : { y: hidden ? '-100%' : '0%' }}
       transition={{ duration: 0.35, ease: [0.22, 0.65, 0.28, 1] }}
     >
-      {/* Breiter als der Seiteninhalt (max-w-7xl) und mit großzügigem Abstand
-          zwischen den drei Spalten: Bei sieben Punkten und vier Zeichen rechts
-          stieß die Navigation sonst direkt an den Schriftzug — und genau das
-          ließ die Leiste vollgestopft aussehen. */}
-      <div className="site-header-bar mx-auto grid h-20 max-w-[88rem] grid-cols-[1fr_auto_1fr] items-center gap-8 px-4 sm:px-6">
-        <Link href={`/${locale}`} className="shrink-0 justify-self-start" onClick={() => setOpen(false)}>
-          <Logo className="site-logo text-ink h-4 w-auto sm:h-5" />
+      {/*
+       * Am Rechner drei Spalten: Schriftzug links, Navigation mittig,
+       * Werkzeuge rechts. Der großzügige Abstand hält die Navigation vom
+       * Schriftzug weg — daran lag es, dass die Leiste vollgestopft wirkte.
+       *
+       * Am Handy dagegen eine schlichte Reihe. Das Raster mit zwei gleich
+       * breiten Außenspalten war dort der Fehler: Der Schriftzug ist rund
+       * 230 Pixel breit, die Werkzeuge brauchen mehr als ihre halbe Leiste —
+       * und was nicht hineinpasste, lief nach rechts aus dem Bild. Zuletzt
+       * der Warenkorb, also ausgerechnet der Knopf, an dem das Geld hängt.
+       */}
+      <div className="site-header-bar mx-auto flex h-20 max-w-[88rem] items-center justify-between gap-3 px-4 sm:px-6 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:gap-8">
+        <Link href={`/${locale}`} className="min-w-0 shrink justify-self-start" onClick={() => setOpen(false)}>
+          <Logo className="site-logo text-ink h-3.5 w-auto sm:h-4 md:h-5" />
         </Link>
 
         <nav className="hidden items-center justify-center gap-6 xl:flex">
@@ -203,8 +210,15 @@ export function Header({
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 justify-self-end sm:gap-3">
-          <SprachWahl locale={locale} pfadFuer={pathFor} label={dict.nav.language} />
+        {/*
+         * Am Handy bleiben nur Suche, Warenkorb und das Menü stehen. Sprache
+         * und Konto stehen im Menü — beides braucht man selten mitten im
+         * Stöbern, der Warenkorb dagegen immer.
+         */}
+        <div className="flex shrink-0 items-center gap-1 justify-self-end sm:gap-3">
+          <span className="hidden sm:block">
+            <SprachWahl locale={locale} pfadFuer={pathFor} label={dict.nav.language} />
+          </span>
 
           <Link
             href={`/${locale}/suche`}
@@ -233,12 +247,15 @@ export function Header({
            * dorthin: Wer den Link aus der Bestellmail nicht mehr hatte, kam
            * nicht hinein. Angemeldet wird dort mit der E-Mail-Adresse und
            * einem sechsstelligen Code, ohne Passwort.
+           *
+           * Am Handy steht es im Menü: Dort ist Platz für ein Wort, und in
+           * der Leiste ist er knapp.
            */}
           <Link
             href={`/${locale}/konto`}
             aria-label={dict.nav.account}
             title={dict.nav.account}
-            className="text-ink-soft hover:text-bronze flex h-10 w-10 items-center justify-center transition-colors"
+            className="text-ink-soft hover:text-bronze hidden h-10 w-10 items-center justify-center transition-colors sm:flex"
           >
             <svg
               width="18"
@@ -308,11 +325,20 @@ export function Header({
             ))}
             <Link
               href={`/${locale}/konto`}
-              className="tracking-nav text-ink py-3 text-sm font-medium uppercase"
+              className="tracking-nav text-ink border-line border-b py-3 text-sm font-medium uppercase"
               onClick={() => setOpen(false)}
             >
               {dict.nav.account}
             </Link>
+
+            {/* Die Sprachwahl steht am Handy nicht mehr in der Leiste — dort
+                war der Platz für den Warenkorb nötig. */}
+            <div className="flex items-center gap-3 pt-4 sm:hidden">
+              <span className="tracking-nav text-ink-soft text-[0.65rem] uppercase">
+                {dict.nav.language}
+              </span>
+              <SprachWahl locale={locale} pfadFuer={pathFor} label={dict.nav.language} />
+            </div>
           </div>
         </nav>
       )}

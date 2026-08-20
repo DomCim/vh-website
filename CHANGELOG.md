@@ -6,6 +6,9 @@ Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Ein
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Warenkorb war am Handy aus dem Bild gelaufen.** Die Kopfleiste stand auch am Telefon im Raster mit zwei gleich breiten Außenspalten — der Schriftzug ist aber rund 230 Pixel breit, und die fünf Zeichen rechts brauchten mehr als ihre Hälfte. Was nicht hineinpasste, lief nach rechts hinaus; zuletzt ausgerechnet der Knopf, an dem das Geld hängt. Am Handy ist es jetzt eine schlichte Reihe: Schriftzug, Suche, Warenkorb, Menü. Sprache und Konto sind ins Menü gewandert — beides braucht man selten mitten im Stöbern.
+- **„In den Warenkorb" war im dunklen Thema unlesbar**: heller Knopf mit weißer Schrift. Die Schriftfarbe stand in der gemeinsamen Zeile, die Hintergrundfarbe erst in der Fallunterscheidung — und damit lief sie nicht mit um. Beide Fälle tragen ihre Schriftfarbe jetzt selbst.
+
 - **Das Kundenportal sieht wieder nach Website aus.** Die Corten-Striche unter den Überschriften fehlten dort als einziger Seite — jetzt trägt die Hauptüberschrift denselben Strich wie überall, und jeder Abschnitt seinen kleinen.
 - **Begrüßung mit Namen.** Wir wissen, wer da ist: Der Name kommt vom Geschäftspartner, ersatzweise aus der Bestellung. Steht dort nichts, bleibt die Zeile weg — eine erfundene Anrede ist schlimmer als keine. Die E-Mail-Adresse steht weiter darunter; sie beantwortet die Frage, in welchem Konto man gerade steckt.
 - **Ein Rechenfehler im Portal, der Kundschaft erschreckt hat:** Beim Auftrag stand die Nettosumme, daneben aber der **brutto** bezahlte Betrag aus den Rechnungen. Bei 20 % Steuer las sich das als „1.492,50 €, davon 1.791,00 € bezahlt" — es sah aus, als hätte man zu viel überwiesen. Beide Zahlen sind jetzt brutto, so wie alles andere auf der Seite.

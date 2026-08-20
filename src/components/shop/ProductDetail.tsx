@@ -259,8 +259,17 @@ export function ProductDetail({
                 type="button"
                 onClick={handleAdd}
                 whileTap={{ scale: 0.96 }}
-                className={`tracking-nav mt-5 cursor-pointer px-8 py-3 text-xs font-semibold text-white uppercase transition-colors ${
-                  justAdded ? "bg-green-700" : "bg-ink hover:bg-bronze"
+                /*
+                 * Die Schriftfarbe gehört zum jeweiligen Grund und nicht in
+                 * die gemeinsame Zeile: Im dunklen Thema wird `bg-ink` hell,
+                 * und weiße Schrift stand dann auf einem hellen Knopf. Das
+                 * Grün nach dem Hinzufügen bleibt in beiden Themen dunkel und
+                 * trägt deshalb weiter Weiß.
+                 */
+                className={`tracking-nav mt-5 cursor-pointer px-8 py-3 text-xs font-semibold uppercase transition-colors ${
+                  justAdded
+                    ? "bg-green-700 text-white"
+                    : "bg-ink text-on-ink hover:bg-bronze"
                 }`}
               >
                 {justAdded ? dict.added : dict.addToCart}
