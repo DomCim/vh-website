@@ -64,7 +64,7 @@ const BEZEICHNUNG: Record<Stufe, string> = {
  */
 
 /** Der Steuersatz des Betriebs — je Auftrag gibt es keinen eigenen. */
-async function steuersatz(payload: Payload, req?: PayloadRequest): Promise<number> {
+export async function steuersatz(payload: Payload, req?: PayloadRequest): Promise<number> {
   try {
     const einstellungen = (await payload.findGlobal({ slug: 'site-settings', depth: 0, req })) as {
       company?: { vatRate?: number | null } | null

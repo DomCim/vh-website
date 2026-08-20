@@ -120,6 +120,9 @@ const de = {
   },
   account: {
     title: 'Meine Bestellungen',
+    /* Mit Namen, wenn wir ihn kennen — sonst bleibt die Zeile weg. Eine
+       erfundene Anrede ist schlimmer als keine. */
+    greeting: 'Guten Tag, {name}',
     intro:
       'Geben Sie die E-Mail-Adresse ein, unter der wir Sie kennen — aus einer Bestellung oder einem Angebot. Sie erhalten einen sechsstelligen Code per E-Mail, den Sie hier eintragen.',
     email: 'E-Mail-Adresse',
@@ -448,6 +451,7 @@ const fr: Dictionary = {
   },
   account: {
     title: 'Mes commandes',
+    greeting: 'Bonjour {name}',
     intro:
       "Saisissez l'adresse e-mail sous laquelle nous vous connaissons — commande ou devis. Vous recevrez un code à six chiffres par e-mail, à saisir ici.",
     email: 'Adresse e-mail',
@@ -773,6 +777,7 @@ const en: Dictionary = {
   },
   account: {
     title: 'My orders',
+    greeting: 'Hello {name}',
     intro:
       'Enter the email address we know you by — from an order or a quote. You will receive a six-digit code by email to enter here.',
     email: 'Email address',

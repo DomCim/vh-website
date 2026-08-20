@@ -39,7 +39,9 @@ export default async function KontoSeite({ params }: { params: Promise<{ locale:
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
-      <h1 className="tracking-nav text-ink text-2xl font-semibold uppercase">
+      {/* Derselbe Corten-Strich wie auf jeder anderen Seite — das Portal ist
+          Teil der Website und nicht ein Anhängsel davon. */}
+      <h1 className="tracking-nav text-ink rule-bronze mb-8 text-2xl font-semibold uppercase">
         {dict.account.title}
       </h1>
 
@@ -54,7 +56,8 @@ export default async function KontoSeite({ params }: { params: Promise<{ locale:
   )
 }
 
-const ueberschrift = 'tracking-nav text-ink mt-12 mb-4 text-sm font-semibold uppercase'
+const ueberschrift =
+  'tracking-nav text-ink rule-bronze-sm mt-14 mb-5 text-sm font-semibold uppercase'
 
 async function Uebersicht({
   email,
@@ -66,7 +69,7 @@ async function Uebersicht({
   dict: ReturnType<typeof t>
 }) {
   const payload = await payloadClient()
-  const { bestellungen, auftraege, rechnungen, angebote } = await vorgaenge(payload, email)
+  const { kunde, bestellungen, auftraege, rechnungen, angebote } = await vorgaenge(payload, email)
   const k = dict.account
 
   /*
@@ -105,7 +108,19 @@ async function Uebersicht({
 
   return (
     <>
-      <p className="text-ink-soft mt-2 text-sm">{email}</p>
+      {/*
+       * Wir wissen, wer da ist — dann soll die Seite es auch sagen. Die
+       * Adresse bleibt darunter stehen: Sie beantwortet die Frage, in welchem
+       * Konto man gerade steckt, und die stellt sich bei zwei Adressen sofort.
+       */}
+      {kunde ? (
+        <>
+          <p className="text-ink text-lg">{k.greeting.replace('{name}', kunde)}</p>
+          <p className="text-ink-soft mt-1 text-sm">{email}</p>
+        </>
+      ) : (
+        <p className="text-ink-soft text-sm">{email}</p>
+      )}
 
       {leer && <p className="text-ink-soft mt-8">{k.nothing}</p>}
 

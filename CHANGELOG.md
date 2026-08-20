@@ -2,6 +2,14 @@
 
 Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Einträge zuerst. Dieses Protokoll steht im Büro unter **Neuerungen** (`/office/neuerungen`).
 
+## Noch nicht ausgerollt
+
+*Gesammelt, wartet auf das Wort zum Ausrollen.*
+
+- **Das Kundenportal sieht wieder nach Website aus.** Die Corten-Striche unter den Überschriften fehlten dort als einziger Seite — jetzt trägt die Hauptüberschrift denselben Strich wie überall, und jeder Abschnitt seinen kleinen.
+- **Begrüßung mit Namen.** Wir wissen, wer da ist: Der Name kommt vom Geschäftspartner, ersatzweise aus der Bestellung. Steht dort nichts, bleibt die Zeile weg — eine erfundene Anrede ist schlimmer als keine. Die E-Mail-Adresse steht weiter darunter; sie beantwortet die Frage, in welchem Konto man gerade steckt.
+- **Ein Rechenfehler im Portal, der Kundschaft erschreckt hat:** Beim Auftrag stand die Nettosumme, daneben aber der **brutto** bezahlte Betrag aus den Rechnungen. Bei 20 % Steuer las sich das als „1.492,50 €, davon 1.791,00 € bezahlt" — es sah aus, als hätte man zu viel überwiesen. Beide Zahlen sind jetzt brutto, so wie alles andere auf der Seite.
+
 ## 20.08.2026 — Schriftzug folgt dem Hero, nicht dem Thema
 
 - **Über einem hellen Hero-Bild war der Schriftzug im dunklen Thema unsichtbar.** Die Kopfleiste nimmt über dem Hero die Farbe des Bildes an — welche Schrift darauf lesbar ist, hängt damit am Bild und nicht daran, ob das Gerät hell oder dunkel eingestellt ist. Abgedeckt war bisher nur der Fall „dunkles Bild"; beim hellen blieb die helle Schrift des dunklen Themas stehen und stand auf hellem Grund. Vorher fiel das nicht auf, weil das Logo ein schwarzes Bild war und sich um Themen nicht scherte.

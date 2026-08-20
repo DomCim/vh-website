@@ -2,6 +2,7 @@ import type { Payload, Where } from 'payload'
 
 import { stufenBerechnen } from './anzahlung'
 import { zahlungsstand, type StufenRechnung } from './zahlungsstand'
+import { steuersatz } from './rechnungsstufen'
 
 /**
  * Was ein Kunde im Portal von sich sehen darf.
@@ -80,7 +81,10 @@ export type PortalBestellung = {
 const runden = (n: number) => Math.round(n * 100) / 100
 
 /** Die Geschäftspartner zu dieser Adresse — der Weg ins Projektgeschäft. */
-async function kontaktIds(payload: Payload, email: string): Promise<number[]> {
+async function kontakte(
+  payload: Payload,
+  email: string,
+): Promise<{ id: number; name?: string | null }[]> {
   const { docs } = await payload.find({
     collection: 'contacts',
     where: { email: { equals: email } },
@@ -88,7 +92,11 @@ async function kontaktIds(payload: Payload, email: string): Promise<number[]> {
     depth: 0,
     overrideAccess: true,
   })
-  return docs.map((k) => k.id as number)
+  return docs.map((k) => ({ id: k.id as number, name: k.name }))
+}
+
+async function kontaktIds(payload: Payload, email: string): Promise<number[]> {
+  return (await kontakte(payload, email)).map((k) => k.id)
 }
 
 /** Gibt es zu dieser Adresse überhaupt etwas? Entscheidet über den Anmeldecode. */
@@ -146,12 +154,22 @@ export async function vorgaenge(
   payload: Payload,
   email: string,
 ): Promise<{
+  /**
+   * Wie die Kundschaft heißt — für die Begrüßung.
+   *
+   * Der Geschäftspartner geht vor: Dort steht der gepflegte Name. Die
+   * Bestellung ist der Rückfallweg für alle, die nur im Shop gekauft haben
+   * und nie als Partner angelegt wurden. Ist beides leer, bleibt es leer —
+   * eine erfundene Anrede ist schlimmer als keine.
+   */
+  kunde: string | null
   bestellungen: PortalBestellung[]
   auftraege: PortalAuftrag[]
   rechnungen: PortalRechnung[]
   angebote: PortalAngebot[]
 }> {
-  const ids = await kontaktIds(payload, email)
+  const partner = await kontakte(payload, email)
+  const ids = partner.map((k) => k.id)
 
   const { docs: bestellungen } = await payload.find({
     collection: 'orders',
@@ -221,7 +239,29 @@ export async function vorgaenge(
 
   const nummerJeAuftrag = new Map(auftraege.map((a) => [String(a.id), a.jobNumber ?? '']))
 
+  /*
+   * Der Auftragswert wird brutto gezeigt — wie alles andere auf dieser Seite.
+   *
+   * Vorher stand dort die Nettosumme der Stufen, daneben aber das **brutto**
+   * Bezahlte aus den Rechnungen. Bei 20 % Steuer las sich das als „1.492,50 €,
+   * davon 1.791,00 € bezahlt": Es sah aus, als hätte die Kundschaft zu viel
+   * überwiesen. Verglichen wurden zwei verschiedene Größen.
+   */
+  const satz = await steuersatz(payload)
+  const brutto = (netto: number) => runden(netto * (1 + satz / 100))
+
+  /*
+   * Der Geschäftspartner geht vor: Dort steht der gepflegte Name. Die
+   * Bestellung ist der Rückfallweg für alle, die nur im Shop gekauft haben und
+   * nie als Partner angelegt wurden.
+   */
+  const ausBestellung = bestellungen
+    .map((b) => (b.customer as { name?: string | null } | null)?.name?.trim())
+    .find(Boolean)
+  const kunde = partner.map((k) => k.name?.trim()).find(Boolean) || ausBestellung || null
+
   return {
+    kunde,
     bestellungen: bestellungen.map((b) => ({
       id: b.id,
       nummer: b.orderNumber,
@@ -262,7 +302,7 @@ export async function vorgaenge(
         wartetAufZahlung: stand.wartet,
         offeneStufe: stand.offeneStufe,
         tageUeberfaellig: stand.tageUeberfaellig,
-        gesamt: runden(stufen.anzahlung + stufen.zwischen + stufen.schluss),
+        gesamt: brutto(runden(stufen.anzahlung + stufen.zwischen + stufen.schluss)),
         bezahlt: runden(
           dazu.filter((r) => r.status === 'bezahlt').reduce((s, r) => s + (Number(r.total) || 0), 0),
         ),
