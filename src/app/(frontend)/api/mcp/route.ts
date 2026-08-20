@@ -14,7 +14,8 @@ import { registerReferenzen } from '../../../../lib/mcp/referenzen'
 import { registerSeiten } from '../../../../lib/mcp/seiten'
 import { payloadClient } from '../../../../lib/data'
 import { ipAus, zuVieleAnfragen } from '../../../../lib/rateLimit'
-import { type McpServer, nurLesenderServer } from '../../../../lib/mcp/helpers'
+import { ok, type McpServer, mitLeitplanken, nurLesenderServer } from '../../../../lib/mcp/helpers'
+import { leitplankenAntwort } from '../../../../lib/mcp/leitplanken'
 import { getIntegrations } from '../../../../lib/settings'
 
 /**
@@ -34,7 +35,29 @@ export const dynamic = 'force-dynamic'
 // Große Bild-Uploads über bild_hochladen brauchen Luft
 export const maxDuration = 300
 
+/**
+ * Die Leitplanken selbst — das einzige Werkzeug, das keine Freigabe braucht,
+ * weil es sie ausstellt.
+ *
+ * Es heißt bewusst auf `_lesen`: Damit ist es für den Nur-Lese-Schlüssel
+ * sichtbar und für den Freigabe-Proxy kein Sonderfall. Wer nur liest, darf die
+ * Hausregeln trotzdem kennen — schaden kann das nie.
+ */
+function registerLeitplanken(server: McpServer) {
+  server.registerTool(
+    'leitplanken_lesen',
+    {
+      description:
+        'MUSS vor jeder Änderung aufgerufen werden. Gibt die Hausregeln dieses Betriebs ' +
+        'zurück und dazu eine Freigabe, die jedes ändernde Werkzeug verlangt.',
+      inputSchema: {},
+    },
+    async () => ok(leitplankenAntwort()),
+  )
+}
+
 function alleWerkzeuge(server: McpServer) {
+  registerLeitplanken(server)
   registerProdukte(server)
   registerKategorien(server)
   registerReferenzen(server)
@@ -49,7 +72,7 @@ function alleWerkzeuge(server: McpServer) {
 }
 
 const handler = createMcpHandler(
-  (server) => alleWerkzeuge(server),
+  (server) => alleWerkzeuge(mitLeitplanken(server)),
   {
     serverInfo: { name: 'vh-website', version: '2.0.0' },
     instructions: [
@@ -62,6 +85,10 @@ const handler = createMcpHandler(
       'nachtragen. uebersetzungen_pruefen zeigt, was noch fehlt.',
       '',
       'Seitentexte: vor jedem seite_schreiben zuerst seite_lesen aufrufen — Listen werden komplett ersetzt.',
+      '',
+      'WICHTIG: Vor der ersten Änderung leitplanken_lesen aufrufen. Es gibt die Hausregeln',
+      'des Betriebs heraus und eine Freigabe, die jedes ändernde Werkzeug als Parameter',
+      '„freigabe" verlangt. Ohne sie wird nichts geändert.',
       '',
       'Fertigung: Es gibt keine Serienfertigung, jedes Stück entsteht einzeln. Produkte tragen eine',
       'Fertigungszeit; Bestellungen durchlaufen bezahlt → in Fertigung (bestellung_in_fertigung) →',

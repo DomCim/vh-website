@@ -4,6 +4,7 @@ import { getPayload, type CollectionSlug, type Payload } from 'payload'
 import { z } from 'zod'
 
 import { slugify } from '../slug'
+import { freigabePruefen, type Freigabestand } from './leitplanken'
 
 /**
  * Gemeinsame Bausteine aller MCP-Werkzeuge.
@@ -114,6 +115,74 @@ export function istLesend(name: string): boolean {
     name === 'website_check' ||
     name === 'shop_statistik'
   )
+}
+
+/** Das Feld, mit dem ein änderndes Werkzeug seine Leitplanken-Freigabe nachweist */
+export const freigabe = z
+  .string()
+  .describe(
+    'Freigabe aus leitplanken_lesen. Ohne gültige Freigabe wird nichts geändert — ' +
+      'das Werkzeug zuerst aufrufen und den Wert von dort übernehmen.',
+  )
+
+const FREIGABE_TEXT: Record<Exclude<Freigabestand, 'ok'>, string> = {
+  fehlt:
+    'Keine Freigabe dabei. Bitte zuerst leitplanken_lesen aufrufen, die Hausregeln lesen ' +
+    'und die Freigabe von dort als Parameter „freigabe" mitgeben.',
+  ungueltig:
+    'Diese Freigabe stimmt nicht. Sie stammt aus leitplanken_lesen und wird unverändert ' +
+    'übernommen — bitte dort eine neue holen.',
+  abgelaufen:
+    'Die Freigabe ist abgelaufen (sie gilt eine Stunde). Bitte leitplanken_lesen erneut ' +
+    'aufrufen; die Hausregeln stehen dort noch einmal.',
+}
+
+/**
+ * Hüllt den Server so ein, dass jedes **ändernde** Werkzeug eine gültige
+ * Leitplanken-Freigabe verlangt.
+ *
+ * Der Weg über einen Proxy ist hier kein Kunststück, sondern das Gegenteil:
+ * Er hält die Regel an **einer** Stelle. Siebenundvierzig Werkzeuge einzeln um
+ * einen Parameter zu ergänzen hieße, das achtundvierzigste zu vergessen — und
+ * zwar das, das nächsten Monat jemand schreibt. So ist jedes künftige Werkzeug
+ * von selbst dahinter, sobald sein Name nicht auf `_lesen` oder `_liste` endet.
+ *
+ * Der Parameter wird dem Schema angehängt und vor dem Aufruf geprüft; das
+ * Werkzeug selbst sieht ihn nie und muss ihn nicht kennen.
+ */
+export function mitLeitplanken(server: McpServer): McpServer {
+  return new Proxy(server, {
+    get(ziel, eigenschaft, empfaenger) {
+      if (eigenschaft !== 'registerTool') return Reflect.get(ziel, eigenschaft, empfaenger)
+
+      return (name: string, beschreibung: Record<string, unknown>, handler: unknown) => {
+        if (istLesend(name)) {
+          return (ziel.registerTool as (...args: unknown[]) => unknown)(
+            name,
+            beschreibung,
+            handler,
+          )
+        }
+
+        const erweitert = {
+          ...beschreibung,
+          inputSchema: { ...(beschreibung.inputSchema as object), freigabe },
+        }
+
+        const bewacht = async (eingabe: Record<string, unknown>, rest: unknown) => {
+          const stand = freigabePruefen(eingabe?.freigabe)
+          if (stand !== 'ok') return fehler(FREIGABE_TEXT[stand])
+          return (handler as (a: unknown, b: unknown) => unknown)(eingabe, rest)
+        }
+
+        return (ziel.registerTool as (...args: unknown[]) => unknown)(
+          name,
+          erweitert,
+          bewacht,
+        )
+      }
+    },
+  }) as McpServer
 }
 
 /**
