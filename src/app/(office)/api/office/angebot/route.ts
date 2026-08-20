@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
+import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
 
@@ -151,8 +152,14 @@ export async function POST(req: Request) {
         : {}),
     }
 
+    /* Beim Ändern nur das Gesendete — siehe lib/teilaenderung.ts */
     const doc = b.id
-      ? await payload.update({ collection: 'quotes', id: b.id, overrideAccess: true, data: daten })
+      ? await payload.update({
+          collection: 'quotes',
+          id: b.id,
+          overrideAccess: true,
+          data: nurGesendete(b, daten, { acceptedAt: 'status', acceptedVia: 'status' }),
+        })
       : await payload.create({ collection: 'quotes', overrideAccess: true, data: daten })
 
     return NextResponse.json({

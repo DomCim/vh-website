@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
+import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, id: doc.id })
     }
 
-    if (!b.title?.trim()) return NextResponse.json({ error: 'titel-fehlt' }, { status: 400 })
+    // Pflicht nur beim Anlegen: Eine Änderung, die den Titel nicht anfasst,
+    // muss ihn auch nicht mitschicken.
+    if (!b.id && !b.title?.trim()) {
+      return NextResponse.json({ error: 'titel-fehlt' }, { status: 400 })
+    }
 
     const daten = {
       title: b.title,
@@ -85,8 +90,17 @@ export async function POST(req: Request) {
       },
     }
 
+    /* Beim Ändern nur das Gesendete — siehe lib/teilaenderung.ts */
     const doc = b.id
-      ? await payload.update({ collection: 'jobs', id: b.id, overrideAccess: true, data: daten })
+      ? await payload.update({
+          collection: 'jobs',
+          id: b.id,
+          overrideAccess: true,
+          data: nurGesendete(b, daten, {
+            zahlplan: ['anzahlungProzent', 'zwischenProzent'],
+            meilenstein: ['meilensteinBezeichnung', 'meilensteinErreichtAm'],
+          }),
+        })
       : await payload.create({ collection: 'jobs', overrideAccess: true, data: daten })
 
     return NextResponse.json({ ok: true, id: doc.id, jobNumber: doc.jobNumber })

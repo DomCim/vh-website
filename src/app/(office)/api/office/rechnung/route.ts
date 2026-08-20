@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
+import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
 
@@ -168,12 +169,20 @@ export async function POST(req: Request) {
       note: b.note || undefined,
     }
 
+    /*
+     * Beim Ändern nur das schreiben, wonach gefragt wurde.
+     *
+     * `{ id, status: 'bezahlt' }` hätte sonst über `items: (b.items ?? [])`
+     * sämtliche Positionen gelöscht, und `{ id, items }` den Status einer
+     * gestellten Rechnung auf „Entwurf" zurückgestellt. Siehe
+     * lib/teilaenderung.ts.
+     */
     const doc = b.id
       ? await payload.update({
           collection: 'outgoing-invoices',
           id: b.id,
           overrideAccess: true,
-          data: daten,
+          data: nurGesendete(b, daten, { paidDate: ['paidDate', 'status'] }),
         })
       : await payload.create({
           collection: 'outgoing-invoices',

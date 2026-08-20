@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Ein
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Eine Teiländerung nimmt nichts mehr weg.** Die Büro-Schnittstellen bauten aus der Anfrage einen vollständigen Datensatz und schrieben ihn — beim Anlegen richtig, beim Ändern eine Falle: Wer nur `{ id, status: 'bezahlt' }` schickte, löschte damit sämtliche Rechnungspositionen, und wer nur Positionen schickte, stellte eine gestellte Rechnung auf „Entwurf" zurück. Beim Ändern bleibt jetzt weg, wonach niemand gefragt hat — bei Rechnung, Angebot und Auftrag. Eine mitgeschickte leere Liste zählt weiter als Ansage: Wer alle Positionen löschen will, kann das.
+
 - **Der Warenkorb war am Handy aus dem Bild gelaufen.** Die Kopfleiste stand auch am Telefon im Raster mit zwei gleich breiten Außenspalten — der Schriftzug ist aber rund 230 Pixel breit, und die fünf Zeichen rechts brauchten mehr als ihre Hälfte. Was nicht hineinpasste, lief nach rechts hinaus; zuletzt ausgerechnet der Knopf, an dem das Geld hängt. Am Handy ist es jetzt eine schlichte Reihe: Schriftzug, Suche, Warenkorb, Menü. Sprache und Konto sind ins Menü gewandert — beides braucht man selten mitten im Stöbern.
 - **„In den Warenkorb" war im dunklen Thema unlesbar**: heller Knopf mit weißer Schrift. Die Schriftfarbe stand in der gemeinsamen Zeile, die Hintergrundfarbe erst in der Fallunterscheidung — und damit lief sie nicht mit um. Beide Fälle tragen ihre Schriftfarbe jetzt selbst.
 
