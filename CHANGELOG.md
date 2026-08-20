@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com (vh.dominikdill.com) getan hat — neueste Ein
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Am Rechner lief „Kollektion" in den Schriftzug hinein.** Genau an der Schwelle, ab der die Navigation erscheint (1280 Pixel), ging es um 33 Pixel nicht aus: Schriftzug 286, Navigation 658, Werkzeuge 257, dazu zweimal 32 Pixel Abstand. Ein Raster gibt dann nicht nach — es lässt die mittlere Spalte über die äußere laufen. Weil eine Grafik mit fester Höhe nicht schmaler wird, gibt jetzt der Abstand nach: bis 1400 Pixel knapp bemessen, darüber wieder weit. Gemessen in allen drei Sprachen, bei jeder Breite von 1280 bis 1536 — vorher 1 Pixel Luft, jetzt mindestens 30.
+
 - **Unterlagen hängen jetzt am Vorgang, nicht nur am Artikel.** Anfrage, Angebot und Auftrag haben einen eigenen Block „Unterlagen zum Vorgang" — mit allem, was dazugehört, auch dem, was über eine Übergabemappe hereinkam. Wer in der Werkstatt am Auftrag steht, sucht dort und nicht in einer Mappe, an die sich niemand erinnert. Von jedem Vorgang aus lässt sich mit einem Tipp eine Übergabemappe anlegen; der Geschäftspartner kommt mit.
 
 - **Die Kundschaft kann im Portal nachreichen und abholen.** Unter jedem Auftrag steht „Unterlagen": Dateien hochladen — mehrere auf einmal, bis 500 MB je Stück — und herunterladen, was Vincent freigegeben hat. Der Übergabelink bleibt für die, die noch kein Konto haben. Zugeklappt, bis jemand hineinsieht: Bei einer Shop-Bestellung gibt es keine Unterlagen, und ein leerer Kasten unter jedem Auftrag wäre nur Grundrauschen. Eine nachgereichte Datei meldet sich per Push.

@@ -139,13 +139,27 @@ export function Header({
        * 230 Pixel breit, die Werkzeuge brauchen mehr als ihre halbe Leiste —
        * und was nicht hineinpasste, lief nach rechts aus dem Bild. Zuletzt
        * der Warenkorb, also ausgerechnet der Knopf, an dem das Geld hängt.
+       *
+       * Der Abstand ist zweistufig, und das ist kein Feinschliff.
+       *
+       * Genau an der Schwelle, an der die Navigation erscheint (1280 px), ging
+       * es um 33 Pixel nicht aus: Schriftzug 286, Navigation 658, Werkzeuge
+       * 257, dazu zweimal 32 Abstand — zusammen mehr, als zwischen die Ränder
+       * passt. Das Raster gibt dann nicht nach, sondern lässt die mittlere
+       * Spalte über die äußere laufen: „Kollektion" stand im Schriftzug.
+       *
+       * Weil eine Grafik mit fester Höhe nicht schmaler wird, muss der Abstand
+       * nachgeben. Bis 1400 px ist er knapp bemessen — das bringt 92 Pixel und
+       * damit Luft, auch für längere Beschriftungen auf Französisch. Darüber,
+       * wo die Leiste ohnehin ihre volle Breite hat, steht wieder der weite
+       * Abstand.
        */}
-      <div className="site-header-bar mx-auto flex h-20 max-w-[88rem] items-center justify-between gap-3 px-4 sm:px-6 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:gap-8">
+      <div className="site-header-bar mx-auto flex h-20 max-w-[88rem] items-center justify-between gap-3 px-4 sm:px-6 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:gap-4 min-[1400px]:xl:gap-8">
         <Link href={`/${locale}`} className="min-w-0 shrink justify-self-start" onClick={() => setOpen(false)}>
           <Logo className="site-logo text-ink h-3.5 w-auto sm:h-4 md:h-5" />
         </Link>
 
-        <nav className="hidden items-center justify-center gap-6 xl:flex">
+        <nav className="hidden items-center justify-center gap-3 min-[1400px]:gap-6 xl:flex">
           {kategorien.length > 0 && (
             <div
               className="relative"
