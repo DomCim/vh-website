@@ -1,3 +1,5 @@
+@import './schritte.css';
+
 /* Büro-Oberfläche — eigenständiges, ruhiges Layout mit derselben
    Formensprache wie die Website: viel Weißraum, Corten als einziger Akzent. */
 
@@ -1502,73 +1504,17 @@ html.tastatur-offen .buero-inhalt {
 
 /* ── Schritt-für-Schritt-Formulare ──────────────────────────────────────── */
 /*
- * Die Leiste über einem langen Formular. Am Handy stehen nur die Nummern —
- * für Wörter ist dort kein Platz, und darunter steht ohnehin, wie der Schritt
- * heißt und wie viele es noch sind.
+ * Die Leiste selbst steht in `schritte.css` — Form für Shop und Büro
+ * gemeinsam. Hier stehen nur die Farben und das, was das Büro drumherum
+ * braucht.
  */
-.buero-schrittleiste {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  list-style: none;
-  margin: 0 0 0.75rem;
-  padding: 0 0 0.75rem;
-  border-bottom: 1px solid var(--buero-linie);
-}
-
-.buero-schrittmarke {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.5rem;
-  background: none;
-  border: 0;
-  color: var(--buero-tinte-leise);
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  border-radius: 8px;
-}
-
-/* Ein Schritt, der noch nicht dran war, ist kein Ziel — das muss man sehen
-   und nicht erst durch Klicken merken. */
-.buero-schrittmarke:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.buero-schrittmarke.ist-fertig {
-  color: var(--buero-tinte);
-}
-
-.buero-schrittmarke.ist-hier {
-  color: var(--buero-tinte);
-  font-weight: 650;
-  background: color-mix(in srgb, var(--buero-bronze) 12%, transparent);
-}
-
-.buero-schrittnummer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
-  flex: 0 0 auto;
-  border: 1px solid var(--buero-linie);
-  border-radius: 999px;
-  font-size: 0.7rem;
-  line-height: 1;
-}
-
-.buero-schrittmarke.ist-hier .buero-schrittnummer {
-  border-color: var(--buero-bronze);
-  color: var(--buero-bronze);
-}
-
-.buero-schrittzaehler {
-  color: var(--buero-tinte-leise);
-  font-size: 0.85rem;
-  margin: 0 0 1rem;
+.buero {
+  --schritt-linie: var(--buero-linie);
+  --schritt-aktiv: var(--buero-bronze);
+  --schritt-auf-aktiv: var(--buero-auf-bronze);
+  --schritt-grund: var(--buero-flaeche);
+  --schritt-text: var(--buero-tinte);
+  --schritt-text-leise: var(--buero-tinte-leise);
 }
 
 /*
@@ -1589,11 +1535,4 @@ html.tastatur-offen .buero-inhalt {
   align-items: center;
   gap: 0.6rem;
   margin-top: 1.25rem;
-}
-
-/* Am Handy steht in der Leiste nur die Nummer */
-@media (max-width: 720px) {
-  .buero-schritttext {
-    display: none;
-  }
 }

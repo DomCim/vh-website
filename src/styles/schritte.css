@@ -1,0 +1,177 @@
+/*
+ * Die Schrittleiste über einem langen Formular.
+ *
+ * Nummerierte Kreise, durch eine Linie verbunden, mit dem Namen des Schritts
+ * darunter. Man sieht auf einen Blick, wo man ist, wie viel noch kommt und
+ * was schon erledigt ist — und die erledigten sind anklickbar.
+ *
+ * **Eine Geometrie für Shop und Büro.** Die beiden sehen verschieden aus,
+ * aber ein Kreis ist ein Kreis. Zweimal dieselbe Anordnung zu schreiben hieße,
+ * sie zweimal zu pflegen — und eine der beiden bliebe zurück. Deshalb steht
+ * die Form hier einmal, und die Farben kommen aus Variablen, die jede Welt
+ * selbst setzt (siehe `globals.css` und `office.css`).
+ *
+ * **Warum die Linie ein Pseudo-Element ist.** Sie gehört zum Zwischenraum,
+ * nicht zu einem der Kreise. Als eigenes Element gezählt bräuchte jeder
+ * Schritt einen Nachbarn im Markup, und der letzte einen, den es nicht gibt.
+ * So hängt sie am Schritt und reicht nach links zum vorigen — das kommt ohne
+ * Sonderfall am Ende aus.
+ */
+
+.schritte {
+  /* Der Durchmesser der Kreise steht an einer Stelle: Die Verbindungslinie
+     rechnet damit, wo sie anfangen und aufhören muss. Am Telefon wird nur
+     dieser eine Wert kleiner, alles andere folgt von selbst. */
+  --schritt-kreis: 2.2rem;
+  /* Etwas Luft zwischen Kreis und Linie — ohne sie klebt der Strich am Rand
+     und sieht aus wie ein Fehler beim Zeichnen */
+  --schritt-luft: 0.35rem;
+
+  display: flex;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.schritte-punkt {
+  /* Gleiche Breite für alle: Sonst zöge ein langer Name die Linie schief */
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+}
+
+/*
+ * Die Verbindungslinie zum vorigen Schritt.
+ *
+ * Sie sitzt auf halber Kreishöhe und reicht **von Rand zu Rand** — nicht von
+ * Mittelpunkt zu Mittelpunkt. Der Unterschied ist keiner der Genauigkeit: Bei
+ * Mitte zu Mitte läuft der Strich hinter den Kreisen durch und stößt an ihren
+ * Rand, statt zwischen ihnen zu stehen.
+ *
+ * `left: -50%` und `right: 50%` messen die Breite eines Schrittes und treffen
+ * damit die Mittelpunkte; Radius und ein wenig Luft rücken die Enden von dort
+ * nach außen. Deshalb stimmt es bei drei Schritten so gut wie bei sechs, ohne
+ * dass irgendwo eine feste Zahl steht.
+ */
+.schritte-punkt + .schritte-punkt::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--schritt-kreis) / 2 - 1px);
+  left: calc(-50% + var(--schritt-kreis) / 2 + var(--schritt-luft));
+  right: calc(50% + var(--schritt-kreis) / 2 + var(--schritt-luft));
+  height: 2px;
+  background: var(--schritt-linie);
+}
+
+/* Hinter einem erledigten Schritt ist auch der Weg dorthin erledigt */
+.schritte-punkt.ist-fertig::before,
+.schritte-punkt.ist-hier::before {
+  background: var(--schritt-aktiv);
+}
+
+.schritte-marke {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 0.25rem;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--schritt-text-leise);
+  cursor: pointer;
+}
+
+/* Ein Schritt, der noch nicht dran war, ist kein Ziel — das muss man sehen
+   und nicht erst durch Klicken merken. */
+.schritte-marke:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.schritte-nummer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--schritt-kreis);
+  height: var(--schritt-kreis);
+  flex: 0 0 auto;
+  border: 2px solid var(--schritt-linie);
+  border-radius: 999px;
+  background: var(--schritt-grund);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ist-fertig .schritte-nummer {
+  border-color: var(--schritt-aktiv);
+  color: var(--schritt-aktiv);
+}
+
+.ist-hier .schritte-nummer {
+  border-color: var(--schritt-aktiv);
+  background: var(--schritt-aktiv);
+  color: var(--schritt-auf-aktiv);
+}
+
+.schritte-text {
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-align: center;
+  /* Lange Namen dürfen umbrechen, aber nicht die Spalte sprengen */
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.ist-fertig .schritte-text {
+  color: var(--schritt-text);
+}
+
+.ist-hier .schritte-text {
+  color: var(--schritt-aktiv);
+  font-weight: 650;
+}
+
+/*
+ * Am Telefon wird alles etwas kleiner — aber die Namen bleiben stehen.
+ * Bloße Nummern sagen nicht, was einen erwartet, und genau das ist der Sinn
+ * der Leiste.
+ */
+@media (max-width: 560px) {
+  .schritte {
+    --schritt-kreis: 1.9rem;
+  }
+  .schritte-nummer {
+    font-size: 0.85rem;
+  }
+  .schritte-text {
+    font-size: 0.72rem;
+  }
+}
+
+/*
+ * Der Fortschritt in Worten — für alle, die die Leiste nicht sehen.
+ *
+ * Sichtbar wäre er doppelt gemoppelt: Die Leiste sagt dasselbe, nur schneller.
+ * Vorlesen lassen muss man ihn trotzdem können, und bei einem Wechsel soll er
+ * angesagt werden.
+ */
+.schritte-ansage {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

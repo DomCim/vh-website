@@ -233,12 +233,21 @@ export function Schrittformular({
 
   return (
     <div ref={behaelter}>
-      <ol className={k.leiste} aria-label="Schritte">
+      <ol className="schritte" aria-label="Schritte">
         {sichtbar.map((s, i) => {
           const erledigt = i < jetzt
           const hier = i === jetzt
           return (
-            <li key={s.schluessel} className={k.punkt}>
+            <li
+              key={s.schluessel}
+              className={[
+                'schritte-punkt',
+                hier ? 'ist-hier' : '',
+                erledigt ? 'ist-fertig' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
               <button
                 type="button"
                 /*
@@ -248,24 +257,24 @@ export function Schrittformular({
                  */
                 disabled={i > erreicht}
                 aria-current={hier ? 'step' : undefined}
-                className={[k.marke, hier ? k.markeHier : '', erledigt ? k.markeFertig : '']
-                  .filter(Boolean)
-                  .join(' ')}
+                className="schritte-marke"
                 onClick={() => i <= erreicht && wechseln(i)}
               >
-                <span className={k.nummer} aria-hidden="true">
+                {/* Der Haken sagt „erledigt" — vorgelesen wird die Nummer
+                    ohnehin nicht, dafür steht die Ansage unten. */}
+                <span className="schritte-nummer" aria-hidden="true">
                   {erledigt ? '✓' : i + 1}
                 </span>
-                <span className={k.markeText}>{s.titel}</span>
+                <span className="schritte-text">{s.titel}</span>
               </button>
             </li>
           )
         })}
       </ol>
 
-      {/* Am Telefon ist in der Leiste kein Platz für Wörter — dort steht der
-          Name des Schrittes hier, und der Fortschritt gleich dazu. */}
-      <p className={k.zaehler} aria-live="polite">
+      {/* Sichtbar wäre das doppelt gemoppelt — die Leiste sagt dasselbe,
+          nur schneller. Vorgelesen werden muss es trotzdem. */}
+      <p className="schritte-ansage" aria-live="polite">
         Schritt {jetzt + 1} von {sichtbar.length}
         {sichtbar[jetzt] ? ` — ${sichtbar[jetzt].titel}` : ''}
       </p>
@@ -322,26 +331,18 @@ export function Schrittformular({
 }
 
 /*
- * Die Klassen — der einzige Unterschied zwischen Shop und Büro.
+ * Was Shop und Büro unterschiedlich machen: Knöpfe und Meldungen.
  *
- * Das Büro bringt keine Tailwind-Grundregeln mit, sein Aussehen steht in
- * `office.css`. Der Shop nimmt dieselben Bausteine wie der Rest der Seite.
+ * Die Leiste selbst nicht — deren Form steht in `schritte.css` und gilt für
+ * beide; nur die Farben kommen aus der jeweiligen Welt. Ein Kreis ist ein
+ * Kreis, und zweimal dieselbe Anordnung zu pflegen hieße, dass eine der
+ * beiden zurückbleibt.
  *
  * `min-w-0` beim Feld ist kein Zierrat: Ein `fieldset` hat von Haus aus
  * `min-width: min-content` und sprengt damit jedes Raster, in dem etwas
  * Breites steht — eine lange Zeile, eine Tabelle, ein Bild.
  */
 const SHOP = {
-  leiste: 'border-line mb-4 flex flex-wrap gap-x-1 gap-y-2 border-b pb-3',
-  punkt: 'flex items-center',
-  marke:
-    'text-ink-soft tracking-nav flex items-center gap-2 px-2 py-1 text-xs uppercase disabled:opacity-40',
-  markeHier: 'text-ink font-semibold',
-  markeFertig: 'text-ink',
-  nummer:
-    'border-line flex h-5 w-5 items-center justify-center rounded-full border text-[10px] leading-none',
-  markeText: 'hidden sm:inline',
-  zaehler: 'text-ink-soft mb-5 text-xs sm:hidden',
   feld: 'm-0 min-w-0 border-0 p-0',
   fehler: 'text-accent mt-4 text-sm',
   knoepfe: 'mt-8 flex flex-wrap items-center gap-3',
@@ -350,14 +351,6 @@ const SHOP = {
 }
 
 const BUERO = {
-  leiste: 'buero-schrittleiste',
-  punkt: '',
-  marke: 'buero-schrittmarke',
-  markeHier: 'ist-hier',
-  markeFertig: 'ist-fertig',
-  nummer: 'buero-schrittnummer',
-  markeText: 'buero-schritttext',
-  zaehler: 'buero-schrittzaehler',
   feld: 'buero-schrittfeld',
   fehler: 'buero-hinweis warn',
   knoepfe: 'buero-schrittknoepfe',
