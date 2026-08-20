@@ -644,8 +644,27 @@
     box-shadow: 0 6px 22px rgb(0 0 0 / 14%);
   }
 
-  .buero-fussleiste > .buero-knopf {
-    flex: 1 1 100%;
+  /*
+   * Die **eine** Hauptaktion über die volle Breite. Alles Übrige ist am Handy
+   * ins Blatt hinter „⋯" gewandert (siehe `Fussleiste.tsx`) — hier bleibt
+   * deshalb nichts mehr zu stapeln.
+   */
+  .buero-fussleiste > .buero-knopf:not(.buero-mehr-knopf) {
+    flex: 1 1 auto;
+  }
+
+  /* Der „⋯"-Knopf nimmt nur, was er braucht */
+  .buero-mehr-knopf {
+    flex: 0 0 auto;
+    min-width: 3rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    letter-spacing: 0.1em;
+  }
+
+  /* Am Rechner stünden sie nebeneinander — am Handy stehen sie im Blatt */
+  .buero-fussleiste > .buero-nebensachen {
+    display: none;
   }
 
   .buero-fussleiste-hinweis {
@@ -712,7 +731,15 @@ html.tastatur-offen .buero-inhalt {
  */
 @media (max-width: 719px) {
   .buero-inhalt {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    /*
+     * So viel Luft, wie die Fußleiste wirklich hoch ist — gemeldet von ihr
+     * selbst. Vorher stand hier eine feste Zahl; bei einer Leiste mit vier
+     * Knöpfen war sie um mehr als hundert Pixel zu klein, und die letzte
+     * Zeile des Formulars lag dauerhaft darunter.
+     */
+    padding-bottom: calc(
+      var(--buero-fussleiste-hoehe, 0px) + 5.5rem + env(safe-area-inset-bottom)
+    );
   }
 }
 
@@ -1844,5 +1871,40 @@ html.tastatur-offen .buero-inhalt {
   }
   .buero-schreibfeld .ql-editor {
     min-height: 11rem;
+  }
+}
+
+/* ── Nebensachen der Fußleiste ─────────────────────────────────────────────
+   Am Rechner stehen sie neben der Hauptaktion, am Handy im Blatt dahinter.
+   Zwei Fassungen desselben Knopfes wären doppelte Pflege — einer, den das
+   Stylesheet je nach Breite an der einen oder anderen Stelle zeigt, nicht. */
+
+.buero-nebensachen {
+  display: contents;
+}
+
+/* Im Blatt bekommt jede Aktion eine eigene Zeile: Dort ist Platz, und getippt
+   wird mit dem Daumen. */
+.buero-blatt-aktionen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.buero-blatt-aktionen .buero-knopf {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 719px) {
+  .buero-mehr-knopf {
+    display: inline-flex;
+  }
+}
+
+/* Am Rechner gibt es kein Blatt und also auch keinen Knopf, der eines öffnet */
+@media (min-width: 720px) {
+  .buero-mehr-knopf {
+    display: none;
   }
 }
