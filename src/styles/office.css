@@ -1725,3 +1725,18 @@ html.tastatur-offen .buero-inhalt {
 .buero-ruecken:hover {
   text-decoration: underline;
 }
+
+/*
+ * In einer Übersicht ist der Hinweis eine Andeutung, kein Absatz.
+ *
+ * Ungekürzt wuchsen zwölf Zeilen auf fast zwei Bildschirmhöhen an — und
+ * ausgerechnet die Übersicht, die das Suchen ersparen soll, musste man
+ * durchscrollen. Ganze Sätze stehen weiterhin da, wo man sie braucht: im
+ * Bereich selbst.
+ */
+.buero-zeile-neben.knapp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
