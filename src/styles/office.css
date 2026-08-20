@@ -63,6 +63,18 @@
 }
 
 .buero {
+  /*
+   * Der Browser gibt dem Körper von sich aus 8 Pixel Rand.
+   *
+   * Auf der Website nimmt Tailwind ihn weg, das Büro bringt sein eigenes
+   * Stylesheet mit und hatte ihn deshalb noch — genau wie damals beim
+   * `box-sizing` ein paar Zeilen weiter oben. Zu sehen war er als schmaler
+   * Streifen in Hintergrundfarbe oben und an beiden Seiten: Die Kopfleiste
+   * klebt zwar bei `top: 0`, saß aber 8 Pixel tiefer und 8 Pixel schmaler
+   * als der Bildschirm. Am Handy fällt das auf, sobald man ganz nach oben
+   * scrollt.
+   */
+  margin: 0;
   min-height: 100vh;
   background: var(--buero-papier);
   color: var(--buero-tinte);
@@ -101,6 +113,79 @@
 
 .buero-marke .buero-marke-zusatz {
   color: var(--buero-bronze);
+}
+
+/* ── Name der Seite in der Kopfleiste (nur Handy) ─────────────────────────
+   Steht dort, wo am Rechner der Schriftzug steht. Lange Namen werden
+   abgeschnitten statt umgebrochen — eine zweizeilige Kopfleiste wäre genau
+   das, was hier abgeschafft werden sollte. */
+.buero-kopftitel {
+  display: none;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Abgleich als Punkt ───────────────────────────────────────────────────
+   Immer an derselben Stelle, kostet keine Zeile. Die Farbe sagt die Art, das
+   Antippen den Klartext — auf einem Handy gibt es kein Überfahren mit der
+   Maus. */
+.buero-abgleichpunkt-huelle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.buero-abgleichpunkt {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Die Fläche zum Antippen ist 44 Pixel, der Punkt darin 10 — bedient wird das
+   mit dem Daumen, gesehen werden soll ein Punkt und kein Knopf. */
+.buero-abgleichpunkt::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--buero-tinte-leise);
+}
+
+.buero-abgleichpunkt.ist-wartet::after,
+.buero-abgleichpunkt.ist-haengt::after {
+  background: var(--buero-bronze);
+}
+
+.buero-abgleichpunkt.ist-abgelehnt::after {
+  background: var(--buero-rot);
+}
+
+.buero-abgleichpunkt-text {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 21;
+  width: max-content;
+  max-width: min(19rem, 80vw);
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten, 0 6px 22px rgb(0 0 0 / 14%));
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
 .nur-schmal {
@@ -470,6 +555,16 @@
   gap: 0.4rem;
 }
 
+/* „Abmelden" steht im Blatt „Sonstiges" unter den Punkten, abgesetzt durch
+   eine Linie: Es ist keine Seite, sondern das Ende der Sitzung. */
+.buero-blatt-abmelden {
+  margin-top: 0.6rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--buero-linie);
+  display: flex;
+  justify-content: flex-start;
+}
+
 .buero-blatt-punkte a {
   display: flex;
   align-items: center;
@@ -501,6 +596,23 @@
 @media (max-width: 719px) {
   .buero-nav,
   .buero .buero-nur-breit {
+    display: none;
+  }
+
+  .buero-kopftitel {
+    display: block;
+  }
+
+  /* Die Überschrift steht jetzt oben in der Leiste — im Inhalt wäre sie
+     dieselbe Zeile ein zweites Mal. Ausgeblendet wird sie erst, wenn der
+     Name oben wirklich angekommen ist (`titel-oben` setzt `Kopftitel`);
+     ohne Skript bleibt sie stehen, wo sie war.
+
+     Ohne Kindschafts-Zeichen, weil die Überschrift nicht überall direkt im
+     Inhalt steht: Fünf von sieben Seiten packen sie mit ihrer Unterzeile in
+     ein eigenes Kästchen. Mit `>` blieb sie dort stehen und stand doppelt.
+     Nachgezählt: Jede Seite hat genau eine. */
+  html.titel-oben .buero-inhalt h1 {
     display: none;
   }
 

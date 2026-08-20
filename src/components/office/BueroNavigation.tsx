@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRahmen } from '../../lib/buero/bestand'
+import { Abmelden } from './Abmelden'
 
 /**
  * Navigation im Büro.
@@ -535,6 +536,13 @@ export function BueroNavigation() {
                   {p.label}
                 </Link>
               ))}
+              {/* Abmelden steht am Handy hier, weil oben in der Leiste kein
+                  Platz dafür ist — sie trägt dort den Namen der Seite. */}
+              {offenesBlatt === 'Sonstiges' && (
+                <div className="buero-blatt-abmelden">
+                  <Abmelden />
+                </div>
+              )}
             </div>
           </div>
         </>

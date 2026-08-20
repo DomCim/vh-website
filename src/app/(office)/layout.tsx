@@ -3,10 +3,12 @@ import Link from 'next/link'
 import React from 'react'
 
 import { AbgleichLeiste } from '../../components/office/AbgleichLeiste'
+import { Abgleichpunkt } from '../../components/office/Abgleichpunkt'
 import { AdminVerweis } from '../../components/office/AdminVerweis'
 import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
+import { Kopftitel } from '../../components/office/Kopftitel'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import { Tastaturwache } from '../../components/office/Tastaturwache'
 import '../../styles/office.css'
@@ -47,19 +49,32 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
         <Tastaturwache />
         <BestandAnbieter />
         <AbgleichLeiste />
+        {/*
+          * Die Kopfleiste sagt am Handy, wo man ist — am Rechner, wo man ist.
+          *
+          * Dort trägt sie den Schriftzug: Der Bildschirm ist breit genug, und
+          * die Navigation steht ohnehin darunter. Am Handy ist der Platz zu
+          * knapp für Zierde — der Schriftzug verlinkte zur Übersicht, die
+          * unten der erste Tab ist, und „Abmelden" braucht man selten. Statt
+          * dessen steht dort der Name der offenen Seite (`Kopftitel`), und
+          * „Abmelden" ist ins Blatt „Sonstiges" gewandert.
+          */}
         <header className="buero-kopf">
-          <Link href="/office" className="buero-marke">
+          <Link href="/office" className="buero-marke buero-nur-breit">
             {/* Auf schmalen Geräten reicht das Kürzel — der volle Name
                 bräuchte dort drei Zeilen. */}
             <span className="nur-breit">Vincent Hellmann </span>
             <span className="nur-schmal">VH </span>
             <span className="buero-marke-zusatz">Büro</span>
           </Link>
+          <Kopftitel />
           <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
-            {/* Am Handy steht der Verweis im Blatt hinter „Mehr" — oben wäre
-                daneben kein Platz für Marke und Abmelden */}
+            <Abgleichpunkt />
+            {/* Beide nur am Rechner: Am Handy stehen sie im Blatt „Sonstiges" */}
             <AdminVerweis />
-            <Abmelden />
+            <span className="buero-nur-breit">
+              <Abmelden />
+            </span>
           </div>
         </header>
         <BueroNavigation />
