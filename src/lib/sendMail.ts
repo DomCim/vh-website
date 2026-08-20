@@ -4,6 +4,7 @@ import path from 'path'
 import nodemailer from 'nodemailer'
 import type { Payload } from 'payload'
 
+import { dkimFuer } from './dkim'
 import { benachrichtige } from './push'
 import { getIntegrations } from './settings'
 
@@ -91,6 +92,10 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
     return
   }
 
+  const dkim = dkimFuer(email.fromAddress, undefined, email.dkim, (grund) =>
+    payload.logger.warn({ absender: email.fromAddress }, grund),
+  )
+
   const transport = nodemailer.createTransport({
     host: email.smtpHost,
     port: email.smtpPort,
@@ -100,9 +105,11 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
      * DKIM unterschreibt die Mail, damit sie nicht im Spam landet. Nodemailer
      * kann das von Haus aus; hinterlegt wird es im Admin unter Integrationen.
      * Ohne vollständige Angaben bleibt das Feld leer und es wird wie bisher
-     * unsigniert verschickt.
+     * unsigniert verschickt. Passt die hinterlegte Domain nicht zur
+     * Absenderadresse, wird ebenfalls nicht signiert — eine Unterschrift im
+     * Namen einer fremden Domain zählt beim Empfänger nicht (siehe `dkim.ts`).
      */
-    ...(email.dkim ? { dkim: email.dkim } : {}),
+    ...(dkim ? { dkim } : {}),
   })
 
   // Das Logo reist als Anhang mit — nachgeladene Bilder blockieren die

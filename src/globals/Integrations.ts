@@ -94,7 +94,7 @@ export const Integrations: GlobalConfig = {
           type: 'group',
           admin: {
             description:
-              'Signiert ausgehende Mails, damit sie nicht im Spam landen. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.',
+              'Signiert ausgehende Mails, damit sie nicht im Spam landen — die der Website und die Antworten aus den Postfächern weiter unten, sofern deren Adresse auf dieser Domain liegt. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.',
           },
           fields: [
             {
@@ -293,6 +293,54 @@ export const Integrations: GlobalConfig = {
               label: 'Passwort',
               type: 'text',
               admin: { components: { Field: '/components/admin/GeheimFeld#GeheimFeld' } },
+            },
+          ],
+        },
+        {
+          /*
+           * Eigene Unterschrift für dieses Postfach.
+           *
+           * Der Normalfall braucht das nicht: Steht die Adresse auf derselben
+           * Domain wie die allgemeine DKIM-Angabe oben, wird die genommen.
+           * Nötig wird es, wenn ein Postfach auf einer anderen Domain liegt —
+           * eine Mail von einer .fr-Adresse mit dem .com-Schlüssel zu
+           * unterschreiben nützt nichts, weil DMARC verlangt, dass Absender
+           * und signierende Domain zusammenpassen.
+           */
+          name: 'dkim',
+          label: 'Eigene DKIM-Signatur (optional)',
+          type: 'group',
+          admin: {
+            description:
+              'Nur nötig, wenn dieses Postfach auf einer anderen Domain liegt als die allgemeine DKIM-Angabe oben. Leer = die allgemeine wird verwendet, sofern die Domain zur Adresse passt.',
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'domain',
+                  label: 'Domain',
+                  type: 'text',
+                  admin: { description: 'Die Domain der Adresse dieses Postfachs' },
+                },
+                {
+                  name: 'selector',
+                  label: 'Selector',
+                  type: 'text',
+                  admin: { description: 'Name des DNS-Eintrags, z.B. „vh"' },
+                },
+              ],
+            },
+            {
+              name: 'privateKey',
+              label: 'Privater Schlüssel (PEM)',
+              type: 'textarea',
+              admin: {
+                description:
+                  'Beginnt mit -----BEGIN. Der öffentliche Schlüssel muss im DNS dieser Domain stehen.',
+                components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+              },
             },
           ],
         },

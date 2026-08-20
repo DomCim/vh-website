@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { type DkimAngaben, dkimAus } from './dkim'
+
 /**
  * Ein Postfach, das im Büro gelesen wird.
  *
@@ -23,6 +25,8 @@ export type MailboxKonfiguration = {
   smtpPort?: number
   smtpUser?: string
   smtpPass?: string
+  /** Eigene Unterschrift — leer heißt: die allgemeine, falls sie zur Adresse passt */
+  dkim?: DkimAngaben
 }
 
 export type ResolvedIntegrations = {
@@ -35,7 +39,7 @@ export type ResolvedIntegrations = {
     fromName: string
     notificationEmail?: string
     /** Nur gesetzt, wenn alle drei Angaben da sind — halb signiert gibt es nicht */
-    dkim?: { domainName: string; keySelector: string; privateKey: string }
+    dkim?: DkimAngaben
   }
   mailboxes: MailboxKonfiguration[]
   paypal: {
@@ -77,9 +81,11 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
   }
 
   const smtpPort = val(doc?.email?.smtpPort, process.env.SMTP_PORT)
-  const dkimDomain = val(doc?.email?.dkim?.domain, process.env.DKIM_DOMAIN)
-  const dkimSelector = val(doc?.email?.dkim?.selector, process.env.DKIM_SELECTOR)
-  const dkimSchluessel = val(doc?.email?.dkim?.privateKey, process.env.DKIM_PRIVATE_KEY)
+  const dkim = dkimAus(
+    val(doc?.email?.dkim?.domain, process.env.DKIM_DOMAIN),
+    val(doc?.email?.dkim?.selector, process.env.DKIM_SELECTOR),
+    val(doc?.email?.dkim?.privateKey, process.env.DKIM_PRIVATE_KEY),
+  )
 
   return {
     email: {
@@ -90,14 +96,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromAddress: val(doc?.email?.fromAddress, process.env.EMAIL_FROM) || 'noreply@localhost',
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
-      /*
-       * Alles oder nichts: Fehlt eine der drei Angaben, wird nicht signiert.
-       * Eine unvollständige Signatur schlägt beim Empfänger fehl und schadet
-       * mehr als gar keine — dann sieht die Mail nach einer Fälschung aus.
-       */
-      dkim: dkimDomain && dkimSelector && dkimSchluessel
-        ? { domainName: dkimDomain, keySelector: dkimSelector, privateKey: dkimSchluessel }
-        : undefined,
+      dkim,
     },
     mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])
       .filter((m) => m?.imapHost && m?.user && m?.pass && m?.address)
@@ -118,6 +117,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
         smtpPort: m.smtpPort ? Number(m.smtpPort) : undefined,
         smtpUser: m.smtpUser || undefined,
         smtpPass: m.smtpPass || undefined,
+        dkim: dkimAus(m.dkim?.domain, m.dkim?.selector, m.dkim?.privateKey),
       })),
     paypal: {
       clientId: val(doc?.paypal?.clientId, process.env.PAYPAL_CLIENT_ID),

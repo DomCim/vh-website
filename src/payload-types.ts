@@ -3148,6 +3148,23 @@ export interface Integration {
         smtpPort?: number | null;
         smtpUser?: string | null;
         smtpPass?: string | null;
+        /**
+         * Nur nötig, wenn dieses Postfach auf einer anderen Domain liegt als die allgemeine DKIM-Angabe oben. Leer = die allgemeine wird verwendet, sofern die Domain zur Adresse passt.
+         */
+        dkim?: {
+          /**
+           * Die Domain der Adresse dieses Postfachs
+           */
+          domain?: string | null;
+          /**
+           * Name des DNS-Eintrags, z.B. „vh"
+           */
+          selector?: string | null;
+          /**
+           * Beginnt mit -----BEGIN. Der öffentliche Schlüssel muss im DNS dieser Domain stehen.
+           */
+          privateKey?: string | null;
+        };
         id?: string | null;
       }[]
     | null;
@@ -3475,6 +3492,13 @@ export interface IntegrationsSelect<T extends boolean = true> {
         smtpPort?: T;
         smtpUser?: T;
         smtpPass?: T;
+        dkim?:
+          | T
+          | {
+              domain?: T;
+              selector?: T;
+              privateKey?: T;
+            };
         id?: T;
       };
   paypal?:
