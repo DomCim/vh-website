@@ -75,6 +75,10 @@ const VORRAT = [
   '/office/auslastung',
   '/office/nachbestellen',
   '/office/unterlagen',
+  // Die Übergabemappen: Die Liste hilft auch ohne Netz („welche Mappe hat der
+  // Kunde?"); Link erzeugen und Hochladen brauchen ohnehin eine Verbindung.
+  '/office/uebergabe',
+  '/office/uebergabe/_',
   '/office/nachkalkulation',
   '/office/wiedervorlagen',
   '/office/einstellungen',

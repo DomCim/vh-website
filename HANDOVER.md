@@ -315,6 +315,67 @@ zurück; der KI-Zugang (`produkt_varianten_setzen`) nimmt zusätzlich eine
 
 ---
 
+## Übergabemappe (`customer-uploads`)
+
+Der Weg, auf dem Unterlagen mit der Kundschaft hin und her gehen — gebaut für
+Lohnfertigung, wo die Daten **vor** der Entscheidung kommen.
+
+**Sie hängt an einem Menschen, nicht in der Luft.** Die Schnittstelle verlangt
+beim Anlegen einen Geschäftspartner oder eine Anfrage; die Bezeichnung entsteht
+daraus (`mappenTitel`). Angebot und Auftrag kommen später dazu. Alle Anker der
+Mappe werden beim Hochladen an die Datei kopiert — so steht die Zeichnung
+später am Auftrag und nicht nur in einer Mappe, an die sich niemand erinnert.
+
+**Zugang.** Kennung (24 zufällige Bytes) in der Adresse, dazu ein Passwort aus
+acht Zeichen ohne `I l O 0 1` — eines zum Durchsagen. Verwahrt wird es mit
+`scrypt` samt eigenem Salz (`scrypt$salz$abdruck`); im Klartext steht es
+**einmal** in der Antwort ans Büro und danach nirgends. Sieben Tage Gültigkeit,
+mehrere Zugänge je Mappe (der zweite Link nimmt dem ersten nichts). Nach dem
+Passwort trägt der Besucher ein signiertes Cookie für genau diese Mappe, das
+nie länger lebt als der Zugang. Zehn Fehlversuche je Viertelstunde und Adresse.
+Nach außen sind „gibt es nicht", „abgelaufen" und „zurückgezogen" **dieselbe**
+Antwort — sonst verrät der Fehlercode, welche Kennungen existieren.
+
+**Beide Richtungen.** `product-files.herkunft` sagt, wer die Datei abgelegt
+hat; `freigabe` sagt, ob der Auftraggeber sie sehen darf. `fuerKunden()` fasst
+beides zusammen: eigene immer, fremde nur nach ausdrücklicher Freigabe.
+Gespeichert ist voreingestellt **nicht freigegeben**; die Mappenansicht setzt
+das Häkchen beim Hochladen sichtbar auf „ja", weil man dort in den Ordner des
+Auftraggebers legt — abwählbar, bevor etwas hinausgeht.
+
+**500 MB je Datei, mehrere auf einmal.** Der übliche Weg (`req.formData()` →
+`Buffer` → Payload) hielte die Datei zweimal vollständig im Speicher. Deshalb:
+Die Datei kommt **unverpackt** als Rumpf der Anfrage, Name und Ordner stehen in
+der Adresszeile; `stromAblegen()` schreibt sie stückweise nach
+`media/werkstattdateien`, und erst danach entsteht der Datensatz mit
+`filename`, `mimeType` und `filesize` von Hand gesetzt (`dateiEintragen()`).
+Das umgeht Payloads Upload-Verarbeitung bewusst — die läse die Datei erneut
+komplett ein (`getFileByPath`) und hat bei Zeichnungen ohnehin nichts zu tun.
+Hooks, Live-Meldungen und das Löschen der Datei beim Löschen des Datensatzes
+laufen unverändert, denn der Datensatz entsteht normal über `payload.create`.
+Der Browser schickt die Auswahl **nacheinander** (`auswahlSenden`), mit
+Fortschrittsbalken je Datei; `fetch` meldet keinen Fortschritt, deshalb XHR.
+
+**Erlaubt ist eine Liste, nicht eine Ausschlussliste** (`dateigrenzen.ts`).
+Der Ordner steht im Netz; `html`, `svg` und ausführbare Dateien fehlen mit
+Absicht. Was nicht draufsteht, wird mit dem Hinweis „bitte als ZIP packen"
+abgelehnt. `dateiName()` macht aus keinem Namen einen Pfad
+(`../../etc/passwd` → `passwd`).
+
+**Wichtig beim Ausrollen:** Der Reverse Proxy muss 500 MB durchlassen — Nginx
+Proxy Manager steht standardmäßig weit darunter, und dann endet der Upload mit
+413, bevor irgendetwas hier ankommt. Die Dateien liegen im bestehenden
+Medien-Volume, das die nächtliche Sicherung mitnimmt; sie wird dadurch
+wachsen.
+
+Dateien: `lib/uebergabe.ts` (Zugang, Passwort, Sitzung), `lib/dateigrenzen.ts`
+(Grenzen, auch im Browser), `lib/dateiAblage.ts` (Strom auf die Platte),
+`lib/mappenZugang.ts` (Kennung → Mappe), `lib/hochladen.ts` (Browser),
+`collections/CustomerUploads.ts`, Büro unter `/office/uebergabe`, öffentlich
+unter `/[locale]/uebergabe/[token]`.
+
+---
+
 ## Offen
 
 1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit

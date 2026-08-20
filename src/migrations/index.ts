@@ -40,6 +40,7 @@ import * as migration_20260819_201353_variantendienste_bestandsverlauf from './2
 import * as migration_20260819_202917_nachbestellung from './20260819_202917_nachbestellung';
 import * as migration_20260819_204824_wareneingang from './20260819_204824_wareneingang';
 import * as migration_20260819_233212_werkstattdateien from './20260819_233212_werkstattdateien';
+import * as migration_20260820_092646_uebergabemappen from './20260820_092646_uebergabemappen';
 
 export const migrations = [
   {
@@ -250,6 +251,11 @@ export const migrations = [
   {
     up: migration_20260819_233212_werkstattdateien.up,
     down: migration_20260819_233212_werkstattdateien.down,
-    name: '20260819_233212_werkstattdateien'
+    name: '20260819_233212_werkstattdateien',
+  },
+  {
+    up: migration_20260820_092646_uebergabemappen.up,
+    down: migration_20260820_092646_uebergabemappen.down,
+    name: '20260820_092646_uebergabemappen'
   },
 ];

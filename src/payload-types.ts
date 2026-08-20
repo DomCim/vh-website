@@ -86,6 +86,7 @@ export interface Config {
     'inventory-items': InventoryItem;
     'goods-receipts': GoodsReceipt;
     'product-files': ProductFile;
+    'customer-uploads': CustomerUpload;
     stocktakes: Stocktake;
     'follow-ups': FollowUp;
     'workshop-weeks': WorkshopWeek;
@@ -124,6 +125,7 @@ export interface Config {
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     'goods-receipts': GoodsReceiptsSelect<false> | GoodsReceiptsSelect<true>;
     'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
+    'customer-uploads': CustomerUploadsSelect<false> | CustomerUploadsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
     'follow-ups': FollowUpsSelect<false> | FollowUpsSelect<true>;
     'workshop-weeks': WorkshopWeeksSelect<false> | WorkshopWeeksSelect<true>;
@@ -1248,7 +1250,13 @@ export interface GoodsReceipt {
  */
 export interface ProductFile {
   id: number;
-  product: number | Product;
+  product?: (number | null) | Product;
+  mappe?: (number | null) | CustomerUpload;
+  anfrage?: (number | null) | Inquiry;
+  angebot?: (number | null) | Quote;
+  auftrag?: (number | null) | Job;
+  herkunft?: ('haus' | 'kunde') | null;
+  freigabe?: boolean | null;
   variantId?: string | null;
   /**
    * Nur zur Anzeige — maßgeblich ist die Kennung.
@@ -1271,6 +1279,59 @@ export interface ProductFile {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-uploads".
+ */
+export interface CustomerUpload {
+  id: number;
+  /**
+   * Leer = aus Geschäftspartner und Anfrage gebildet.
+   */
+  title?: string | null;
+  /**
+   * Woran die Mappe hängt — hier oder eine Anfrage.
+   */
+  contact?: (number | null) | Contact;
+  /**
+   * Dorthin geht der Link.
+   */
+  email?: string | null;
+  folders?:
+    | {
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wird beim Erzeugen eines Links gefüllt.
+   */
+  zugaenge?:
+    | {
+        token?: string | null;
+        /**
+         * Salz und Abdruck — das Passwort selbst steht nirgends.
+         */
+        passwort?: string | null;
+        erzeugtAm?: string | null;
+        gueltigBis?: string | null;
+        anEmail?: string | null;
+        zuletztGenutzt?: string | null;
+        zurueckgezogen?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  anfrage?: (number | null) | Inquiry;
+  angebot?: (number | null) | Quote;
+  auftrag?: (number | null) | Job;
+  /**
+   * Es kann nichts mehr hochgeladen werden; Ansehen bleibt möglich.
+   */
+  geschlossen?: boolean | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1639,6 +1700,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'product-files';
         value: number | ProductFile;
+      } | null)
+    | ({
+        relationTo: 'customer-uploads';
+        value: number | CustomerUpload;
       } | null)
     | ({
         relationTo: 'stocktakes';
@@ -2330,6 +2395,12 @@ export interface GoodsReceiptsSelect<T extends boolean = true> {
  */
 export interface ProductFilesSelect<T extends boolean = true> {
   product?: T;
+  mappe?: T;
+  anfrage?: T;
+  angebot?: T;
+  auftrag?: T;
+  herkunft?: T;
+  freigabe?: T;
   variantId?: T;
   variantTitle?: T;
   folder?: T;
@@ -2346,6 +2417,40 @@ export interface ProductFilesSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-uploads_select".
+ */
+export interface CustomerUploadsSelect<T extends boolean = true> {
+  title?: T;
+  contact?: T;
+  email?: T;
+  folders?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
+  zugaenge?:
+    | T
+    | {
+        token?: T;
+        passwort?: T;
+        erzeugtAm?: T;
+        gueltigBis?: T;
+        anEmail?: T;
+        zuletztGenutzt?: T;
+        zurueckgezogen?: T;
+        id?: T;
+      };
+  anfrage?: T;
+  angebot?: T;
+  auftrag?: T;
+  geschlossen?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

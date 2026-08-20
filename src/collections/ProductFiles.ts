@@ -56,14 +56,121 @@ export const ProductFiles: CollectionConfig = {
     staticDir: 'media/werkstattdateien',
     // Keine Bildgrößen: Eine Fräsdatei ist kein Bild und wird nicht angefasst.
     disableLocalStorage: false,
+    /*
+     * Der Datensatz darf ohne beigelegte Datei entstehen.
+     *
+     * Nicht, weil Einträge ohne Datei erwünscht wären — sondern weil große
+     * Dateien einen anderen Weg gehen: Sie werden stückweise in diesen Ordner
+     * geschrieben und der Datensatz danach mit `filename`, `mimeType` und
+     * `filesize` von Hand angelegt (siehe `lib/dateiAblage.ts`). Payloads
+     * eigener Weg läse eine 500-MB-Zeichnung komplett in den Arbeitsspeicher,
+     * und zwar zweimal.
+     *
+     * Die Schnittstellen legen nie einen Eintrag an, bevor die Datei liegt;
+     * scheitert das Anlegen, wird die Datei wieder weggeräumt.
+     */
+    filesRequiredOnCreate: false,
   },
   fields: [
     {
+      /*
+       * Woran die Datei hängt — genau eines davon.
+       *
+       * Am Anfang war das immer ein Artikel: die Laserdatei zur eigenen
+       * Variante. Bei Lohnfertigung gibt es aber keinen Artikel — dort gehört
+       * die Zeichnung an den Vorgang, und zwar schon bevor es einen Auftrag
+       * gibt. Deshalb sind alle Anker freiwillig; die Schnittstelle besteht
+       * darauf, dass einer gesetzt ist.
+       */
       name: 'product',
       label: 'Artikel',
       type: 'relationship',
       relationTo: 'products',
-      required: true,
+      index: true,
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'mappe',
+          label: 'Übergabemappe',
+          type: 'relationship',
+          relationTo: 'customer-uploads',
+          index: true,
+        },
+        {
+          name: 'anfrage',
+          label: 'Anfrage',
+          type: 'relationship',
+          relationTo: 'inquiries',
+          index: true,
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'angebot',
+          label: 'Angebot',
+          type: 'relationship',
+          relationTo: 'quotes',
+          index: true,
+        },
+        {
+          name: 'auftrag',
+          label: 'Auftrag',
+          type: 'relationship',
+          relationTo: 'jobs',
+          index: true,
+        },
+      ],
+    },
+    {
+      /*
+       * Wer die Datei abgelegt hat.
+       *
+       * „Kunde" heißt: Sie kam über einen Übergabelink herein. Das gehört
+       * sichtbar dazu — eine Zeichnung vom Auftraggeber ist etwas anderes als
+       * eine, die im Haus entstanden ist, und bei Rückfragen zählt der
+       * Unterschied.
+       */
+      name: 'herkunft',
+      label: 'Herkunft',
+      type: 'select',
+      defaultValue: 'haus',
+      options: [
+        { label: 'Aus dem Haus', value: 'haus' },
+        { label: 'Vom Auftraggeber', value: 'kunde' },
+      ],
+    },
+    {
+      /*
+       * Darf der Auftraggeber diese Datei über seinen Link herunterladen?
+       *
+       * Die Übergabemappe geht in beide Richtungen: Hinein legt der
+       * Auftraggeber seine Zeichnungen, heraus gehen Fertigungszeichnung zur
+       * Freigabe, Prüfprotokoll, Messschrieb, das unterschriebene Angebot.
+       *
+       * Gespeichert ist voreingestellt **nein**: Was im Haus entsteht, ist
+       * erst einmal Hausarbeit — Kalkulationsblatt, Zwischenstand, Notiz. Eine
+       * Datei, die still freigegeben wird, weil sie zufällig an einer Mappe
+       * hängt, ist genau der Weg, auf dem irgendwann der falsche
+       * Zwischenstand beim Kunden liegt.
+       *
+       * In der Mappenansicht steht das Häkchen beim Hochladen trotzdem
+       * angekreuzt — wer eine Datei in den Ordner **des Auftraggebers** legt,
+       * will sie in aller Regel dort haben. Das ist keine stille
+       * Voreinstellung: Das Kästchen steht sichtbar neben dem Knopf und lässt
+       * sich abwählen, bevor das erste Byte hinausgeht.
+       *
+       * Was der Auftraggeber selbst hochgeladen hat, sieht er ohnehin —
+       * dafür braucht es dieses Häkchen nicht (siehe `fuerKunden`).
+       */
+      name: 'freigabe',
+      label: 'Für den Auftraggeber sichtbar',
+      type: 'checkbox',
+      defaultValue: false,
       index: true,
     },
     {

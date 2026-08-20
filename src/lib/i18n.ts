@@ -186,6 +186,33 @@ const de = {
     quoteDeclined: 'abgelehnt',
     acceptError: 'Das hat nicht geklappt. Bitte erneut versuchen oder kurz anrufen.',
   },
+  handover: {
+    title: 'Unterlagen',
+    /* Kein Wort von „Upload": Wer hier landet, hat einen Link bekommen und
+       will wissen, wo er ist und was er tun soll. */
+    intro:
+      'Hier tauschen wir die Unterlagen zu Ihrem Vorgang aus. Legen Sie Ihre Zeichnungen und Dateien ab — und laden Sie herunter, was wir für Sie bereitgestellt haben.',
+    password: 'Passwort',
+    open: 'Ordner öffnen',
+    opening: 'wird geöffnet …',
+    denied: 'Link oder Passwort stimmen nicht — oder der Zugang ist abgelaufen.',
+    tooMany: 'Zu viele Versuche. Bitte in einer Viertelstunde erneut probieren.',
+    fromYou: 'Von Ihnen',
+    fromUs: 'Von uns bereitgestellt',
+    choose: 'Dateien auswählen',
+    chooseHint: 'Mehrere auf einmal möglich, bis 500 MB je Datei.',
+    kinds: 'Zeichnungen, CAD-Dateien, PDF, Bilder und ZIP-Archive.',
+    uploading: 'wird übertragen …',
+    uploaded: 'übertragen',
+    failed: 'nicht übertragen',
+    empty: 'Hier liegt noch nichts.',
+    download: 'Herunterladen',
+    closed: 'Dieser Ordner nimmt nichts mehr entgegen. Ansehen und Herunterladen geht weiter.',
+    newFolder: 'Neuer Ordner',
+    add: 'Anlegen',
+    noFolder: 'Ohne Ordner',
+    error: 'Das hat nicht geklappt. Bitte erneut versuchen.',
+  },
   orderStatus: {
     title: 'Ihre Bestellung',
     notFound: 'Diese Bestellung konnte nicht gefunden werden.',
@@ -335,7 +362,7 @@ const de = {
   },
 }
 
-type Dictionary = typeof de
+export type Dictionary = typeof de
 
 const fr: Dictionary = {
   nav: {
@@ -514,6 +541,31 @@ const fr: Dictionary = {
     acceptedNow: 'Merci — nous avons votre accord. La date vous parvient dans les prochains jours.',
     quoteDeclined: 'refusé',
     acceptError: "Cela n'a pas fonctionné. Merci de réessayer ou de nous appeler.",
+  },
+  handover: {
+    title: 'Documents',
+    intro:
+      "Nous échangeons ici les documents de votre dossier. Déposez vos plans et fichiers — et téléchargez ce que nous mettons à votre disposition.",
+    password: 'Mot de passe',
+    open: 'Ouvrir le dossier',
+    opening: 'ouverture …',
+    denied: "Le lien ou le mot de passe ne correspond pas — ou l'accès a expiré.",
+    tooMany: "Trop de tentatives. Merci de réessayer dans un quart d'heure.",
+    fromYou: 'De votre part',
+    fromUs: 'Mis à disposition par nos soins',
+    choose: 'Choisir des fichiers',
+    chooseHint: 'Plusieurs à la fois, jusqu\'à 500 Mo par fichier.',
+    kinds: 'Plans, fichiers CAO, PDF, images et archives ZIP.',
+    uploading: 'transfert en cours …',
+    uploaded: 'transféré',
+    failed: 'non transféré',
+    empty: "Rien ici pour l'instant.",
+    download: 'Télécharger',
+    closed: 'Ce dossier ne reçoit plus de fichiers. La consultation reste possible.',
+    newFolder: 'Nouveau dossier',
+    add: 'Créer',
+    noFolder: 'Sans dossier',
+    error: "Cela n'a pas fonctionné. Merci de réessayer.",
   },
   orderStatus: {
     title: 'Votre commande',
@@ -840,6 +892,31 @@ const en: Dictionary = {
     acceptedNow: 'Thank you — we have your acceptance. The date follows in the next few days.',
     quoteDeclined: 'declined',
     acceptError: 'That did not work. Please try again or give us a call.',
+  },
+  handover: {
+    title: 'Documents',
+    intro:
+      'This is where we exchange the documents for your project. Drop off your drawings and files — and download whatever we have made available for you.',
+    password: 'Password',
+    open: 'Open folder',
+    opening: 'opening …',
+    denied: 'Link or password do not match — or the access has expired.',
+    tooMany: 'Too many attempts. Please try again in fifteen minutes.',
+    fromYou: 'From you',
+    fromUs: 'Provided by us',
+    choose: 'Choose files',
+    chooseHint: 'Several at once, up to 500 MB per file.',
+    kinds: 'Drawings, CAD files, PDF, images and ZIP archives.',
+    uploading: 'uploading …',
+    uploaded: 'uploaded',
+    failed: 'not uploaded',
+    empty: 'Nothing here yet.',
+    download: 'Download',
+    closed: 'This folder no longer accepts files. Viewing and downloading still work.',
+    newFolder: 'New folder',
+    add: 'Create',
+    noFolder: 'No folder',
+    error: 'That did not work. Please try again.',
   },
   orderStatus: {
     title: 'Your order',

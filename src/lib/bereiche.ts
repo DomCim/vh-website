@@ -23,6 +23,7 @@ export const BEREICHE = {
   newsletter: 'newsletter-subscribers',
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',
+  mappen: 'customer-uploads',
   wareneingaenge: 'goods-receipts',
   werkstattdateien: 'product-files',
   werkstattwochen: 'workshop-weeks',

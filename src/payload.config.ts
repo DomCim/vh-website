@@ -22,6 +22,7 @@ import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
 import { FollowUps } from './collections/FollowUps'
 import { GoodsReceipts } from './collections/GoodsReceipts'
+import { CustomerUploads } from './collections/CustomerUploads'
 import { ProductFiles } from './collections/ProductFiles'
 import { Inquiries } from './collections/Inquiries'
 import { InventoryItems } from './collections/InventoryItems'
@@ -95,6 +96,7 @@ export default buildConfig({
     InventoryItems,
     GoodsReceipts,
     ProductFiles,
+    CustomerUploads,
     Stocktakes,
     FollowUps,
     WorkshopWeeks,

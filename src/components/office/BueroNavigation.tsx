@@ -49,6 +49,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/anfragen', label: 'Anfragen', recht: 'anfragen.bearbeiten' },
       { href: '/office/bestellungen', label: 'Bestellungen', recht: 'anfragen.bearbeiten' },
       { href: '/office/angebote', label: 'Angebote', recht: 'angebote.schreiben' },
+      { href: '/office/uebergabe', label: 'Übergabemappen', recht: 'angebote.schreiben' },
       { href: '/office/wiedervorlagen', label: 'Wiedervorlagen' },
       { href: '/office/newsletter', label: 'Newsletter', recht: 'newsletter.versenden' },
     ],
@@ -167,6 +168,14 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <path d="M6.5 3.5h7l4.5 4.5v12a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z" />
       <path d="M13.5 3.5V8H18" />
       <path d="M9 15.5h5M11.5 12.5v6" />
+    </>
+  ),
+  /* Übergabemappen: eine Mappe mit Pfeilen — Unterlagen gehen hin und her */
+  '/office/uebergabe': (
+    <>
+      <path d="M3.5 7.5a1 1 0 0 1 1-1h4l1.7 2h9.3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" />
+      <path d="M9.5 13.5h5" />
+      <path d="m12.5 11.5 2 2-2 2" />
     </>
   ),
   '/office/wiedervorlagen': (
