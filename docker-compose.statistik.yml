@@ -171,19 +171,24 @@ services:
     networks:
       - statistik
     healthcheck:
-      # Gefragt wird ClickHouse mit seinem eigenen Werkzeug, nicht über HTTP mit
-      # `wget`. Zwei Gründe, und der zweite ist der wichtigere:
+      # **`127.0.0.1`, nicht `localhost`.** Daran hing der ganze Stack.
       #
-      # `clickhouse-client` liegt dem Abbild bei — es *ist* dasselbe Programm
-      # wie der Server, nur anders gerufen. `wget` dagegen ist Beiwerk der
-      # Grundausstattung, und fehlt es, schlägt der Check immer fehl. Der
-      # Container gilt dann als krank, obwohl die Datenbank tadellos läuft, und
-      # reißt über `depends_on` den ganzen Stack mit. Ein Healthcheck, der aus
-      # eigenem Unvermögen scheitert, ist schlimmer als keiner.
+      # Der Container hat kein IPv6, ClickHouse lauscht deshalb auf `0.0.0.0`.
+      # `localhost` löst drinnen aber zuerst auf `::1` auf — die IPv6-Schleife.
+      # Der Check klopfte also an eine Tür, die es nicht gibt, bekam
+      # „Connection refused" und meldete die Datenbank als krank, während sie
+      # tadellos lief. Plausible wartete per `depends_on` auf ein „gesund", das
+      # nie kommen konnte, und das Ausrollen brach ab.
       #
-      # Und `SELECT 1` fragt mehr als ein offener Port verrät: Die Datenbank
-      # nimmt Abfragen an und beantwortet sie. Genau darauf wartet Plausible.
-      test: ['CMD', 'clickhouse-client', '--query', 'SELECT 1']
+      # Ein Healthcheck, der aus eigenem Unvermögen scheitert, ist schlimmer
+      # als keiner: Er lässt den Fehler dort suchen, wo keiner ist.
+      #
+      # Gefragt wird mit `clickhouse-client`, dem Werkzeug des Abbilds selbst —
+      # es *ist* dasselbe Programm wie der Server, nur anders gerufen, und kann
+      # deshalb nicht fehlen. `SELECT 1` verrät zudem mehr als ein offener
+      # Port: dass die Datenbank Abfragen annimmt und beantwortet. Genau darauf
+      # wartet Plausible.
+      test: ['CMD', 'clickhouse-client', '--host', '127.0.0.1', '--query', 'SELECT 1']
       # Reichlich Geduld beim ersten Start: ClickHouse legt sein Datenverzeichnis
       # an, und auf einer langsamen Platte dauert das. Läuft es einmal, ist der
       # Healthcheck in Sekunden durch — die Wartezeit kostet also nur einmal.
