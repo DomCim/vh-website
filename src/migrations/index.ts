@@ -41,6 +41,7 @@ import * as migration_20260819_202917_nachbestellung from './20260819_202917_nac
 import * as migration_20260819_204824_wareneingang from './20260819_204824_wareneingang';
 import * as migration_20260819_233212_werkstattdateien from './20260819_233212_werkstattdateien';
 import * as migration_20260820_092646_uebergabemappen from './20260820_092646_uebergabemappen';
+import * as migration_20260820_095931_beigestelltes_material from './20260820_095931_beigestelltes_material';
 
 export const migrations = [
   {
@@ -256,6 +257,11 @@ export const migrations = [
   {
     up: migration_20260820_092646_uebergabemappen.up,
     down: migration_20260820_092646_uebergabemappen.down,
-    name: '20260820_092646_uebergabemappen'
+    name: '20260820_092646_uebergabemappen',
+  },
+  {
+    up: migration_20260820_095931_beigestelltes_material.up,
+    down: migration_20260820_095931_beigestelltes_material.down,
+    name: '20260820_095931_beigestelltes_material'
   },
 ];

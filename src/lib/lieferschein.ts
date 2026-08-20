@@ -29,6 +29,15 @@ export type LieferscheinDaten = {
     /** Pfad zu einem kleinen Artikelbild — wer packt, sieht dann, was gemeint ist */
     bild?: string | null
   }[]
+  /**
+   * Was der Auftraggeber selbst beigestellt hat.
+   *
+   * Steht getrennt von den Positionen und nicht darunter: Es ist keine
+   * Lieferung, sondern sein eigenes Material, das zurückkommt. Wer die Ware
+   * annimmt, muss beides auseinanderhalten können — sonst quittiert er den
+   * Empfang von etwas, das ihm ohnehin gehört.
+   */
+  beistellung?: { bezeichnung: string; menge: number; einheit?: string | null }[]
   hinweis?: string | null
 }
 
@@ -103,6 +112,23 @@ export async function lieferscheinPdf(
 
   doc.moveDown(0.4)
   doc.moveTo(LINKS, doc.y).lineTo(RECHTS, doc.y).strokeColor('#ddd').stroke()
+
+  if (daten.beistellung?.length) {
+    doc.moveDown(0.9)
+    doc.fontSize(10).fillColor('#000').text('Von Ihnen beigestelltes Material', LINKS, doc.y)
+    doc.moveDown(0.3)
+    doc.fontSize(9).fillColor('#444')
+    for (const b of daten.beistellung) {
+      const y = doc.y
+      doc.text(b.bezeichnung, LINKS, y, { width: mengeSpalte - LINKS - 8 })
+      doc.text(`${b.menge}${b.einheit ? ` ${b.einheit}` : ''}`, mengeSpalte, y, {
+        width: RECHTS - mengeSpalte,
+        align: 'right',
+      })
+      doc.moveDown(0.2)
+    }
+    doc.fillColor('#000')
+  }
 
   if (daten.hinweis) {
     doc.moveDown(0.8)

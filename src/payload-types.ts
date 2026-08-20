@@ -1007,6 +1007,7 @@ export interface Job {
     | {
         item: number | InventoryItem;
         quantity: number;
+        beigestellt?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -2225,6 +2226,7 @@ export interface JobsSelect<T extends boolean = true> {
     | {
         item?: T;
         quantity?: T;
+        beigestellt?: T;
         id?: T;
       };
   materialGebucht?: T;

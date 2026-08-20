@@ -6,6 +6,7 @@ import React, { useMemo } from 'react'
 
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
+import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { Zahlungsleiste } from '../../../../../components/office/Zahlungsleiste'
 import { Wiedervorlagen } from '../../../../../components/office/Wiedervorlagen'
 import { Zeiterfassung } from '../../../../../components/office/Zeiterfassung'
@@ -155,6 +156,7 @@ export function AuftragAnsicht() {
           material: (j.material ?? []).map((m) => ({
             item: Number(typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item),
             quantity: m.quantity ?? 0,
+            beigestellt: Boolean((m as { beigestellt?: boolean }).beigestellt),
           })),
         }}
         posten={posten.map((p) => ({
@@ -172,6 +174,11 @@ export function AuftragAnsicht() {
         stundensatz={stundensatz}
         auftragswert={auftragswert}
         materialkosten={materialkosten}
+      />
+
+      <Vorgangsdateien
+        auftrag={j.id}
+        kontakt={typeof j.contact === 'object' ? (j.contact as { id?: number })?.id : (j.contact as number)}
       />
 
       {/* Nur der Auftrag als Bezug: Was am Partner hängt, steht beim Partner.

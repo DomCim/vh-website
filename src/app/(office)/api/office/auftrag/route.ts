@@ -70,6 +70,7 @@ export async function POST(req: Request) {
         .map((m: Record<string, unknown>) => ({
           item: Number(m.item),
           quantity: Number(m.quantity) || 0,
+          beigestellt: Boolean(m.beigestellt),
         })),
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,

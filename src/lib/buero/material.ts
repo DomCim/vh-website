@@ -27,7 +27,7 @@ const runden = (n: number) => Math.round(n * 1000) / 1000
 
 /** Prüft Materialzeilen eines Auftrags gegen den Inventarbestand. */
 export function bestandsPruefung(
-  zeilen: { item?: unknown; quantity?: number | null }[],
+  zeilen: { item?: unknown; quantity?: number | null; beigestellt?: boolean | null }[],
   posten: Posten[],
 ): Bedarfsposten[] {
   const bedarf = new Map<number, number>()
@@ -35,6 +35,8 @@ export function bestandsPruefung(
     const roh = typeof zeile.item === 'object' ? (zeile.item as { id?: number })?.id : zeile.item
     const id = Number(roh)
     if (!Number.isFinite(id) || !zeile.quantity) continue
+    // Was der Auftraggeber mitbringt, muss niemand nachbestellen
+    if (zeile.beigestellt) continue
     bedarf.set(id, runden((bedarf.get(id) ?? 0) + zeile.quantity))
   }
   if (!bedarf.size) return []

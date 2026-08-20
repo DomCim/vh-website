@@ -359,6 +359,23 @@ export async function darfAngebotSehen(
   return meine.angebote.some((a) => String(a.id) === String(angebotId))
 }
 
+/**
+ * Gehört dieser Auftrag zu dieser Adresse?
+ *
+ * Dieselbe Frage wie bei Angebot und Rechnung und bewusst derselbe Weg: über
+ * `vorgaenge`, nicht über eine eigene Abfrage. Eine zweite Stelle, die
+ * entscheidet, wem was gehört, ist die Stelle, die es irgendwann anders
+ * entscheidet.
+ */
+export async function darfAuftragSehen(
+  payload: Payload,
+  email: string,
+  auftragId: string | number,
+): Promise<boolean> {
+  const meine = await vorgaenge(payload, email)
+  return meine.auftraege.some((a) => String(a.id) === String(auftragId))
+}
+
 export async function darfRechnungSehen(
   payload: Payload,
   email: string,

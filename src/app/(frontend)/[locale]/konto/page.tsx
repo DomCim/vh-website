@@ -5,6 +5,7 @@ import React from 'react'
 
 import { AngebotAnnehmen } from '../../../../components/shop/AngebotAnnehmen'
 import { KontoAnmeldung } from '../../../../components/shop/KontoAnmeldung'
+import { Vorgangsunterlagen } from '../../../../components/shop/Vorgangsunterlagen'
 import { payloadClient } from '../../../../lib/data'
 import { formatPrice, isLocale, t, type Locale } from '../../../../lib/i18n'
 import { SITZUNGS_COOKIE, sitzungLesen } from '../../../../lib/kundenportal'
@@ -307,6 +308,10 @@ function AuftragsZeile({
           )}
         </p>
       )}
+
+      {/* Nachreichen und abholen — bei Lohnfertigung geht das hin und her,
+          und der Auftrag ist die Stelle, an der beide danach suchen. */}
+      <Vorgangsunterlagen auftrag={auftrag.id} labels={dict.handover} />
     </li>
   )
 }

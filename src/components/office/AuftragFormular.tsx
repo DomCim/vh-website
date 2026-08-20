@@ -21,6 +21,8 @@ export type AuftragPosition = {
 export type AuftragMaterial = {
   item: number | ''
   quantity: number
+  /** Vom Auftraggeber mitgebracht — zieht nichts vom Bestand ab */
+  beigestellt?: boolean
 }
 
 export type AuftragWerte = {
@@ -397,7 +399,32 @@ export function AuftragFormular({
               }
             />
           </label>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '.7rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* Bei Lohnfertigung bringt der Kunde sein Blech mit. Das darf
+                beim Fertigmelden nichts abziehen und kostet in der
+                Nachkalkulation nichts — sonst sieht jeder Lohnauftrag nach
+                einem Verlustgeschäft aus. */}
+            <label style={{ display: 'flex', gap: '.35rem', alignItems: 'center', fontSize: '.85rem' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(m.beigestellt)}
+                onChange={(e) =>
+                  setzen({
+                    material: (w.material ?? []).map((x, idx) =>
+                      idx === i ? { ...x, beigestellt: e.target.checked } : x,
+                    ),
+                  })
+                }
+              />
+              beigestellt
+            </label>
             <button
               type="button"
               className="buero-knopf leise"

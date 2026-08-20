@@ -376,6 +376,36 @@ unter `/[locale]/uebergabe/[token]`.
 
 ---
 
+## Dateien am Vorgang, im Portal und beigestelltes Material
+
+**Am Vorgang.** `product-files` trägt neben `product` jetzt `anfrage`,
+`angebot`, `auftrag` und `mappe`. Genau einer ist gesetzt; die Schnittstelle
+(`/api/office/vorgangsdatei`) besteht darauf und prüft bei jeder Änderung, dass
+die Datei wirklich an diesem Vorgang hängt — sonst wäre die Nummer in der
+Anfrage ein Generalschlüssel auf jede Werkstattdatei im Haus. Angezeigt wird
+das über `components/office/Vorgangsdateien.tsx` an Anfrage, Angebot und
+Auftrag. Mappendateien tragen die Anker ihrer Mappe, damit sie dort mit
+auftauchen.
+
+**Im Portal.** `/api/konto/datei` (Liste, Upload) und `/api/konto/datei/[id]`
+(Download). Wem was gehört, entscheidet ausschließlich `lib/portalDaten.ts` —
+neu dort: `darfAuftragSehen`. Der Download prüft **zwei** Dinge: Der Vorgang
+gehört dieser Adresse, und die Datei ist für die Kundschaft bestimmt
+(`fuerKunden`). Ohne das zweite wäre die Nummer ein Schlüssel auf das
+Kalkulationsblatt zum eigenen Auftrag. Die Ansicht ist zugeklappt und lädt
+erst beim Aufklappen — sonst stellte die Übersicht bei zehn Aufträgen zehn
+Anfragen, von denen neun niemanden interessieren.
+
+**Beigestelltes Material.** `jobs.material[].beigestellt`. Drei Stellen lesen
+es, und jede fälschte sonst eine Zahl: der `afterChange`-Hook in
+`collections/Jobs.ts` (kein Abzug vom Bestand), `materialkosten()` in
+`lib/nachkalkulation.ts` (kostet null) und `bestandsPruefung()` in
+`lib/buero/material.ts` (fehlt nie). Auf dem Lieferschein steht es als eigener
+Block unter den Positionen — es ist keine Lieferung, sondern sein Material,
+das zurückkommt.
+
+---
+
 ## Offen
 
 1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit

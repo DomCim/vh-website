@@ -219,12 +219,28 @@ export function fuerKunden(datei: Mappendatei | null | undefined): boolean {
 export function mappenTitel(bezug: {
   kontakt?: string | null
   anfrage?: string | number | null
+  angebot?: string | number | null
+  auftrag?: string | number | null
   betreff?: string | null
 }): string {
-  const teile = [
-    bezug.kontakt?.trim() || null,
-    bezug.anfrage ? `Anfrage ${bezug.anfrage}` : null,
-    bezug.betreff?.trim() || null,
-  ].filter(Boolean)
+  /*
+   * Genau **ein** Vorgang im Namen, und zwar der jüngste.
+   *
+   * Eine Mappe, die „Meier · Anfrage 12 · Angebot 34 · Auftrag 56" heißt, ist
+   * am Handy abgeschnitten und sagt trotzdem nichts mehr als „Auftrag 56".
+   * Woran sie sonst noch hängt, steht in den Feldern und ist von dort
+   * anklickbar.
+   */
+  const vorgang = bezug.auftrag
+    ? `Auftrag ${bezug.auftrag}`
+    : bezug.angebot
+      ? `Angebot ${bezug.angebot}`
+      : bezug.anfrage
+        ? `Anfrage ${bezug.anfrage}`
+        : null
+
+  const teile = [bezug.kontakt?.trim() || null, vorgang, bezug.betreff?.trim() || null].filter(
+    Boolean,
+  )
   return teile.length > 0 ? teile.join(' · ').slice(0, 120) : 'Übergabemappe'
 }

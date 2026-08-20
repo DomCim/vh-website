@@ -461,6 +461,35 @@ export async function bestaetigungDokument(
 }
 
 /**
+ * Was der Auftraggeber beigestellt hat — mit Namen aus dem Inventar.
+ *
+ * Bei Lohnfertigung schickt der Kunde sein Blech; auf dem Lieferschein muss
+ * stehen, was davon zurückkommt. Ohne den Namen aus dem Inventar stünde dort
+ * nur eine Nummer.
+ */
+async function beigestelltesMaterial(
+  payload: Payload,
+  material: { item?: unknown; quantity?: number | null; beigestellt?: boolean | null }[] | null | undefined,
+): Promise<{ bezeichnung: string; menge: number; einheit?: string | null }[]> {
+  const zeilen = (material ?? []).filter((m) => m.beigestellt && m.quantity)
+  return Promise.all(
+    zeilen.map(async (m) => {
+      const id = typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item
+      const posten = id
+        ? await payload
+            .findByID({ collection: 'inventory-items', id: Number(id), depth: 0, overrideAccess: true })
+            .catch(() => null)
+        : null
+      return {
+        bezeichnung: posten?.name ?? `Posten ${id ?? '?'}`,
+        menge: m.quantity ?? 0,
+        einheit: posten?.unit ?? null,
+      }
+    }),
+  )
+}
+
+/**
  * Lieferschein zu einem Auftrag.
  *
  * Die Nummer ist die des Auftrags mit einem Zusatz — ein eigener Nummernkreis
@@ -512,6 +541,7 @@ export async function lieferscheinDokument(
           bild: await artikelBildPfad(payload, p.product),
         })),
       ),
+      beistellung: await beigestelltesMaterial(payload, auftrag.material),
       hinweis: auftrag.notes,
     },
     await firma(payload),

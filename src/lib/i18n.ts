@@ -211,6 +211,8 @@ const de = {
     newFolder: 'Neuer Ordner',
     add: 'Anlegen',
     noFolder: 'Ohne Ordner',
+    atJob: 'Unterlagen zu diesem Vorgang',
+    show: 'Unterlagen',
     error: 'Das hat nicht geklappt. Bitte erneut versuchen.',
   },
   orderStatus: {
@@ -565,6 +567,8 @@ const fr: Dictionary = {
     newFolder: 'Nouveau dossier',
     add: 'Créer',
     noFolder: 'Sans dossier',
+    atJob: 'Documents de ce dossier',
+    show: 'Documents',
     error: "Cela n'a pas fonctionné. Merci de réessayer.",
   },
   orderStatus: {
@@ -916,6 +920,8 @@ const en: Dictionary = {
     newFolder: 'New folder',
     add: 'Create',
     noFolder: 'No folder',
+    atJob: 'Documents for this project',
+    show: 'Documents',
     error: 'That did not work. Please try again.',
   },
   orderStatus: {

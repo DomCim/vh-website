@@ -29,7 +29,7 @@ export type KalkAuftrag = {
   dueDate?: string | null
   plannedMinutes?: number | null
   timeEntries?: Zeiteintrag[] | null
-  material?: { item?: unknown; quantity?: number | null }[] | null
+  material?: { item?: unknown; quantity?: number | null; beigestellt?: boolean | null }[] | null
   positions?: { description?: string | null; quantity?: number | null; price?: number | null }[] | null
 }
 
@@ -90,10 +90,18 @@ export function auftragswert(auftrag: KalkAuftrag): number {
   )
 }
 
-/** Was das eingesetzte Material gekostet hat. */
+/**
+ * Was das eingesetzte Material gekostet hat.
+ *
+ * Beigestelltes zählt mit **null**: Es gehört dem Auftraggeber, wir haben es
+ * nicht bezahlt. Würde es zum Lagerwert eingerechnet, sähe jeder Lohnauftrag
+ * nach einem Verlustgeschäft aus — und genau die Aufträge, bei denen man
+ * nichts einkauft, wären auf dem Papier die schlechtesten.
+ */
 export function materialkosten(auftrag: KalkAuftrag, lager: Lagerposten[]): number {
   return runden(
     (auftrag.material ?? []).reduce((summe, zeile) => {
+      if (zeile.beigestellt) return summe
       const roh = typeof zeile.item === 'object' ? (zeile.item as { id?: number })?.id : zeile.item
       const posten = lager.find((p) => String(p.id) === String(roh))
       return summe + (Number(zeile.quantity) || 0) * (Number(posten?.unitValue) || 0)

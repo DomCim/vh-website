@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import React from 'react'
 
 import { AnfrageFormular } from '../../../../../components/office/AnfrageFormular'
+import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { useAbgleich, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum } from '../../../../../lib/format'
 
@@ -118,6 +119,8 @@ export function AnfrageAnsicht() {
           </div>
         </>
       )}
+
+      <Vorgangsdateien anfrage={a.id} />
 
       <h2>Stand</h2>
       <AnfrageFormular

@@ -94,10 +94,10 @@ export async function POST(req: Request) {
        * Eine Mappe, die an nichts hängt, ist in einem halben Jahr ein Rätsel:
        * „Zeichnungen 3" sagt niemandem, wessen Zeichnungen das sind, und
        * wiederfinden lässt sie sich nur, wer noch weiß, wie er sie genannt
-       * hat. Deshalb: ein Geschäftspartner oder eine Anfrage. Beides geht
+       * hat. Deshalb ein Geschäftspartner oder ein Vorgang — mehreres geht
        * auch, eines muss.
        */
-      if (!b.contact && !b.anfrage) {
+      if (!b.contact && !b.anfrage && !b.angebot && !b.auftrag) {
         return NextResponse.json({ error: 'kein-bezug' }, { status: 400 })
       }
 
@@ -113,6 +113,8 @@ export async function POST(req: Request) {
             mappenTitel({
               kontakt: partner.name ?? anfrage.name,
               anfrage: b.anfrage ? Number(b.anfrage) : null,
+              angebot: b.angebot ? Number(b.angebot) : null,
+              auftrag: b.auftrag ? Number(b.auftrag) : null,
               betreff: b.betreff,
             }),
           // Die Adresse kommt aus dem Vorgang, wenn keine eingetippt wurde —

@@ -133,6 +133,9 @@ export const Jobs: CollectionConfig = {
           for (const zeile of doc.material ?? []) {
             const id = typeof zeile.item === 'object' ? zeile.item?.id : zeile.item
             if (!id || !zeile.quantity) continue
+            // Beigestelltes gehört dem Auftraggeber und lag nie im eigenen
+            // Lager — abziehen würde den Bestand fälschen
+            if (zeile.beigestellt) continue
             try {
               const posten = await req.payload.findByID({
                 collection: 'inventory-items',
@@ -381,6 +384,25 @@ export const Jobs: CollectionConfig = {
           required: true,
         },
         { name: 'quantity', label: 'Menge', type: 'number', required: true },
+        {
+          /*
+           * Vom Auftraggeber beigestelltes Material.
+           *
+           * Bei Lohnfertigung ist das der Regelfall: Der Kunde schickt sein
+           * Blech, wir schneiden und kanten. Das Zeug war nie im eigenen
+           * Lager, es kostet uns nichts, und es darf beim Fertigmelden auch
+           * nichts abziehen — sonst rutscht der Bestand bei jedem
+           * Lohnauftrag ins Minus und die Nachbestellung meldet Bedarf, den
+           * es nicht gibt.
+           *
+           * Auf dem Lieferschein steht es trotzdem: Wer die Ware annimmt,
+           * muss sehen, was von seinem eigenen Material zurückkommt.
+           */
+          name: 'beigestellt',
+          label: 'Vom Kunden beigestellt',
+          type: 'checkbox',
+          defaultValue: false,
+        },
       ],
     },
     {

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
 import { AngebotFormular } from '../../../../../components/office/AngebotFormular'
+import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 
 /**
@@ -119,6 +120,13 @@ export function AngebotAnsicht() {
           discountReason: a.discountReason as string,
           revision: a.revision as number,
         }}
+      />
+
+      <Vorgangsdateien
+        angebot={a.id}
+        kontakt={
+          typeof a.customer === 'object' ? (a.customer as { id?: number })?.id : (a.customer as number)
+        }
       />
     </>
   )
