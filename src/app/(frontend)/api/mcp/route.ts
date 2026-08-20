@@ -5,6 +5,7 @@ import { registerAktionen } from '../../../../lib/mcp/aktionen'
 import { registerAnalyse } from '../../../../lib/mcp/analyse'
 import { registerAnfragen } from '../../../../lib/mcp/anfragen'
 import { registerBestellungen } from '../../../../lib/mcp/bestellungen'
+import { registerBuero } from '../../../../lib/mcp/buero'
 import { registerKategorien } from '../../../../lib/mcp/kategorien'
 import { registerKundenstimmen } from '../../../../lib/mcp/kundenstimmen'
 import { registerMedien } from '../../../../lib/mcp/medien'
@@ -69,6 +70,7 @@ function alleWerkzeuge(server: McpServer) {
   registerMedien(server)
   registerSeiten(server)
   registerAnalyse(server)
+  registerBuero(server)
 }
 
 const handler = createMcpHandler(
@@ -79,6 +81,10 @@ const handler = createMcpHandler(
       'Verwaltung der Vincent-Hellmann-Website: Produkte, Kategorien, Referenzen (Projekte),',
       'Kundenstimmen, News (inkl. Facebook-/Instagram-Autopost), Rabatt-Aktionen, Bestellungen,',
       'Anfragen, Mediathek, Seitentexte und Auswertungen.',
+      '',
+      'Dazu das Büro: offene Posten, Aufträge, Lagerbestand und Partner. Was dort Geld oder',
+      'Recht berührt (Rechnungen, Mahnungen, Angebote), entsteht ausschließlich als Entwurf —',
+      'verschickt und gebucht wird von Hand.',
       '',
       'Sprachen: Die Website ist dreisprachig (de/fr/en). Neue Inhalte entstehen immer auf Deutsch;',
       'Französisch und Englisch danach über dasselbe *_aendern-Werkzeug mit sprache: "fr" bzw. "en"',
