@@ -517,11 +517,6 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Platz, damit die Leiste nichts verdeckt */
-  .buero-inhalt {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
-  }
-
   /* Die Hauptaktion klebt über der Tableiste, dort wo der Daumen liegt.
      Volle Breite, weil daneben ohnehin nichts hinpasst. */
   .buero-fussleiste {
@@ -581,6 +576,30 @@ html.tastatur-offen .buero-inhalt {
   margin: 0 auto;
   padding: 1.5rem 1.25rem 4rem;
   padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+/* Platz, damit die Tableiste nichts verdeckt.
+ *
+ * Diese Regel stand vorher oben im Handy-Block — und war dort wirkungslos.
+ * Beide Regeln sprechen dieselbe Klasse an, haben also dieselbe Spezifität;
+ * bei Gleichstand gewinnt die spätere, und das war die Grundregel darüber.
+ * Am Handy blieb es deshalb bei 4rem = 64 Pixeln.
+ *
+ * Aufgefallen ist das erst am Gerät: Am Rechner ist
+ * `env(safe-area-inset-bottom)` null, die Leiste misst 55 Pixel, und 64
+ * reichten knapp. Auf einem iPhone kommen 34 Pixel Sicherheitsrand dazu —
+ * die Leiste wird 89 Pixel hoch, das Polster bleibt bei 64, und die unterste
+ * Karte verschwindet zu 17 Pixeln darunter.
+ *
+ * Nachgemessen mit nachgestelltem Rand: vorher 64 Pixel Polster und die
+ * Karte „Aufträge" zu 17 Pixeln verdeckt, danach 88 und nichts mehr
+ * angeschnitten. Am Gerät sind es 122, weil dort der Sicherheitsrand in die
+ * Rechnung eingeht — im Browser am Rechner ist er null.
+ */
+@media (max-width: 719px) {
+  .buero-inhalt {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 .buero h1 {
