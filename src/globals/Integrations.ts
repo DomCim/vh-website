@@ -76,6 +76,60 @@ export const Integrations: GlobalConfig = {
           ],
         },
         {
+          /*
+           * DKIM — die Unterschrift unter der Mail.
+           *
+           * Ohne sie landet Post von einer eigenen Domain regelmäßig im Spam:
+           * Der empfangende Server sieht eine Mail, die vorgibt, von
+           * vincent-hellmann.com zu kommen, und hat nichts, womit er das
+           * prüfen könnte. Mit DKIM signiert der Absender, und im DNS steht
+           * der öffentliche Schlüssel dazu.
+           *
+           * Drei Angaben gehören zusammen und wirken nur gemeinsam. Fehlt
+           * eine, wird gar nicht signiert — eine halbe Unterschrift ist
+           * schlimmer als keine, denn sie schlägt beim Prüfen fehl.
+           */
+          name: 'dkim',
+          label: 'DKIM-Signatur (optional)',
+          type: 'group',
+          admin: {
+            description:
+              'Signiert ausgehende Mails, damit sie nicht im Spam landen. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.',
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'domain',
+                  label: 'Domain der Absender-Adresse',
+                  type: 'text',
+                  admin: { description: 'z.B. vincent-hellmann.com — leer = keine Signatur' },
+                },
+                {
+                  name: 'selector',
+                  label: 'Selector',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Name des DNS-Eintrags, z.B. „vh" → vh._domainkey.vincent-hellmann.com',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'privateKey',
+              label: 'Privater Schlüssel (PEM)',
+              type: 'textarea',
+              admin: {
+                description:
+                  'Beginnt mit -----BEGIN. Der zugehörige öffentliche Schlüssel muss als DNS-TXT-Eintrag veröffentlicht sein.',
+                components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+              },
+            },
+          ],
+        },
+        {
           name: 'notificationEmail',
           label: 'Benachrichtigungen an',
           type: 'email',

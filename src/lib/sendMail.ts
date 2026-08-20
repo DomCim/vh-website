@@ -96,6 +96,13 @@ export async function sendMail(payload: Payload, mail: MailInput): Promise<void>
     port: email.smtpPort,
     secure: email.smtpPort === 465,
     auth: email.smtpUser ? { user: email.smtpUser, pass: email.smtpPass } : undefined,
+    /*
+     * DKIM unterschreibt die Mail, damit sie nicht im Spam landet. Nodemailer
+     * kann das von Haus aus; hinterlegt wird es im Admin unter Integrationen.
+     * Ohne vollständige Angaben bleibt das Feld leer und es wird wie bisher
+     * unsigniert verschickt.
+     */
+    ...(email.dkim ? { dkim: email.dkim } : {}),
   })
 
   // Das Logo reist als Anhang mit — nachgeladene Bilder blockieren die

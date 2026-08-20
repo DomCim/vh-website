@@ -3072,6 +3072,23 @@ export interface Integration {
      */
     fromName?: string | null;
     /**
+     * Signiert ausgehende Mails, damit sie nicht im Spam landen. Wirkt nur, wenn alle drei Felder gefüllt sind und der öffentliche Schlüssel im DNS steht.
+     */
+    dkim?: {
+      /**
+       * z.B. vincent-hellmann.com — leer = keine Signatur
+       */
+      domain?: string | null;
+      /**
+       * Name des DNS-Eintrags, z.B. „vh" → vh._domainkey.vincent-hellmann.com
+       */
+      selector?: string | null;
+      /**
+       * Beginnt mit -----BEGIN. Der zugehörige öffentliche Schlüssel muss als DNS-TXT-Eintrag veröffentlicht sein.
+       */
+      privateKey?: string | null;
+    };
+    /**
      * Empfängt Kontaktanfragen und Bestell-Benachrichtigungen
      */
     notificationEmail?: string | null;
@@ -3424,6 +3441,13 @@ export interface IntegrationsSelect<T extends boolean = true> {
         smtpPass?: T;
         fromAddress?: T;
         fromName?: T;
+        dkim?:
+          | T
+          | {
+              domain?: T;
+              selector?: T;
+              privateKey?: T;
+            };
         notificationEmail?: T;
       };
   push?:

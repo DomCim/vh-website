@@ -34,6 +34,8 @@ export type ResolvedIntegrations = {
     fromAddress: string
     fromName: string
     notificationEmail?: string
+    /** Nur gesetzt, wenn alle drei Angaben da sind — halb signiert gibt es nicht */
+    dkim?: { domainName: string; keySelector: string; privateKey: string }
   }
   mailboxes: MailboxKonfiguration[]
   paypal: {
@@ -75,6 +77,9 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
   }
 
   const smtpPort = val(doc?.email?.smtpPort, process.env.SMTP_PORT)
+  const dkimDomain = val(doc?.email?.dkim?.domain, process.env.DKIM_DOMAIN)
+  const dkimSelector = val(doc?.email?.dkim?.selector, process.env.DKIM_SELECTOR)
+  const dkimSchluessel = val(doc?.email?.dkim?.privateKey, process.env.DKIM_PRIVATE_KEY)
 
   return {
     email: {
@@ -85,6 +90,14 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromAddress: val(doc?.email?.fromAddress, process.env.EMAIL_FROM) || 'noreply@localhost',
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
+      /*
+       * Alles oder nichts: Fehlt eine der drei Angaben, wird nicht signiert.
+       * Eine unvollständige Signatur schlägt beim Empfänger fehl und schadet
+       * mehr als gar keine — dann sieht die Mail nach einer Fälschung aus.
+       */
+      dkim: dkimDomain && dkimSelector && dkimSchluessel
+        ? { domainName: dkimDomain, keySelector: dkimSelector, privateKey: dkimSchluessel }
+        : undefined,
     },
     mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])
       .filter((m) => m?.imapHost && m?.user && m?.pass && m?.address)
