@@ -62,30 +62,50 @@ es schlimmer als das. Anmeldung, Warenkorb und Übergabelinks hängen an Cookies
 und Cookies gelten je Adresse. Wer sich auf `.de` anmeldet und auf `.com`
 weitersurft, ist dort wieder ausgeloggt.
 
-**Im Nginx Proxy Manager** (die Umleitung passiert dort und nicht in Traefik —
-sie kostet dann keinen Weg durch die ganze Kette):
+**Im Nginx Proxy Manager** steht **ein** Proxy Host, in dessen Domainliste
+alle sechs Namen stehen:
 
-| Domain | Typ im NPM | Ziel |
-| --- | --- | --- |
-| `vincent-hellmann.com` | Proxy Host | Traefik |
-| `www.vincent-hellmann.com` | Redirection Host, 301 | `https://vincent-hellmann.com` |
-| `vincent-hellmann.de`, `www.vincent-hellmann.de` | Redirection Host, 301 | `https://vincent-hellmann.com` |
-| `vincent-hellmann.fr`, `www.vincent-hellmann.fr` | Redirection Host, 301 | `https://vincent-hellmann.com` |
+```
+vincent-hellmann.com      vincent-hellmann.de      vincent-hellmann.fr
+www.vincent-hellmann.com  www.vincent-hellmann.de  www.vincent-hellmann.fr
+        →  http://<traefik>:80
+```
 
-Bei jedem Redirection Host: **„Preserve Path" an** (sonst landet
-`…de/de/kollektion` auf der Startseite statt auf der Kollektion),
-**HTTP-Code 301** (dauerhaft — 302 sagt Google „kommt wieder zurück") und ein
-eigenes Zertifikat je Domain, damit auch `https://…de` ohne Warnung umleitet.
+Ein Host statt sechs, weil ein Zertifikat dann alle sechs Namen abdeckt und es
+nur eine Stelle gibt, an der etwas eingestellt wird. Die Umleitung macht der
+Host selbst — unter **Advanced**:
 
-Beim Proxy Host für `.com` zusätzlich:
+```nginx
+client_max_body_size 512m;
 
-- **Websockets Support** an — die Live-Verbindung des Büros läuft über `/ws/buero`.
-- Unter *Advanced* → `client_max_body_size 512m;` — die Übergabemappe nimmt
-  Dateien bis 500 MB an. Ohne das antwortet Nginx mit **413**, bevor überhaupt
-  etwas bei der Anwendung ankommt, und die Fehlermeldung im Browser sagt nur
-  „nicht übertragen".
-- `X-Forwarded-Proto: https` muss durchgereicht werden (NPM macht das von
-  selbst) — sonst baut die Anwendung `http`-Links.
+set $umleiten 0;
+if ($host != "vincent-hellmann.com") { set $umleiten 1; }
+if ($request_uri ~ ^/\.well-known/acme-challenge/) { set $umleiten 0; }
+if ($umleiten = 1) { return 301 https://vincent-hellmann.com$request_uri; }
+```
+
+Zeile für Zeile, weil jede einen Grund hat:
+
+- **`client_max_body_size 512m`** — die Übergabemappe nimmt Dateien bis 500 MB
+  an. Ohne das antwortet Nginx mit **413**, bevor überhaupt etwas bei der
+  Anwendung ankommt; im Browser steht dann nur „nicht übertragen“.
+- **Die Umleitung über eine Hilfsvariable** statt in einem Rutsch. Ein
+  schlichtes `if ($host != …) { return 301 …; }` greift nämlich auch für
+  `/.well-known/acme-challenge/…` — und über genau diesen Pfad prüft Let's
+  Encrypt, ob die Domain einem gehört. Umgeleitet schlägt die Prüfung fehl,
+  und zwar lautlos: Das Zertifikat läuft weiter, bis es zwei Monate später
+  nicht verlängert wird. Die dritte Zeile nimmt diesen einen Pfad aus.
+  Nachgemessen mit nginx 1.24 — ohne die Zeile antwortet der Prüfpfad auf
+  `.de` mit `301`, mit ihr mit `200`.
+- **301, nicht 302** — dauerhaft. 302 sagt Google „kommt wieder zurück“, und
+  dann bleibt die alte Adresse im Index.
+- **`$request_uri`** trägt Pfad **und** Abfrage mit hinüber:
+  `…de/de/kollektion?a=1` landet auf `…com/de/kollektion?a=1` und nicht auf
+  der Startseite.
+
+Am selben Host außerdem **Websockets Support** einschalten — die
+Live-Verbindung des Büros läuft über `/ws/buero`. `X-Forwarded-Proto: https`
+reicht NPM von selbst durch; ohne das baute die Anwendung `http`-Links.
 
 **Traefik** kennt nur `vincent-hellmann.com` (Label `Host(...)`, gesetzt über
 `DOMAIN`). Kommt dort eine andere Adresse an, antwortet es mit 404. Das ist
@@ -109,7 +129,8 @@ mehr. Beides gehört deshalb in denselben Schritt.
    die Seite unter der neuen Adresse erreichbar.
 4. Prüfen: `curl -I https://vincent-hellmann.com/api/healthz`, einmal im Büro
    anmelden, eine Seite im Admin speichern.
-5. Die **Redirection Hosts** für `.de`, `.fr` und `www` anlegen.
+5. Die übrigen fünf Namen in die Domainliste desselben Proxy Hosts
+   aufnehmen, Zertifikat neu ausstellen, dann den Advanced-Block eintragen.
 6. Prüfen, dass jede Umleitung 301 liefert und den Pfad behält:
    `curl -I https://vincent-hellmann.de/de/kollektion` → `location:
    https://vincent-hellmann.com/de/kollektion`
