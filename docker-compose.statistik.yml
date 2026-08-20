@@ -171,7 +171,19 @@ services:
     networks:
       - statistik
     healthcheck:
-      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1']
+      # Gefragt wird ClickHouse mit seinem eigenen Werkzeug, nicht über HTTP mit
+      # `wget`. Zwei Gründe, und der zweite ist der wichtigere:
+      #
+      # `clickhouse-client` liegt dem Abbild bei — es *ist* dasselbe Programm
+      # wie der Server, nur anders gerufen. `wget` dagegen ist Beiwerk der
+      # Grundausstattung, und fehlt es, schlägt der Check immer fehl. Der
+      # Container gilt dann als krank, obwohl die Datenbank tadellos läuft, und
+      # reißt über `depends_on` den ganzen Stack mit. Ein Healthcheck, der aus
+      # eigenem Unvermögen scheitert, ist schlimmer als keiner.
+      #
+      # Und `SELECT 1` fragt mehr als ein offener Port verrät: Die Datenbank
+      # nimmt Abfragen an und beantwortet sie. Genau darauf wartet Plausible.
+      test: ['CMD', 'clickhouse-client', '--query', 'SELECT 1']
       # Reichlich Geduld beim ersten Start: ClickHouse legt sein Datenverzeichnis
       # an, und auf einer langsamen Platte dauert das. Läuft es einmal, ist der
       # Healthcheck in Sekunden durch — die Wartezeit kostet also nur einmal.
