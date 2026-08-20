@@ -9,6 +9,7 @@ import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { Kopftitel } from '../../components/office/Kopftitel'
+import { Scrollstart } from '../../components/office/Scrollstart'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import { Tastaturwache } from '../../components/office/Tastaturwache'
 import '../../styles/office.css'
@@ -45,6 +46,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
   return (
     <html lang="de">
       <body className="buero">
+        <Scrollstart />
         <SitzungVerlaengern />
         <Tastaturwache />
         <BestandAnbieter />
