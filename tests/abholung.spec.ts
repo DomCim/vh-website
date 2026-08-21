@@ -20,7 +20,13 @@ test.describe('Abholbestellung', () => {
       data: { email: EMAIL, password: PASSWORT },
     })
     const { token } = await anmeldung.json()
-    const kopf = { Authorization: `JWT ${token}` }
+    // Payload prüft bei Schreibzugriffen die Herkunft — ohne diese Kopfzeilen
+    // antwortet es 403, sobald der Anmelde-Keks aus dem Login mitfährt
+    const kopf = {
+      Authorization: `JWT ${token}`,
+      Origin: BASIS,
+      'Sec-Fetch-Site': 'same-origin',
+    }
     const kennung = Date.now()
 
     const bestellen = async (lieferart: 'pickup' | 'shipping') => {
