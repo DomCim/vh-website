@@ -48,8 +48,8 @@ type Props = {
  */
 const SCHRIFTFARBEN = [
   false, // Standard — folgt dem Thema bzw. dem Briefbogen
+  '#a5622d', // Corten — der Ton der Striche auf der Website (--color-bronze)
   '#666666',
-  '#a86b3d',
   '#c0392b',
   '#b26b00',
   '#006100',
