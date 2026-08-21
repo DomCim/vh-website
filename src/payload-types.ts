@@ -882,6 +882,10 @@ export interface Expense {
     | 'sonstiges';
   paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
   paid?: boolean | null;
+  /**
+   * Miete, Internet & Co.: Zum nächsten Termin entsteht der Folgebeleg von selbst — nur der Beleg-Scan ist dann noch nachzureichen.
+   */
+  turnus?: ('nein' | 'monatlich' | 'vierteljaehrlich' | 'jaehrlich') | null;
   reminderSentAt?: string | null;
   /**
    * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
@@ -1050,6 +1054,11 @@ export interface Job {
    * Aus, wenn ihr ohnehin telefoniert. Dann meldet das Büro nichts von selbst.
    */
   kundeBenachrichtigen?: boolean | null;
+  abnahme?: {
+    am?: string | null;
+    name?: string | null;
+    ort?: string | null;
+  };
   gemeldet?: {
     inFertigung?: string | null;
     fertig?: string | null;
@@ -2256,6 +2265,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   category?: T;
   paymentMethod?: T;
   paid?: T;
+  turnus?: T;
   reminderSentAt?: T;
   deductible?: T;
   notes?: T;
@@ -2362,6 +2372,13 @@ export interface JobsSelect<T extends boolean = true> {
   trackingUrl?: T;
   kundeEmail?: T;
   kundeBenachrichtigen?: T;
+  abnahme?:
+    | T
+    | {
+        am?: T;
+        name?: T;
+        ort?: T;
+      };
   gemeldet?:
     | T
     | {
@@ -3267,6 +3284,10 @@ export interface Integration {
      * Empfängt Kontaktanfragen und Bestell-Benachrichtigungen
      */
     notificationEmail?: string | null;
+    /**
+     * Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.
+     */
+    steuerberaterEmail?: string | null;
   };
   /**
    * Schlüssel für die Push-Benachrichtigungen der Büro-App. Wird beim ersten Mal automatisch erzeugt — hier ist nichts einzutragen. Wer den Schlüssel austauscht, muss alle Geräte neu anmelden.
@@ -3340,6 +3361,22 @@ export interface Integration {
            */
           privateKey?: string | null;
         };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Fertige Absätze für Mails, Versandfenster und Newsletter. Im Schreibfeld „::" tippen, Baustein wählen — eingefügt. Der Titel dient zum Finden, z.B. „Gruß französisch" oder „Zahlungshinweis".
+   */
+  textbausteine?:
+    | {
+        /**
+         * Steht in der Auswahl — kurz und eindeutig.
+         */
+        titel: string;
+        /**
+         * Der Text, der eingefügt wird — mit Gestaltung, wenn gewünscht.
+         */
+        inhalt: string;
         id?: string | null;
       }[]
     | null;
@@ -3659,6 +3696,7 @@ export interface IntegrationsSelect<T extends boolean = true> {
               privateKey?: T;
             };
         notificationEmail?: T;
+        steuerberaterEmail?: T;
       };
   push?:
     | T
@@ -3692,6 +3730,13 @@ export interface IntegrationsSelect<T extends boolean = true> {
               selector?: T;
               privateKey?: T;
             };
+        id?: T;
+      };
+  textbausteine?:
+    | T
+    | {
+        titel?: T;
+        inhalt?: T;
         id?: T;
       };
   plausible?:

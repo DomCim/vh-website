@@ -513,6 +513,8 @@ async function beigestelltesMaterial(
 export async function lieferscheinDokument(
   payload: Payload,
   id: string | number,
+  /** Mit Unterschrift wird aus dem Lieferschein das Abnahmeprotokoll */
+  abnahme?: { bild: Buffer; name?: string | null; ort?: string | null; datum: Date },
 ): Promise<Dokument> {
   const auftrag = await payload.findByID({
     collection: 'jobs',
@@ -557,13 +559,14 @@ export async function lieferscheinDokument(
       ),
       beistellung: await beigestelltesMaterial(payload, auftrag.material),
       hinweis: auftrag.notes,
+      abnahme,
     },
     await firma(payload),
   )
 
   return {
     datei,
-    dateiname: `Lieferschein-${auftrag.jobNumber}.pdf`,
+    dateiname: `${abnahme ? 'Abnahme' : 'Lieferschein'}-${auftrag.jobNumber}.pdf`,
     betreff: `Lieferschein zu ${auftrag.jobNumber}${auftrag.title ? ` — ${auftrag.title}` : ''}`,
     an: await partnerMail(payload, auftrag.contact),
     text:

@@ -137,6 +137,15 @@ export const Integrations: GlobalConfig = {
             description: 'Empfängt Kontaktanfragen und Bestell-Benachrichtigungen',
           },
         },
+        {
+          name: 'steuerberaterEmail',
+          label: 'Steuerberater (Kanzlei-Adresse)',
+          type: 'email',
+          admin: {
+            description:
+              'Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.',
+          },
+        },
       ],
     },
     {
@@ -347,6 +356,42 @@ export const Integrations: GlobalConfig = {
               },
             },
           ],
+        },
+      ],
+    },
+    {
+      /*
+       * Wiederkehrende Absätze fürs Schreibfeld.
+       *
+       * Grußformeln, Zahlungshinweise, Gewährleistungstexte — was in jeder
+       * zweiten Mail steht, soll niemand jedes Mal neu tippen. Im Schreibfeld
+       * öffnet „::" die Auswahl; der Titel ist das, wonach man dort sucht.
+       */
+      name: 'textbausteine',
+      label: 'Textbausteine',
+      labels: { singular: 'Textbaustein', plural: 'Textbausteine' },
+      type: 'array',
+      admin: {
+        description:
+          'Fertige Absätze für Mails, Versandfenster und Newsletter. Im Schreibfeld „::" tippen, Baustein wählen — eingefügt. Der Titel dient zum Finden, z.B. „Gruß französisch" oder „Zahlungshinweis".',
+      },
+      fields: [
+        {
+          name: 'titel',
+          label: 'Titel',
+          type: 'text',
+          required: true,
+          admin: { description: 'Steht in der Auswahl — kurz und eindeutig.' },
+        },
+        {
+          name: 'inhalt',
+          label: 'Inhalt',
+          type: 'textarea',
+          required: true,
+          custom: { gestaltet: true },
+          admin: {
+            description: 'Der Text, der eingefügt wird — mit Gestaltung, wenn gewünscht.',
+          },
         },
       ],
     },

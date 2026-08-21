@@ -38,6 +38,8 @@ export type ResolvedIntegrations = {
     fromAddress: string
     fromName: string
     notificationEmail?: string
+    /** Kanzlei-Adresse fürs Monatspaket aus dem Steuer-Export */
+    steuerberaterEmail?: string
     /** Nur gesetzt, wenn alle drei Angaben da sind — halb signiert gibt es nicht */
     dkim?: DkimAngaben
   }
@@ -102,6 +104,7 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromAddress: val(doc?.email?.fromAddress, process.env.EMAIL_FROM) || 'noreply@localhost',
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
+      steuerberaterEmail: val(doc?.email?.steuerberaterEmail, process.env.STEUERBERATER_EMAIL),
       dkim,
     },
     mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])
