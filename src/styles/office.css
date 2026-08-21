@@ -2019,7 +2019,24 @@ html.tastatur-offen .buero-inhalt {
  * Die Farbfelder bleiben, wie sie sind — hier ist die Farbe der Inhalt.
  * Sie umzufärben hieße, dem Schreibenden etwas anderes zu zeigen, als beim
  * Empfänger ankommt.
+ *
+ * Nur das erste Feld ist besonders: „Standard" trägt keine Farbe (der Text
+ * folgt dann dem Thema bzw. dem Briefbogen). Damit es nicht wie ein leeres
+ * Loch aussieht, bekommt es Rand und Schrägstrich — das Zeichen, das jeder
+ * aus Farbwählern kennt.
  */
+.buero-schreibfeld .ql-color-picker .ql-picker-item:not([data-value]) {
+  border: 1px solid var(--buero-rahmen);
+  background:
+    linear-gradient(
+      to top right,
+      transparent 44%,
+      #c0392b 46%,
+      #c0392b 54%,
+      transparent 56%
+    ),
+    var(--buero-papier);
+}
 
 /* Der Link-Dialog von Quill */
 .buero-schreibfeld .ql-snow .ql-tooltip {

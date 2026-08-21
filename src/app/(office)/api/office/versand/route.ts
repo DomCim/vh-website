@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { DOKUMENT_RECHT, dokument, type DokumentArt } from '../../../../../lib/dokumente'
+import { htmlHatInhalt, mailHtmlSaeubern } from '../../../../../lib/mailhtml'
 import { nachrichtSenden, postfachFinden } from '../../../../../lib/postfach'
 import { sendMail } from '../../../../../lib/sendMail'
 import { getIntegrations } from '../../../../../lib/settings'
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
       an?: string
       betreff?: string
       text?: string
+      html?: string
       fach?: string
     }
     if (!b.art || !b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
@@ -77,12 +79,16 @@ export async function POST(req: Request) {
 
     const betreff = b.betreff?.trim() || unterlage.betreff
     const text = b.text?.trim() || unterlage.text
+    // Gestalteter Rumpf aus dem Schreibfeld — Signatur steht dann schon drin
+    const gestaltet =
+      typeof b.html === 'string' && htmlHatInhalt(b.html) ? mailHtmlSaeubern(b.html) : null
 
     if (fach) {
       await nachrichtSenden(payload, fach, {
         an,
         betreff,
         text,
+        ...(gestaltet ? { html: gestaltet } : {}),
         dateien: [
           { name: unterlage.dateiname, inhalt: unterlage.datei, typ: 'application/pdf' },
         ],
@@ -91,10 +97,12 @@ export async function POST(req: Request) {
       await sendMail(payload, {
         to: an,
         subject: betreff,
-        html: text
-          .split('\n')
-          .map((zeile) => zeile || '&nbsp;')
-          .join('<br>'),
+        html:
+          gestaltet ??
+          text
+            .split('\n')
+            .map((zeile) => zeile || '&nbsp;')
+            .join('<br>'),
         attachments: [
           { filename: unterlage.dateiname, content: unterlage.datei, contentType: 'application/pdf' },
         ],
@@ -147,6 +155,12 @@ export async function GET(req: Request) {
       text: unterlage.text,
       dateiname: unterlage.dateiname,
       absender: fach?.address ?? email.fromAddress ?? null,
+      /*
+       * Die Signatur kommt mit, damit das Schreibfeld sie gleich anzeigt.
+       * Beim gestalteten Versand hängt der Server sie nämlich nicht mehr an —
+       * was im Feld steht, geht raus, und der Mensch davor hat es gesehen.
+       */
+      signatur: fach?.signature ?? null,
     })
   } catch (err) {
     const grund = err instanceof Error ? err.message : 'fehler'

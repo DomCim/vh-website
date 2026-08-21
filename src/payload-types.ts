@@ -3313,7 +3313,7 @@ export interface Integration {
         sentMailbox?: string | null;
         trashMailbox?: string | null;
         /**
-         * Wird unter jede Mail gesetzt, die aus dem Büro rausgeht. Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.
+         * Wird unter jede Mail gesetzt, die aus dem Büro rausgeht — und lässt sich dort gestalten (fett, Farbe, Link). Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.
          */
         signature?: string | null;
         /**
