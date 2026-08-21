@@ -392,7 +392,17 @@ function signaturText(
   absenderName: string,
   kontakt: { phone?: string | null; website?: string | null },
 ): string {
-  if (fach.signature?.trim()) return fach.signature.trim()
+  if (fach.signature?.trim()) {
+    const roh = fach.signature.trim()
+    /*
+     * Die Signatur kann inzwischen gestaltet sein (HTML aus dem Schreibfeld
+     * der Einstellungen). Dieser Text hier landet aber nur noch auf den
+     * Wegen ohne Gestaltung — Nur-Text-Fassung und Altaufrufer —, also wird
+     * sie dafür zurück zu Klartext. Der gestaltete Weg bekommt sie im
+     * Schreibfeld ohnehin als HTML vorgelegt.
+     */
+    return roh.includes('<') ? htmlAlsText(roh) : roh
+  }
   return [
     'Mit freundlichen Grüßen',
     absenderName,

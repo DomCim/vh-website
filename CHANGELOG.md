@@ -6,6 +6,12 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Mails und Wiedervorlagen lassen sich wischen.** In der Postliste heißt nach links wischen „in den Papierkorb", nach rechts „gelesen/ungelesen umdrehen" — wie in jeder Mail-App. Dazu hat jede Zeile einen „⋯"-Knopf: markieren, löschen oder in einen anderen Ordner verschieben, ohne die Mail zu öffnen. Bei den Wiedervorlagen gilt dasselbe: links löschen, rechts abhaken. Das Scrollen bleibt ungestört — die erste Bewegung entscheidet, ob gewischt oder gescrollt wird.
+
+- **Die Signatur lässt sich gestalten.** Das Signatur-Feld am Postfach ist jetzt dasselbe Schreibfeld wie beim Mailschreiben: fett, Farbe, Link — statt nacktem Text. Bestehende Klartext-Signaturen bleiben gültig und werden beim Öffnen zu Absätzen; wer die Signatur leert, bekommt wieder den automatischen Rückfall aus Absendername und Kontaktdaten.
+
+- **Feinschliff am Handy.** Knöpfe mitten in Formularen nehmen die volle Breite — ein schmaler Knopf zwischen Feldern war ein kleines Ziel für den Daumen. Datumsfelder sehen aus wie alle anderen Felder (vorher zeichnete das iPhone sie mit eigener Höhe und mittigem Text), und Platzhaltertexte sind dezenter.
+
 - **Ziehen zum Aktualisieren — die Geste, die jede App am Handy kann.** Als installierte App gibt es keinen Neuladen-Knopf des Browsers; wer wissen wollte, ob etwas Neues da ist, musste den kleinen Abgleichpunkt oben rechts treffen. Jetzt genügt es, ganz oben auf einer Seite nach unten zu ziehen: Ein kleiner Kreis kommt hervor, ab der Schwelle wird er bronze, loslassen stößt den Abgleich an — Wartendes geht raus, Neues kommt herein. Die Seite wird dabei bewusst nicht hart neu geladen: Das Büro lebt aus dem Bestand im Gerät, und man bleibt, wo man war. „Bestand neu holen" in den Einstellungen bleibt daneben bestehen — das ist das Reparaturwerkzeug für den Fall, dass etwas fehlt, und wirft alles weg und holt es von vorn.
 
 ## 21.08.2026 — ERP-Audit: Storno, Rechte, Partnerkette, MCP-Härtung — und die Meldungsglocke

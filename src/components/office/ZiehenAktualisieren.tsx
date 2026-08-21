@@ -42,7 +42,8 @@ export function ZiehenAktualisieren() {
   const ohneAnmeldung = pfad === '/office/login' || pfad === '/office/kein-zugang'
   const zeiger = useRef<HTMLDivElement>(null)
   const [laeuft, setLaeuft] = useState(false)
-  const stand = useRef<{ startY: number; aktiv: boolean; strecke: number }>({
+  const stand = useRef<{ startX: number; startY: number; aktiv: boolean; strecke: number }>({
+    startX: 0,
     startY: 0,
     aktiv: false,
     strecke: 0,
@@ -65,14 +66,21 @@ export function ZiehenAktualisieren() {
 
     const anfang = (e: TouchEvent) => {
       if (laeuftRef.current || e.touches.length !== 1 || !obenAm()) return
-      stand.current = { startY: e.touches[0]!.clientY, aktiv: true, strecke: 0 }
+      stand.current = {
+        startX: e.touches[0]!.clientX,
+        startY: e.touches[0]!.clientY,
+        aktiv: true,
+        strecke: 0,
+      }
     }
 
     const ziehen = (e: TouchEvent) => {
       if (!stand.current.aktiv || laeuftRef.current) return
       const delta = e.touches[0]!.clientY - stand.current.startY
-      // Wer nach oben wischt oder längst scrollt, will scrollen — Geste beenden
-      if (delta <= 0 || !obenAm()) {
+      const seitlich = Math.abs(e.touches[0]!.clientX - stand.current.startX)
+      // Wer nach oben wischt, längst scrollt — oder seitlich wischt (etwa
+      // eine Mail-Zeile) —, meint nicht das Neuladen: Geste beenden
+      if (delta <= 0 || !obenAm() || (seitlich > 12 && seitlich > delta)) {
         stand.current.aktiv = false
         zeichnen(0)
         return

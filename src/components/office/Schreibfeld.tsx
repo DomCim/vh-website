@@ -34,6 +34,8 @@ import 'quill/dist/quill.snow.css'
 type Props = {
   wert: string
   aendern: (html: string) => void
+  /** Was im leeren Feld steht — Standard „Nachricht …" */
+  platzhalter?: string
 }
 
 /** Was in der Leiste steht — mehr wäre für eine Mail Zierde */
@@ -47,7 +49,7 @@ const LEISTE = [
   ['clean'],
 ]
 
-export function Schreibfeld({ wert, aendern }: Props) {
+export function Schreibfeld({ wert, aendern, platzhalter = 'Nachricht …' }: Props) {
   const behaelter = useRef<HTMLDivElement>(null)
   const [gescheitert, setGescheitert] = useState(false)
   const [bereit, setBereit] = useState(false)
@@ -77,7 +79,7 @@ export function Schreibfeld({ wert, aendern }: Props) {
 
         const q = new Quill(behaelter.current, {
           theme: 'snow',
-          placeholder: 'Nachricht …',
+          placeholder: platzhalter,
           modules: { toolbar: LEISTE },
         })
 
@@ -117,7 +119,7 @@ export function Schreibfeld({ wert, aendern }: Props) {
           rows={14}
           value={wert}
           onChange={(e) => aendern(e.target.value)}
-          placeholder="Nachricht …"
+          placeholder={platzhalter}
         />
         <span className="buero-unterzeile">
           Das Schreibfeld ließ sich nicht laden — es geht als einfacher Text weiter.

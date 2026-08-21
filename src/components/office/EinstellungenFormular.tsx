@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { FeldBeschreibung } from '../../lib/felderLesen'
+import { htmlHatInhalt } from '../../lib/mailhtml'
 import { Fussleiste } from './Fussleiste'
+import { Schreibfeld } from './Schreibfeld'
 
 /**
  * Einstellungen im Büro — gerendert aus der Feldbeschreibung von Payload.
@@ -105,6 +107,19 @@ function eintragNeben(eintrag: Werte, felder: FeldBeschreibung[]): string {
   return ''
 }
 
+/** Ältere Klartext-Signaturen fürs Schreibfeld zu Absätzen machen */
+function klartextAlsHtml(wert: string): string {
+  const sauber = wert.trim()
+  if (!sauber || sauber.includes('<')) return sauber
+  return sauber
+    .split(/\r?\n/)
+    .map(
+      (z) =>
+        `<p>${z.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '<br>'}</p>`,
+    )
+    .join('')
+}
+
 function Geheimfeld({ wert, aendern }: { wert: string; aendern: (neu: string) => void }) {
   const [sichtbar, setSichtbar] = useState(false)
   return (
@@ -160,6 +175,27 @@ function Feld({
         <span>{feld.label}</span>
         {feld.hinweis && <span className="buero-unterzeile"> — {feld.hinweis}</span>}
       </label>
+    )
+  }
+
+  if (feld.art === 'gestaltet') {
+    return (
+      <div className="buero-feld">
+        <span>{feld.label}</span>
+        {/*
+          * Das Schreibfeld der Mails, hier für die Signatur: Was man beim
+          * Schreiben gestalten kann, soll auch die Grußformel können. Ältere
+          * Klartext-Signaturen werden beim Öffnen zu Absätzen; leer gemachte
+          * werden wieder als leer gespeichert, damit der Rückfall auf
+          * Absendername und Kontaktdaten greift.
+          */}
+        <Schreibfeld
+          wert={klartextAlsHtml((wert as string) ?? '')}
+          aendern={(html) => setzen(eigenerPfad, htmlHatInhalt(html) ? html : '')}
+          platzhalter="Mit freundlichen Grüßen …"
+        />
+        {feld.hinweis && <span className="buero-unterzeile">{feld.hinweis}</span>}
+      </div>
     )
   }
 
