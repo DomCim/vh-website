@@ -647,7 +647,7 @@ Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inh
 
 Alternativ lassen sich die Schlüssel weiterhin als Umgebungsvariablen `MCP_API_KEY` / `MCP_READONLY_API_KEY` setzen — sie greifen nur, wenn im Admin nichts hinterlegt ist. Ohne jeden Schlüssel antwortet der Endpunkt mit 503.
 
-Es gibt **zwei Schlüssel**: Der volle Zugriff bringt alle 47 Werkzeuge und wirkt wie ein Admin-Passwort. Der Nur-Lese-Schlüssel bringt 19 — Schreib- und Löschwerkzeuge erscheinen damit gar nicht erst in der Werkzeugliste. Praktisch für Auswertungen, ohne den Vollzugriff aus der Hand zu geben.
+Es gibt **zwei Schlüssel**: Der volle Zugriff bringt sämtliche Werkzeuge und wirkt wie ein Admin-Passwort. Der Nur-Lese-Schlüssel bringt nur die lesenden — Schreib- und Löschwerkzeuge erscheinen damit gar nicht erst in der Werkzeugliste. Aber Vorsicht mit dem Wort „nur": Auch lesend stehen dort offene Posten, Partnerdaten und Umsätze — der Nur-Lese-Schlüssel ist ein Betriebsdaten-Schlüssel, kein harmloser.
 
 ### Was der Assistent kann
 
@@ -664,13 +664,15 @@ Es gibt **zwei Schlüssel**: Der volle Zugriff bringt alle 47 Werkzeuge und wirk
 | **Mediathek** | `medien_liste`, `bild_hochladen`, `bild_aendern`, `bild_loeschen` |
 | **Seitentexte** | `seite_lesen`, `seite_schreiben` (Startseite, Über uns, Einstellungen, Rechtliches) |
 | **Auswertung** | `suchen`, `uebersetzungen_pruefen`, `website_check`, `shop_statistik` |
+| **Büro** | `offene_posten_liste`, `auftraege_liste`, `material_liste`, `partner_liste`, `partner_anlegen`, `partner_aendern`, `stueckliste_setzen`, `wiedervorlagen_liste`, `wiedervorlage_anlegen`, `angebot_entwurf_anlegen`, `rechnung_entwurf_anlegen` |
+| **Leitplanken** | `leitplanken_lesen` — Hausregeln plus Freigabe, ohne die kein schreibendes Werkzeug arbeitet |
 
 ### Vier Regeln, die überall gelten
 
 - **Sprachen.** Jedes lesende und ändernde Werkzeug kennt `sprache` (`de`/`fr`/`en`). Angelegt wird immer auf Deutsch, Französisch und Englisch trägt man mit demselben `*_aendern`-Aufruf nach. `uebersetzungen_pruefen` listet auf, was noch fehlt — das ist die Arbeitsliste.
 - **Seitentexte.** Vor jedem `seite_schreiben` zuerst `seite_lesen` aufrufen. Listen (Hero-Slider, Zeitleiste, Highlights) werden komplett ersetzt, nicht ergänzt.
 - **Löschen ist zweistufig.** Ohne `bestaetigen: true` kommt nur eine Vorschau, was gelöscht würde. Bestellungen und Seitentexte lassen sich gar nicht löschen; Bilder nur, wenn sie nirgends mehr verwendet werden.
-- **Zugangsdaten bleiben außen vor.** Das Global *Integrationen* mit SMTP-, PayPal- und Facebook-Zugängen ist bewusst nicht angebunden — weder lesend noch schreibend.
+- **Zugangsdaten bleiben außen vor.** Das Global *Integrationen* mit SMTP-, PayPal- und Facebook-Zugängen ist bewusst nicht angebunden — weder lesend noch schreibend. In den *Einstellungen* sind zusätzlich die Firmenstammdaten (`company` mit IBAN, SIRET, TVA) und der Stundensatz (`craft`) gesperrt: Die Bankverbindung auf den Rechnungen ändert kein Assistent, und lesen muss er sie auch nicht. Rechnungs- und Angebots-Werkzeuge legen ausschließlich **Entwürfe** an — Nummer und Versand gibt es nur im Büro.
 
 ### Bilder hochladen
 

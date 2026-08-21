@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { db, fehler, type McpServer, ok } from './helpers'
-import { BESTELL_STATUS, textKarte, werteVon } from '../listen'
+import { BESTELL_STATUS, BESTELL_UEBERGAENGE, textKarte, werteVon } from '../listen'
 
 type BestellStatus = (typeof BESTELL_STATUS)[number]['value']
 const statusEnum = z.enum(werteVon(BESTELL_STATUS) as [BestellStatus, ...BestellStatus[]])
@@ -128,6 +128,14 @@ export function registerBestellungen(server: McpServer) {
       if (o.status === 'cancelled') {
         return fehler(`Bestellung ${bestellnummer} ist storniert.`)
       }
+      // Eine unbezahlte Bestellung geht nicht in Fertigung — die Mail dazu
+      // wäre eine Falschmeldung an die Kundschaft.
+      if (o.status !== 'paid') {
+        return fehler(
+          `Bestellung ${bestellnummer} steht auf „${STATUS_TEXT[o.status ?? ''] ?? o.status}" — ` +
+            'in Fertigung geht nur, was bezahlt ist. Es wurde nichts geändert.',
+        )
+      }
       await payload.update({
         collection: 'orders',
         id: o.id,
@@ -142,7 +150,8 @@ export function registerBestellungen(server: McpServer) {
         bestellnummer,
         neuerStatus: 'inProduction',
         voraussichtlichFertig: voraussichtlichFertig ?? o.expectedReady ?? null,
-        hinweis: 'Der Kunde hat eine E-Mail zur Fertigung erhalten.',
+        hinweis:
+          'Die E-Mail zur Fertigung wurde angestoßen — ob sie ankam, weiß nur der Mailserver.',
       })
     },
   )
@@ -180,7 +189,9 @@ export function registerBestellungen(server: McpServer) {
         bestellnummer,
         neuerStatus: 'shipped',
         sendungsnummer,
-        hinweis: 'Versand-Mail mit Sendungsnummer wurde verschickt.',
+        // Nicht „wurde verschickt": Die Mail hängt am Hook und läuft asynchron —
+        // ob sie ankam, weiß dieses Werkzeug nicht.
+        hinweis: 'Versand-Mail mit Sendungsnummer wurde angestoßen.',
       })
     },
   )
@@ -199,6 +210,21 @@ export function registerBestellungen(server: McpServer) {
       const payload = await db()
       const o = await findeBestellung(payload, bestellnummer)
       if (!o) return fehler(`Bestellung ${bestellnummer} nicht gefunden`)
+      /*
+       * Nur erlaubte Übergänge: cancelled → paid oder shipped → pending hat
+       * noch nie etwas repariert, aber schon Kundenmails ausgelöst, die nie
+       * hätten rausgehen dürfen. Wer wirklich zurück muss, macht das im Büro.
+       */
+      const erlaubt = BESTELL_UEBERGAENGE[o.status ?? ''] ?? []
+      if (o.status !== status && !erlaubt.includes(status)) {
+        return fehler(
+          `Von „${STATUS_TEXT[o.status ?? ''] ?? o.status}" geht es nicht nach ` +
+            `„${STATUS_TEXT[status] ?? status}". ` +
+            (erlaubt.length
+              ? `Möglich wäre: ${erlaubt.map((s) => STATUS_TEXT[s] ?? s).join(', ')}.`
+              : 'Dieser Stand ist endgültig — Änderungen daran macht das Büro.'),
+        )
+      }
       await payload.update({
         collection: 'orders',
         id: o.id,
@@ -212,7 +238,7 @@ export function registerBestellungen(server: McpServer) {
         ...(status === 'shipped' && !o.trackingNumber
           ? {
               warnung:
-                'Es war keine Sendungsnummer hinterlegt — die Versand-Mail ging ohne Sendungsverfolgung raus. Künftig bestellung_versenden verwenden.',
+                'Es war keine Sendungsnummer hinterlegt — die Versand-Mail wurde ohne Sendungsverfolgung angestoßen. Künftig bestellung_versenden verwenden.',
             }
           : {}),
       })

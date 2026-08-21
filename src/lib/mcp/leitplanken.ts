@@ -6,7 +6,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
  * **Das Problem.** Ein Assistent, der frisch an diesen Server andockt, weiß
  * nichts über den Betrieb. Er weiß nicht, dass jedes Stück einzeln entsteht,
  * dass Inhalte auf Deutsch beginnen, dass eine Rechnung ein Buchungsvorgang
- * ist. Er sieht siebenundvierzig Werkzeuge und legt los. Was dabei
+ * ist. Er sieht Dutzende Werkzeuge und legt los. Was dabei
  * herauskommt, ist selten böse und oft falsch.
  *
  * **Die Lösung, und was sie nicht ist.** `leitplanken_lesen` gibt die
@@ -21,9 +21,10 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
  * registriert, und was nicht da ist, lässt sich nicht überreden.
  *
  * Was die Freigabe leistet, ist zweierlei: Sie sorgt dafür, dass die Regeln im
- * Kopf sind, wenn geschrieben wird. Und sie steht in jedem Protokolleintrag —
- * bei „wer hat das geändert?" ist das der Unterschied zwischen einer Antwort
- * und einem Achselzucken.
+ * Kopf sind, wenn geschrieben wird. Und sie steht in jedem Protokolleintrag
+ * (der Freigabe-Proxy in helpers.ts schreibt je Schreibzugriff eine Logzeile
+ * mit Werkzeug und Freigabe-Kennung) — bei „wer hat das geändert?" ist das
+ * der Unterschied zwischen einer Antwort und einem Achselzucken.
  *
  * **Warum ohne Datenbank.** Die Freigabe trägt ihre Gültigkeit in sich: ein
  * Zeitstempel, unterschrieben mit dem Serverschlüssel. Kein Tisch, in dem

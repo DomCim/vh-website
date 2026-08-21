@@ -26,9 +26,54 @@ export function zuVieleAnfragen(schluessel: string, maximum: number, fensterMs: 
   return false
 }
 
-/** Absender-IP aus den üblichen Proxy-Kopfzeilen */
+/** Liegt die Adresse in einem privaten Bereich? Dann ist es einer unserer Proxys. */
+function eigenerProxy(ip: string): boolean {
+  if (ip.includes(':')) {
+    const v6 = ip.toLowerCase()
+    return (
+      v6 === '::1' ||
+      v6.startsWith('fc') ||
+      v6.startsWith('fd') ||
+      v6.startsWith('fe8') ||
+      v6.startsWith('::ffff:10.') ||
+      v6.startsWith('::ffff:127.') ||
+      v6.startsWith('::ffff:172.') ||
+      v6.startsWith('::ffff:192.168.')
+    )
+  }
+  const teile = ip.split('.').map(Number)
+  if (teile.length !== 4) return false
+  const [a, b] = teile
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
+  )
+}
+
+/**
+ * Absender-IP aus den üblichen Proxy-Kopfzeilen.
+ *
+ * Nicht der **erste** Eintrag in X-Forwarded-For — den schreibt der Absender
+ * selbst und kann ihn bei jedem Versuch wechseln, womit das Limit keines
+ * wäre. Stattdessen von rechts: Die eigenen Proxys (Nginx Proxy Manager,
+ * Traefik — beide mit privaten Adressen) überspringen und den ersten
+ * öffentlichen Eintrag nehmen. Das funktioniert hinter null, einem oder zwei
+ * eigenen Proxys, ohne dass jemand eine Liste pflegen muss.
+ */
 export function ipAus(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0]!.trim()
+  if (forwarded) {
+    const kette = forwarded
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+    for (let i = kette.length - 1; i >= 0; i--) {
+      if (!eigenerProxy(kette[i]!)) return kette[i]!
+    }
+    // Alles privat (Entwicklung, internes Netz): der letzte Eintrag genügt
+    if (kette.length) return kette[kette.length - 1]!
+  }
   return req.headers.get('x-real-ip') ?? 'unbekannt'
 }
