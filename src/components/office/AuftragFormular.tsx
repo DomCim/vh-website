@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { AUFTRAG_STATUS } from '../../lib/listen'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
@@ -71,13 +72,7 @@ export type PostenAuswahl = { id: number; name: string; unit: string; quantity: 
 
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
-const STATUS = [
-  { wert: 'geplant', text: 'Geplant' },
-  { wert: 'inFertigung', text: 'In Fertigung' },
-  { wert: 'fertig', text: 'Fertig' },
-  { wert: 'geliefert', text: 'Geliefert' },
-  { wert: 'abgebrochen', text: 'Abgebrochen' },
-]
+const STATUS = AUFTRAG_STATUS.map((s) => ({ wert: s.value, text: s.label }))
 
 /**
  * Ein Stück durch die Werkstatt begleiten.

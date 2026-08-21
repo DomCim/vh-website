@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
+import { ANFRAGE_STATUS } from '../lib/listen'
 import { benachrichtige } from '../lib/push'
 import { liveHooks } from '../lib/liveHooks'
 
@@ -68,12 +69,7 @@ export const Inquiries: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'neu',
-      options: [
-        { label: 'Neu', value: 'neu' },
-        { label: 'In Bearbeitung', value: 'inBearbeitung' },
-        { label: 'Beantwortet', value: 'beantwortet' },
-        { label: 'Erledigt', value: 'erledigt' },
-      ],
+      options: [...ANFRAGE_STATUS],
       admin: { position: 'sidebar' },
     },
     {

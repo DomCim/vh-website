@@ -7,6 +7,7 @@ import { stufenBerechnen, type Zahlplan } from '../../lib/anzahlung'
 import { useBestand, useRahmen } from '../../lib/buero/bestand'
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum, euro } from '../../lib/format'
+import { RECHNUNG_STUFEN, textKarte } from '../../lib/listen'
 import {
   eingegangen,
   offenerBetrag,
@@ -42,10 +43,9 @@ type Rechnung = {
   total?: number | null
 }
 
+// In der Leiste heißt „vollstaendig" schlicht „Rechnung" — der lange Titel gehört ins Formular.
 const bezeichnung: Record<string, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
+  ...textKarte(RECHNUNG_STUFEN),
   vollstaendig: 'Rechnung',
 }
 

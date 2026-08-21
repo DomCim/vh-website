@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { AUFTRAG_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
 
@@ -43,6 +44,12 @@ export async function POST(req: Request) {
     // muss ihn auch nicht mitschicken.
     if (!b.id && !b.title?.trim()) {
       return NextResponse.json({ error: 'titel-fehlt' }, { status: 400 })
+    }
+
+    // Ein Tippfehler im Status liefe sonst bis in die Datenbank durch —
+    // und die Übersichten wüssten nicht, in welche Spalte damit.
+    if (b.status && !werteVon(AUFTRAG_STATUS).includes(b.status)) {
+      return NextResponse.json({ error: 'status-unbekannt' }, { status: 400 })
     }
 
     const daten = {

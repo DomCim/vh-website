@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { BESTELL_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,11 @@ export async function POST(req: Request) {
 
     const b = (await req.json()) as Record<string, any>
     if (!b.id) return NextResponse.json({ error: 'id-fehlt' }, { status: 400 })
+
+    // Ein Tippfehler im Status liefe sonst bis in die Datenbank durch.
+    if (b.status && !werteVon(BESTELL_STATUS).includes(b.status)) {
+      return NextResponse.json({ error: 'status-unbekannt' }, { status: 400 })
+    }
 
     // Versand ohne Sendungsnummer wäre für die Kundschaft eine leere Mail
     if (b.status === 'shipped' && !b.trackingNumber?.trim()) {

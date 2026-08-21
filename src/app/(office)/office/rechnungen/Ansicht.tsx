@@ -7,16 +7,12 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum, euro } from '../../../../lib/format'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte } from '../../../../lib/listen'
 import { tageSeit } from '../../../../lib/zahlungsstand'
 
 /** Rechnungen — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  entwurf: { text: 'Entwurf', art: '' },
-  gestellt: { text: 'Gestellt', art: 'offen' },
-  bezahlt: { text: 'Bezahlt', art: 'gut' },
-  storniert: { text: 'Storniert', art: 'warn' },
-}
+const STATUS = statusKarte(RECHNUNG_STATUS)
 
 type Rechnung = {
   id: number | string
@@ -31,11 +27,8 @@ type Rechnung = {
   createdAt?: string | null
 }
 
-const STUFE: Record<string, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
-}
+// „Vollständige Rechnung" bekommt bewusst kein Abzeichen — das ist der Normalfall.
+const STUFE = textKarte(RECHNUNG_STUFEN.filter((s) => s.value !== 'vollstaendig'))
 
 const ueberfaellig = (r: Rechnung) =>
   r.status === 'gestellt' && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()

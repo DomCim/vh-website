@@ -1,16 +1,12 @@
 import { z } from 'zod'
 
 import { db, fehler, type McpServer, ok } from './helpers'
+import { BESTELL_STATUS, textKarte, werteVon } from '../listen'
 
-const statusEnum = z.enum(['pending', 'paid', 'inProduction', 'shipped', 'cancelled'])
+type BestellStatus = (typeof BESTELL_STATUS)[number]['value']
+const statusEnum = z.enum(werteVon(BESTELL_STATUS) as [BestellStatus, ...BestellStatus[]])
 
-const STATUS_TEXT: Record<string, string> = {
-  pending: 'Offen (unbezahlt)',
-  paid: 'Bezahlt',
-  inProduction: 'In Fertigung',
-  shipped: 'Versendet',
-  cancelled: 'Storniert',
-}
+const STATUS_TEXT = textKarte(BESTELL_STATUS)
 
 async function findeBestellung(payload: Awaited<ReturnType<typeof db>>, bestellnummer: string) {
   const { docs } = await payload.find({

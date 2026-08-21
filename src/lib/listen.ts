@@ -27,3 +27,95 @@ export const MAHN_TITEL: Record<1 | 2 | 3, string> = {
   2: 'Mahnung',
   3: 'Letzte Mahnung',
 }
+
+/*
+ * Die Status-Listen der Vorgänge.
+ *
+ * Dieselbe Liste stand eine Zeit lang in der Collection, im Formular und in
+ * der Übersicht — dreimal, und bei den Bestellungen fünfmal. Das ging gut,
+ * bis die erste Beschriftung nur an einer Stelle geändert wurde. Seitdem
+ * gilt: Werte, Beschriftung und Ampelfarbe (`art`) stehen hier, alles andere
+ * leitet ab.
+ *
+ * `art` ist die Farbe des Status-Abzeichens in den Büro-Listen:
+ * '' = neutral, 'offen' = wartet auf uns, 'gut' = erledigt, 'warn' = Achtung.
+ */
+
+export const AUFTRAG_STATUS = [
+  { label: 'Geplant', value: 'geplant', art: '' },
+  { label: 'In Fertigung', value: 'inFertigung', art: 'offen' },
+  { label: 'Fertig', value: 'fertig', art: 'gut' },
+  { label: 'Geliefert', value: 'geliefert', art: 'gut' },
+  { label: 'Abgebrochen', value: 'abgebrochen', art: 'warn' },
+] as const
+
+export const BESTELL_STATUS = [
+  { label: 'Offen (unbezahlt)', value: 'pending', art: 'offen' },
+  { label: 'Bezahlt', value: 'paid', art: 'gut' },
+  { label: 'In Fertigung', value: 'inProduction', art: 'offen' },
+  { label: 'Versendet', value: 'shipped', art: 'gut' },
+  { label: 'Storniert', value: 'cancelled', art: 'warn' },
+] as const
+
+/*
+ * Welcher Bestellstatus von wo aus erreichbar ist. Ein Sprung zurück —
+ * versendet zu unbezahlt, storniert zu bezahlt — hat noch nie etwas
+ * repariert, aber schon Kundenmails ausgelöst, die nie hätten rausgehen
+ * dürfen. Wer wirklich zurück muss, macht das im Admin, nicht im Vorbeigehen.
+ */
+export const BESTELL_UEBERGAENGE: Record<string, readonly string[]> = {
+  pending: ['paid', 'cancelled'],
+  paid: ['inProduction', 'shipped', 'cancelled'],
+  inProduction: ['shipped', 'cancelled'],
+  shipped: [],
+  cancelled: [],
+}
+
+export const RECHNUNG_STATUS = [
+  { label: 'Entwurf', value: 'entwurf', art: '' },
+  { label: 'Gestellt', value: 'gestellt', art: 'offen' },
+  { label: 'Bezahlt', value: 'bezahlt', art: 'gut' },
+  { label: 'Storniert', value: 'storniert', art: 'warn' },
+] as const
+
+export const RECHNUNG_STUFEN = [
+  { label: 'Vollständige Rechnung', value: 'vollstaendig' },
+  { label: 'Anzahlung', value: 'anzahlung' },
+  { label: 'Zwischenrechnung', value: 'zwischen' },
+  { label: 'Schlussrechnung', value: 'schluss' },
+] as const
+
+export const ANGEBOT_STATUS = [
+  { label: 'Entwurf', value: 'entwurf', art: '' },
+  { label: 'Versendet', value: 'versendet', art: 'offen' },
+  { label: 'Angenommen', value: 'angenommen', art: 'gut' },
+  { label: 'Abgelehnt', value: 'abgelehnt', art: 'warn' },
+] as const
+
+export const ANFRAGE_STATUS = [
+  { label: 'Neu', value: 'neu', art: 'offen' },
+  { label: 'In Bearbeitung', value: 'inBearbeitung', art: 'offen' },
+  { label: 'Beantwortet', value: 'beantwortet', art: 'gut' },
+  { label: 'Erledigt', value: 'erledigt', art: '' },
+] as const
+
+export const ANFRAGE_ARTEN = [
+  { label: 'Kontaktformular', value: 'kontakt' },
+  { label: 'Produktanfrage', value: 'produkt' },
+  { label: 'Maßanfertigung', value: 'massanfertigung' },
+] as const
+
+type Eintrag = { readonly label: string; readonly value: string; readonly art?: string }
+
+/** Nur die Werte — für Prüfungen in Routen und für Schema-Enums. */
+export const werteVon = (liste: readonly Eintrag[]): string[] => liste.map((e) => e.value)
+
+/** Wert → Beschriftung, z. B. für Listen und Protokolltexte. */
+export const textKarte = (liste: readonly Eintrag[]): Record<string, string> =>
+  Object.fromEntries(liste.map((e) => [e.value, e.label]))
+
+/** Wert → { text, art } — die Form, in der die Büro-Übersichten es brauchen. */
+export const statusKarte = (
+  liste: readonly Eintrag[],
+): Record<string, { text: string; art: string }> =>
+  Object.fromEntries(liste.map((e) => [e.value, { text: e.label, art: e.art ?? '' }]))

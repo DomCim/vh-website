@@ -5,16 +5,11 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
+import { BESTELL_STATUS, statusKarte } from '../../../../lib/listen'
 
 /** Bestellungen aus dem Shop — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  pending: { text: 'Unbezahlt', art: 'offen' },
-  paid: { text: 'Bezahlt', art: 'gut' },
-  inProduction: { text: 'In Fertigung', art: 'offen' },
-  shipped: { text: 'Versendet', art: 'gut' },
-  cancelled: { text: 'Storniert', art: 'warn' },
-}
+const STATUS = statusKarte(BESTELL_STATUS)
 
 type Bestellung = {
   id: number | string

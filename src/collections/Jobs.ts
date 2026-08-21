@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { AUFTRAG_STATUS } from '../lib/listen'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
@@ -246,13 +247,7 @@ export const Jobs: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'geplant',
-      options: [
-        { label: 'Geplant', value: 'geplant' },
-        { label: 'In Fertigung', value: 'inFertigung' },
-        { label: 'Fertig', value: 'fertig' },
-        { label: 'Geliefert', value: 'geliefert' },
-        { label: 'Abgebrochen', value: 'abgebrochen' },
-      ],
+      options: [...AUFTRAG_STATUS],
       admin: {
         position: 'sidebar',
         description:

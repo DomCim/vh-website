@@ -8,14 +8,11 @@ import { AnfrageFormular } from '../../../../../components/office/AnfrageFormula
 import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { useAbgleich, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum } from '../../../../../lib/format'
+import { ANFRAGE_ARTEN, textKarte } from '../../../../../lib/listen'
 
 /** Eine Anfrage im Ganzen — aus dem Bestand im Gerät. */
 
-const ART: Record<string, string> = {
-  kontakt: 'Kontaktformular',
-  produkt: 'Produktanfrage',
-  massanfertigung: 'Maßanfertigung',
-}
+const ART = textKarte(ANFRAGE_ARTEN)
 
 type Anfrage = {
   id: number | string
