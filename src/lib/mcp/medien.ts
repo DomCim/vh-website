@@ -52,7 +52,8 @@ function privateAdresse(ip: string): boolean {
   )
 }
 
-async function urlPruefen(roh: string): Promise<string | null> {
+/** Exportiert für die Prüfung in tests/mcp-haertung.spec.ts */
+export async function urlPruefen(roh: string): Promise<string | null> {
   let url: URL
   try {
     url = new URL(roh)
