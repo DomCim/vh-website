@@ -14,6 +14,7 @@ import { Meldungsglocke } from '../../components/office/Meldungsglocke'
 import { Scrollstart } from '../../components/office/Scrollstart'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import { Tastaturwache } from '../../components/office/Tastaturwache'
+import { ZiehenAktualisieren } from '../../components/office/ZiehenAktualisieren'
 import '../../styles/office.css'
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
       <body className="buero">
         <Scrollstart />
         <Haptik />
+        <ZiehenAktualisieren />
         <SitzungVerlaengern />
         <Tastaturwache />
         <BestandAnbieter />

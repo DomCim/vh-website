@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Ziehen zum Aktualisieren — die Geste, die jede App am Handy kann.** Als installierte App gibt es keinen Neuladen-Knopf des Browsers; wer wissen wollte, ob etwas Neues da ist, musste den kleinen Abgleichpunkt oben rechts treffen. Jetzt genügt es, ganz oben auf einer Seite nach unten zu ziehen: Ein kleiner Kreis kommt hervor, ab der Schwelle wird er bronze, loslassen stößt den Abgleich an — Wartendes geht raus, Neues kommt herein. Die Seite wird dabei bewusst nicht hart neu geladen: Das Büro lebt aus dem Bestand im Gerät, und man bleibt, wo man war. „Bestand neu holen" in den Einstellungen bleibt daneben bestehen — das ist das Reparaturwerkzeug für den Fall, dass etwas fehlt, und wirft alles weg und holt es von vorn.
+
+## 21.08.2026 — ERP-Audit: Storno, Rechte, Partnerkette, MCP-Härtung — und die Meldungsglocke
+
 - **Ein Storno drückte den Umsatz doppelt — jetzt zählt er richtig.** Beim Stornieren entsteht eine Gegenrechnung mit negativen Beträgen, das Original wird als „storniert" markiert. Die Übersicht und der Steuer-Export zählten aber nur die Gegenrechnung und ließen das Original weg: Der Betrag fehlte zweimal statt einmal. Jetzt erscheinen beide Belege — sie heben sich auf, und der Steuerberater sieht das Paar mit Kennzeichnung. Die Gegenrechnung steht dafür nicht mehr bei den offenen Posten und wird nicht mehr angemahnt: Aus einem Storno ist nichts zu zahlen.
 
 - **Jeder sieht nur noch seine Bereiche im Gerät.** Das Büro spielt seinen Datenbestand aufs Gerät, damit es ohne Netz arbeitet. Bisher bekam jeder, der das Büro öffnen durfte, dabei alles — auch Rechnungen, Belege und Kontobewegungen; ausgeblendet war nur die Anzeige. Jetzt entscheiden die Rechte, was überhaupt ins Gerät kommt, und wem ein Recht entzogen wird, dessen Gerät leert die betroffenen Bereiche beim nächsten Abgleich von selbst.
