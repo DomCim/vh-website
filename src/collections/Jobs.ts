@@ -5,6 +5,7 @@ import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
+import { meldungVerschicken } from '../lib/auftragsmeldung'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -81,6 +82,32 @@ export const Jobs: CollectionConfig = {
               `Auftrag ${doc.jobNumber}: Schlussrechnung nicht vorbereitet`,
             ),
           )
+        }
+
+        /*
+         * Statusmeldung an die Kundschaft — für alles, was nicht aus dem Shop
+         * kommt. Der Auslöser sitzt hier und nicht in der Büro-Route, damit er
+         * auch greift, wenn der Status im Admin oder über MCP wechselt.
+         *
+         * Der Auftrag wird dafür mit Tiefe 1 nachgeladen: Sprache und Adresse
+         * hängen am Geschäftspartner, und `doc` trägt hier nur dessen ID.
+         */
+        if (doc.status !== previousDoc?.status) {
+          try {
+            const voll = await req.payload.findByID({
+              collection: 'jobs',
+              id: doc.id,
+              depth: 1,
+              overrideAccess: true,
+              req,
+            })
+            await meldungVerschicken(req.payload, voll as never, previousDoc?.status, req)
+          } catch (err) {
+            req.payload.logger.error(
+              { err },
+              `Auftrag ${doc.jobNumber}: Statusmeldung fehlgeschlagen`,
+            )
+          }
         }
 
         // Bestellung mitziehen: der Kunde erfährt vom Fertigungsstart
@@ -411,6 +438,104 @@ export const Jobs: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: { hidden: true },
+    },
+    {
+      /*
+       * Wie das Stück zur Kundschaft kommt.
+       *
+       * Entscheidet über die Meldungen: Bei Abholung sagt „fertig" schon
+       * alles („zur Abholung bereit"), und eine Versandmeldung wäre falsch.
+       */
+      name: 'lieferart',
+      label: 'Lieferung',
+      type: 'select',
+      defaultValue: 'versand',
+      options: [
+        { label: 'Versand', value: 'versand' },
+        { label: 'Abholung', value: 'abholung' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+    {
+      type: 'row',
+      admin: {
+        condition: (daten: { lieferart?: string }) => daten?.lieferart !== 'abholung',
+      },
+      fields: [
+        {
+          name: 'trackingNumber',
+          label: 'Sendungsnummer',
+          type: 'text',
+          admin: {
+            description:
+              'Geht mit der Liefermeldung an die Kundschaft. Leer lassen, wenn du selbst ' +
+              'lieferst — die Meldung geht dann ohne Sendungsverfolgung raus.',
+          },
+        },
+        { name: 'trackingUrl', label: 'Link zur Sendungsverfolgung', type: 'text' },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          /*
+           * Ohne Adresse keine Meldung — das ist keine Frage der Einstellung,
+           * sondern des Möglichen. Diese hier ist der Rückfall für Kundschaft,
+           * die nicht als Geschäftspartner geführt wird: Am Auftrag steht dann
+           * nur ein Name im Textfeld, und ein Name ist keine Adresse.
+           */
+          name: 'kundeEmail',
+          label: 'E-Mail des Kunden',
+          type: 'email',
+          admin: {
+            description:
+              'Nur nötig, wenn oben kein Geschäftspartner verknüpft ist. Dessen Adresse gilt.',
+          },
+        },
+        {
+          name: 'kundeBenachrichtigen',
+          label: 'Kunde über den Fortschritt benachrichtigen',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Aus, wenn ihr ohnehin telefoniert. Dann meldet das Büro nichts von selbst.',
+          },
+        },
+      ],
+    },
+    {
+      /*
+       * Wann worüber gemeldet wurde — und der Riegel gegen Doppelmeldungen.
+       *
+       * Ein Blick auf den vorigen Stand allein genügt dafür nicht: Wer einen
+       * Auftrag versehentlich auf „geliefert" stellt, zurücksetzt und später
+       * wieder vorstellt, bekäme zwei Liefermeldungen an dieselbe Kundschaft.
+       * Steht hier ein Datum, ist die Sache erledigt — unabhängig davon, wie
+       * oft der Status danach noch hin und her geht.
+       *
+       * Zugleich ist es das, was das Büro anzeigt: „am 21.08. benachrichtigt"
+       * statt einer Lücke, die aussieht wie „ist informiert".
+       */
+      name: 'gemeldet',
+      label: 'Benachrichtigt am',
+      type: 'group',
+      admin: { readOnly: true },
+      fields: [
+        { name: 'inFertigung', type: 'date' },
+        { name: 'fertig', type: 'date' },
+        { name: 'geliefert', type: 'date' },
+        {
+          name: 'hinweis',
+          label: 'Anmerkung zur letzten Meldung',
+          type: 'text',
+          admin: {
+            description:
+              'Warum eine Meldung unterblieb oder unvollständig war — z.B. „keine Adresse".',
+          },
+        },
+      ],
     },
     arbeitsplanFeld(
       true,

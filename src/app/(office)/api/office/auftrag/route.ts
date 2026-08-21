@@ -91,6 +91,18 @@ export async function POST(req: Request) {
           erledigtAm: s.erledigtAm || undefined,
           notiz: s.notiz || undefined,
         })),
+      /*
+       * Was über die Meldungen entscheidet. `gemeldet` steht bewusst **nicht**
+       * dabei: Das schreibt der Auslöser am Datenmodell, und ein Formular, das
+       * es mitschickte, könnte einen Versand ungeschehen machen, der längst
+       * stattgefunden hat.
+       */
+      lieferart: (b.lieferart === 'abholung' ? 'abholung' : 'versand') as 'versand' | 'abholung',
+      trackingNumber: b.trackingNumber || undefined,
+      trackingUrl: b.trackingUrl || undefined,
+      kundeEmail: b.kundeEmail || undefined,
+      kundeBenachrichtigen: b.kundeBenachrichtigen !== false,
+      contact: Number(b.contact) || undefined,
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,
       orderedAt: b.orderedAt || undefined,

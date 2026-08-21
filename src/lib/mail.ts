@@ -552,3 +552,198 @@ export function rechnungskaufEmail(
     ),
   }
 }
+
+/* ══ Statusmeldungen am Auftrag ═══════════════════════════════════════════════
+
+   Warum eigene Vorlagen und nicht die der Bestellung: Ein Auftrag hat eine
+   Auftragsnummer und eine Bezeichnung, keine Positionsliste mit Preisen und
+   keinen Zugangstoken. Die Bestellvorlagen darauf zu biegen hieße, in jeder
+   Zeile eine Ausnahme zu prüfen — und die Kundschaft im Projektgeschäft bekäme
+   Mails, die von „Ihrer Bestellung" reden, obwohl sie nie bestellt hat.
+
+   Verlinkt wird ins Kundenportal statt auf eine Bestellseite: Aufträge sind
+   dort ohnehin sichtbar, sobald die Adresse zu einem Geschäftspartner gehört
+   (siehe portalDaten.ts). Ein eigener Token wäre eine zweite Tür für dasselbe
+   Zimmer. */
+
+export type AuftragLike = {
+  jobNumber?: string | null
+  title?: string | null
+  dueDate?: string | null
+  lieferart?: string | null
+  trackingNumber?: string | null
+  trackingUrl?: string | null
+}
+
+const AUFTRAGSWORTE: Record<
+  Locale,
+  {
+    anrede: (name: string) => string
+    auftrag: string
+    inFertigung: (nr: string) => string
+    inFertigungText: string
+    termin: (datum: string) => string
+    fertig: (nr: string) => string
+    fertigVersand: string
+    fertigAbholung: string
+    geliefert: (nr: string) => string
+    geliefertText: string
+    sendung: string
+    portal: string
+    gruss: string
+  }
+> = {
+  de: {
+    anrede: (name) => `Guten Tag ${name}`,
+    auftrag: 'Auftrag',
+    inFertigung: (nr) => `Ihr Auftrag ${nr} ist in Fertigung – Vincent Hellmann`,
+    inFertigungText:
+      'Ihr Auftrag liegt jetzt in der Werkstatt. Wir melden uns wieder, sobald er fertig ist.',
+    termin: (datum) => `Vorgesehen bis: <strong>${datum}</strong>`,
+    fertig: (nr) => `Ihr Auftrag ${nr} ist fertig – Vincent Hellmann`,
+    fertigVersand:
+      'Ihr Auftrag ist fertig. Wir stimmen die Lieferung mit Ihnen ab und melden uns dazu.',
+    fertigAbholung:
+      'Ihr Auftrag ist fertig und steht zur Abholung bereit. Melden Sie sich gern für einen Termin.',
+    geliefert: (nr) => `Ihr Auftrag ${nr} ist unterwegs – Vincent Hellmann`,
+    geliefertText: 'Ihr Auftrag hat die Werkstatt verlassen.',
+    sendung: 'Sendungsverfolgung',
+    portal: 'Ihre Vorgänge im Kundenbereich ansehen',
+    gruss: 'Mit freundlichen Grüßen',
+  },
+  fr: {
+    anrede: (name) => `Bonjour ${name}`,
+    auftrag: 'Commande',
+    inFertigung: (nr) => `Votre commande ${nr} est en fabrication – Vincent Hellmann`,
+    inFertigungText:
+      "Votre commande est à l'atelier. Nous vous recontactons dès qu'elle est terminée.",
+    termin: (datum) => `Prévu pour le : <strong>${datum}</strong>`,
+    fertig: (nr) => `Votre commande ${nr} est terminée – Vincent Hellmann`,
+    fertigVersand:
+      'Votre commande est terminée. Nous convenons de la livraison avec vous et revenons vers vous.',
+    fertigAbholung:
+      'Votre commande est terminée et prête à être retirée. Contactez-nous pour convenir d’un rendez-vous.',
+    geliefert: (nr) => `Votre commande ${nr} est en route – Vincent Hellmann`,
+    geliefertText: "Votre commande a quitté l'atelier.",
+    sendung: 'Suivi de colis',
+    portal: 'Consulter vos dossiers dans votre espace client',
+    gruss: 'Cordialement',
+  },
+  en: {
+    anrede: (name) => `Hello ${name}`,
+    auftrag: 'Order',
+    inFertigung: (nr) => `Your order ${nr} is in production – Vincent Hellmann`,
+    inFertigungText:
+      'Your order is now in the workshop. We will be in touch again as soon as it is finished.',
+    termin: (datum) => `Planned for: <strong>${datum}</strong>`,
+    fertig: (nr) => `Your order ${nr} is finished – Vincent Hellmann`,
+    fertigVersand:
+      'Your order is finished. We will arrange delivery with you and get back to you shortly.',
+    fertigAbholung:
+      'Your order is finished and ready for collection. Get in touch to arrange a time.',
+    geliefert: (nr) => `Your order ${nr} is on its way – Vincent Hellmann`,
+    geliefertText: 'Your order has left the workshop.',
+    sendung: 'Tracking',
+    portal: 'View your projects in the customer area',
+    gruss: 'Kind regards',
+  },
+}
+
+/** Link ins Kundenportal — dort stehen Aufträge, Angebote und Rechnungen */
+function portalLink(sprache: Locale): string {
+  const basis = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || ''
+  if (!basis) return ''
+  return `<p style="margin-top:20px"><a href="${basis}/${sprache}/konto" style="color:#1d1d1f">${AUFTRAGSWORTE[sprache].portal}</a></p>`
+}
+
+/** Kopf und Fuß sind bei allen drei Meldungen gleich — nur der Rumpf wechselt */
+function auftragsMail(
+  auftrag: AuftragLike,
+  kundeName: string,
+  sprache: Locale,
+  betreff: string,
+  rumpf: string,
+  firma?: CompanyInfo,
+) {
+  const w = AUFTRAGSWORTE[sprache]
+  const bezeichnung = auftrag.title?.trim()
+  return {
+    subject: betreff,
+    html: briefbogen(
+      `<p>${w.anrede(kundeName)},</p>
+        ${rumpf}
+        <p style="color:#666;font-size:13px">${w.auftrag} <strong>${auftrag.jobNumber ?? ''}</strong>${
+          bezeichnung ? ` — ${bezeichnung}` : ''
+        }</p>
+        ${portalLink(sprache)}
+        <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
+      firma,
+    ),
+  }
+}
+
+export function auftragInFertigungEmail(
+  auftrag: AuftragLike,
+  kundeName: string,
+  sprache: Locale = 'de',
+  firma?: CompanyInfo,
+) {
+  const w = AUFTRAGSWORTE[sprache]
+  // Der Termin steht nur dabei, wenn einer gesetzt ist — eine Zusage, die man
+  // nicht gemacht hat, soll nicht aus einer Statusmail entstehen
+  const termin = auftrag.dueDate
+    ? `<p>${w.termin(new Date(auftrag.dueDate).toLocaleDateString(sprache === 'de' ? 'de-DE' : sprache === 'fr' ? 'fr-FR' : 'en-GB'))}</p>`
+    : ''
+  return auftragsMail(
+    auftrag,
+    kundeName,
+    sprache,
+    w.inFertigung(auftrag.jobNumber ?? ''),
+    `<p>${w.inFertigungText}</p>${termin}`,
+    firma,
+  )
+}
+
+export function auftragFertigEmail(
+  auftrag: AuftragLike,
+  kundeName: string,
+  sprache: Locale = 'de',
+  firma?: CompanyInfo,
+) {
+  const w = AUFTRAGSWORTE[sprache]
+  const text = auftrag.lieferart === 'abholung' ? w.fertigAbholung : w.fertigVersand
+  return auftragsMail(
+    auftrag,
+    kundeName,
+    sprache,
+    w.fertig(auftrag.jobNumber ?? ''),
+    `<p>${text}</p>`,
+    firma,
+  )
+}
+
+export function auftragGeliefertEmail(
+  auftrag: AuftragLike,
+  kundeName: string,
+  sprache: Locale = 'de',
+  firma?: CompanyInfo,
+) {
+  const w = AUFTRAGSWORTE[sprache]
+  // Ohne Sendungsnummer geht die Meldung trotzdem raus: Vincent liefert oft
+  // selbst, und dann gibt es schlicht nichts zu verfolgen.
+  const sendung = auftrag.trackingNumber
+    ? `<p><strong>${w.sendung}:</strong> ${
+        auftrag.trackingUrl
+          ? `<a href="${auftrag.trackingUrl}">${auftrag.trackingNumber}</a>`
+          : auftrag.trackingNumber
+      }</p>`
+    : ''
+  return auftragsMail(
+    auftrag,
+    kundeName,
+    sprache,
+    w.geliefert(auftrag.jobNumber ?? ''),
+    `<p>${w.geliefertText}</p>${sendung}`,
+    firma,
+  )
+}

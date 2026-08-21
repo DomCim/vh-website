@@ -1982,3 +1982,44 @@ html.tastatur-offen .buero-inhalt {
   width: auto;
   min-width: 6rem;
 }
+
+/* ── Ein Haken mit Beschriftung ────────────────────────────────────────────
+   `.buero-feld` ist ein Block, und seine Beschriftung ebenso — für ein
+   Textfeld richtig, für einen Haken nicht: Dort standen Kästchen und Text
+   untereinander, mit dem Kästchen einsam in einer eigenen Zeile.
+
+   Zwei Stellen hatten dafür denselben Satz Inline-Stile stehen, der nichts
+   bewirkte (`flex-direction` ohne `display: flex`). Jetzt einmal hier. */
+
+.buero-haken {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.buero-haken > span {
+  display: inline;
+  margin-bottom: 0;
+  /* Neben einem Kästchen ist der Text die Aussage, nicht die Feldbeschriftung
+     darüber — deshalb in Lesegröße und nicht im Kleingedruckten */
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--buero-tinte);
+}
+
+.buero-haken input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--buero-bronze);
+}
+
+/* Ein Hinweis unter dem Haken darf wieder klein sein */
+.buero-haken .buero-unterzeile {
+  flex: 1 1 100%;
+  margin-top: 0.1rem;
+}

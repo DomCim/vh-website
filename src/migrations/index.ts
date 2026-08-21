@@ -46,6 +46,7 @@ import * as migration_20260820_135217_dkim from './20260820_135217_dkim';
 import * as migration_20260820_145936_postfach_dkim from './20260820_145936_postfach_dkim';
 import * as migration_20260820_154207_statistik from './20260820_154207_statistik';
 import * as migration_20260820_222645_arbeitsplan from './20260820_222645_arbeitsplan';
+import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_auftragsmeldungen';
 
 export const migrations = [
   {
@@ -286,6 +287,11 @@ export const migrations = [
   {
     up: migration_20260820_222645_arbeitsplan.up,
     down: migration_20260820_222645_arbeitsplan.down,
-    name: '20260820_222645_arbeitsplan'
+    name: '20260820_222645_arbeitsplan',
+  },
+  {
+    up: migration_20260821_055731_auftragsmeldungen.up,
+    down: migration_20260821_055731_auftragsmeldungen.down,
+    name: '20260821_055731_auftragsmeldungen'
   },
 ];

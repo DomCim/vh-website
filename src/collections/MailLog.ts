@@ -65,6 +65,9 @@ export const MailLog: CollectionConfig = {
             { label: 'Bestellbestätigung', value: 'bestellung' },
             { label: 'Fertigung begonnen', value: 'fertigung' },
             { label: 'Versandmeldung', value: 'versand' },
+            { label: 'Auftrag: in Fertigung', value: 'auftrag-fertigung' },
+            { label: 'Auftrag: fertig', value: 'auftrag-fertig' },
+            { label: 'Auftrag: geliefert', value: 'auftrag-geliefert' },
             { label: 'Anfrage eingegangen', value: 'anfrage' },
             { label: 'Zugangscode', value: 'zugangscode' },
             { label: 'Aus dem Postfach geschrieben', value: 'postfach' },
@@ -88,5 +91,6 @@ export const MailLog: CollectionConfig = {
     },
     { name: 'order', label: 'Bestellung', type: 'relationship', relationTo: 'orders' },
     { name: 'inquiry', label: 'Anfrage', type: 'relationship', relationTo: 'inquiries' },
+    { name: 'job', label: 'Auftrag', type: 'relationship', relationTo: 'jobs' },
   ],
 }

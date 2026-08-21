@@ -84,6 +84,25 @@ export const Contacts: CollectionConfig = {
           'Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.',
       },
     },
+    {
+      /*
+       * In welcher Sprache dieser Betrieb angeschrieben wird.
+       *
+       * Die Werkstatt steht in Frankreich und hat Kundschaft auf beiden Seiten
+       * der Grenze. Ohne diese Angabe müsste jede Mail raten — am Land etwa,
+       * und das geht schief, sobald jemand mit deutschem Namen in Frankreich
+       * wohnt oder umgekehrt. Einmal eingestellt, stimmt es danach immer.
+       */
+      name: 'sprache',
+      label: 'Sprache für Mails',
+      type: 'select',
+      defaultValue: 'de',
+      options: [
+        { label: 'Deutsch', value: 'de' },
+        { label: 'Französisch', value: 'fr' },
+        { label: 'Englisch', value: 'en' },
+      ],
+    },
     { name: 'notes', label: 'Notiz', type: 'textarea' },
   ],
 }

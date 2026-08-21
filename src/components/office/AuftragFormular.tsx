@@ -11,6 +11,7 @@ import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
+import { Meldestand } from './Meldestand'
 
 export type AuftragPosition = {
   description: string
@@ -41,6 +42,19 @@ export type AuftragWerte = {
   positions?: AuftragPosition[]
   material?: AuftragMaterial[]
   arbeitsplan?: Arbeitsschritt[]
+  contact?: number | string
+  lieferart?: string
+  trackingNumber?: string
+  trackingUrl?: string
+  kundeEmail?: string
+  kundeBenachrichtigen?: boolean
+  /** Nur zum Anzeigen — geschrieben wird das vom Auslöser am Datenmodell */
+  gemeldet?: {
+    inFertigung?: string | null
+    fertig?: string | null
+    geliefert?: string | null
+    hinweis?: string | null
+  }
   notes?: string | null
   materialGebucht?: boolean
   customerOrderRef?: string | null
@@ -85,6 +99,8 @@ export function AuftragFormular({
     positions: [{ description: '', quantity: 1 }],
     material: [],
     arbeitsplan: [],
+    lieferart: 'versand',
+    kundeBenachrichtigen: true,
     ...werte,
   }))
   const [w, setW] = useState<AuftragWerte>(anfang)
@@ -210,6 +226,69 @@ export function AuftragFormular({
           </select>
         </label>
       </div>
+
+      <h2>Lieferung und Meldungen</h2>
+      {/*
+        * Was hier steht, entscheidet, was die Kundschaft erfährt. Deshalb steht
+        * es beieinander und nicht verstreut: Lieferart, Adresse, Schalter — und
+        * darunter, was tatsächlich rausging.
+        */}
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Lieferung</span>
+          <select value={w.lieferart ?? 'versand'} onChange={(e) => setzen({ lieferart: e.target.value })}>
+            <option value="versand">Versand</option>
+            <option value="abholung">Abholung</option>
+          </select>
+          <span className="buero-unterzeile">
+            Bei Abholung sagt schon &bdquo;fertig&ldquo;, dass das Stück bereitsteht — eine
+            Liefermeldung gibt es dann nicht.
+          </span>
+        </label>
+        {w.lieferart !== 'abholung' && (
+          <label className="buero-feld">
+            <span>Sendungsnummer</span>
+            <input
+              value={w.trackingNumber ?? ''}
+              onChange={(e) => setzen({ trackingNumber: e.target.value })}
+              placeholder="z.B. 00340434…"
+            />
+            <span className="buero-unterzeile">
+              Geht mit der Liefermeldung raus. Leer lassen, wenn du selbst lieferst.
+            </span>
+          </label>
+        )}
+      </div>
+
+      <label className="buero-feld buero-haken">
+        <input
+          type="checkbox"
+          checked={w.kundeBenachrichtigen !== false}
+          onChange={(e) => setzen({ kundeBenachrichtigen: e.target.checked })}
+        />
+        <span>Kunde über den Fortschritt benachrichtigen</span>
+      </label>
+
+      {/*
+        * Die Rückfalladresse erscheint nur, wenn sie gebraucht wird: Steht ein
+        * Geschäftspartner am Auftrag, gilt dessen Adresse, und ein zweites Feld
+        * daneben wäre eine Einladung, sie auseinanderlaufen zu lassen.
+        */}
+      {!w.contact && (
+        <label className="buero-feld">
+          <span>E-Mail des Kunden</span>
+          <input
+            type="email"
+            value={w.kundeEmail ?? ''}
+            onChange={(e) => setzen({ kundeEmail: e.target.value })}
+          />
+          <span className="buero-unterzeile">
+            Nur nötig, solange kein Geschäftspartner verknüpft ist — sonst gilt dessen Adresse.
+          </span>
+        </label>
+      )}
+
+      <Meldestand gemeldet={w.gemeldet} />
 
       <h2>Bestellung des Kunden</h2>
       <div className="buero-reihe">

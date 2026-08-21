@@ -151,15 +151,11 @@ function Feld({
 
   if (feld.art === 'haken') {
     return (
-      <label
-        className="buero-feld"
-        style={{ flexDirection: 'row', alignItems: 'center', gap: '.5rem' }}
-      >
+      <label className="buero-feld buero-haken">
         <input
           type="checkbox"
           checked={Boolean(wert)}
           onChange={(e) => setzen(eigenerPfad, e.target.checked)}
-          style={{ width: 'auto' }}
         />
         <span>{feld.label}</span>
         {feld.hinweis && <span className="buero-unterzeile"> — {feld.hinweis}</span>}

@@ -161,6 +161,14 @@ export function AuftragAnsicht() {
             beigestellt: Boolean((m as { beigestellt?: boolean }).beigestellt),
           })),
           arbeitsplan: (j.arbeitsplan as Arbeitsschritt[] | null) ?? [],
+          lieferart: (j.lieferart as string) ?? 'versand',
+          trackingNumber: (j.trackingNumber as string) ?? '',
+          trackingUrl: (j.trackingUrl as string) ?? '',
+          kundeEmail: (j.kundeEmail as string) ?? '',
+          kundeBenachrichtigen: j.kundeBenachrichtigen !== false,
+          contact:
+            typeof j.contact === 'object' ? (j.contact as { id?: number })?.id : (j.contact as number),
+          gemeldet: (j.gemeldet as Record<string, string | null>) ?? {},
         }}
         posten={posten.map((p) => ({
           id: Number(p.id),

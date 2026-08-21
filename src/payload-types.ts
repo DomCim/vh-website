@@ -535,6 +535,7 @@ export interface Contact {
    * Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.
    */
   defaultCategory?: string | null;
+  sprache?: ('de' | 'fr' | 'en') | null;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1033,6 +1034,29 @@ export interface Job {
       }[]
     | null;
   materialGebucht?: boolean | null;
+  lieferart?: ('versand' | 'abholung') | null;
+  /**
+   * Geht mit der Liefermeldung an die Kundschaft. Leer lassen, wenn du selbst lieferst — die Meldung geht dann ohne Sendungsverfolgung raus.
+   */
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  /**
+   * Nur nötig, wenn oben kein Geschäftspartner verknüpft ist. Dessen Adresse gilt.
+   */
+  kundeEmail?: string | null;
+  /**
+   * Aus, wenn ihr ohnehin telefoniert. Dann meldet das Büro nichts von selbst.
+   */
+  kundeBenachrichtigen?: boolean | null;
+  gemeldet?: {
+    inFertigung?: string | null;
+    fertig?: string | null;
+    geliefert?: string | null;
+    /**
+     * Warum eine Meldung unterblieb oder unvollständig war — z.B. „keine Adresse".
+     */
+    hinweis?: string | null;
+  };
   /**
    * Was mit diesem Stück nacheinander passiert — auch bei Lohnfertigung und Maßanfertigung, wo keine Variante dahintersteht. Stammt der Auftrag aus einem Artikel mit hinterlegtem Ablauf, steht dessen Vorlage schon hier. Rein intern; auf keinem Papier für die Kundschaft.
    */
@@ -1618,7 +1642,20 @@ export interface MailLog {
   from?: string | null;
   subject: string;
   status: 'gesendet' | 'fehler' | 'ohneVersand';
-  kind?: ('bestellung' | 'fertigung' | 'versand' | 'anfrage' | 'zugangscode' | 'postfach' | 'sonstiges') | null;
+  kind?:
+    | (
+        | 'bestellung'
+        | 'fertigung'
+        | 'versand'
+        | 'auftrag-fertigung'
+        | 'auftrag-fertig'
+        | 'auftrag-geliefert'
+        | 'anfrage'
+        | 'zugangscode'
+        | 'postfach'
+        | 'sonstiges'
+      )
+    | null;
   /**
    * Antwort des Mailservers, wenn der Versand nicht geklappt hat.
    */
@@ -1629,6 +1666,7 @@ export interface MailLog {
   attachments?: string | null;
   order?: (number | null) | Order;
   inquiry?: (number | null) | Inquiry;
+  job?: (number | null) | Job;
   updatedAt: string;
   createdAt: string;
 }
@@ -2162,6 +2200,7 @@ export interface ContactsSelect<T extends boolean = true> {
   vatId?: T;
   siret?: T;
   defaultCategory?: T;
+  sprache?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2286,6 +2325,19 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  lieferart?: T;
+  trackingNumber?: T;
+  trackingUrl?: T;
+  kundeEmail?: T;
+  kundeBenachrichtigen?: T;
+  gemeldet?:
+    | T
+    | {
+        inFertigung?: T;
+        fertig?: T;
+        geliefert?: T;
+        hinweis?: T;
+      };
   arbeitsplan?:
     | T
     | {
@@ -2647,6 +2699,7 @@ export interface MailLogSelect<T extends boolean = true> {
   attachments?: T;
   order?: T;
   inquiry?: T;
+  job?: T;
   updatedAt?: T;
   createdAt?: T;
 }
