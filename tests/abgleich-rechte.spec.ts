@@ -39,41 +39,39 @@ test.describe('Abgleich mit begrenztem Konto', () => {
   test.skip(!PASSWORT, 'Ohne ADMIN_TEST_PASSWORT nicht prüfbar')
 
   test('gesperrte Bereiche kommen leer und werden im Gerät geleert', async ({ request }) => {
+    // Der Weg des Büros selbst (Keks-Anmeldung + Herkunfts-Kopfzeilen) — wie
+    // in benutzer.spec.ts; die rohen Payload-Endpunkte waren im Parallellauf
+    // wählerischer als die eigenen.
+    const kopf = { Origin: BASIS, 'Sec-Fetch-Site': 'same-origin' }
     const anmeldung = await request.post(`${BASIS}/api/users/login`, {
+      headers: kopf,
       data: { email: EMAIL, password: PASSWORT },
     })
-    const { token } = await anmeldung.json()
-    // Payload prüft bei Schreibzugriffen die Herkunft — ohne diese Kopfzeilen
-    // antwortet es 403, sobald der Anmelde-Keks aus dem Login mitfährt
-    const kopf = {
-      Authorization: `JWT ${token}`,
-      Origin: BASIS,
-      'Sec-Fetch-Site': 'same-origin',
-    }
-    const kennung = Date.now()
+    expect(anmeldung.ok()).toBeTruthy()
+    const kennung = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 
     // Eine Rolle, die nur Werkstatt darf — und ein Konto damit
-    const rolleAntwort = await request.post(`${BASIS}/api/roles`, {
+    const rolleAntwort = await request.post(`${BASIS}/api/office/rolle`, {
       headers: kopf,
       data: {
+        aktion: 'anlegen',
         name: `Werkstattprobe ${kennung}`,
-        schluessel: `werkstattprobe-${kennung}`,
         rechte: ['buero.oeffnen', 'auftraege.bearbeiten'],
       },
     })
-    expect(rolleAntwort.status()).toBe(201)
-    const { doc: rolle } = await rolleAntwort.json()
+    expect(rolleAntwort.status()).toBe(200)
+    const { id: rolleId } = await rolleAntwort.json()
 
-    const kontoAntwort = await request.post(`${BASIS}/api/users`, {
+    const kontoAntwort = await request.post(`${BASIS}/api/office/benutzer`, {
       headers: kopf,
       data: {
+        aktion: 'anlegen',
         email: `werkstattprobe-${kennung}@example.com`,
-        password: 'pruef-geheim-123',
-        role: 'redaktion',
-        rolle: rolle.id,
+        passwort: 'pruef-geheim-123',
+        rolleId,
       },
     })
-    expect(kontoAntwort.status()).toBe(201)
+    expect(kontoAntwort.status()).toBe(200)
 
     const werkstattAnmeldung = await request.post(`${BASIS}/api/users/login`, {
       data: { email: `werkstattprobe-${kennung}@example.com`, password: 'pruef-geheim-123' },
