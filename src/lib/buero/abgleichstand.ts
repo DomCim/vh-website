@@ -1,5 +1,6 @@
 'use client'
 
+import { seit } from '../format'
 import { useAbgleich } from './bestand'
 import { useWarteschlange } from './warteschlange'
 
@@ -24,15 +25,12 @@ export type Abgleichstand = {
   text: string
 }
 
-function vorZeit(zeitpunkt: number): string {
-  const sekunden = Math.round((Date.now() - zeitpunkt) / 1000)
-  if (sekunden < 90) return 'gerade eben'
-  const minuten = Math.round(sekunden / 60)
-  if (minuten < 60) return `vor ${minuten} Minuten`
-  const stunden = Math.round(minuten / 60)
-  if (stunden < 24) return `vor ${stunden} Stunden`
-  return `vor ${Math.round(stunden / 24)} Tagen`
-}
+/*
+ * Die Worte für „wie lange her" stehen in lib/format, seit die Meldungen unter
+ * der Glocke dieselben brauchen. Zweimal gerechnet hieße irgendwann zweierlei
+ * gesagt.
+ */
+const vorZeit = seit
 
 /** `null` heißt: alles in Ordnung, es gibt nichts zu melden. */
 export function useAbgleichstand(): Abgleichstand | null {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { FeldBeschreibung } from '../../lib/felderLesen'
 import { Fussleiste } from './Fussleiste'
@@ -12,6 +12,21 @@ import { Fussleiste } from './Fussleiste'
  * fünfhundert Zeilen Felddefinition. Ein zweites, handgeschriebenes Formular
  * liefe auseinander, sobald jemand ein Feld ergänzt — und zwar unbemerkt. So
  * erscheint hier, was dort steht.
+ *
+ * **Warum nicht alles untereinander.** Genau so war es: 7523 Pixel am Telefon,
+ * knapp neun Bildschirmhöhen. Zum Postfach kam man, indem man an PayPal und
+ * Facebook vorbeiscrollte, und wer eines eintragen wollte, hatte neun Felder vor
+ * sich und daneben alles andere. Die Übersicht braucht jetzt 1337 Pixel.
+ *
+ * Deshalb drei Ebenen mit **einer** Bewegung: Liste antippen, Ansicht bearbeiten,
+ * zurück. Oben die Bereiche (E-Mail, Postfächer, PayPal …), darin die Felder —
+ * und wo ein Bereich mehrere gleichartige Einträge hat, noch eine Liste. Ein
+ * Postfach ist dann eine Zeile mit Namen und Adresse, und die neun Felder
+ * erscheinen erst, wenn man es öffnet.
+ *
+ * **Der Stand bleibt dabei überall im selben Objekt.** Das Umblättern ist keine
+ * Navigation, sondern eine Anzeigefrage — sonst wäre jede Rückkehr ein
+ * Datenverlust, und gespeichert wird ohnehin am Ende alles auf einmal.
  *
  * Passwörter und Schlüssel sind verdeckt, aber kopierfähig: Man braucht sie
  * regelmäßig zum Einfügen woanders, und ein Feld, das man nur überschreiben
@@ -28,16 +43,13 @@ function tiefLesen(werte: Werte, pfad: string[]): unknown {
 }
 
 /**
- * Einen Wert tief in der Struktur setzen — und die Struktur dabei lassen, wie
- * sie ist.
+ * Einen Wert tief in der Struktur setzen — ohne die Struktur zu verändern.
  *
- * Der Haken sitzt bei den Listen. `{ ...stand, [kopf]: … }` macht aus einem
+ * Der Haken sitzt bei den Listen. `{ ...werte, [kopf]: … }` macht aus einem
  * Array ein gewöhnliches Objekt: Aus `[{…}]` wird `{ '0': {…} }`. Beim
  * Anzeigen fragt das Formular `Array.isArray` — und findet nichts mehr.
- *
- * Genau das passierte beim Anlegen eines Postfachs: Der neue Eintrag stand
- * da, und beim ersten Buchstaben war er wieder verschwunden. Nicht der Knopf
- * hatte zugeklappt — die Liste war keine mehr.
+ * Genau das passierte beim Anlegen eines Postfachs: Der Eintrag stand da, und
+ * beim ersten Buchstaben war er wieder weg.
  */
 function tiefSetzen(stand: unknown, pfad: string[], wert: unknown): unknown {
   const [kopf, ...rest] = pfad
@@ -53,13 +65,47 @@ function tiefSetzen(stand: unknown, pfad: string[], wert: unknown): unknown {
   return { ...alt, [kopf]: rest.length ? tiefSetzen(alt[kopf], rest, wert) : wert }
 }
 
-function Geheimfeld({
-  wert,
-  aendern,
-}: {
-  wert: string
-  aendern: (neu: string) => void
-}) {
+/** Steht in diesem Feld (oder irgendwo darunter) etwas? */
+function istGefuellt(wert: unknown): boolean {
+  if (wert == null || wert === '') return false
+  if (typeof wert === 'boolean') return wert
+  if (Array.isArray(wert)) return wert.length > 0
+  if (typeof wert === 'object') return Object.values(wert as Werte).some(istGefuellt)
+  return true
+}
+
+/**
+ * Die Zeile unter dem Namen eines Listeneintrags.
+ *
+ * Gesucht wird nach den Feldern, an denen man einen Eintrag wiedererkennt —
+ * erst eine Bezeichnung, dann eine Adresse. Fest verdrahtete Feldnamen wären
+ * hier falsch: Die Liste soll auch für eine Liste funktionieren, die es noch
+ * nicht gibt. Findet sich nichts, bleibt die Zeile eben leer.
+ */
+const NAMENSFELDER = ['label', 'name', 'titel', 'title', 'bezeichnung']
+const KENNFELDER = ['address', 'email', 'adresse', 'user', 'benutzer', 'host']
+
+function eintragTitel(eintrag: Werte, felder: FeldBeschreibung[], nummer: number): string {
+  for (const schluessel of NAMENSFELDER) {
+    if (felder.some((f) => f.name === schluessel)) {
+      const wert = eintrag?.[schluessel]
+      if (typeof wert === 'string' && wert.trim()) return wert.trim()
+    }
+  }
+  return `Eintrag ${nummer}`
+}
+
+function eintragNeben(eintrag: Werte, felder: FeldBeschreibung[]): string {
+  for (const schluessel of KENNFELDER) {
+    if (felder.some((f) => f.name === schluessel)) {
+      const wert = eintrag?.[schluessel]
+      if (typeof wert === 'string' && wert.trim()) return wert.trim()
+    }
+  }
+  return ''
+}
+
+function Geheimfeld({ wert, aendern }: { wert: string; aendern: (neu: string) => void }) {
   const [sichtbar, setSichtbar] = useState(false)
   return (
     <div style={{ display: 'flex', gap: '.4rem', alignItems: 'stretch' }}>
@@ -83,6 +129,12 @@ function Geheimfeld({
   )
 }
 
+/**
+ * Ein einzelnes Feld — alles außer Gruppen und Listen.
+ *
+ * Die beiden fehlen hier nicht aus Versehen: Sie sind keine Eingabe, sondern
+ * eine Ebene, und Ebenen entscheidet das Blatt weiter unten.
+ */
 function Feld({
   feld,
   pfad,
@@ -97,86 +149,13 @@ function Feld({
   const eigenerPfad = [...pfad, feld.name]
   const wert = tiefLesen(werte, eigenerPfad)
 
-  if (feld.art === 'gruppe') {
-    return (
-      <fieldset className="buero-karte" style={{ marginBottom: '1rem' }}>
-        <legend className="buero-zeile-titel">{feld.label}</legend>
-        {feld.hinweis && <p className="buero-unterzeile">{feld.hinweis}</p>}
-        {(feld.felder ?? []).map((unterfeld) => (
-          <Feld
-            key={unterfeld.name}
-            feld={unterfeld}
-            pfad={eigenerPfad}
-            werte={werte}
-            setzen={setzen}
-          />
-        ))}
-      </fieldset>
-    )
-  }
-
-  if (feld.art === 'liste') {
-    const eintraege = Array.isArray(wert) ? (wert as Werte[]) : []
-    return (
-      <fieldset className="buero-karte" style={{ marginBottom: '1rem' }}>
-        <legend className="buero-zeile-titel">{feld.label}</legend>
-        {feld.hinweis && <p className="buero-unterzeile">{feld.hinweis}</p>}
-
-        {eintraege.length === 0 && <div className="buero-leer">Noch nichts eingetragen.</div>}
-
-        {eintraege.map((_, i) => (
-          <div
-            key={i}
-            style={{
-              borderTop: '1px solid var(--buero-linie)',
-              paddingTop: '.8rem',
-              marginTop: '.8rem',
-            }}
-          >
-            {(feld.felder ?? []).map((unterfeld) => (
-              <Feld
-                key={unterfeld.name}
-                feld={unterfeld}
-                pfad={[...eigenerPfad, String(i)]}
-                werte={werte}
-                setzen={setzen}
-              />
-            ))}
-            <button
-              type="button"
-              className="buero-knopf schmal gefahr"
-              onClick={() =>
-                setzen(
-                  eigenerPfad,
-                  eintraege.filter((_, k) => k !== i),
-                )
-              }
-            >
-              Entfernen
-            </button>
-          </div>
-        ))}
-
-        <button
-          type="button"
-          className="buero-knopf leise schmal"
-          style={{ marginTop: '.8rem' }}
-          onClick={() => setzen(eigenerPfad, [...eintraege, {}])}
-        >
-          Hinzufügen
-        </button>
-      </fieldset>
-    )
-  }
-
   if (feld.art === 'haken') {
     return (
-      <label className="buero-feld" style={{ flexDirection: 'row', alignItems: 'center', gap: '.5rem' }}>
+      <label className="buero-feld buero-haken">
         <input
           type="checkbox"
           checked={Boolean(wert)}
           onChange={(e) => setzen(eigenerPfad, e.target.checked)}
-          style={{ width: 'auto' }}
         />
         <span>{feld.label}</span>
         {feld.hinweis && <span className="buero-unterzeile"> — {feld.hinweis}</span>}
@@ -191,24 +170,14 @@ function Feld({
         {feld.pflicht ? ' *' : ''}
       </span>
 
-      {/*
-        Geheim geht vor Bauart: Ein mehrzeiliges Feld, das ein Geheimnis
-        trägt, bleibt verdeckt. Sonst stünde der private DKIM-Schlüssel
-        offen im Blatt.
-      */}
-      {feld.geheim ? (
-        <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(eigenerPfad, neu)} />
-      ) : feld.art === 'absatz' ? (
+      {feld.art === 'absatz' ? (
         <textarea
           rows={3}
           value={(wert as string) ?? ''}
           onChange={(e) => setzen(eigenerPfad, e.target.value)}
         />
       ) : feld.art === 'auswahl' ? (
-        <select
-          value={(wert as string) ?? ''}
-          onChange={(e) => setzen(eigenerPfad, e.target.value)}
-        >
+        <select value={(wert as string) ?? ''} onChange={(e) => setzen(eigenerPfad, e.target.value)}>
           <option value="">— bitte wählen —</option>
           {(feld.optionen ?? []).map((o) => (
             <option key={o.wert} value={o.wert}>
@@ -216,6 +185,8 @@ function Feld({
             </option>
           ))}
         </select>
+      ) : feld.geheim ? (
+        <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(eigenerPfad, neu)} />
       ) : (
         <input
           type={feld.art === 'zahl' ? 'number' : feld.art === 'email' ? 'email' : 'text'}
@@ -239,6 +210,135 @@ function Feld({
   )
 }
 
+/**
+ * Die Einträge einer Liste — ohne Überschrift.
+ *
+ * Ohne Titel, weil es zwei Stellen gibt, die ihn setzen: innerhalb eines
+ * Bereichs steht er als Zwischenüberschrift, als eigener Bereich schon oben
+ * auf dem Blatt. Trüge der Block ihn selbst, stünde er dort zweimal.
+ */
+function Listenblock({
+  feld,
+  pfad,
+  werte,
+  setzen,
+  oeffnen,
+}: {
+  feld: FeldBeschreibung
+  pfad: string[]
+  werte: Werte
+  setzen: (pfad: string[], wert: unknown) => void
+  oeffnen: (weg: string[]) => void
+}) {
+  const eigenerPfad = [...pfad, feld.name]
+  const wert = tiefLesen(werte, eigenerPfad)
+  const eintraege = Array.isArray(wert) ? (wert as Werte[]) : []
+  const unterfelder = feld.felder ?? []
+
+  return (
+    <>
+      <div className="buero-liste" style={{ marginTop: '.6rem' }}>
+        {eintraege.length === 0 ? (
+          <div className="buero-leer">Noch nichts eingetragen.</div>
+        ) : (
+          eintraege.map((eintrag, i) => (
+            <button
+              key={i}
+              type="button"
+              className="buero-zeile buero-zeile-knopf"
+              onClick={() => oeffnen([...eigenerPfad, String(i)])}
+            >
+              <div className="buero-zeile-haupt">
+                <div className="buero-zeile-titel">{eintragTitel(eintrag, unterfelder, i + 1)}</div>
+                <div className="buero-zeile-neben">{eintragNeben(eintrag, unterfelder)}</div>
+              </div>
+              <span className="buero-marker">öffnen</span>
+            </button>
+          ))
+        )}
+      </div>
+
+      <button
+        type="button"
+        className="buero-knopf leise schmal"
+        style={{ marginTop: '.8rem' }}
+        onClick={() => {
+          // Gleich öffnen: Wer „Hinzufügen" tippt, will tippen, nicht eine
+          // neue leere Zeile ansehen
+          setzen(eigenerPfad, [...eintraege, {}])
+          oeffnen([...eigenerPfad, String(eintraege.length)])
+        }}
+      >
+        Hinzufügen
+      </button>
+    </>
+  )
+}
+
+/**
+ * Die Felder einer Ebene — einfache direkt, Listen als Liste, Gruppen
+ * eingerückt darunter.
+ *
+ * Gruppen bekommen **keine** eigene Ebene: Eine Gruppe in einer Gruppe ist
+ * eine Ordnungshilfe (etwa „DKIM" innerhalb von E-Mail), kein eigener Ort. Sie
+ * dafür anzutippen wäre ein Klick für nichts.
+ */
+function Ebene({
+  felder,
+  pfad,
+  werte,
+  setzen,
+  oeffnen,
+}: {
+  felder: FeldBeschreibung[]
+  pfad: string[]
+  werte: Werte
+  setzen: (pfad: string[], wert: unknown) => void
+  oeffnen: (weg: string[]) => void
+}) {
+  return (
+    <>
+      {felder.map((feld) => {
+        const eigenerPfad = [...pfad, feld.name]
+
+        if (feld.art === 'liste') {
+          return (
+            <section key={feld.name} style={{ marginBottom: '1.4rem' }}>
+              <h3 className="buero-zeile-titel">{feld.label}</h3>
+              {feld.hinweis && <p className="buero-unterzeile">{feld.hinweis}</p>}
+              <Listenblock
+                feld={feld}
+                pfad={pfad}
+                werte={werte}
+                setzen={setzen}
+                oeffnen={oeffnen}
+              />
+            </section>
+          )
+        }
+
+        if (feld.art === 'gruppe') {
+          return (
+            <fieldset key={feld.name} className="buero-karte" style={{ marginBottom: '1rem' }}>
+              <legend className="buero-zeile-titel">{feld.label}</legend>
+              {feld.hinweis && <p className="buero-unterzeile">{feld.hinweis}</p>}
+              <Ebene
+                felder={feld.felder ?? []}
+                pfad={eigenerPfad}
+                werte={werte}
+                setzen={setzen}
+                oeffnen={oeffnen}
+              />
+            </fieldset>
+          )
+        }
+
+        return <Feld key={feld.name} feld={feld} pfad={pfad} werte={werte} setzen={setzen} />
+      })}
+    </>
+  )
+}
+
 export function EinstellungenFormular({
   bereich,
   titel,
@@ -252,6 +352,8 @@ export function EinstellungenFormular({
   const [urspruenglich, setUrspruenglich] = useState<Werte>({})
   const [meldung, setMeldung] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
+  /** Wo man gerade ist: [] = Übersicht, ['email'] = Bereich, ['mailboxes','0'] = Eintrag */
+  const [weg, setWeg] = useState<string[]>([])
 
   useEffect(() => {
     let abgebrochen = false
@@ -279,6 +381,16 @@ export function EinstellungenFormular({
     setWerte((v) => tiefSetzen(v, pfad, wert) as Werte)
     setMeldung(null)
   }, [])
+
+  /** Das Feld, auf das der Weg zeigt — und der Datenpfad dorthin */
+  const ziel = useMemo(() => {
+    if (!felder || weg.length === 0) return null
+    const oben = felder.find((f) => f.name === weg[0])
+    if (!oben) return null
+    // Zweiter Schritt ist immer eine Nummer: der Eintrag einer Liste
+    const eintrag = weg.length > 1 ? weg[1] : null
+    return { feld: oben, eintrag }
+  }, [felder, weg])
 
   async function speichern() {
     /*
@@ -332,6 +444,14 @@ export function EinstellungenFormular({
     }
   }
 
+  const fussleiste = (
+    <Fussleiste>
+      <button type="button" className="buero-knopf" disabled={laeuft} onClick={speichern}>
+        {laeuft ? 'speichert …' : 'Speichern'}
+      </button>
+    </Fussleiste>
+  )
+
   if (!felder) {
     return (
       <>
@@ -341,20 +461,138 @@ export function EinstellungenFormular({
     )
   }
 
+  // ── Ein Listeneintrag, z.B. ein einzelnes Postfach ─────────────────────────
+  if (ziel?.eintrag != null) {
+    const unterfelder = ziel.feld.felder ?? []
+    const datenPfad = [ziel.feld.name, ziel.eintrag]
+    const eintrag = (tiefLesen(werte, datenPfad) ?? {}) as Werte
+    const alle = (tiefLesen(werte, [ziel.feld.name]) ?? []) as Werte[]
+
+    return (
+      <>
+        <button type="button" className="buero-ruecken" onClick={() => setWeg([ziel.feld.name])}>
+          ← {ziel.feld.label}
+        </button>
+        <h2 style={{ marginTop: '.5rem' }}>
+          {eintragTitel(eintrag, unterfelder, Number(ziel.eintrag) + 1)}
+        </h2>
+        {meldung && <p className="buero-hinweis">{meldung}</p>}
+
+        <div className="buero-karte">
+          <Ebene
+            felder={unterfelder}
+            pfad={datenPfad}
+            werte={werte}
+            setzen={setzen}
+            oeffnen={setWeg}
+          />
+          <button
+            type="button"
+            className="buero-knopf schmal gefahr"
+            style={{ marginTop: '.8rem' }}
+            onClick={() => {
+              if (!window.confirm('Diesen Eintrag entfernen?')) return
+              setzen(
+                [ziel.feld.name],
+                alle.filter((_, k) => k !== Number(ziel.eintrag)),
+              )
+              setWeg([ziel.feld.name])
+            }}
+          >
+            Entfernen
+          </button>
+        </div>
+
+        {fussleiste}
+      </>
+    )
+  }
+
+  // ── Ein Bereich, z.B. „E-Mail" oder „Postfächer" ───────────────────────────
+  if (ziel) {
+    return (
+      <>
+        <button type="button" className="buero-ruecken" onClick={() => setWeg([])}>
+          ← {titel}
+        </button>
+        <h2 style={{ marginTop: '.5rem' }}>{ziel.feld.label}</h2>
+        {meldung && <p className="buero-hinweis">{meldung}</p>}
+
+        {ziel.feld.art === 'liste' ? (
+          <>
+            {ziel.feld.hinweis && <p className="buero-unterzeile">{ziel.feld.hinweis}</p>}
+            <Listenblock
+              feld={ziel.feld}
+              pfad={[]}
+              werte={werte}
+              setzen={setzen}
+              oeffnen={setWeg}
+            />
+          </>
+        ) : (
+          <div className="buero-karte">
+            <Ebene
+              felder={ziel.feld.felder ?? [ziel.feld]}
+              pfad={ziel.feld.art === 'gruppe' ? [ziel.feld.name] : []}
+              werte={werte}
+              setzen={setzen}
+              oeffnen={setWeg}
+            />
+          </div>
+        )}
+
+        {fussleiste}
+      </>
+    )
+  }
+
+  // ── Die Übersicht ──────────────────────────────────────────────────────────
   return (
     <>
       <h2>{titel}</h2>
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
-      {felder.map((feld) => (
-        <Feld key={feld.name} feld={feld} pfad={[]} werte={werte} setzen={setzen} />
-      ))}
+      <div className="buero-liste">
+        {felder.map((feld) => {
+          const wert = tiefLesen(werte, [feld.name])
+          const gefuellt = istGefuellt(wert)
+          const anzahl = Array.isArray(wert) ? wert.length : null
+          return (
+            <button
+              key={feld.name}
+              type="button"
+              className="buero-zeile buero-zeile-knopf"
+              onClick={() => setWeg([feld.name])}
+            >
+              <div className="buero-zeile-haupt">
+                <div className="buero-zeile-titel">{feld.label}</div>
+                {feld.hinweis && (
+                  <div className="buero-zeile-neben knapp">{feld.hinweis}</div>
+                )}
+              </div>
+              {/*
+                * Ein Wort dazu, ob hier etwas steht. Das ist der eigentliche
+                * Grund für die Übersicht: Man sieht auf einen Blick, was
+                * eingerichtet ist, statt sieben Bereiche zu öffnen, um es
+                * herauszufinden.
+                */}
+              <span className={`buero-marker${gefuellt ? ' gut' : ''}`}>
+                {anzahl != null
+                  ? anzahl === 0
+                    ? 'keine'
+                    : anzahl === 1
+                      ? '1 Eintrag'
+                      : `${anzahl} Einträge`
+                  : gefuellt
+                    ? 'eingerichtet'
+                    : 'leer'}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-      <Fussleiste>
-        <button type="button" className="buero-knopf" disabled={laeuft} onClick={speichern}>
-          {laeuft ? 'speichert …' : 'Speichern'}
-        </button>
-      </Fussleiste>
+      {fussleiste}
     </>
   )
 }

@@ -1,5 +1,7 @@
 import type { Payload, PayloadRequest } from 'payload'
 
+import { bewegung } from './bestandsbewegung'
+
 /**
  * Einen Wareneingang auf den Bestand buchen.
  *
@@ -31,8 +33,6 @@ export type Wareneingang = {
   lines?: { item?: unknown; quantity?: number | null; note?: string | null }[] | null
 }
 
-const runden = (n: number) => Math.round(n * 1000) / 1000
-
 export async function wareneingangBuchen(
   payload: Payload,
   eingang: Wareneingang,
@@ -55,7 +55,6 @@ export async function wareneingangBuchen(
       })
       if (!posten) continue
 
-      const rest = runden((posten.quantity ?? 0) + menge)
       const grund = [
         `Wareneingang ${eingang.receiptNumber ?? ''}`.trim(),
         eingang.supplierName || undefined,
@@ -70,20 +69,7 @@ export async function wareneingangBuchen(
         id: id as number,
         overrideAccess: true,
         req,
-        data: {
-          quantity: rest,
-          // Die Lieferung ist da — der Posten ist nicht mehr unterwegs
-          reorderedAt: null,
-          movements: [
-            ...(posten.movements ?? []),
-            {
-              day: eingang.receivedAt ?? new Date().toISOString(),
-              delta: menge,
-              rest,
-              reason: grund,
-            },
-          ],
-        },
+        data: bewegung(posten, menge, grund, undefined, eingang.receivedAt),
       })
       gebucht += 1
     } catch (err) {

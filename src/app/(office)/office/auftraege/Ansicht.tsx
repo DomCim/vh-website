@@ -5,16 +5,11 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
+import { AUFTRAG_STATUS, statusKarte } from '../../../../lib/listen'
 
 /** Fertigungsaufträge — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  geplant: { text: 'Geplant', art: '' },
-  inFertigung: { text: 'In Fertigung', art: 'offen' },
-  fertig: { text: 'Fertig', art: 'gut' },
-  geliefert: { text: 'Geliefert', art: 'gut' },
-  abgebrochen: { text: 'Abgebrochen', art: 'warn' },
-}
+const STATUS = statusKarte(AUFTRAG_STATUS)
 
 const HERKUNFT: Record<string, string> = {
   shop: 'Shop-Bestellung',

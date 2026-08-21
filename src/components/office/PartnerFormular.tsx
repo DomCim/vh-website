@@ -20,8 +20,15 @@ export type PartnerWerte = {
   vatId?: string | null
   siret?: string | null
   defaultCategory?: string | null
+  sprache?: string | null
   notes?: string | null
 }
+
+const SPRACHEN = [
+  { wert: 'de', text: 'Deutsch' },
+  { wert: 'fr', text: 'Französisch' },
+  { wert: 'en', text: 'Englisch' },
+]
 
 const ARTEN = [
   { wert: 'lieferant', text: 'Lieferant' },
@@ -145,6 +152,20 @@ export function PartnerFormular({
         <label className="buero-feld">
           <span>Land</span>
           <input value={w.country ?? ''} onChange={(e) => setzen({ country: e.target.value })} />
+        </label>
+        <label className="buero-feld">
+          <span>Sprache für Mails</span>
+          <select value={w.sprache ?? 'de'} onChange={(e) => setzen({ sprache: e.target.value })}>
+            {SPRACHEN.map((s) => (
+              <option key={s.wert} value={s.wert}>
+                {s.text}
+              </option>
+            ))}
+          </select>
+          <span className="buero-unterzeile">
+            Statusmeldungen zu Aufträgen gehen in dieser Sprache raus. Das Feld gab es im
+            Datenmodell längst — nur pflegen konnte es niemand, also blieb es immer Deutsch.
+          </span>
         </label>
       </div>
 

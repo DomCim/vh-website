@@ -23,6 +23,8 @@ import { type Stufen } from './anzahlung'
 export type StufenRechnung = {
   stufe?: string | null
   status?: string | null
+  /** Gesetzt, wenn dies die Gegenrechnung eines Stornos ist. */
+  stornoVon?: unknown
   /** Fällig am — ISO-Zeichenkette oder Datum */
   dueDate?: string | Date | null
   netto?: number | null
@@ -43,6 +45,25 @@ export type Zahlungsstand = {
 }
 
 const TAG = 24 * 60 * 60 * 1000
+
+/*
+ * Was eine Rechnung für Umsatz und offene Posten bedeutet — an einer Stelle.
+ *
+ * Der Anlass war ein Storno, das den Umsatz doppelt drückte: Das Original
+ * fiel mit „storniert" aus der Summe, die negative Gegenrechnung blieb mit
+ * „gestellt" drin. Richtig ist: Beide Belege zählen — Original und
+ * Gegenrechnung heben sich auf, und der Steuerberater sieht beide Zeilen.
+ * Und keiner von beiden ist ein offener Posten: Aus einem Storno ist nichts
+ * zu zahlen.
+ */
+
+/** Zählt diese Rechnung zum Umsatz? Storno-Paare heben sich darin auf. */
+export const zaehltZumUmsatz = (r: { status?: string | null }) =>
+  ['gestellt', 'bezahlt', 'storniert'].includes(r.status ?? '')
+
+/** Wartet aus dieser Rechnung noch Geld? Gegenrechnungen eines Stornos nie. */
+export const istOffenerPosten = (r: { status?: string | null; stornoVon?: unknown }) =>
+  r.status === 'gestellt' && !r.stornoVon
 
 /** Ganze Tage zwischen einem Datum und heute; negativ heißt: noch nicht fällig. */
 export function tageSeit(datum: string | Date | null | undefined, jetzt = new Date()): number {
@@ -65,7 +86,7 @@ export function zahlungsstand(
   jetzt = new Date(),
 ): Zahlungsstand {
   const offen = rechnungen
-    .filter((r) => r.status === 'gestellt' && r.dueDate)
+    .filter((r) => istOffenerPosten(r) && r.dueDate)
     .map((r) => ({ ...r, ueberfaellig: tageSeit(r.dueDate, jetzt) }))
     .filter((r) => r.ueberfaellig > 0)
     .sort((a, b) => b.ueberfaellig - a.ueberfaellig)

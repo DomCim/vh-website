@@ -190,6 +190,176 @@
   line-height: 1.35;
 }
 
+/* ── Glocke und Zähler ─────────────────────────────────────────────────────
+   Die Glocke steht neben dem Abgleichpunkt und ist genauso gebaut: 44 Pixel
+   zum Antippen, ein Blatt darunter, das sich erklärt. Der Punkt sagt, ob der
+   Stand stimmt; die Glocke sagt, dass etwas etwas will. */
+.buero-glocke-huelle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* Neben dem Seitennamen am Handy darf sie nicht mitschrumpfen */
+  flex: 0 0 auto;
+}
+
+.buero-glocke {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--buero-tinte-leise);
+}
+
+/* Liegt etwas an, wird die Glocke selbst kräftiger — die Zahl allein ist bei
+   Sonne aufs Display schnell übersehen. */
+.buero-glocke.hat-neue {
+  color: var(--buero-tinte);
+}
+
+.buero-glocke svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.buero-glocke-blatt {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 21;
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten, 0 6px 22px rgb(0 0 0 / 14%));
+}
+
+.buero-glocke-leer {
+  margin: 0;
+  padding: 1.1rem 0.9rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.buero-glocke-liste a {
+  display: block;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--buero-linie);
+  border-left: 2px solid transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Ungelesenes trägt den bronzenen Strich — dieselbe Farbe, die im Büro überall
+   „hier ist etwas zu tun" heißt. */
+.buero-glocke-liste a.ist-neu {
+  border-left-color: var(--buero-bronze);
+}
+
+.buero-glocke-liste a:hover {
+  background: var(--buero-papier);
+}
+
+.buero-glocke-liste strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.buero-glocke-liste span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.buero-glocke-liste time {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.72rem;
+}
+
+.buero-glocke-fuss {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.82rem;
+}
+
+/* ── Der Zähler ────────────────────────────────────────────────────────────
+   Bronze, weil das hier „da ist etwas zu tun" heißt — dieselbe Farbe wie der
+   wartende Abgleichpunkt. Rot wäre eine Störung, und ein Rechnungsentwurf,
+   der auf seine Prüfung wartet, ist keine.
+
+   Der Ring in Flächenfarbe trennt die Zahl vom Zeichen darunter. Er ist als
+   Wert gesetzt und nicht als Weiß: Kopfleiste und Tableiste stehen beide auf
+   `--buero-flaeche`, und die kippt im dunklen Modus mit. */
+.buero-zaehler {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.35rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--buero-flaeche);
+  pointer-events: none;
+}
+
+/* In einer Zeile mit Text steht die Zahl am rechten Ende statt in der Ecke */
+.buero-zaehler.inline {
+  position: static;
+  margin-left: auto;
+  box-shadow: none;
+}
+
+/* Steht der Punkt selbst schon auf gefülltem Grund („hier bist du"), kehrt
+   sich der Zähler um — sonst verschwände Bronze auf Bronze. */
+.buero-nav-gruppe > button[aria-current='page'] .buero-zaehler,
+.buero-blatt-punkte a[aria-current='page'] .buero-zaehler {
+  background: var(--buero-auf-bronze, #fff);
+  color: var(--buero-tinte);
+}
+
+/* Nur für Vorleseprogramme: Die Zahl allein sagt nicht, wovon */
+.buero-nur-vorlesen {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .nur-schmal {
   display: none;
 }
@@ -440,6 +610,8 @@
 }
 
 .buero-tab {
+  /* Anker für den Zähler in der Ecke — ohne das säße er am Rand des Fensters */
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -644,8 +816,27 @@
     box-shadow: 0 6px 22px rgb(0 0 0 / 14%);
   }
 
-  .buero-fussleiste > .buero-knopf {
-    flex: 1 1 100%;
+  /*
+   * Die **eine** Hauptaktion über die volle Breite. Alles Übrige ist am Handy
+   * ins Blatt hinter „⋯" gewandert (siehe `Fussleiste.tsx`) — hier bleibt
+   * deshalb nichts mehr zu stapeln.
+   */
+  .buero-fussleiste > .buero-knopf:not(.buero-mehr-knopf) {
+    flex: 1 1 auto;
+  }
+
+  /* Der „⋯"-Knopf nimmt nur, was er braucht */
+  .buero-mehr-knopf {
+    flex: 0 0 auto;
+    min-width: 3rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    letter-spacing: 0.1em;
+  }
+
+  /* Am Rechner stünden sie nebeneinander — am Handy stehen sie im Blatt */
+  .buero-fussleiste > .buero-nebensachen {
+    display: none;
   }
 
   .buero-fussleiste-hinweis {
@@ -712,7 +903,15 @@ html.tastatur-offen .buero-inhalt {
  */
 @media (max-width: 719px) {
   .buero-inhalt {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    /*
+     * So viel Luft, wie die Fußleiste wirklich hoch ist — gemeldet von ihr
+     * selbst. Vorher stand hier eine feste Zahl; bei einer Leiste mit vier
+     * Knöpfen war sie um mehr als hundert Pixel zu klein, und die letzte
+     * Zeile des Formulars lag dauerhaft darunter.
+     */
+    padding-bottom: calc(
+      var(--buero-fussleiste-hoehe, 0px) + 5.5rem + env(safe-area-inset-bottom)
+    );
   }
 }
 
@@ -1535,4 +1734,464 @@ html.tastatur-offen .buero-inhalt {
   align-items: center;
   gap: 0.6rem;
   margin-top: 1.25rem;
+}
+
+/* ══ Postfach ═══════════════════════════════════════════════════════════════
+
+   Die Knöpfe im Büro sind absichtlich groß (48px, siehe oben) — bedient wird
+   das mit Handschuh. Im Postfach standen davon aber fünf nebeneinander, und
+   am Telefon fraßen sie die halbe Seite, bevor die erste Nachricht kam.
+
+   Die Antwort ist nicht, sie kleiner zu machen: Dann wäre die Regel für alle
+   anderen Seiten auch nicht mehr wahr. Die Antwort ist, **weniger große** zu
+   zeigen. Eine Handlung ist die naheliegende und bleibt groß und beschriftet
+   („Antworten", „Schreiben"). Der Rest wird zu quadratischen Zeichenknöpfen:
+   Sie behalten ihre 44 Pixel Trefferfläche, brauchen aber ein Viertel der
+   Breite und passen zu viert in eine Zeile statt in drei. */
+
+.buero-werkzeuge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+/* Quadratisch, nur ein Zeichen — die Beschriftung liest der Screenreader */
+.buero-symbolknopf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 2px solid var(--buero-rahmen);
+  border-radius: 10px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.buero-symbolknopf:hover {
+  border-color: var(--buero-bronze);
+  color: var(--buero-bronze);
+}
+
+.buero-symbolknopf:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+}
+
+.buero-symbolknopf:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Rot bleibt dem Wegnehmen vorbehalten — dieselbe Regel wie bei den Knöpfen */
+.buero-symbolknopf.gefahr:hover {
+  border-color: var(--buero-rot);
+  color: var(--buero-rot);
+}
+
+.buero-symbolknopf.ist-an {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+}
+
+.buero-symbolknopf svg {
+  width: 20px;
+  height: 20px;
+  /* Das Zeichen folgt der Schriftfarbe des Knopfes, auch im Umschlag */
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+ * Die Ordner als Reihe, nicht als Auswahlfeld.
+ *
+ * Ein `<select>` verbirgt, wie viele Ordner es gibt und wo ungelesene Post
+ * liegt — man muss es erst aufklappen, um zu sehen, ob sich das Aufklappen
+ * lohnt. Als Reihe steht beides sofort da. Sie rollt seitwärts, damit auch
+ * zwölf Ordner die Seite nicht nach unten schieben.
+ */
+.buero-ordnerleiste {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.9rem;
+  scrollbar-width: none;
+}
+
+.buero-ordnerleiste::-webkit-scrollbar {
+  display: none;
+}
+
+.buero-ordner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 999px;
+  background: var(--buero-flaeche);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  /* Ordnernamen brechen nicht um — sonst wird aus der Reihe ein Absatz */
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.buero-ordner:hover {
+  border-color: var(--buero-bronze);
+}
+
+.buero-ordner.ist-hier {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-weight: 600;
+}
+
+/* Die Zahl der ungelesenen — der eigentliche Grund, warum die Leiste offen ist */
+.buero-ordner-zahl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Im offenen Ordner sitzt die Zahl auf Bronze — dann muss sie andersherum */
+.buero-ordner.ist-hier .buero-ordner-zahl {
+  background: var(--buero-auf-bronze);
+  color: var(--buero-bronze);
+}
+
+/* Der Anlegen-Knopf am Ende der Reihe */
+.buero-ordner.ist-zugabe {
+  border-style: dashed;
+  padding: 0.35rem 0.7rem;
+}
+
+.buero-ordner-neu {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.buero-ordner-neu input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+/* „Zurück" ist kein Knopf, sondern ein Weg — und braucht keine Fläche dafür */
+.buero-ruecken {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--buero-bronze);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.buero-ruecken:hover {
+  text-decoration: underline;
+}
+
+/*
+ * In einer Übersicht ist der Hinweis eine Andeutung, kein Absatz.
+ *
+ * Ungekürzt wuchsen zwölf Zeilen auf fast zwei Bildschirmhöhen an — und
+ * ausgerechnet die Übersicht, die das Suchen ersparen soll, musste man
+ * durchscrollen. Ganze Sätze stehen weiterhin da, wo man sie braucht: im
+ * Bereich selbst.
+ */
+.buero-zeile-neben.knapp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ══ Schreibfeld (Quill) ════════════════════════════════════════════════════
+
+   Quills Standardaussehen ist hell: weißer Grund, graue Rahmen, dunkle
+   Zeichen. Im Büro gibt es aber beide Themen, und im dunklen sähe das aus wie
+   ein Fremdkörper, den jemand vergessen hat.
+
+   Umgefärbt wird deshalb über dieselben Variablen wie überall — dann dreht das
+   Schreibfeld beim Themenwechsel von selbst mit, ohne zweite Farbliste. */
+
+.buero-schreibfeld .ql-toolbar.ql-snow,
+.buero-schreibfeld .ql-container.ql-snow {
+  border-color: var(--buero-rahmen);
+}
+
+.buero-schreibfeld .ql-toolbar.ql-snow {
+  border-radius: 9px 9px 0 0;
+  background: var(--buero-flaeche);
+}
+
+.buero-schreibfeld .ql-container.ql-snow {
+  border-radius: 0 0 9px 9px;
+  background: var(--buero-papier);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.buero-schreibfeld .ql-editor {
+  min-height: 14rem;
+  color: inherit;
+}
+
+.buero-schreibfeld .ql-editor.ql-blank::before {
+  color: var(--buero-tinte-leise);
+  font-style: normal;
+}
+
+/* Die Zeichen in der Leiste sind SVG-Striche — die müssen der Schrift folgen */
+.buero-schreibfeld .ql-snow .ql-stroke {
+  stroke: var(--buero-tinte);
+}
+.buero-schreibfeld .ql-snow .ql-fill {
+  fill: var(--buero-tinte);
+}
+.buero-schreibfeld .ql-snow .ql-picker {
+  color: var(--buero-tinte);
+}
+
+.buero-schreibfeld .ql-snow .ql-active .ql-stroke,
+.buero-schreibfeld .ql-snow button:hover .ql-stroke {
+  stroke: var(--buero-bronze);
+}
+.buero-schreibfeld .ql-snow .ql-active .ql-fill,
+.buero-schreibfeld .ql-snow button:hover .ql-fill {
+  fill: var(--buero-bronze);
+}
+.buero-schreibfeld .ql-snow .ql-picker-label:hover,
+.buero-schreibfeld .ql-snow .ql-picker-item:hover,
+.buero-schreibfeld .ql-snow .ql-picker-label.ql-active {
+  color: var(--buero-bronze);
+}
+
+/* Die aufklappbaren Listen (Überschrift, Farbe) haben eigene Flächen */
+.buero-schreibfeld .ql-snow .ql-picker-options {
+  background: var(--buero-flaeche);
+  border-color: var(--buero-rahmen);
+  border-radius: 9px;
+}
+
+/*
+ * Die Farbfelder bleiben, wie sie sind — hier ist die Farbe der Inhalt.
+ * Sie umzufärben hieße, dem Schreibenden etwas anderes zu zeigen, als beim
+ * Empfänger ankommt.
+ */
+
+/* Der Link-Dialog von Quill */
+.buero-schreibfeld .ql-snow .ql-tooltip {
+  background: var(--buero-flaeche);
+  border-color: var(--buero-rahmen);
+  border-radius: 9px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+  color: inherit;
+}
+
+.buero-schreibfeld .ql-snow .ql-tooltip input[type='text'] {
+  background: var(--buero-papier);
+  border-color: var(--buero-rahmen);
+  color: inherit;
+  border-radius: 6px;
+}
+
+/*
+ * Am Telefon darf die Leiste umbrechen statt seitwärts zu verschwinden.
+ * Ein Knopf, den man nicht sieht, ist keiner — und scrollen kann man in einer
+ * Werkzeugleiste schlecht, ohne den Text mitzuziehen.
+ */
+@media (max-width: 560px) {
+  .buero-schreibfeld .ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem;
+  }
+  .buero-schreibfeld .ql-editor {
+    min-height: 11rem;
+  }
+}
+
+/* ── Nebensachen der Fußleiste ─────────────────────────────────────────────
+   Am Rechner stehen sie neben der Hauptaktion, am Handy im Blatt dahinter.
+   Zwei Fassungen desselben Knopfes wären doppelte Pflege — einer, den das
+   Stylesheet je nach Breite an der einen oder anderen Stelle zeigt, nicht. */
+
+.buero-nebensachen {
+  display: contents;
+}
+
+/* Im Blatt bekommt jede Aktion eine eigene Zeile: Dort ist Platz, und getippt
+   wird mit dem Daumen. */
+.buero-blatt-aktionen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.buero-blatt-aktionen .buero-knopf {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 719px) {
+  .buero-mehr-knopf {
+    display: inline-flex;
+  }
+}
+
+/* Am Rechner gibt es kein Blatt und also auch keinen Knopf, der eines öffnet */
+@media (min-width: 720px) {
+  .buero-mehr-knopf {
+    display: none;
+  }
+}
+
+/* ── Ablauf eines Auftrags ─────────────────────────────────────────────────
+   Was schon war, was läuft, was kommt. Der laufende Schritt steht oben und
+   groß — er beantwortet die einzige Frage, die man in der Werkstatt stellt. */
+
+.buero-ablauf-kopf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--buero-bronze);
+  border-radius: 12px;
+  margin-bottom: 0.8rem;
+}
+
+.buero-ablauf-kopf strong {
+  font-size: 1.05rem;
+}
+
+.buero-ablauf-kopf .buero-marker {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+}
+
+.buero-ablauf-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.buero-ablauf-zeile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-ablauf-nummer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--buero-linie);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Erledigtes tritt zurück, ohne zu verschwinden: Man will nachsehen können,
+   was schon war — aber nicht dauernd darüber stolpern. */
+.ist-erledigt .buero-ablauf-nummer {
+  border-color: var(--buero-gruen);
+  color: var(--buero-gruen);
+}
+
+.ist-erledigt .buero-zeile-titel {
+  color: var(--buero-tinte-leise);
+  text-decoration: line-through;
+}
+
+.ist-laeuft .buero-ablauf-nummer {
+  border-color: var(--buero-bronze);
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+}
+
+.buero-ablauf-zeile select {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 6rem;
+}
+
+/* ── Ein Haken mit Beschriftung ────────────────────────────────────────────
+   `.buero-feld` ist ein Block, und seine Beschriftung ebenso — für ein
+   Textfeld richtig, für einen Haken nicht: Dort standen Kästchen und Text
+   untereinander, mit dem Kästchen einsam in einer eigenen Zeile.
+
+   Zwei Stellen hatten dafür denselben Satz Inline-Stile stehen, der nichts
+   bewirkte (`flex-direction` ohne `display: flex`). Jetzt einmal hier. */
+
+.buero-haken {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.buero-haken > span {
+  display: inline;
+  margin-bottom: 0;
+  /* Neben einem Kästchen ist der Text die Aussage, nicht die Feldbeschriftung
+     darüber — deshalb in Lesegröße und nicht im Kleingedruckten */
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--buero-tinte);
+}
+
+.buero-haken input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--buero-bronze);
+}
+
+/* Ein Hinweis unter dem Haken darf wieder klein sein */
+.buero-haken .buero-unterzeile {
+  flex: 1 1 100%;
+  margin-top: 0.1rem;
 }

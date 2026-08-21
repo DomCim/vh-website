@@ -2,8 +2,11 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 
-type Fach = { id: string; label: string; address: string }
-type Ordner = { pfad: string; name: string; ungelesen: number; art: string }
+import { ordnernameGueltig } from '../../lib/ordnerpfad'
+import { Schreibfeld } from './Schreibfeld'
+
+type Fach = { id: string; label: string; address: string; signatur?: string | null }
+type Ordner = { pfad: string; name: string; ungelesen: number; art: string; trenner: string }
 type Kopfzeile = {
   uid: number
   betreff: string
@@ -23,7 +26,20 @@ type Nachricht = Kopfzeile & {
   dateien: { name: string; groesse: number; typ: string }[]
 }
 
-type Entwurf = { an: string; betreff: string; text: string; antwortAufMessageId?: string }
+/**
+ * Ein Entwurf trägt HTML, nicht mehr bloß Text.
+ *
+ * `text` bleibt als Rückfallebene: Lädt das Schreibfeld nicht, wird dort
+ * einfacher Text getippt, und der Server setzt ihn wie früher auf den
+ * Briefbogen.
+ */
+type Entwurf = {
+  an: string
+  betreff: string
+  text: string
+  html: string
+  antwortAufMessageId?: string
+}
 
 const zeit = (v: string | null) => {
   if (!v) return ''
@@ -37,6 +53,68 @@ const zeit = (v: string | null) => {
 
 const groesse = (b: number) =>
   b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`
+
+/**
+ * Die Zeichen für die schmalen Knöpfe.
+ *
+ * Bewusst als Striche gezeichnet und nicht als Schriftzeichen oder Emoji:
+ * Emoji sehen auf jedem Gerät anders aus und tragen Farben, die nichts
+ * bedeuten. Diese hier folgen der Schriftfarbe des Knopfes und drehen im
+ * dunklen Thema von selbst mit.
+ */
+const ZEICHEN: Record<string, React.ReactNode> = {
+  neuLaden: <path d="M3 10a7 7 0 0 1 12-4.9L18 8M18 3v5h-5M18 10a7 7 0 0 1-12 4.9L3 12M3 17v-5h5" />,
+  ungelesen: <path d="M2 5.5h16v10H2zM2 6l8 5.5L18 6" />,
+  markieren: (
+    <path d="M10 2.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 8.2l5.4-.8z" />
+  ),
+  verschieben: <path d="M2 5.5h5.5l1.5 2H18v9H2zM2 5.5V16" />,
+  loeschen: <path d="M3 5.5h14M8 5.5V3h4v2.5M5 5.5l1 11h8l1-11M8.5 8.5v5M11.5 8.5v5" />,
+  zurueck: <path d="M12 4l-6 6 6 6" />,
+  plus: <path d="M10 4v12M4 10h12" />,
+}
+
+function Zeichen({ was }: { was: keyof typeof ZEICHEN }) {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      {ZEICHEN[was]}
+    </svg>
+  )
+}
+
+/** Zeilen einer Signatur zu Absätzen — sie kommt als Klartext aus den Einstellungen */
+function signaturAlsHtml(signatur?: string | null): string {
+  const sauber = (signatur ?? '').trim()
+  if (!sauber) return ''
+  const zeilen = sauber
+    .split('\n')
+    .map((z) =>
+      z
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;'),
+    )
+    .join('<br>')
+  /*
+   * Zwei leere Absätze davor: Der Zeiger steht beim Öffnen oben, und man soll
+   * lostippen können, ohne sich erst Platz zu schaffen.
+   */
+  return `<p><br></p><p><br></p><p style="color: #666666">${zeilen}</p>`
+}
+
+/** Kurzer, sprechender Name statt des rohen IMAP-Pfads */
+function ordnerName(o: Ordner): string {
+  const nachArt: Record<string, string> = {
+    '\\Inbox': 'Posteingang',
+    '\\Sent': 'Gesendet',
+    '\\Drafts': 'Entwürfe',
+    '\\Trash': 'Papierkorb',
+    '\\Junk': 'Spam',
+    '\\Archive': 'Archiv',
+  }
+  if (o.pfad.toUpperCase() === 'INBOX') return 'Posteingang'
+  return nachArt[o.art] ?? o.name
+}
 
 /**
  * Postfach im Büro.
@@ -60,6 +138,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [laeuft, setLaeuft] = useState(true)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [nichtEingerichtet, setNichtEingerichtet] = useState(false)
+  /** Offen, während ein neuer Ordner benannt wird — leer heißt: zu */
+  const [neuerOrdner, setNeuerOrdner] = useState<string | null>(null)
 
   const laden = useCallback(
     async (fachId?: string | null, ordnerPfad?: string) => {
@@ -101,6 +181,22 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   useEffect(() => {
     void laden()
   }, [laden])
+
+  /*
+   * Die Signatur kommt erst, wenn die Postfächer da sind.
+   *
+   * Beim Aufruf über `/office/post?an=…` steht der Entwurf schon, bevor der
+   * Server geantwortet hat — die Signatur gehört aber zum Postfach und ist zu
+   * dem Zeitpunkt noch unbekannt. Nachgelegt wird nur in einen leeren Rumpf:
+   * Was jemand schon getippt hat, wird nicht angefasst.
+   */
+  useEffect(() => {
+    if (!entwurf || entwurf.html.trim()) return
+    const signatur = signaturAlsHtml(faecher.find((f) => f.id === fach)?.signatur)
+    if (signatur) setEntwurf({ ...entwurf, html: signatur })
+    // Nur an den Postfächern hängen — sonst liefe es bei jedem Buchstaben
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [faecher, fach])
 
   async function oeffnen(uid: number) {
     setLaeuft(true)
@@ -144,9 +240,70 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
   }
 
+  async function verschieben(uid: number, ziel: string) {
+    const res = await fetch('/api/office/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ aktion: 'verschieben', uid, ordner, ziel, fach }),
+    })
+    if (!res.ok) {
+      setMeldung('Verschieben hat nicht geklappt.')
+      return
+    }
+    // Aus dieser Liste ist sie weg — sie liegt jetzt woanders
+    setListe((v) => v.filter((n) => n.uid !== uid))
+    setOffen(null)
+    const zielName = ordnerAlle.find((o) => o.pfad === ziel)
+    setMeldung(`Verschoben nach ${zielName ? ordnerName(zielName) : ziel}.`)
+  }
+
+  async function ordnerAnlegen(name: string) {
+    if (!ordnernameGueltig(name)) {
+      setMeldung('Der Name darf keinen Punkt und keinen Schrägstrich enthalten.')
+      return
+    }
+    const hier = ordnerAlle.find((o) => o.pfad === ordner)
+    const res = await fetch('/api/office/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      // Der Server baut den Pfad selbst — hier geht nur mit, woraus
+      body: JSON.stringify({
+        aktion: 'ordner-anlegen',
+        name,
+        ordner,
+        trenner: hier?.trenner || '/',
+        fach,
+      }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setMeldung(
+        j?.error === 'name-ungueltig'
+          ? 'Der Name darf keinen Punkt und keinen Schrägstrich enthalten.'
+          : 'Der Ordner ließ sich nicht anlegen.',
+      )
+      return
+    }
+    setNeuerOrdner(null)
+    await laden(fach, ordner)
+    setMeldung(`Ordner „${name}" angelegt.`)
+  }
+
   async function senden() {
     if (!entwurf?.an.trim()) {
       setMeldung('Eine Empfängeradresse wird gebraucht.')
+      return
+    }
+    /*
+     * Leere Mails gar nicht erst losschicken. Quill hinterlässt beim Leeren
+     * ein `<p><br></p>` — wer nur darauf prüft, ob etwas dasteht, schickt
+     * genau das raus.
+     */
+    const inhalt = (entwurf.html || entwurf.text).replace(/<[^>]+>/g, '').replace(/\s|&nbsp;/g, '')
+    if (!inhalt) {
+      setMeldung('Die Nachricht ist leer.')
       return
     }
     setLaeuft(true)
@@ -170,16 +327,34 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
   }
 
+  /** Die Signatur des gerade gewählten Postfachs, als HTML für das Schreibfeld */
+  function signaturJetzt(): string {
+    return signaturAlsHtml(faecher.find((f) => f.id === fach)?.signatur)
+  }
+
   function antworten(n: Nachricht) {
+    /*
+     * Das Zitat kommt als Blockzitat, nicht als „> "-Zeilen.
+     *
+     * Die Größer-Zeichen sind eine Krücke aus der Zeit reiner Textmails; in
+     * einer gestalteten Mail sehen sie aus wie ein Fehler. Ein eingerücktes,
+     * graues Blockzitat sagt dasselbe und wird von jedem Mailprogramm richtig
+     * dargestellt.
+     */
     const zitat = n.text
       .split('\n')
       .slice(0, 40)
-      .map((z) => `> ${z}`)
-      .join('\n')
+      .map((z) => z.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+      .join('<br>')
+
     setEntwurf({
       an: n.antwortAn || n.vonAdresse,
       betreff: n.betreff.startsWith('Re:') ? n.betreff : `Re: ${n.betreff}`,
-      text: `\n\n---\nAm ${zeit(n.datum)} schrieb ${n.von}:\n${zitat}`,
+      text: '',
+      html:
+        signaturJetzt() +
+        `<p><br></p><p style="color: #666666">Am ${zeit(n.datum)} schrieb ${n.von}:</p>` +
+        `<blockquote style="color: #666666">${zitat}</blockquote>`,
       antwortAufMessageId: n.messageId,
     })
     setOffen(null)
@@ -218,10 +393,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         </label>
         <label className="buero-feld">
           <span>Nachricht</span>
-          <textarea
-            rows={14}
-            value={entwurf.text}
-            onChange={(e) => setEntwurf({ ...entwurf, text: e.target.value })}
+          <Schreibfeld
+            wert={entwurf.html}
+            aendern={(html) => setEntwurf((v) => (v ? { ...v, html } : v))}
           />
         </label>
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
@@ -253,42 +427,81 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   if (offen) {
     return (
       <div className="buero-karte">
-        <button type="button" className="buero-knopf leise" onClick={() => setOffen(null)}>
-          Zurück
+        <button type="button" className="buero-ruecken" onClick={() => setOffen(null)}>
+          <Zeichen was="zurueck" /> Zurück
         </button>
-        <h2 style={{ marginTop: '1rem' }}>{offen.betreff}</h2>
+        <h2 style={{ marginTop: '.5rem' }}>{offen.betreff}</h2>
         <p className="buero-unterzeile">
           {offen.von} · {zeit(offen.datum)}
           {offen.an ? ` · an ${offen.an}` : ''}
         </p>
 
-        <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        {/*
+          * Eine große Handlung, der Rest als Zeichen.
+          *
+          * „Antworten" ist das, was man hier zu neunzig Prozent will — das
+          * bleibt beschriftet. Ungelesen, Markieren, Verschieben und Löschen
+          * passen daneben in eine Zeile, statt drei zu füllen. Jeder behält
+          * seine 44 Pixel; nur die Beschriftung wandert zum Screenreader.
+          */}
+        <div className="buero-werkzeuge">
           <button type="button" className="buero-knopf" onClick={() => antworten(offen)}>
             Antworten
           </button>
           <button
             type="button"
-            className="buero-knopf leise"
+            className="buero-symbolknopf"
+            title="Als ungelesen zurücklegen"
+            aria-label="Als ungelesen zurücklegen"
             onClick={() => void aktion(offen.uid, 'ungelesen')}
           >
-            Ungelesen
+            <Zeichen was="ungelesen" />
           </button>
           <button
             type="button"
-            className="buero-knopf leise"
+            className={`buero-symbolknopf${offen.markiert ? ' ist-an' : ''}`}
+            title={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
+            aria-label={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
+            aria-pressed={offen.markiert}
             onClick={() => void aktion(offen.uid, offen.markiert ? 'unmarkiert' : 'markiert')}
           >
-            {offen.markiert ? 'Markierung weg' : 'Markieren'}
+            <Zeichen was="markieren" />
           </button>
+          {/*
+            * Verschieben als Auswahlfeld und nicht als eigenes Menü: Das
+            * Zielverzeichnis ist die Frage, nicht das Verschieben selbst. Am
+            * Telefon öffnet das native Rad, das man ohnehin kennt.
+            */}
+          {ordnerAlle.length > 1 && (
+            <select
+              className="buero-fach-wahl"
+              aria-label="In einen anderen Ordner verschieben"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) void verschieben(offen.uid, e.target.value)
+              }}
+            >
+              <option value="">Verschieben nach …</option>
+              {ordnerAlle
+                .filter((o) => o.pfad !== ordner)
+                .map((o) => (
+                  <option key={o.pfad} value={o.pfad}>
+                    {ordnerName(o)}
+                  </option>
+                ))}
+            </select>
+          )}
           <button
             type="button"
-            className="buero-knopf leise"
+            className="buero-symbolknopf gefahr"
+            title="In den Papierkorb legen"
+            aria-label="In den Papierkorb legen"
             onClick={() => {
               if (window.confirm('Diese Nachricht in den Papierkorb legen?'))
                 void aktion(offen.uid, 'loeschen')
             }}
           >
-            Löschen
+            <Zeichen was="loeschen" />
           </button>
         </div>
 
@@ -329,18 +542,11 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   // ── Liste ─────────────────────────────────────────────────────────────────
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          gap: '.6rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
+      <div className="buero-werkzeuge">
         {faecher.length > 1 && (
           <select
             className="buero-fach-wahl"
+            aria-label="Postfach"
             value={fach ?? ''}
             onChange={(e) => void laden(e.target.value, 'INBOX')}
           >
@@ -351,36 +557,83 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
             ))}
           </select>
         )}
-        {ordnerAlle.length > 1 && (
-          <select
-            className="buero-fach-wahl"
-            value={ordner}
-            onChange={(e) => void laden(fach, e.target.value)}
-          >
-            {ordnerAlle.map((o) => (
-              <option key={o.pfad} value={o.pfad}>
-                {o.name}
-                {o.ungelesen ? ` (${o.ungelesen})` : ''}
-              </option>
-            ))}
-          </select>
-        )}
         <button
           type="button"
           className="buero-knopf"
-          onClick={() => setEntwurf({ an: '', betreff: '', text: '' })}
+          onClick={() =>
+            setEntwurf({ an: '', betreff: '', text: '', html: signaturJetzt() })
+          }
         >
           Schreiben
         </button>
         <button
           type="button"
-          className="buero-knopf leise"
+          className="buero-symbolknopf"
           disabled={laeuft}
+          title="Neu laden"
+          aria-label="Neu laden"
           onClick={() => void laden(fach, ordner)}
         >
-          {laeuft ? 'Lädt …' : 'Neu laden'}
+          <Zeichen was="neuLaden" />
         </button>
       </div>
+
+      {/*
+        * Die Ordner offen als Reihe, mit der Zahl der ungelesenen daneben.
+        *
+        * Als Auswahlfeld musste man erst aufklappen, um zu sehen, ob sich das
+        * Aufklappen lohnt — und wie viele Ordner es überhaupt gibt. Hier steht
+        * beides sofort da.
+        */}
+      {ordnerAlle.length > 0 && (
+        <div className="buero-ordnerleiste" role="tablist" aria-label="Ordner">
+          {ordnerAlle.map((o) => (
+            <button
+              key={o.pfad}
+              type="button"
+              role="tab"
+              aria-selected={o.pfad === ordner}
+              className={`buero-ordner${o.pfad === ordner ? ' ist-hier' : ''}`}
+              onClick={() => void laden(fach, o.pfad)}
+            >
+              {ordnerName(o)}
+              {o.ungelesen > 0 && <span className="buero-ordner-zahl">{o.ungelesen}</span>}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="buero-ordner ist-zugabe"
+            title="Ordner anlegen"
+            aria-label="Ordner anlegen"
+            onClick={() => setNeuerOrdner('')}
+          >
+            <Zeichen was="plus" />
+          </button>
+        </div>
+      )}
+
+      {neuerOrdner !== null && (
+        <form
+          className="buero-ordner-neu"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (neuerOrdner.trim()) void ordnerAnlegen(neuerOrdner.trim())
+          }}
+        >
+          <input
+            autoFocus
+            value={neuerOrdner}
+            placeholder="Name des Ordners"
+            onChange={(e) => setNeuerOrdner(e.target.value)}
+          />
+          <button type="submit" className="buero-knopf" disabled={!neuerOrdner.trim()}>
+            Anlegen
+          </button>
+          <button type="button" className="buero-knopf stumm" onClick={() => setNeuerOrdner(null)}>
+            Abbrechen
+          </button>
+        </form>
+      )}
 
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 

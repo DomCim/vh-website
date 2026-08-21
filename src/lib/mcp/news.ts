@@ -119,6 +119,10 @@ export function registerNews(server: McpServer) {
       aufInstagramPosten,
       veroeffentlichen,
     }) => {
+      // „nächster Dienstag" landete sonst ungeprüft im Veröffentlichungsdatum
+      if (datum !== undefined && !Number.isFinite(Date.parse(datum))) {
+        return fehler(`„${datum}" ist kein lesbares Datum — bitte als ISO-Datum (2026-09-01) angeben.`)
+      }
       const payload = await db()
       const publish = veroeffentlichen ?? false
       const doc = await payload.create({
@@ -191,6 +195,9 @@ export function registerNews(server: McpServer) {
       aufInstagramPosten,
       veroeffentlichen,
     }) => {
+      if (datum !== undefined && !Number.isFinite(Date.parse(datum))) {
+        return fehler(`„${datum}" ist kein lesbares Datum — bitte als ISO-Datum (2026-09-01) angeben.`)
+      }
       const payload = await db()
       const n = await findeNachSlug<{ id: number }>(payload, 'news', slug, { draft: true })
       if (!n) return fehler(`News-Beitrag "${slug}" nicht gefunden`)

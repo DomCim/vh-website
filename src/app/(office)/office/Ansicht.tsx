@@ -6,6 +6,8 @@ import React, { useMemo } from 'react'
 import { useBestand, useRahmen } from '../../../lib/buero/bestand'
 import { useDarf } from '../../../lib/buero/rechte'
 import { datum, euro } from '../../../lib/format'
+import { istFaellig, istKnapp, istNeueAnfrage, istUeberfaellig, istZuZahlen } from '../../../lib/zuErledigen'
+import { istOffenerPosten, zaehltZumUmsatz } from '../../../lib/zahlungsstand'
 
 /**
  * Übersicht: was dieses Jahr rein- und rausging, was offen ist und woran
@@ -27,6 +29,7 @@ type Rechnung = {
   dueDate?: string | null
   invoiceNumber?: string | null
   customerName?: string | null
+  stornoVon?: unknown
 }
 type Beleg = {
   grossAmount?: number | null
@@ -71,9 +74,7 @@ export function UebersichtAnsicht() {
     const shop = bestellungen.filter(
       (o) => ['paid', 'inProduction', 'shipped'].includes(o.status ?? '') && imJahr(o.createdAt),
     )
-    const gestellt = rechnungen.filter(
-      (r) => ['gestellt', 'bezahlt'].includes(r.status ?? '') && imJahr(r.issueDate),
-    )
+    const gestellt = rechnungen.filter((r) => zaehltZumUmsatz(r) && imJahr(r.issueDate))
     const ausgaben = belege.filter((a) => a.deductible !== false && imJahr(a.invoiceDate))
 
     return {
@@ -90,36 +91,34 @@ export function UebersichtAnsicht() {
   const inventarWert = runden(
     inventar.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitValue ?? 0), 0),
   )
-  const knapp = inventar.filter(
-    (i) => typeof i.minQuantity === 'number' && (i.quantity ?? 0) < i.minQuantity,
-  )
+  /*
+   * Die Regeln stehen in lib/zuErledigen — dieselben, aus denen die Zähler an
+   * der Navigation entstehen. Zweimal gerechnet gingen sie irgendwann
+   * auseinander, und dann glaubte man keiner von beiden.
+   */
+  const knapp = inventar.filter(istKnapp)
 
   const offeneRechnungen = useMemo(
     () =>
       rechnungen
-        .filter((r) => r.status === 'gestellt')
+        .filter(istOffenerPosten)
         .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
         .slice(0, 10),
     [rechnungen],
   )
-  const ueberfaellig = offeneRechnungen.filter(
-    (r) => r.dueDate && new Date(r.dueDate).getTime() < heute,
-  )
+  const ueberfaellig = offeneRechnungen.filter((r) => istUeberfaellig(r, heute))
 
   // Alles, was in den nächsten drei Tagen fällig wird oder es schon war —
   // derselbe Zeitraum, in dem auch die Erinnerung aufs Handy geht.
   const zuZahlen = useMemo(
     () =>
       belege
-        .filter(
-          (b) =>
-            !b.paid && b.dueDate && new Date(b.dueDate).getTime() < Date.now() + 3 * 86400_000,
-        )
+        .filter((b) => istZuZahlen(b, Date.now()))
         .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? '')),
     [belege],
   )
   const laengstFaellig = zuZahlen[0]
-  const offeneAnfragen = anfragen.filter((a) => a.status === 'neu').length
+  const offeneAnfragen = anfragen.filter(istNeueAnfrage).length
 
   /*
    * Die Frist, die kein Programm erledigt.
@@ -136,13 +135,11 @@ export function UebersichtAnsicht() {
   // Selbst gestellte Erinnerungen, deren Tag da ist. Sie stehen hier zwischen
   // dem, was das Büro von allein gefunden hat — der Zettel am Monitor gehört
   // auf dieselbe Liste wie die überfällige Rechnung.
-  const heuteStempel = new Date().toISOString().slice(0, 10)
   const faelligeZettel = useMemo(
     () =>
       wiedervorlagen
-        .filter((w) => !w.done && (w.dueDate ?? '').slice(0, 10) <= heuteStempel)
+        .filter((w) => istFaellig(w, Date.now()))
         .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? '')),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [wiedervorlagen],
   )
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
-import { dokument, type DokumentArt } from '../../../../../lib/dokumente'
+import { DOKUMENT_RECHT, dokument, type DokumentArt } from '../../../../../lib/dokumente'
 import { nachrichtSenden, postfachFinden } from '../../../../../lib/postfach'
 import { sendMail } from '../../../../../lib/sendMail'
 import { getIntegrations } from '../../../../../lib/settings'
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   try {
     const payload = await payloadClient()
     const { user } = await payload.auth({ headers: req.headers })
-    if (!user || !(await darf(payload, user, 'anfragen.bearbeiten'))) {
+    if (!user) {
       return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
     }
 
@@ -44,6 +44,13 @@ export async function POST(req: Request) {
       fach?: string
     }
     if (!b.art || !b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+    if (!(b.art in DOKUMENT_RECHT)) {
+      return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+    }
+    // Das Recht hängt an der Dokumentart — erst der Körper sagt, welches gilt.
+    if (!(await darf(payload, user, DOKUMENT_RECHT[b.art]))) {
+      return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
+    }
 
     const fach = await postfachFinden(payload, b.fach)
 
@@ -114,14 +121,19 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const payload = await payloadClient()
   const { user } = await payload.auth({ headers: req.headers })
-  if (!user || !(await darf(payload, user, 'anfragen.bearbeiten'))) {
+  if (!user) {
     return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
   }
 
   const url = new URL(req.url)
   const art = url.searchParams.get('art') as DokumentArt | null
   const id = url.searchParams.get('id')
-  if (!art || !id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+  if (!art || !id || !(art in DOKUMENT_RECHT)) {
+    return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+  }
+  if (!(await darf(payload, user, DOKUMENT_RECHT[art]))) {
+    return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
+  }
 
   try {
     const unterlage = await dokument(payload, art, id)

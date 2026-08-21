@@ -18,6 +18,7 @@ import { Deletions } from './collections/Deletions'
 import { Drafts } from './collections/Drafts'
 import { Roles } from './collections/Roles'
 import { MailLog } from './collections/MailLog'
+import { Notifications } from './collections/Notifications'
 import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
 import { FollowUps } from './collections/FollowUps'
@@ -106,6 +107,7 @@ export default buildConfig({
     Roles,
     SystemState,
     MailLog,
+    Notifications,
     PushSubscriptions,
     Media,
     Users,

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { ALLE_BEREICHE, suche, type SuchBereich } from '../search'
+import { BESTELL_STATUS, werteVon } from '../listen'
 import { db, type McpServer, ok, type Sprache, sprache } from './helpers'
 
 const TAG = 86400_000
@@ -253,7 +254,7 @@ export function registerAnalyse(server: McpServer) {
     },
     async () => {
       const payload = await db()
-      const statuses = ['pending', 'paid', 'inProduction', 'shipped', 'cancelled'] as const
+      const statuses = werteVon(BESTELL_STATUS)
       const counts: Record<string, number> = {}
       for (const s of statuses) {
         const { totalDocs } = await payload.count({

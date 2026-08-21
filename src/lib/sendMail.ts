@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import nodemailer from 'nodemailer'
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest } from 'payload'
 
 import { dkimFuer } from './dkim'
 import { benachrichtige } from './push'
@@ -12,6 +12,9 @@ export type MailArt =
   | 'bestellung'
   | 'fertigung'
   | 'versand'
+  | 'auftrag-fertigung'
+  | 'auftrag-fertig'
+  | 'auftrag-geliefert'
   | 'anfrage'
   | 'zugangscode'
   | 'postfach'
@@ -26,7 +29,22 @@ export type MailInput = {
   /** Wofür die Mail steht — landet im Ausgangsprotokoll */
   art?: MailArt
   /** Bezug für die Nachverfolgung */
-  bezug?: { order?: number | string; inquiry?: number | string }
+  bezug?: { order?: number | string; inquiry?: number | string; job?: number | string }
+  /*
+   * Die laufende Anfrage, wenn die Mail aus einem Hook kommt.
+   *
+   * Ohne sie schreibt das Ausgangsprotokoll auf einer **eigenen** Verbindung —
+   * und das ist keine Feinheit, sondern eine Sperre: Der Protokolleintrag
+   * verweist auf Bestellung, Anfrage oder Auftrag, und für diesen Verweis
+   * braucht die Datenbank die betreffende Zeile. Hält die noch offene
+   * Transaktion des Hooks genau diese Zeile fest, wartet das Protokoll auf sie
+   * — und der Hook wartet auf das Protokoll. Beide warten, bis der Browser
+   * aufgibt.
+   *
+   * Mit `req` läuft das Protokoll in derselben Transaktion mit, und die Frage
+   * stellt sich nicht.
+   */
+  req?: PayloadRequest
 }
 
 /**
@@ -56,7 +74,9 @@ async function protokollieren(
         attachments: (mail.attachments ?? []).map((a) => a.filename).join(', ') || undefined,
         order: mail.bezug?.order as number | undefined,
         inquiry: mail.bezug?.inquiry as number | undefined,
+        job: mail.bezug?.job as number | undefined,
       },
+      ...(mail.req ? { req: mail.req } : {}),
     })
   } catch (err) {
     payload.logger.error({ err }, 'Ausgangsprotokoll konnte nicht geschrieben werden')

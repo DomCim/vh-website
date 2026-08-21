@@ -435,6 +435,36 @@ das zurückkommt.
    Volumes gehören dem falschen Benutzer (`chown 1000:1000`), `SEED=true`
    steht noch im Stack, `MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe
    Wert, übriggebliebener Container `vincent-hellmann-backup-1`.
+6. **Beim Ausrollen einmal die X-Forwarded-For-Kette nachmessen.** Das
+   Anmelde-Limit nimmt jetzt den ersten öffentlichen Eintrag von rechts
+   (eigene Proxys — NPM, Traefik — haben private Adressen und werden
+   übersprungen). Das ist konfigurationsfrei und sollte hinter der ganzen
+   Kette stimmen; ein Blick in die echten Header nach dem Deploy kostet
+   eine Minute und beendet die Frage.
+7. **Aus dem ERP-Audit bewusst verschoben** (Reihenfolge nach Nutzen, nichts
+   davon blockiert den Betrieb):
+   - **Einkaufs-Bestellwesen.** `reorderedAt` ist nur ein Merker; bestellte
+     Menge, Liefertermin und Prüfung des Wareneingangs gegen die Bestellung
+     gibt es nicht. Teillieferungen und Überlieferung fallen nicht auf.
+   - **Storno einer Shop-Bestellung ist folgenlos** — keine Rückerstattung
+     (PayPal), keine Rückbuchung der Verfügbarkeit, verknüpfter Auftrag
+     läuft weiter. Heute alles Handarbeit.
+   - **Zahlungsabgleich für Ausgaben.** Der Kontoauszug-Abgleich schlägt nur
+     eigene Rechnungen vor; Belege (`expenses.paid`) müssen weiter von Hand
+     abgehakt werden.
+   - **Postfach kann beim Antworten keine Anhänge mitschicken** (lesen ja).
+     `nachrichtSenden` kann es längst — es fehlt nur der Weg durch
+     `api/office/post`.
+   - **Bestandsabbuchung beim Shop-Verkauf.** Ein verkauftes Einzelstück
+     wird nur auf „nicht verfügbar" gestellt; der Inventarposten
+     (`fertigware`) bleibt unberührt und der Inventarwert zu hoch. Ebenso
+     gibt es keine Reservierung gegen Doppelverkauf im Zahlfenster.
+   - **MCP-Scopes je Rolle.** Es gibt zwei Stufen (voll/lesend), das Büro
+     kennt fünfzehn Rechte. Ein Schlüssel je Rolle wäre der nächste Schritt.
+   - **Rest-Risiko DNS-Rebinding** in `bild_hochladen`: Die URL-Prüfung löst
+     den Hostnamen selbst auf; der eigentliche Abruf könnte theoretisch eine
+     andere Antwort bekommen. Gegen Prompt-Injection reicht die Prüfung,
+     gegen einen Angreifer mit eigener DNS-Zone hilft nur Netztrennung.
 
 ---
 

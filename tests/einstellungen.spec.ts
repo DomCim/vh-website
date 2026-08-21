@@ -32,12 +32,20 @@ test.describe('Einstellungen im Büro', () => {
     await page.goto('/office/einstellungen?teil=integrationen')
     await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
 
-    // Die Gruppen aus Payload müssen alle da sein
-    for (const gruppe of ['E-Mail-Versand', 'Postfächer', 'Takt', 'Sicherung', 'PayPal']) {
-      await expect(page.locator('legend', { hasText: gruppe }).first()).toBeVisible({
-        timeout: 15_000,
-      })
+    // Jeder Bereich aus Payload steht als Zeile in der Übersicht
+    for (const bereich of ['E-Mail-Versand', 'Postfächer', 'Takt', 'Sicherung', 'PayPal']) {
+      await expect(
+        page.locator('.buero-zeile-knopf', { hasText: bereich }).first(),
+      ).toBeVisible({ timeout: 15_000 })
     }
+
+    // Die Übersicht sagt auch, wo etwas drinsteht — sonst müsste man alle
+    // zwölf Bereiche öffnen, um es herauszufinden
+    await expect(page.locator('.buero-marker', { hasText: /eingerichtet|leer|Eintrag|keine/ }).first())
+      .toBeVisible()
+
+    await page.locator('.buero-zeile-knopf', { hasText: 'E-Mail-Versand' }).first().click()
+    await expect(page.locator('h2')).toContainText('E-Mail-Versand', { timeout: 15_000 })
 
     // Schlüssel sind verdeckt, lassen sich aber aufdecken
     const verdeckt = await page.locator('input[type="password"]').count()
@@ -49,11 +57,26 @@ test.describe('Einstellungen im Büro', () => {
     const marke = `Prüfstand ${Date.now()}`
     const feld = page.locator('label.buero-feld', { hasText: 'Absender-Name' }).locator('input')
     await feld.fill(marke)
+
+    /*
+     * Einmal hin und zurück, bevor gespeichert wird.
+     *
+     * Das Umblättern zwischen Übersicht und Bereich ist eine Anzeigefrage, kein
+     * Neuladen — der Stand liegt weiter im selben Objekt. Ginge das Getippte
+     * dabei verloren, wäre die neue Aufteilung schlimmer als die alte Rolle.
+     */
+    await page.locator('.buero-ruecken').click()
+    await page.locator('.buero-zeile-knopf', { hasText: 'E-Mail-Versand' }).first().click()
+    await expect(
+      page.locator('label.buero-feld', { hasText: 'Absender-Name' }).locator('input'),
+    ).toHaveValue(marke)
+
     await page.getByRole('button', { name: 'Speichern' }).click()
     await expect(page.locator('.buero-hinweis')).toContainText('Gespeichert', { timeout: 20_000 })
 
     // Und wirklich angekommen: frisch laden
     await page.reload()
+    await page.locator('.buero-zeile-knopf', { hasText: 'E-Mail-Versand' }).first().click()
     await expect(
       page.locator('label.buero-feld', { hasText: 'Absender-Name' }).locator('input'),
     ).toHaveValue(marke, { timeout: 30_000 })
@@ -82,24 +105,37 @@ test.describe('Einstellungen im Büro', () => {
     await page.goto('/office/einstellungen?teil=integrationen')
     await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
 
-    const postfaecher = page.locator('fieldset.buero-karte', { has: page.locator('legend', { hasText: 'Postfächer' }) })
-    await expect(postfaecher).toBeVisible({ timeout: 15_000 })
-    await postfaecher.getByRole('button', { name: 'Hinzufügen' }).click()
+    await page.locator('.buero-zeile-knopf', { hasText: 'Postfächer' }).first().click()
+    await expect(page.locator('h2')).toContainText('Postfächer', { timeout: 15_000 })
 
-    const bezeichnung = postfaecher.locator('label.buero-feld', { hasText: 'Bezeichnung' }).locator('input')
-    await expect(bezeichnung).toBeVisible()
+    // „Hinzufügen" führt gleich in die Eingabe — wer tippen will, will tippen
+    await page.getByRole('button', { name: 'Hinzufügen' }).click()
+
+    const bezeichnung = page.locator('label.buero-feld', { hasText: 'Bezeichnung' }).locator('input')
+    await expect(bezeichnung).toBeVisible({ timeout: 15_000 })
 
     // Buchstabe für Buchstabe — genau hier verschwand der Eintrag
     await bezeichnung.pressSequentially('Info', { delay: 60 })
     await expect(bezeichnung).toHaveValue('Info')
-    await expect(postfaecher.getByRole('button', { name: 'Entfernen' })).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Entfernen' })).toHaveCount(1)
 
     // Und die übrigen Felder des Eintrags stehen auch noch da
     for (const feld of ['E-Mail-Adresse', 'IMAP-Server', 'Benutzername']) {
-      await expect(
-        postfaecher.locator('label.buero-feld', { hasText: feld }).first(),
-      ).toBeVisible()
+      await expect(page.locator('label.buero-feld', { hasText: feld }).first()).toBeVisible()
     }
+
+    /*
+     * Zurück zur Liste: Der Eintrag muss dort mit seinem Namen stehen. Eine
+     * Liste, in der alle Zeilen „Eintrag 1" heißen, wäre keine.
+     */
+    await page.locator('.buero-ruecken').click()
+    await expect(page.locator('.buero-zeile-knopf', { hasText: 'Info' }).first()).toBeVisible()
+
+    // Wieder hinein — und das Getippte steht noch da
+    await page.locator('.buero-zeile-knopf', { hasText: 'Info' }).first().click()
+    await expect(
+      page.locator('label.buero-feld', { hasText: 'Bezeichnung' }).locator('input'),
+    ).toHaveValue('Info')
 
     /*
      * Unvollständig speichern muss sagen, was fehlt. Vorher stand da nur
@@ -112,8 +148,9 @@ test.describe('Einstellungen im Büro', () => {
     await expect(page.locator('.buero-hinweis')).not.toHaveText('Das hat nicht geklappt.')
 
     // Wieder weg damit — der Prüfstand soll nichts hinterlassen
-    await postfaecher.getByRole('button', { name: 'Entfernen' }).click()
-    await expect(postfaecher.getByRole('button', { name: 'Entfernen' })).toHaveCount(0)
+    page.once('dialog', (d) => void d.accept())
+    await page.getByRole('button', { name: 'Entfernen' }).click()
+    await expect(page.locator('.buero-zeile-knopf', { hasText: 'Info' })).toHaveCount(0)
   })
 
   /**

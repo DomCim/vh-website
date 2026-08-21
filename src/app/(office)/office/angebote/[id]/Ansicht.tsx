@@ -101,6 +101,14 @@ export function AngebotAnsicht() {
           quoteNumber: a.quoteNumber,
           status: a.status as string,
           title: a.title,
+          customer:
+            typeof a.customer === 'object'
+              ? ((a.customer as { id?: number })?.id ?? '')
+              : ((a.customer as number) ?? ''),
+          inquiry:
+            typeof a.inquiry === 'object'
+              ? (a.inquiry as { id?: number })?.id
+              : (a.inquiry as number),
           customerName: a.customerName,
           customerAddress: a.customerAddress as string,
           issueDate: a.issueDate as string,

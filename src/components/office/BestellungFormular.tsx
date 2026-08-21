@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
+import { BESTELL_STATUS } from '../../lib/listen'
 import { Fussleiste } from './Fussleiste'
 
 export type BestellungWerte = {
@@ -12,13 +13,7 @@ export type BestellungWerte = {
   expectedReady?: string | null
 }
 
-const STATUS = [
-  { wert: 'pending', text: 'Offen (unbezahlt)' },
-  { wert: 'paid', text: 'Bezahlt' },
-  { wert: 'inProduction', text: 'In Fertigung' },
-  { wert: 'shipped', text: 'Versendet' },
-  { wert: 'cancelled', text: 'Storniert' },
-]
+const STATUS = BESTELL_STATUS.map((s) => ({ wert: s.value, text: s.label }))
 
 /**
  * Bestellstand setzen.

@@ -8,6 +8,7 @@ import MailComposer from 'nodemailer/lib/mail-composer'
 import type { Payload } from 'payload'
 
 import { dkimFuer } from './dkim'
+import { htmlAlsText, mailHtmlSaeubern } from './mailhtml'
 import { briefbogen as briefbogenVorlage, pflichtangaben, type CompanyInfo } from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
@@ -48,7 +49,20 @@ export type Nachricht = Kopfzeile & {
   dateien: { name: string; groesse: number; typ: string }[]
 }
 
-export type Ordner = { pfad: string; name: string; ungelesen: number; art: string }
+export type Ordner = {
+  pfad: string
+  name: string
+  ungelesen: number
+  art: string
+  /**
+   * Das Zeichen, mit dem der Anbieter Ebenen trennt — bei IONOS ein Punkt,
+   * bei anderen ein Schrägstrich. Es kommt aus der Auskunft des Servers und
+   * wird nicht geraten: Ein neuer Unterordner mit dem falschen Trenner landet
+   * nicht eine Ebene tiefer, sondern als eigener Ordner mit einem Sonderzeichen
+   * im Namen.
+   */
+  trenner: string
+}
 
 /** Alle eingerichteten Postfächer. */
 export async function postfaecher(payload: Payload): Promise<MailboxKonfiguration[]> {
@@ -108,7 +122,13 @@ export async function ordnerListe(fach: MailboxKonfiguration): Promise<Ordner[]>
       } catch {
         // Manche Ordner lassen sich nicht abfragen — dann eben ohne Zähler
       }
-      ordner.push({ pfad: o.path, name: o.name, ungelesen, art: o.specialUse ?? '' })
+      ordner.push({
+        pfad: o.path,
+        name: o.name,
+        ungelesen,
+        art: o.specialUse ?? '',
+        trenner: o.delimiter || '/',
+      })
     }
     return ordner
   })
@@ -274,6 +294,57 @@ export async function nachrichtAendern(
 }
 
 /**
+ * Eine Nachricht in einen anderen Ordner legen.
+ *
+ * `messageMove` ist eine einzige IMAP-Anweisung — Kopieren und Löschen in
+ * einem Zug. Von Hand nachgebaut (kopieren, dann löschen) bliebe bei einem
+ * Abbruch dazwischen eine Doppelung zurück, und zwar stillschweigend.
+ */
+export async function nachrichtVerschieben(
+  fach: MailboxKonfiguration,
+  ordner: string,
+  uid: number,
+  ziel: string,
+): Promise<void> {
+  if (ziel === ordner) return
+  await mitVerbindung(fach, async (client) => {
+    const schloss = await client.getMailboxLock(ordner)
+    try {
+      await client.messageMove(String(uid), ziel, { uid: true })
+    } finally {
+      schloss.release()
+    }
+  })
+}
+
+/**
+ * Einen Ordner anlegen.
+ *
+ * Der Name wird vom Anbieter eingeordnet: Bei manchen liegen eigene Ordner
+ * unter `INBOX.`, bei anderen daneben. Deshalb wird hier **nicht** geraten,
+ * sondern der Pfad genommen, wie er hereinkommt — die Oberfläche stellt ihn
+ * aus dem gerade offenen Ordner zusammen, und der stammt vom Anbieter selbst.
+ *
+ * Gibt den angelegten Pfad zurück; existiert er schon, ist das kein Fehler,
+ * sondern das gewünschte Ergebnis.
+ */
+export async function ordnerAnlegen(
+  fach: MailboxKonfiguration,
+  pfad: string,
+): Promise<string> {
+  return mitVerbindung(fach, async (client) => {
+    try {
+      const ergebnis = await client.mailboxCreate(pfad)
+      return ergebnis.path
+    } catch (err) {
+      const text = err instanceof Error ? err.message : String(err)
+      if (/already exists|ALREADYEXISTS/i.test(text)) return pfad
+      throw err
+    }
+  })
+}
+
+/**
  * Mail aus dem Büro schreiben — über SMTP raus, Kopie in „Gesendet",
  * Eintrag ins Ausgangsprotokoll.
  *
@@ -297,6 +368,22 @@ export function briefbogen(rumpf: string, signatur: string, firma?: CompanyInfo)
         : ''),
     firma,
   )
+}
+
+/**
+ * Derselbe Briefbogen, aber der Rumpf ist schon HTML.
+ *
+ * Der Unterschied zu oben ist genau einer: Hier wird **nicht** escaped, weil
+ * die Auszeichnung gewollt ist. Dafür ist sie vorher durch `mailHtmlSaeubern`
+ * gegangen — ungeprüftes HTML einzusetzen wäre die teuerste Zeile der ganzen
+ * Datei.
+ *
+ * Eine Signatur wird hier nicht angehängt: Wenn im Schreibfeld gestaltet wird,
+ * steht sie schon im Text, und der Mensch davor hat sie gesehen. Zweimal
+ * dieselbe Grußformel ist peinlicher als gar keine.
+ */
+export function briefbogenAusHtml(rumpf: string, firma?: CompanyInfo): string {
+  return briefbogenVorlage(mailHtmlSaeubern(rumpf), firma)
 }
 
 /** Signatur aus dem Postfach, sonst aus Absendername und Kontaktdaten */
@@ -323,7 +410,10 @@ export async function nachrichtSenden(
   eingabe: {
     an: string
     betreff: string
+    /** Nur-Text-Fassung; wird aus `html` abgeleitet, wenn dieses da ist */
     text: string
+    /** Gestalteter Rumpf aus dem Schreibfeld — samt Signatur, falls gesetzt */
+    html?: string
     antwortAufMessageId?: string
     dateien?: { name: string; inhalt: Buffer; typ?: string }[]
   },
@@ -370,13 +460,31 @@ export async function nachrichtSenden(
     ? [{ filename: 'logo.png', path: logoDatei, cid: 'vh-logo' }]
     : []
 
+  /*
+   * Zwei Wege in denselben Briefbogen.
+   *
+   * Kommt gestaltetes HTML aus dem Schreibfeld, wird es eingesetzt und die
+   * Signatur **nicht** noch einmal angehängt — sie steht dann schon drin, weil
+   * das Schreibfeld sie beim Öffnen hineinlegt. Die Nur-Text-Fassung entsteht
+   * aus demselben HTML, damit beide Fassungen dasselbe sagen.
+   *
+   * Kommt keins (etwa von einem anderen Aufrufer im Haus), bleibt alles wie
+   * bisher: getippter Text, Signatur darunter.
+   */
+  const gestaltet = eingabe.html?.trim() ? mailHtmlSaeubern(eingabe.html) : null
+  const nurText = gestaltet ? htmlAlsText(gestaltet) : eingabe.text
+
   const nachricht = {
     from: `"${email.fromName}" <${fach.address}>`,
     to: eingabe.an,
     subject: eingabe.betreff,
     // Nur-Text-Fassung bleibt dabei: Manche lesen so, und Spamfilter mögen es
-    text: [eingabe.text, signatur, angaben.join(' · ')].filter(Boolean).join('\n\n--\n'),
-    html: briefbogen(eingabe.text, signatur, firma),
+    text: [nurText, gestaltet ? null : signatur, angaben.join(' · ')]
+      .filter(Boolean)
+      .join('\n\n--\n'),
+    html: gestaltet
+      ? briefbogenAusHtml(gestaltet, firma)
+      : briefbogen(eingabe.text, signatur, firma),
     inReplyTo: eingabe.antwortAufMessageId,
     references: eingabe.antwortAufMessageId,
     attachments: [

@@ -37,12 +37,19 @@ export async function POST(req: Request) {
     const b = (await req.json()) as Record<string, any>
 
     if (b.aktion === 'probe') {
-      const anzahl = await benachrichtige(payload, {
-        titel: 'Büro',
-        text: 'Benachrichtigungen kommen an.',
-        url: '/office',
-        tag: 'probe',
-      })
+      // Ohne `merken`: Ein „kommt an" ist eine Prüfung des Geräts und keine
+      // Meldung über den Betrieb — auf der Liste unter der Glocke wäre es
+      // nur Rauschen.
+      const anzahl = await benachrichtige(
+        payload,
+        {
+          titel: 'Büro',
+          text: 'Benachrichtigungen kommen an.',
+          url: '/office',
+          tag: 'probe',
+        },
+        { merken: false },
+      )
       return NextResponse.json({ ok: true, zugestellt: anzahl })
     }
 

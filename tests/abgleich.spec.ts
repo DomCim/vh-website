@@ -54,7 +54,18 @@ test.describe('Abgleich', () => {
     const zweiteRunde = await abgleich({ partner: stand }, ['partner'])
     const gefunden = (zweiteRunde.bereiche.partner.geaendert as { id: number }[]).map((p) => p.id)
     expect(gefunden, 'neuer Partner kommt im Abgleich vor').toContain(doc.id)
-    expect(zweiteRunde.bereiche.partner.geloescht).toEqual([])
+    /*
+     * Nicht „gar nichts gelöscht", sondern „dieser hier nicht".
+     *
+     * `stand` ist der jüngste Änderungszeitpunkt der Partner, nicht die
+     * Uhrzeit. Auf einer Datenbank, die schon länger lebt, kann ein Grabstein
+     * aus einem früheren Lauf jünger sein als dieser Stand — und taucht dann
+     * völlig zu Recht auf. Die strengere Fassung ging nur auf einer frisch
+     * angelegten Datenbank durch und schlug ab dem zweiten Lauf fehl, ohne
+     * dass etwas kaputt war. Geprüft gehört, was die Aussage trägt: Der eben
+     * angelegte Partner ist nicht gelöscht.
+     */
+    expect(zweiteRunde.bereiche.partner.geloescht).not.toContain(String(doc.id))
 
     // Und nun löschen: Der Grabstein muss den Weg finden
     const standVorLoeschen = zweiteRunde.bereiche.partner.stand as string

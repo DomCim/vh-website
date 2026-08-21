@@ -1,9 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { bewegung } from '../lib/bestandsbewegung'
+import { AUFTRAG_STATUS } from '../lib/listen'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
+import { arbeitsplanFeld } from '../lib/arbeitsplan'
+import { meldungVerschicken } from '../lib/auftragsmeldung'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -39,10 +43,30 @@ export const Jobs: CollectionConfig = {
   hooks: {
     afterDelete: liveHooks('auftraege').afterDelete,
     beforeChange: [
-      async ({ data, req, operation }) => {
+      async ({ data, originalDoc, req, operation }) => {
         if (operation === 'create' && !data.jobNumber) {
           data.jobNumber = await naechsteAuftragsnummer(req.payload)
         }
+
+        /*
+         * Das Kennzeichen der Materialbuchung wird hier gesetzt, nicht danach.
+         *
+         * Abgebucht wird gleich im `afterChange`; das Kennzeichen dazu stand
+         * bis vor kurzem in einem zweiten `payload.update` **nach** der
+         * Schleife — ein ungesicherter Schreibvorgang mitten in der
+         * Transaktion, die den Auftrag schreibt. Scheiterte er, rollte alles
+         * zurück: der Auftragsstatus, die Abbuchungen und der Rechnungs-
+         * entwurf, der in derselben Transaktion entstanden war. Die Meldung
+         * aufs Handy war da längst draußen.
+         *
+         * In derselben Zeile mitgeschrieben kann das nicht passieren, und
+         * eine doppelte Abbuchung ist damit auch ausgeschlossen: Kennzeichen
+         * und Statuswechsel sind entweder beide da oder beide nicht.
+         */
+        if (data.status === 'fertig' && !originalDoc?.materialGebucht) {
+          data.materialGebucht = true
+        }
+
         return data
       },
     ],
@@ -82,6 +106,32 @@ export const Jobs: CollectionConfig = {
           )
         }
 
+        /*
+         * Statusmeldung an die Kundschaft — für alles, was nicht aus dem Shop
+         * kommt. Der Auslöser sitzt hier und nicht in der Büro-Route, damit er
+         * auch greift, wenn der Status im Admin oder über MCP wechselt.
+         *
+         * Der Auftrag wird dafür mit Tiefe 1 nachgeladen: Sprache und Adresse
+         * hängen am Geschäftspartner, und `doc` trägt hier nur dessen ID.
+         */
+        if (doc.status !== previousDoc?.status) {
+          try {
+            const voll = await req.payload.findByID({
+              collection: 'jobs',
+              id: doc.id,
+              depth: 1,
+              overrideAccess: true,
+              req,
+            })
+            await meldungVerschicken(req.payload, voll as never, previousDoc?.status, req)
+          } catch (err) {
+            req.payload.logger.error(
+              { err },
+              `Auftrag ${doc.jobNumber}: Statusmeldung fehlgeschlagen`,
+            )
+          }
+        }
+
         // Bestellung mitziehen: der Kunde erfährt vom Fertigungsstart
         const bestellId = typeof doc.order === 'object' ? doc.order?.id : doc.order
         if (bestellId && doc.status !== previousDoc?.status) {
@@ -96,9 +146,16 @@ export const Jobs: CollectionConfig = {
                 overrideAccess: true,
                 req,
               })
-              // Versand nur, wenn eine Sendungsnummer vorliegt — sonst ginge
-              // die Versandmail ohne Sendungsverfolgung raus
-              const versandOhneNummer = neuerStatus === 'shipped' && !bestellung?.trackingNumber
+              /*
+               * Versand nur mit Sendungsnummer — sonst ginge die Versandmail
+               * ohne Sendungsverfolgung raus. Ausgenommen die Abholung: Da
+               * gibt es nichts zu verfolgen, und die Sperre hielt solche
+               * Bestellungen für immer auf „in Fertigung" fest.
+               */
+              const abholung =
+                bestellung?.deliveryMethod === 'pickup' || doc.lieferart === 'abholung'
+              const versandOhneNummer =
+                neuerStatus === 'shipped' && !abholung && !bestellung?.trackingNumber
               if (bestellung && bestellung.status !== neuerStatus && !versandOhneNummer) {
                 await req.payload.update({
                   collection: 'orders',
@@ -128,8 +185,10 @@ export const Jobs: CollectionConfig = {
          * der ersten, die erste wartet auf diesen Hook. Damit blieb jedes
          * Fertigmelden hängen, bis irgendwann eine Zeitüberschreitung kam.
          */
+        // Gefragt wird der Stand **vor** dem Speichern: Das Kennzeichen steht
+        // seit dem `beforeChange` schon in `doc`.
         const fertigJetzt = doc.status === 'fertig' && previousDoc?.status !== 'fertig'
-        if (fertigJetzt && !doc.materialGebucht) {
+        if (fertigJetzt && !previousDoc?.materialGebucht) {
           for (const zeile of doc.material ?? []) {
             const id = typeof zeile.item === 'object' ? zeile.item?.id : zeile.item
             if (!id || !zeile.quantity) continue
@@ -145,43 +204,23 @@ export const Jobs: CollectionConfig = {
                 req,
               })
               if (!posten) continue
-              const rest = Math.round(((posten.quantity ?? 0) - zeile.quantity) * 100) / 100
+              // Auch die automatische Abbuchung gehört in den Verlauf — sonst
+              // stünden dort nur die Korrekturen von Hand.
               await req.payload.update({
                 collection: 'inventory-items',
                 id,
                 overrideAccess: true,
                 req,
-                data: {
-                  quantity: rest,
-                  /*
-                   * Auch die automatische Abbuchung gehört in den Verlauf.
-                   * Sonst stünden dort nur die Korrekturen von Hand, und der
-                   * größte Teil der Bewegungen fehlte — genau der, den man
-                   * beim Nachrechnen sucht.
-                   */
-                  movements: [
-                    ...(posten.movements ?? []),
-                    {
-                      day: new Date().toISOString(),
-                      delta: -zeile.quantity,
-                      rest,
-                      reason: `Auftrag ${doc.jobNumber}${doc.title ? ` — ${doc.title}` : ''}`,
-                    },
-                  ],
-                },
+                data: bewegung(
+                  posten,
+                  -zeile.quantity,
+                  `Auftrag ${doc.jobNumber}${doc.title ? ` — ${doc.title}` : ''}`,
+                ),
               })
             } catch (err) {
               req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Material ${id} nicht abgebucht`)
             }
           }
-          await req.payload.update({
-            collection: 'jobs',
-            id: doc.id,
-            overrideAccess: true,
-            req,
-            data: { materialGebucht: true },
-            context: { skipHooks: true },
-          })
         }
 
         return doc
@@ -204,13 +243,7 @@ export const Jobs: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'geplant',
-      options: [
-        { label: 'Geplant', value: 'geplant' },
-        { label: 'In Fertigung', value: 'inFertigung' },
-        { label: 'Fertig', value: 'fertig' },
-        { label: 'Geliefert', value: 'geliefert' },
-        { label: 'Abgebrochen', value: 'abgebrochen' },
-      ],
+      options: [...AUFTRAG_STATUS],
       admin: {
         position: 'sidebar',
         description:
@@ -411,6 +444,111 @@ export const Jobs: CollectionConfig = {
       defaultValue: false,
       admin: { hidden: true },
     },
+    {
+      /*
+       * Wie das Stück zur Kundschaft kommt.
+       *
+       * Entscheidet über die Meldungen: Bei Abholung sagt „fertig" schon
+       * alles („zur Abholung bereit"), und eine Versandmeldung wäre falsch.
+       */
+      name: 'lieferart',
+      label: 'Lieferung',
+      type: 'select',
+      defaultValue: 'versand',
+      options: [
+        { label: 'Versand', value: 'versand' },
+        { label: 'Abholung', value: 'abholung' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+    {
+      type: 'row',
+      admin: {
+        condition: (daten: { lieferart?: string }) => daten?.lieferart !== 'abholung',
+      },
+      fields: [
+        {
+          name: 'trackingNumber',
+          label: 'Sendungsnummer',
+          type: 'text',
+          admin: {
+            description:
+              'Geht mit der Liefermeldung an die Kundschaft. Leer lassen, wenn du selbst ' +
+              'lieferst — die Meldung geht dann ohne Sendungsverfolgung raus.',
+          },
+        },
+        { name: 'trackingUrl', label: 'Link zur Sendungsverfolgung', type: 'text' },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          /*
+           * Ohne Adresse keine Meldung — das ist keine Frage der Einstellung,
+           * sondern des Möglichen. Diese hier ist der Rückfall für Kundschaft,
+           * die nicht als Geschäftspartner geführt wird: Am Auftrag steht dann
+           * nur ein Name im Textfeld, und ein Name ist keine Adresse.
+           */
+          name: 'kundeEmail',
+          label: 'E-Mail des Kunden',
+          type: 'email',
+          admin: {
+            description:
+              'Nur nötig, wenn oben kein Geschäftspartner verknüpft ist. Dessen Adresse gilt.',
+          },
+        },
+        {
+          name: 'kundeBenachrichtigen',
+          label: 'Kunde über den Fortschritt benachrichtigen',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Aus, wenn ihr ohnehin telefoniert. Dann meldet das Büro nichts von selbst.',
+          },
+        },
+      ],
+    },
+    {
+      /*
+       * Wann worüber gemeldet wurde — und der Riegel gegen Doppelmeldungen.
+       *
+       * Ein Blick auf den vorigen Stand allein genügt dafür nicht: Wer einen
+       * Auftrag versehentlich auf „geliefert" stellt, zurücksetzt und später
+       * wieder vorstellt, bekäme zwei Liefermeldungen an dieselbe Kundschaft.
+       * Steht hier ein Datum, ist die Sache erledigt — unabhängig davon, wie
+       * oft der Status danach noch hin und her geht.
+       *
+       * Zugleich ist es das, was das Büro anzeigt: „am 21.08. benachrichtigt"
+       * statt einer Lücke, die aussieht wie „ist informiert".
+       */
+      name: 'gemeldet',
+      label: 'Benachrichtigt am',
+      type: 'group',
+      admin: { readOnly: true },
+      fields: [
+        { name: 'inFertigung', type: 'date' },
+        { name: 'fertig', type: 'date' },
+        { name: 'geliefert', type: 'date' },
+        {
+          name: 'hinweis',
+          label: 'Anmerkung zur letzten Meldung',
+          type: 'text',
+          admin: {
+            description:
+              'Warum eine Meldung unterblieb oder unvollständig war — z.B. „keine Adresse".',
+          },
+        },
+      ],
+    },
+    arbeitsplanFeld(
+      true,
+      'Was mit diesem Stück nacheinander passiert — auch bei Lohnfertigung und ' +
+        'Maßanfertigung, wo keine Variante dahintersteht. Stammt der Auftrag aus einem ' +
+        'Artikel mit hinterlegtem Ablauf, steht dessen Vorlage schon hier. Rein intern; ' +
+        'auf keinem Papier für die Kundschaft.',
+    ),
     {
       /*
        * Wie viele Werkstattstunden dieser Auftrag zusagt.

@@ -4,11 +4,16 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { AUFTRAG_STATUS } from '../../lib/listen'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { PartnerBezug } from './PartnerBezug'
+import { Ablauf } from './Ablauf'
+import type { Arbeitsschritt } from '../../lib/arbeitsplan'
+import { Meldestand } from './Meldestand'
 
 export type AuftragPosition = {
   description: string
@@ -38,6 +43,20 @@ export type AuftragWerte = {
   plannedMinutes?: number | null
   positions?: AuftragPosition[]
   material?: AuftragMaterial[]
+  arbeitsplan?: Arbeitsschritt[]
+  contact?: number | string
+  lieferart?: string
+  trackingNumber?: string
+  trackingUrl?: string
+  kundeEmail?: string
+  kundeBenachrichtigen?: boolean
+  /** Nur zum Anzeigen — geschrieben wird das vom Auslöser am Datenmodell */
+  gemeldet?: {
+    inFertigung?: string | null
+    fertig?: string | null
+    geliefert?: string | null
+    hinweis?: string | null
+  }
   notes?: string | null
   materialGebucht?: boolean
   customerOrderRef?: string | null
@@ -54,13 +73,7 @@ export type PostenAuswahl = { id: number; name: string; unit: string; quantity: 
 
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
-const STATUS = [
-  { wert: 'geplant', text: 'Geplant' },
-  { wert: 'inFertigung', text: 'In Fertigung' },
-  { wert: 'fertig', text: 'Fertig' },
-  { wert: 'geliefert', text: 'Geliefert' },
-  { wert: 'abgebrochen', text: 'Abgebrochen' },
-]
+const STATUS = AUFTRAG_STATUS.map((s) => ({ wert: s.value, text: s.label }))
 
 /**
  * Ein Stück durch die Werkstatt begleiten.
@@ -81,6 +94,9 @@ export function AuftragFormular({
     status: 'geplant',
     positions: [{ description: '', quantity: 1 }],
     material: [],
+    arbeitsplan: [],
+    lieferart: 'versand',
+    kundeBenachrichtigen: true,
     ...werte,
   }))
   const [w, setW] = useState<AuftragWerte>(anfang)
@@ -153,6 +169,16 @@ export function AuftragFormular({
       </label>
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={typeof w.contact === 'string' ? Number(w.contact) || '' : w.contact}
+          aendern={(id, partner) =>
+            // Am Partner hängen Mailadresse und Sprache der Statusmeldungen
+            setzen({
+              contact: id,
+              ...(partner ? { customerName: partner.name ?? '' } : {}),
+            })
+          }
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input
@@ -206,6 +232,69 @@ export function AuftragFormular({
           </select>
         </label>
       </div>
+
+      <h2>Lieferung und Meldungen</h2>
+      {/*
+        * Was hier steht, entscheidet, was die Kundschaft erfährt. Deshalb steht
+        * es beieinander und nicht verstreut: Lieferart, Adresse, Schalter — und
+        * darunter, was tatsächlich rausging.
+        */}
+      <div className="buero-reihe">
+        <label className="buero-feld">
+          <span>Lieferung</span>
+          <select value={w.lieferart ?? 'versand'} onChange={(e) => setzen({ lieferart: e.target.value })}>
+            <option value="versand">Versand</option>
+            <option value="abholung">Abholung</option>
+          </select>
+          <span className="buero-unterzeile">
+            Bei Abholung sagt schon &bdquo;fertig&ldquo;, dass das Stück bereitsteht — eine
+            Liefermeldung gibt es dann nicht.
+          </span>
+        </label>
+        {w.lieferart !== 'abholung' && (
+          <label className="buero-feld">
+            <span>Sendungsnummer</span>
+            <input
+              value={w.trackingNumber ?? ''}
+              onChange={(e) => setzen({ trackingNumber: e.target.value })}
+              placeholder="z.B. 00340434…"
+            />
+            <span className="buero-unterzeile">
+              Geht mit der Liefermeldung raus. Leer lassen, wenn du selbst lieferst.
+            </span>
+          </label>
+        )}
+      </div>
+
+      <label className="buero-feld buero-haken">
+        <input
+          type="checkbox"
+          checked={w.kundeBenachrichtigen !== false}
+          onChange={(e) => setzen({ kundeBenachrichtigen: e.target.checked })}
+        />
+        <span>Kunde über den Fortschritt benachrichtigen</span>
+      </label>
+
+      {/*
+        * Die Rückfalladresse erscheint nur, wenn sie gebraucht wird: Steht ein
+        * Geschäftspartner am Auftrag, gilt dessen Adresse, und ein zweites Feld
+        * daneben wäre eine Einladung, sie auseinanderlaufen zu lassen.
+        */}
+      {!w.contact && (
+        <label className="buero-feld">
+          <span>E-Mail des Kunden</span>
+          <input
+            type="email"
+            value={w.kundeEmail ?? ''}
+            onChange={(e) => setzen({ kundeEmail: e.target.value })}
+          />
+          <span className="buero-unterzeile">
+            Nur nötig, solange kein Geschäftspartner verknüpft ist — sonst gilt dessen Adresse.
+          </span>
+        </label>
+      )}
+
+      <Meldestand gemeldet={w.gemeldet} />
 
       <h2>Bestellung des Kunden</h2>
       <div className="buero-reihe">
@@ -358,6 +447,31 @@ export function AuftragFormular({
       >
         Position hinzufügen
       </button>
+
+      {/*
+        * Der Ablauf steht über dem Material: In der Werkstatt fragt man
+        * zuerst „was ist jetzt dran?" und erst dann „was brauche ich dafür?".
+        */}
+      <h2>Ablauf</h2>
+      <Ablauf
+        plan={w.arbeitsplan ?? []}
+        aendern={(index, stand) =>
+          setzen({
+            arbeitsplan: (w.arbeitsplan ?? []).map((s, i) =>
+              i === index
+                ? {
+                    ...s,
+                    stand,
+                    // Das Datum wird mitgeführt, nicht getippt: Wer abhakt,
+                    // hat gerade fertiggemacht, und ein leeres Datumsfeld
+                    // bliebe für immer leer.
+                    erledigtAm: stand === 'erledigt' ? new Date().toISOString() : null,
+                  }
+                : s,
+            ),
+          })
+        }
+      />
 
       <h2>Geplantes Material</h2>
       {w.materialGebucht && (

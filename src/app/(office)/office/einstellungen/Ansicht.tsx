@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import React from 'react'
 
 import { Benachrichtigungen } from '../../../../components/office/Benachrichtigungen'
+import { BestandNeuHolen } from '../../../../components/office/BestandNeuHolen'
 import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwaltung'
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
 import { Haengengebliebenes } from '../../../../components/office/Haengengebliebenes'
@@ -62,6 +63,7 @@ export function EinstellungenAnsicht() {
         <>
           <Benachrichtigungen />
           <Haengengebliebenes />
+          <BestandNeuHolen />
         </>
       )}
 

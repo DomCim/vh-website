@@ -5,15 +5,11 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
+import { ANGEBOT_STATUS, statusKarte } from '../../../../lib/listen'
 
 /** Angebote — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  entwurf: { text: 'Entwurf', art: '' },
-  versendet: { text: 'Versendet', art: 'offen' },
-  angenommen: { text: 'Angenommen', art: 'gut' },
-  abgelehnt: { text: 'Abgelehnt', art: 'warn' },
-}
+const STATUS = statusKarte(ANGEBOT_STATUS)
 
 type Angebot = {
   id: number | string

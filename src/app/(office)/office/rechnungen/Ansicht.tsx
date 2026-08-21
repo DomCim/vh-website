@@ -7,16 +7,12 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum, euro } from '../../../../lib/format'
-import { tageSeit } from '../../../../lib/zahlungsstand'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte } from '../../../../lib/listen'
+import { istOffenerPosten, tageSeit } from '../../../../lib/zahlungsstand'
 
 /** Rechnungen — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  entwurf: { text: 'Entwurf', art: '' },
-  gestellt: { text: 'Gestellt', art: 'offen' },
-  bezahlt: { text: 'Bezahlt', art: 'gut' },
-  storniert: { text: 'Storniert', art: 'warn' },
-}
+const STATUS = statusKarte(RECHNUNG_STATUS)
 
 type Rechnung = {
   id: number | string
@@ -28,34 +24,45 @@ type Rechnung = {
   total?: number | null
   reminders?: unknown[] | null
   stufe?: string | null
+  createdAt?: string | null
+  stornoVon?: unknown
 }
 
-const STUFE: Record<string, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
-}
+// „Vollständige Rechnung" bekommt bewusst kein Abzeichen — das ist der Normalfall.
+const STUFE = textKarte(RECHNUNG_STUFEN.filter((s) => s.value !== 'vollstaendig'))
 
 const ueberfaellig = (r: Rechnung) =>
-  r.status === 'gestellt' && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()
+  istOffenerPosten(r) && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()
 
 export function RechnungenAnsicht() {
   const suche = useSearchParams()
   const filter = suche.get('filter') ?? undefined
   const alle = useBestand<Rechnung>('rechnungen')
 
+  /*
+   * Sortiert nach Rechnungsdatum — und Entwürfe zählen nach ihrem Anlegedatum.
+   *
+   * Ein Entwurf hat noch kein Rechnungsdatum; er hat ja auch noch keine
+   * Nummer. Verglichen wurde bisher trotzdem nur `issueDate`, und ein leerer
+   * Wert sortiert hinter jeden ausgefüllten: Der frisch vorbereitete Entwurf
+   * landete unter allen Rechnungen des Jahres. Ausgerechnet das eine Blatt,
+   * das noch Arbeit ist, stand am weitesten unten.
+   */
   const sortiert = useMemo(
-    () => [...alle].sort((a, b) => (b.issueDate ?? '').localeCompare(a.issueDate ?? '')),
+    () =>
+      [...alle].sort((a, b) =>
+        (b.issueDate ?? b.createdAt ?? '').localeCompare(a.issueDate ?? a.createdAt ?? ''),
+      ),
     [alle],
   )
 
   const rechnungen = useMemo(() => {
     if (filter === 'ueberfaellig') return sortiert.filter(ueberfaellig)
-    if (filter === 'offen') return sortiert.filter((r) => r.status === 'gestellt')
+    if (filter === 'offen') return sortiert.filter(istOffenerPosten)
     return sortiert
   }, [sortiert, filter])
 
-  const offen = sortiert.filter((r) => r.status === 'gestellt')
+  const offen = sortiert.filter(istOffenerPosten)
   const offenSumme = Math.round(offen.reduce((s, r) => s + (r.total ?? 0), 0) * 100) / 100
   const spaeteAnzahl = sortiert.filter(ueberfaellig).length
 
@@ -147,9 +154,20 @@ export function RechnungenAnsicht() {
                   className="buero-zeile-haupt"
                   style={{ color: 'inherit', textDecoration: 'none' }}
                 >
+                  {/*
+                    * Beim Entwurf steht die Stufe vorn, wo sonst die Nummer steht.
+                    *
+                    * „Entwurf" sagt der Marker rechts ohnehin; vorn war es
+                    * doppelt gemoppelt — und am Handy wurde die Stufe, die
+                    * dahinter als Marker stand, mit dem Kundennamen zusammen
+                    * abgeschnitten. Dann hieß jede Zeile „Entwurf · Famili…",
+                    * und welche der drei Rechnungen zum Auftrag das ist,
+                    * erfuhr man erst beim Aufmachen.
+                    */}
                   <div className="buero-zeile-titel">
-                    {r.invoiceNumber ?? 'Entwurf'} · {r.customerName ?? 'ohne Kunde'}
-                    {r.stufe && STUFE[r.stufe] && (
+                    {r.invoiceNumber ?? (r.stufe && STUFE[r.stufe]) ?? 'Entwurf'} ·{' '}
+                    {r.customerName ?? 'ohne Kunde'}
+                    {r.invoiceNumber && r.stufe && STUFE[r.stufe] && (
                       <span className="buero-marker" style={{ marginLeft: '.5rem' }}>
                         {STUFE[r.stufe]}
                       </span>
@@ -171,7 +189,7 @@ export function RechnungenAnsicht() {
                     {spaet ? 'überfällig' : s.text}
                   </span>
                   <span className="buero-betrag">{euro(r.total)}</span>
-                  {r.status === 'gestellt' && (
+                  {istOffenerPosten(r) && (
                     <button
                       type="button"
                       className="buero-knopf leise"

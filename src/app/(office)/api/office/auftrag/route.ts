@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { AUFTRAG_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
 
@@ -45,6 +46,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'titel-fehlt' }, { status: 400 })
     }
 
+    // Ein Tippfehler im Status liefe sonst bis in die Datenbank durch —
+    // und die Übersichten wüssten nicht, in welche Spalte damit.
+    if (b.status && !werteVon(AUFTRAG_STATUS).includes(b.status)) {
+      return NextResponse.json({ error: 'status-unbekannt' }, { status: 400 })
+    }
+
     const daten = {
       title: b.title,
       status: b.status || 'geplant',
@@ -72,6 +79,39 @@ export async function POST(req: Request) {
           quantity: Number(m.quantity) || 0,
           beigestellt: Boolean(m.beigestellt),
         })),
+      /*
+       * Der Ablauf kommt vollständig aus dem Formular, wie Positionen und
+       * Material. Die Reihenfolge ist die Aussage — deshalb wird die Liste
+       * ersetzt und nicht ergänzt.
+       */
+      arbeitsplan: (b.arbeitsplan ?? [])
+        .filter((s: { was?: string }) => s.was?.trim())
+        .map((s: Record<string, unknown>) => ({
+          was: s.was,
+          art: s.art === 'fremd' ? 'fremd' : 'eigen',
+          minuten: s.minuten === '' || s.minuten == null ? null : Number(s.minuten) || 0,
+          dienstleister: Number(s.dienstleister) || undefined,
+          kosten: s.kosten === '' || s.kosten == null ? null : Number(s.kosten) || 0,
+          vorlaufTage:
+            s.vorlaufTage === '' || s.vorlaufTage == null ? null : Number(s.vorlaufTage) || 0,
+          stand: ['offen', 'laeuft', 'erledigt'].includes(String(s.stand)) ? s.stand : 'offen',
+          erledigtAm: s.erledigtAm || undefined,
+          notiz: s.notiz || undefined,
+        })),
+      /*
+       * Was über die Meldungen entscheidet. `gemeldet` steht bewusst **nicht**
+       * dabei: Das schreibt der Auslöser am Datenmodell, und ein Formular, das
+       * es mitschickte, könnte einen Versand ungeschehen machen, der längst
+       * stattgefunden hat.
+       */
+      lieferart: (b.lieferart === 'abholung' ? 'abholung' : 'versand') as 'versand' | 'abholung',
+      trackingNumber: b.trackingNumber || undefined,
+      trackingUrl: b.trackingUrl || undefined,
+      kundeEmail: b.kundeEmail || undefined,
+      kundeBenachrichtigen: b.kundeBenachrichtigen !== false,
+      // Abwahl (`null` bzw. '') muss durchgehen — sonst wird man einen
+      // einmal verknüpften Partner nie wieder los.
+      contact: b.contact === null || b.contact === '' ? null : Number(b.contact) || undefined,
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,
       orderedAt: b.orderedAt || undefined,

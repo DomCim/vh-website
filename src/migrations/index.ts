@@ -45,6 +45,9 @@ import * as migration_20260820_095931_beigestelltes_material from './20260820_09
 import * as migration_20260820_135217_dkim from './20260820_135217_dkim';
 import * as migration_20260820_145936_postfach_dkim from './20260820_145936_postfach_dkim';
 import * as migration_20260820_154207_statistik from './20260820_154207_statistik';
+import * as migration_20260820_222645_arbeitsplan from './20260820_222645_arbeitsplan';
+import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_auftragsmeldungen';
+import * as migration_20260821_065058_meldungen from './20260821_065058_meldungen';
 
 export const migrations = [
   {
@@ -280,6 +283,21 @@ export const migrations = [
   {
     up: migration_20260820_154207_statistik.up,
     down: migration_20260820_154207_statistik.down,
-    name: '20260820_154207_statistik'
+    name: '20260820_154207_statistik',
+  },
+  {
+    up: migration_20260820_222645_arbeitsplan.up,
+    down: migration_20260820_222645_arbeitsplan.down,
+    name: '20260820_222645_arbeitsplan',
+  },
+  {
+    up: migration_20260821_055731_auftragsmeldungen.up,
+    down: migration_20260821_055731_auftragsmeldungen.down,
+    name: '20260821_055731_auftragsmeldungen',
+  },
+  {
+    up: migration_20260821_065058_meldungen.up,
+    down: migration_20260821_065058_meldungen.down,
+    name: '20260821_065058_meldungen'
   },
 ];

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
+import { BESTELL_STATUS } from '../lib/listen'
 import { notifyOnProduction, notifyOnShipped } from '../lib/orderHooks'
 import { liveHooks } from '../lib/liveHooks'
 
@@ -47,13 +48,7 @@ export const Orders: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'pending',
-      options: [
-        { label: 'Offen (unbezahlt)', value: 'pending' },
-        { label: 'Bezahlt', value: 'paid' },
-        { label: 'In Fertigung', value: 'inProduction' },
-        { label: 'Versendet', value: 'shipped' },
-        { label: 'Storniert', value: 'cancelled' },
-      ],
+      options: [...BESTELL_STATUS],
       admin: {
         position: 'sidebar',
       },

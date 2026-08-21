@@ -8,7 +8,9 @@ import { AdminVerweis } from '../../components/office/AdminVerweis'
 import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
+import { Haptik } from '../../components/office/Haptik'
 import { Kopftitel } from '../../components/office/Kopftitel'
+import { Meldungsglocke } from '../../components/office/Meldungsglocke'
 import { Scrollstart } from '../../components/office/Scrollstart'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import { Tastaturwache } from '../../components/office/Tastaturwache'
@@ -47,6 +49,7 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
     <html lang="de">
       <body className="buero">
         <Scrollstart />
+        <Haptik />
         <SitzungVerlaengern />
         <Tastaturwache />
         <BestandAnbieter />
@@ -71,6 +74,10 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
           </Link>
           <Kopftitel />
           <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+            {/* Die Glocke steht vor dem Punkt: Sie will etwas, er sagt nur, wie
+                der Stand ist. Beide sind schmal genug, dass am Handy der Name
+                der Seite daneben passt — der schrumpft mit. */}
+            <Meldungsglocke />
             <Abgleichpunkt />
             {/* Beide nur am Rechner: Am Handy stehen sie im Blatt „Sonstiges" */}
             <AdminVerweis />

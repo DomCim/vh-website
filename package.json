@@ -45,11 +45,13 @@
     "payload": "^3.49.0",
     "pdfkit": "^0.19.1",
     "qrcode": "^1.5.4",
+    "quill": "^2.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "sharp": "^0.34.0",
     "web-push": "^3.6.7",
     "ws": "^8.21.3",
+    "xss": "^1.0.15",
     "zod": "^4.4.3"
   },
   "devDependencies": {

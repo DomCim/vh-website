@@ -125,6 +125,59 @@ export function variantenMinuten(
     : null
 }
 
+/**
+ * Der Ablauf der bestellten Variante — sonst der des Artikels.
+ *
+ * Dieselbe Stufenfolge wie bei Zeit und Stückliste: Was an der Variante steht,
+ * gilt; sonst greift die Vorlage am Artikel. Ein Tor in 100 × 200 durchläuft
+ * dieselben Schritte wie eines in 80 × 180, nur dauern sie länger — deshalb
+ * lohnt sich die Vorlage am Artikel und die Ausnahme an der Variante.
+ *
+ * Zurück kommt eine **Abschrift**, keine Verknüpfung: Am Auftrag wird abgehakt,
+ * und die Vorlage darf sich später ändern, ohne die Geschichte eines
+ * abgeschlossenen Auftrags umzuschreiben.
+ */
+export type Planschritt = {
+  was: string
+  art: 'eigen' | 'fremd'
+  minuten?: number | null
+  dienstleister?: number | null
+  kosten?: number | null
+  vorlaufTage?: number | null
+  stand: 'offen'
+  notiz?: string | null
+}
+
+export function variantenArbeitsplan(
+  produkt: ProduktMitVarianten & { arbeitsplan?: unknown },
+  bezug: VariantenBezug = {},
+): Planschritt[] {
+  const variante = varianteFinden(produkt.variants, bezug) as
+    | { arbeitsplan?: unknown }
+    | undefined
+  const quelle = (variante?.arbeitsplan ?? produkt.arbeitsplan) as
+    | Record<string, unknown>[]
+    | undefined
+  if (!Array.isArray(quelle) || !quelle.length) return []
+
+  return quelle.map((schritt) => ({
+    was: String(schritt.was ?? ''),
+    art: (schritt.art === 'fremd' ? 'fremd' : 'eigen') as 'eigen' | 'fremd',
+    minuten: (schritt.minuten as number | null) ?? null,
+    // Die Verknüpfung zum Dienstleister wird zur ID — der Auftrag soll auf
+    // denselben Betrieb zeigen, aber nicht dessen Daten mitschleppen
+    dienstleister:
+      (typeof schritt.dienstleister === 'object' && schritt.dienstleister !== null
+        ? (schritt.dienstleister as { id?: number }).id
+        : (schritt.dienstleister as number | undefined)) ?? null,
+    kosten: (schritt.kosten as number | null) ?? null,
+    vorlaufTage: (schritt.vorlaufTage as number | null) ?? null,
+    // Frisch abgeschrieben ist noch nichts erledigt
+    stand: 'offen' as const,
+    notiz: (schritt.notiz as string | null) ?? null,
+  }))
+}
+
 export type Bedarfsposten = {
   itemId: number
   name: string

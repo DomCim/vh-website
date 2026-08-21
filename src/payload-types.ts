@@ -96,6 +96,7 @@ export interface Config {
     roles: Role;
     'system-state': SystemState;
     'mail-log': MailLog;
+    notifications: Notification;
     'push-subscriptions': PushSubscription;
     media: Media;
     users: User;
@@ -135,6 +136,7 @@ export interface Config {
     roles: RolesSelect<false> | RolesSelect<true>;
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -269,6 +271,27 @@ export interface Product {
             }[]
           | null;
         productionMinutes?: number | null;
+        /**
+         * Die Reihenfolge, in der dieses Stück entsteht — eigene Arbeit und Fremdleistung im Wechsel. Wird beim Anlegen eines Auftrags als Vorlage übernommen und dort abgehakt. Leer heißt: kein fester Ablauf.
+         */
+        arbeitsplan?:
+          | {
+              /**
+               * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+               */
+              was: string;
+              art: 'eigen' | 'fremd';
+              minuten?: number | null;
+              dienstleister?: (number | null) | Contact;
+              kosten?: number | null;
+              /**
+               * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+               */
+              vorlaufTage?: number | null;
+              notiz?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         serviceProviders?:
           | {
               contact: number | Contact;
@@ -514,6 +537,7 @@ export interface Contact {
    * Wird bei neuen Belegen dieses Lieferanten vorgeschlagen — spart bei wiederkehrenden Rechnungen Zeit.
    */
   defaultCategory?: string | null;
+  sprache?: ('de' | 'fr' | 'en') | null;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1012,6 +1036,52 @@ export interface Job {
       }[]
     | null;
   materialGebucht?: boolean | null;
+  lieferart?: ('versand' | 'abholung') | null;
+  /**
+   * Geht mit der Liefermeldung an die Kundschaft. Leer lassen, wenn du selbst lieferst — die Meldung geht dann ohne Sendungsverfolgung raus.
+   */
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  /**
+   * Nur nötig, wenn oben kein Geschäftspartner verknüpft ist. Dessen Adresse gilt.
+   */
+  kundeEmail?: string | null;
+  /**
+   * Aus, wenn ihr ohnehin telefoniert. Dann meldet das Büro nichts von selbst.
+   */
+  kundeBenachrichtigen?: boolean | null;
+  gemeldet?: {
+    inFertigung?: string | null;
+    fertig?: string | null;
+    geliefert?: string | null;
+    /**
+     * Warum eine Meldung unterblieb oder unvollständig war — z.B. „keine Adresse".
+     */
+    hinweis?: string | null;
+  };
+  /**
+   * Was mit diesem Stück nacheinander passiert — auch bei Lohnfertigung und Maßanfertigung, wo keine Variante dahintersteht. Stammt der Auftrag aus einem Artikel mit hinterlegtem Ablauf, steht dessen Vorlage schon hier. Rein intern; auf keinem Papier für die Kundschaft.
+   */
+  arbeitsplan?:
+    | {
+        /**
+         * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+         */
+        was: string;
+        art: 'eigen' | 'fremd';
+        minuten?: number | null;
+        dienstleister?: (number | null) | Contact;
+        kosten?: number | null;
+        /**
+         * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+         */
+        vorlaufTage?: number | null;
+        stand?: ('offen' | 'laeuft' | 'erledigt') | null;
+        erledigtAm?: string | null;
+        notiz?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Grundlage der Wochen-Auslastung. Bei Shop-Bestellungen aus der Fertigungszeit der Artikel vorbelegt.
    */
@@ -1574,7 +1644,20 @@ export interface MailLog {
   from?: string | null;
   subject: string;
   status: 'gesendet' | 'fehler' | 'ohneVersand';
-  kind?: ('bestellung' | 'fertigung' | 'versand' | 'anfrage' | 'zugangscode' | 'postfach' | 'sonstiges') | null;
+  kind?:
+    | (
+        | 'bestellung'
+        | 'fertigung'
+        | 'versand'
+        | 'auftrag-fertigung'
+        | 'auftrag-fertig'
+        | 'auftrag-geliefert'
+        | 'anfrage'
+        | 'zugangscode'
+        | 'postfach'
+        | 'sonstiges'
+      )
+    | null;
   /**
    * Antwort des Mailservers, wenn der Versand nicht geklappt hat.
    */
@@ -1585,6 +1668,33 @@ export interface MailLog {
   attachments?: string | null;
   order?: (number | null) | Order;
   inquiry?: (number | null) | Inquiry;
+  job?: (number | null) | Job;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: number;
+  titel: string;
+  text?: string | null;
+  /**
+   * Wohin der Tipp auf die Meldung führt.
+   */
+  url?: string | null;
+  /**
+   * Gleiche Kennung ersetzt eine ältere, noch ungelesene Meldung, statt sie zu stapeln.
+   */
+  tag?: string | null;
+  /**
+   * Wie oft dieselbe Meldung ausgelöst wurde.
+   */
+  anzahl?: number | null;
+  zuletztAm?: string | null;
+  gelesen?: boolean | null;
+  gelesenAm?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1743,6 +1853,10 @@ export interface PayloadLockedDocument {
         value: number | MailLog;
       } | null)
     | ({
+        relationTo: 'notifications';
+        value: number | Notification;
+      } | null)
+    | ({
         relationTo: 'push-subscriptions';
         value: number | PushSubscription;
       } | null)
@@ -1832,6 +1946,18 @@ export interface ProductsSelect<T extends boolean = true> {
               id?: T;
             };
         productionMinutes?: T;
+        arbeitsplan?:
+          | T
+          | {
+              was?: T;
+              art?: T;
+              minuten?: T;
+              dienstleister?: T;
+              kosten?: T;
+              vorlaufTage?: T;
+              notiz?: T;
+              id?: T;
+            };
         serviceProviders?:
           | T
           | {
@@ -2106,6 +2232,7 @@ export interface ContactsSelect<T extends boolean = true> {
   vatId?: T;
   siret?: T;
   defaultCategory?: T;
+  sprache?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2230,6 +2357,33 @@ export interface JobsSelect<T extends boolean = true> {
         id?: T;
       };
   materialGebucht?: T;
+  lieferart?: T;
+  trackingNumber?: T;
+  trackingUrl?: T;
+  kundeEmail?: T;
+  kundeBenachrichtigen?: T;
+  gemeldet?:
+    | T
+    | {
+        inFertigung?: T;
+        fertig?: T;
+        geliefert?: T;
+        hinweis?: T;
+      };
+  arbeitsplan?:
+    | T
+    | {
+        was?: T;
+        art?: T;
+        minuten?: T;
+        dienstleister?: T;
+        kosten?: T;
+        vorlaufTage?: T;
+        stand?: T;
+        erledigtAm?: T;
+        notiz?: T;
+        id?: T;
+      };
   plannedMinutes?: T;
   runningSince?: T;
   timeEntries?:
@@ -2577,6 +2731,23 @@ export interface MailLogSelect<T extends boolean = true> {
   attachments?: T;
   order?: T;
   inquiry?: T;
+  job?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  titel?: T;
+  text?: T;
+  url?: T;
+  tag?: T;
+  anzahl?: T;
+  zuletztAm?: T;
+  gelesen?: T;
+  gelesenAm?: T;
   updatedAt?: T;
   createdAt?: T;
 }

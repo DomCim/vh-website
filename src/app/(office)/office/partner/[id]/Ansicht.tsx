@@ -81,6 +81,7 @@ export function PartnerBearbeitenAnsicht() {
           vatId: k.vatId as string,
           siret: k.siret as string,
           defaultCategory: k.defaultCategory as string,
+          sprache: k.sprache as string,
           notes: k.notes as string,
         }}
         kategorien={AUSGABEN_KATEGORIEN.map((x) => ({ wert: x.value, text: x.label }))}

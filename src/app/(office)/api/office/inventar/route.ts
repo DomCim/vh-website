@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { bewegung } from '../../../../../lib/bestandsbewegung'
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
 
@@ -38,43 +39,22 @@ export async function POST(req: Request) {
       })
       if (!posten) return NextResponse.json({ error: 'unbekannt' }, { status: 404 })
 
-      /*
-       * Der Bestand darf rechnerisch unter null rutschen, und das bleibt auch
-       * so stehen. Ein auf null gedeckelter Bestand sähe ordentlich aus und
-       * verschwiege genau die Information, um die es geht: Es wurde mehr
-       * verbraucht, als je gebucht wurde — da fehlt eine Lieferung im System
-       * oder es ist Zeit für eine Inventur.
-       */
-      const rest = Math.round(((posten.quantity ?? 0) + delta) * 1000) / 1000
       const konto = user as { name?: string; email?: string; username?: string }
+      const buchung = bewegung(
+        posten,
+        delta,
+        String(b.grund ?? ''),
+        konto?.name || konto?.email || konto?.username,
+      )
 
       const doc = await payload.update({
         collection: 'inventory-items',
         id: b.id,
         overrideAccess: true,
-        data: {
-          quantity: rest,
-          /*
-           * Ein Zugang heißt: Die Lieferung ist da. Damit ist der Posten nicht
-           * mehr „unterwegs" — sonst bliebe er es für immer, und die
-           * Nachbestellliste verschwiege beim nächsten Mal, dass er wieder
-           * knapp ist.
-           */
-          ...(delta > 0 ? { reorderedAt: null } : {}),
-          movements: [
-            ...(posten.movements ?? []),
-            {
-              day: new Date().toISOString(),
-              delta,
-              rest,
-              reason: String(b.grund ?? '').trim() || undefined,
-              who: konto?.name || konto?.email || konto?.username || undefined,
-            },
-          ],
-        },
+        data: buchung,
       })
 
-      return NextResponse.json({ ok: true, id: doc.id, quantity: rest })
+      return NextResponse.json({ ok: true, id: doc.id, quantity: buchung.quantity })
     }
 
     if (!b.name?.trim()) return NextResponse.json({ error: 'name-fehlt' }, { status: 400 })
@@ -84,26 +64,64 @@ export async function POST(req: Request) {
       type: b.type || 'material',
       quantity: Number(b.quantity) || 0,
       unit: b.unit || 'Stück',
-      minQuantity: b.minQuantity ?? undefined,
-      orderQuantity: b.orderQuantity ?? undefined,
+      // `null` bleibt `null`: Ein geleertes Feld heißt „nicht gesetzt" — beim
+      // Mindestbestand ist das der Unterschied zwischen „kein Mindestbestand"
+      // und „Mindestbestand null", und nur Ersteres nimmt den Posten aus der
+      // Knapp-Liste. Nicht mitgeschickte Felder bleiben unangetastet.
+      minQuantity: 'minQuantity' in b ? b.minQuantity : undefined,
+      orderQuantity: 'orderQuantity' in b ? b.orderQuantity : undefined,
+      // Ohne Lieferant am Posten wüsste die Nachbestellliste nicht, an wen
+      // die Anfrage geht — das Feld wurde hier lange verschluckt.
+      supplier: 'supplier' in b ? (b.supplier ? Number(b.supplier) : null) : undefined,
       supplierRef: b.supplierRef || undefined,
-      unitValue: b.unitValue ?? undefined,
+      unitValue: 'unitValue' in b ? b.unitValue : undefined,
       location: b.location || undefined,
       purchaseDate: b.purchaseDate || undefined,
-      purchaseValue: b.purchaseValue ?? undefined,
+      purchaseValue: 'purchaseValue' in b ? b.purchaseValue : undefined,
       notes: b.notes || undefined,
       // `movements` steht bewusst nicht in dieser Liste: Das Formular kennt
       // den Verlauf nicht, und was es nicht kennt, darf es nicht leeren.
     }
 
-    const doc = b.id
-      ? await payload.update({
-          collection: 'inventory-items',
-          id: b.id,
-          overrideAccess: true,
-          data: daten,
-        })
-      : await payload.create({ collection: 'inventory-items', overrideAccess: true, data: daten })
+    let doc
+    if (b.id) {
+      const bisher = await payload.findByID({
+        collection: 'inventory-items',
+        id: b.id,
+        depth: 0,
+        overrideAccess: true,
+      })
+      if (!bisher) return NextResponse.json({ error: 'unbekannt' }, { status: 404 })
+
+      /*
+       * Wer im Formular den Bestand überschreibt, bucht damit — also gehört
+       * auch das in den Verlauf. Vorher war genau hier das Loch: Die Zahl
+       * änderte sich, und keine Zeile erzählte hinterher, wann und durch wen.
+       */
+      const neueMenge = Number(b.quantity) || 0
+      const delta = Math.round((neueMenge - (bisher.quantity ?? 0)) * 1000) / 1000
+      if (delta !== 0) {
+        const konto = user as { name?: string; email?: string; username?: string }
+        Object.assign(
+          daten,
+          bewegung(
+            bisher,
+            delta,
+            'Im Formular geändert',
+            konto?.name || konto?.email || konto?.username,
+          ),
+        )
+      }
+
+      doc = await payload.update({
+        collection: 'inventory-items',
+        id: b.id,
+        overrideAccess: true,
+        data: daten,
+      })
+    } else {
+      doc = await payload.create({ collection: 'inventory-items', overrideAccess: true, data: daten })
+    }
 
     return NextResponse.json({ ok: true, id: doc.id })
   } catch (err) {
