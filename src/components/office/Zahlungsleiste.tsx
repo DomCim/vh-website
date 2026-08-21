@@ -7,8 +7,10 @@ import { stufenBerechnen, type Zahlplan } from '../../lib/anzahlung'
 import { useBestand, useRahmen } from '../../lib/buero/bestand'
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum, euro } from '../../lib/format'
+import { RECHNUNG_STUFEN, textKarte } from '../../lib/listen'
 import {
   eingegangen,
+  istOffenerPosten,
   offenerBetrag,
   terminVerschiebung,
   zahlungsstand,
@@ -40,12 +42,12 @@ type Rechnung = {
   dueDate?: string | null
   netTotal?: number | null
   total?: number | null
+  stornoVon?: unknown
 }
 
+// In der Leiste heißt „vollstaendig" schlicht „Rechnung" — der lange Titel gehört ins Formular.
 const bezeichnung: Record<string, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
+  ...textKarte(RECHNUNG_STUFEN),
   vollstaendig: 'Rechnung',
 }
 
@@ -139,7 +141,7 @@ export function Zahlungsleiste({
       <div className="buero-liste">
         {rechnungen.map((r) => {
           const spaet =
-            r.status === 'gestellt' && r.dueDate && new Date(r.dueDate).getTime() < Date.now()
+            istOffenerPosten(r) && r.dueDate && new Date(r.dueDate).getTime() < Date.now()
           return (
             <Link key={r.id} href={`/office/rechnungen/${r.id}`} className="buero-zeile">
               <div className="buero-zeile-haupt">

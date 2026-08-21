@@ -6,10 +6,12 @@ import React, { useMemo, useState } from 'react'
 import { betraege } from '../../lib/betraege'
 import { VersandKnopf } from './VersandKnopf'
 import { useEntwurf } from '../../lib/buero/entwurf'
-import { absenden } from '../../lib/buero/warteschlange'
+import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
+import { VerwerfenKnopf } from './VerwerfenKnopf'
 
 export type AngebotPosition = {
   description: string
@@ -26,6 +28,10 @@ export type AngebotWerte = {
   quoteNumber?: string | null
   status?: string
   title?: string | null
+  /** Verknüpfter Geschäftspartner — füllt Name und Anschrift vor */
+  customer?: number | '' | null
+  /** Die Anfrage, aus der dieses Angebot entstand — daran hängt der Zahlplan */
+  inquiry?: number | null
   customerName?: string | null
   customerAddress?: string | null
   issueDate?: string | null
@@ -91,7 +97,24 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       // Die Antwort mitgeben: Aus einem angenommenen Angebot entstehen Auftrag
       // und Rechnung, und deren Kennungen vergibt nur der Server.
       return { ...(antwort ?? {}), id } as { id: string | number } & Record<string, unknown>
-    } catch {
+    } catch (err) {
+      /*
+       * „Schon vorhanden" ist kein Fehler, sondern eine Wegbeschreibung:
+       * Aus diesem Angebot ist längst ein Auftrag oder eine Rechnung
+       * entstanden — der zweite Klick führt dorthin, statt zu schimpfen
+       * (oder, schlimmer, ein zweites Exemplar anzulegen).
+       */
+      if (err instanceof AbsendeFehler && err.daten?.error === 'schon-vorhanden') {
+        const ziel = err.daten.auftragId
+          ? `/office/auftraege/${err.daten.auftragId}`
+          : err.daten.rechnungId
+            ? `/office/rechnungen/${err.daten.rechnungId}`
+            : null
+        if (ziel) {
+          router.push(ziel)
+          return null
+        }
+      }
       setMeldung('Das hat nicht geklappt.')
       return null
     } finally {
@@ -138,6 +161,18 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       </label>
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={w.customer}
+          aendern={(id, partner) =>
+            // Auswählen heißt übernehmen — wer abweichen will, tippt danach
+            setzen({
+              customer: id,
+              ...(partner
+                ? { customerName: partner.name ?? '', customerAddress: partnerAnschrift(partner) }
+                : {}),
+            })
+          }
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input
@@ -356,6 +391,28 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
           </a>
         )}
         {versendet && w.id && <VersandKnopf art="angebot" id={w.id} leise />}
+        {!versendet && w.id && (
+          <VerwerfenKnopf
+            pfad="/api/office/angebot"
+            id={w.id}
+            ziel="/office/angebote"
+            was="Angebotsentwurf"
+          />
+        )}
+        {/*
+         * Verlorene Angebote brauchen ein Ende: Ohne „Abgelehnt" blieb der
+         * Stand „versendet" stehen, und das Nachfassen erinnerte ewig weiter.
+         */}
+        {versendet && w.status !== 'angenommen' && w.status !== 'abgelehnt' && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft}
+            onClick={() => void speichern('abgelehnt')}
+          >
+            Abgelehnt
+          </button>
+        )}
         {w.status === 'angenommen' && (
           <button
             type="button"

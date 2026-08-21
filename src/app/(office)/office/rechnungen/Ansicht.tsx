@@ -7,16 +7,12 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum, euro } from '../../../../lib/format'
-import { tageSeit } from '../../../../lib/zahlungsstand'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte } from '../../../../lib/listen'
+import { istOffenerPosten, tageSeit } from '../../../../lib/zahlungsstand'
 
 /** Rechnungen — gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  entwurf: { text: 'Entwurf', art: '' },
-  gestellt: { text: 'Gestellt', art: 'offen' },
-  bezahlt: { text: 'Bezahlt', art: 'gut' },
-  storniert: { text: 'Storniert', art: 'warn' },
-}
+const STATUS = statusKarte(RECHNUNG_STATUS)
 
 type Rechnung = {
   id: number | string
@@ -29,16 +25,14 @@ type Rechnung = {
   reminders?: unknown[] | null
   stufe?: string | null
   createdAt?: string | null
+  stornoVon?: unknown
 }
 
-const STUFE: Record<string, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
-}
+// „Vollständige Rechnung" bekommt bewusst kein Abzeichen — das ist der Normalfall.
+const STUFE = textKarte(RECHNUNG_STUFEN.filter((s) => s.value !== 'vollstaendig'))
 
 const ueberfaellig = (r: Rechnung) =>
-  r.status === 'gestellt' && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()
+  istOffenerPosten(r) && Boolean(r.dueDate) && new Date(r.dueDate!).getTime() < Date.now()
 
 export function RechnungenAnsicht() {
   const suche = useSearchParams()
@@ -64,11 +58,11 @@ export function RechnungenAnsicht() {
 
   const rechnungen = useMemo(() => {
     if (filter === 'ueberfaellig') return sortiert.filter(ueberfaellig)
-    if (filter === 'offen') return sortiert.filter((r) => r.status === 'gestellt')
+    if (filter === 'offen') return sortiert.filter(istOffenerPosten)
     return sortiert
   }, [sortiert, filter])
 
-  const offen = sortiert.filter((r) => r.status === 'gestellt')
+  const offen = sortiert.filter(istOffenerPosten)
   const offenSumme = Math.round(offen.reduce((s, r) => s + (r.total ?? 0), 0) * 100) / 100
   const spaeteAnzahl = sortiert.filter(ueberfaellig).length
 
@@ -195,7 +189,7 @@ export function RechnungenAnsicht() {
                     {spaet ? 'überfällig' : s.text}
                   </span>
                   <span className="buero-betrag">{euro(r.total)}</span>
-                  {r.status === 'gestellt' && (
+                  {istOffenerPosten(r) && (
                     <button
                       type="button"
                       className="buero-knopf leise"

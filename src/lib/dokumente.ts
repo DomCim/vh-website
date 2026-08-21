@@ -36,6 +36,20 @@ export type Dokument = {
 
 export type DokumentArt = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
+/*
+ * Wer eine Dokumentart verschicken darf, richtet sich nach dem Modul, aus
+ * dem sie stammt — nicht nach einem Sammelrecht. Vorher genügte „Anfragen
+ * bearbeiten" für alles: Wer nur Anfragen beantworten durfte, konnte Mahnungen
+ * verschicken, und wer Rechnungen schreiben durfte, konnte sie nicht versenden.
+ */
+export const DOKUMENT_RECHT = {
+  angebot: 'angebote.schreiben',
+  rechnung: 'rechnungen.schreiben',
+  mahnung: 'rechnungen.schreiben',
+  bestaetigung: 'auftraege.bearbeiten',
+  lieferschein: 'auftraege.bearbeiten',
+} as const satisfies Record<DokumentArt, string>
+
 const datum = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
 

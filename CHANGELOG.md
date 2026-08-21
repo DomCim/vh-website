@@ -6,6 +6,32 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Ein Storno drückte den Umsatz doppelt — jetzt zählt er richtig.** Beim Stornieren entsteht eine Gegenrechnung mit negativen Beträgen, das Original wird als „storniert" markiert. Die Übersicht und der Steuer-Export zählten aber nur die Gegenrechnung und ließen das Original weg: Der Betrag fehlte zweimal statt einmal. Jetzt erscheinen beide Belege — sie heben sich auf, und der Steuerberater sieht das Paar mit Kennzeichnung. Die Gegenrechnung steht dafür nicht mehr bei den offenen Posten und wird nicht mehr angemahnt: Aus einem Storno ist nichts zu zahlen.
+
+- **Jeder sieht nur noch seine Bereiche im Gerät.** Das Büro spielt seinen Datenbestand aufs Gerät, damit es ohne Netz arbeitet. Bisher bekam jeder, der das Büro öffnen durfte, dabei alles — auch Rechnungen, Belege und Kontobewegungen; ausgeblendet war nur die Anzeige. Jetzt entscheiden die Rechte, was überhaupt ins Gerät kommt, und wem ein Recht entzogen wird, dessen Gerät leert die betroffenen Bereiche beim nächsten Abgleich von selbst.
+
+- **Wer Rechnungen schreiben darf, darf sie jetzt auch verschicken.** Der Dokumentversand fragte für alles dasselbe Recht „Anfragen bearbeiten" — wer nur Anfragen beantwortete, konnte damit Mahnungen verschicken, und wer Rechnungen schreiben durfte, konnte sie nicht versenden. Jetzt gehört zum Angebot das Angebotsrecht, zu Rechnung und Mahnung das Rechnungsrecht, zu Bestätigung und Lieferschein das Auftragsrecht.
+
+- **Partner einmal anlegen, überall auswählen.** Angebot, Auftrag und Rechnung haben jetzt einen Auswähler für den Geschäftspartner. Auswählen übernimmt Name und Anschrift, bei der Rechnung auch SIRET und TVA — dieselben Angaben mussten bisher bis zu viermal getippt werden. Mit der Verknüpfung weiß das Versandfenster endlich die Mailadresse von selbst, die Vorgänge erscheinen im Kundenportal, und Statusmeldungen gehen in der Sprache des Partners hinaus — die sich am Partner jetzt auch einstellen lässt.
+
+- **„Angebot schreiben" aus einer Anfrage nimmt die Angaben mit.** Name und Produkt stehen schon drin, und das Angebot merkt sich seine Anfrage. Das ist mehr als Bequemlichkeit: Über diese Verbindung findet der spätere Auftrag seinen Zahlplan — Anzahlung und Zwischenrechnung liefen im Projektgeschäft bisher gar nicht erst an, weil die Verbindung nie gesetzt wurde.
+
+- **Entwürfe lassen sich verwerfen.** Ein Angebots- oder Rechnungsentwurf ohne Nummer ließ sich bisher weder löschen noch stornieren — er stand für immer in der Liste und zählte ewig als Arbeit. Jetzt gibt es den Knopf „Entwurf verwerfen". Was eine Nummer hat, bleibt wie gehabt: Das wird storniert oder abgelehnt, nicht gelöscht.
+
+- **Verlorene Angebote bekommen ein Ende.** Der Knopf „Abgelehnt" schließt ein versendetes Angebot ab — vorher blieb es ewig auf „versendet" stehen, und das automatische Nachfassen erinnerte immer weiter.
+
+- **Doppelt getippt legt nichts mehr doppelt an.** Wer bei „Auftrag anlegen" oder „Rechnung daraus" zweimal drückte, bekam zwei Aufträge mit zwei Nummern. Jetzt führt der zweite Druck zum bestehenden Vorgang.
+
+- **Abholbestellungen lassen sich abschließen.** Der Abschluss verlangte eine Sendungsnummer — die es bei Abholung nicht gibt. Solche Bestellungen standen für immer auf „bezahlt" oder „in Fertigung".
+
+- **Der Lieferant am Lagerposten wird wieder gespeichert.** Das Feld „Bezogen von" ging beim Speichern verloren; deshalb stand in der Nachbestellliste alles unter „Ohne Lieferant" und die Bestellanfrage wusste keine Adresse.
+
+- **Der Bestandsverlauf ist lückenlos.** Inventurabschluss und das Bearbeiten-Formular änderten den Bestand bisher wortlos — ausgerechnet die größten Korrekturen fehlten im Verlauf. Jetzt hinterlässt jede Bestandsänderung ihre Zeile mit Grund. Und ein geleertes Mindestbestand-Feld heißt wieder „keiner" statt „null".
+
+- **Kleinigkeiten mit Wirkung.** Belege über 0,00 Euro (Gutschrift, Ersatzlieferung) werden angenommen. Die E-Rechnungs-Felder auf der Rechnung zeigen sich nur noch bei Geschäftskunden statt als Dauerblock. Der Link „Zur Bestellung" am Auftrag führt wieder ins Büro. Ein vertippter Status wird an der Tür abgewiesen statt in die Datenbank durchgereicht.
+
+- **Der KI-Zugang (MCP) ist dichter und kann mehr.** Die Bankverbindung und der Stundensatz sind für den Assistenten gesperrt — auch lesend: Eine präparierte Mail, die ihn überredet, die IBAN auf den Rechnungen zu „korrigieren", läuft jetzt ins Leere, und er meldet den Versuch. Dateiabrufe gehen nur noch nach draußen, nicht mehr an interne Dienste. Jeder Schreibzugriff steht im Protokoll. Fehler kommen als verständliche Antwort statt als Absturz. Und der Assistent kann jetzt auch fürs Büro arbeiten: Wiedervorlagen anlegen, Partner ändern, Angebots- und Rechnungsentwürfe vorbereiten — ohne Nummer und ohne Versand, das bleibt beim Menschen.
+
 - **Ein Rechnungsentwurf war vorbereitet, die Meldung kam aufs Handy — und in der Rechnungsliste stand nichts.** Der Entwurf lag die ganze Zeit in der Datenbank; das Gerät konnte ihn nur nie mehr sehen. Das Büro führt seinen Bestand im Gerät mit und fragt den Server jedes Mal „was hat sich seit meinem Stand getan?". Der Entwurf entsteht aber innerhalb des Schreibvorgangs, der den Auftrag auf „fertig" setzt, und gemeldet wurde er, bevor dieser Vorgang abgeschlossen war. Das Gerät fragte genau in diesem Fenster — ausgelöst von der Meldung selbst, die man ja antippt —, bekam nichts und merkte sich trotzdem den neuen Zeitpunkt. Der lag nach dem Entwurf, und damit fiel der für immer durch das Raster.
   - **Drei Dinge dagegen.** Der gemerkte Stand liegt jetzt eine Minute zurück: Doppelt gelieferte Datensätze sind folgenlos, weil das Gerät sie nach ihrer Kennung ablegt — ein verlorener ist es nicht. Meldung und Live-Signal zur Stufenrechnung gehen erst hinaus, wenn der Entwurf wirklich festgeschrieben ist; scheitert der Vorgang, kommt gar keine Meldung mehr statt einer über etwas, das es nicht gibt. Und die Materialbuchung setzt ihr Kennzeichen in derselben Zeile mit, statt hinterher noch einmal zu schreiben — dieser zweite, ungesicherte Schreibvorgang konnte den ganzen Vorgang samt Entwurf zurückrollen.
   - **Was schon verloren ist, kommt zurück.** Die Geräte drehen ihre Stände einmalig um eine Woche zurück und holen sich damit, was ihnen fehlt. Wer es von Hand braucht: unter Einstellungen → Dieses Gerät steht jetzt „Bestand neu holen" — das holt alles noch einmal, ohne abzumelden.

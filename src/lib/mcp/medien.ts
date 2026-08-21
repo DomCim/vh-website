@@ -1,3 +1,6 @@
+import { lookup } from 'node:dns/promises'
+import { isIP } from 'node:net'
+
 import { z } from 'zod'
 
 import { bestaetigen, bestaetigungNoetig, db, fehler, type McpServer, ok, sprache } from './helpers'
@@ -12,6 +15,131 @@ const MAX_BASE64_BYTES = 8 * 1024 * 1024
 const ERLAUBT = /^(image\/|video\/mp4$|video\/webm$)/
 
 const mb = (bytes: number) => Math.round((bytes / 1024 / 1024) * 10) / 10
+
+/*
+ * Der Abruf einer URL darf nur nach draußen zeigen.
+ *
+ * Der Server steht im selben Netz wie Datenbank und Statistik — ein Abruf von
+ * `http://db:5432` oder `http://plausible:8000` wäre sonst möglich, und die
+ * Fehlermeldungen verrieten, was intern erreichbar ist: ein Port-Scanner mit
+ * MCP-Anschluss. Deshalb: nur http(s), nur Hostnamen mit Punkt (interne
+ * Dienste heißen `db`, `plausible`, `web`), und jede aufgelöste Adresse muss
+ * öffentlich sein. Redirects werden einzeln verfolgt und jedes Ziel erneut
+ * geprüft. Rest-Risiko DNS-Rebinding (Auflösung hier ≠ Auflösung im fetch)
+ * ist bewusst hingenommen — gegen Prompt-Injection reicht das, gegen einen
+ * Angreifer im eigenen Netz hilft ohnehin nur Netztrennung.
+ */
+function privateAdresse(ip: string): boolean {
+  if (ip.includes(':')) {
+    const v6 = ip.toLowerCase()
+    // ::1, link-local fe80::/10, unique-local fc00::/7, v4-mapped ::ffff:…
+    if (v6 === '::1' || v6.startsWith('fe8') || v6.startsWith('fe9') || v6.startsWith('fea') || v6.startsWith('feb')) return true
+    if (v6.startsWith('fc') || v6.startsWith('fd')) return true
+    const v4 = v6.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+    return v4 ? privateAdresse(v4[1]) : false
+  }
+  const teile = ip.split('.').map(Number)
+  if (teile.length !== 4 || teile.some((t) => !Number.isInteger(t) || t < 0 || t > 255)) return true
+  const [a, b] = teile
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 100 && b >= 64 && b <= 127) || // CGNAT
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
+  )
+}
+
+/** Exportiert für die Prüfung in tests/mcp-haertung.spec.ts */
+export async function urlPruefen(roh: string): Promise<string | null> {
+  let url: URL
+  try {
+    url = new URL(roh)
+  } catch {
+    return 'Das ist keine gültige URL.'
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return 'Nur http- und https-Adressen sind erlaubt.'
+  }
+  const host = url.hostname.replace(/^\[|\]$/g, '')
+  if (isIP(host)) {
+    return privateAdresse(host) ? 'Interne Adressen sind nicht erreichbar.' : null
+  }
+  if (!host.includes('.')) {
+    return 'Interne Adressen sind nicht erreichbar.'
+  }
+  try {
+    const adressen = await lookup(host, { all: true })
+    if (!adressen.length || adressen.some((a) => privateAdresse(a.address))) {
+      return 'Interne Adressen sind nicht erreichbar.'
+    }
+  } catch {
+    return `Die Adresse ${host} ließ sich nicht auflösen.`
+  }
+  return null
+}
+
+/**
+ * Holt eine Datei, folgt dabei höchstens drei Umleitungen (jedes Ziel wird
+ * erneut geprüft) und liest den Körper stückweise mit harter Obergrenze —
+ * ein gelogener oder fehlender content-length-Header füllt so nicht mehr
+ * den Arbeitsspeicher.
+ */
+async function dateiHolen(
+  startUrl: string,
+): Promise<{ daten: Buffer; mimetype: string } | { fehler: string }> {
+  let aktuelle = startUrl
+  for (let hop = 0; hop <= 3; hop++) {
+    const problem = await urlPruefen(aktuelle)
+    if (problem) return { fehler: problem }
+
+    let antwort: Response
+    try {
+      antwort = await fetch(aktuelle, { redirect: 'manual' })
+    } catch {
+      return { fehler: `Die URL ${aktuelle} war nicht erreichbar.` }
+    }
+
+    if (antwort.status >= 300 && antwort.status < 400) {
+      const ziel = antwort.headers.get('location')
+      if (!ziel) return { fehler: `Die URL antwortete mit Status ${antwort.status}.` }
+      aktuelle = new URL(ziel, aktuelle).toString()
+      continue
+    }
+    if (!antwort.ok) return { fehler: `Die URL antwortete mit Status ${antwort.status}.` }
+
+    const gemeldet = Number(antwort.headers.get('content-length') ?? 0)
+    if (gemeldet > MAX_URL_BYTES) {
+      return {
+        fehler: `Die Datei ist ${mb(gemeldet)} MB groß — erlaubt sind höchstens ${mb(MAX_URL_BYTES)} MB.`,
+      }
+    }
+
+    const mimetype =
+      antwort.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream'
+
+    if (!antwort.body) return { fehler: 'Die Antwort hatte keinen Inhalt.' }
+    const leser = antwort.body.getReader()
+    const stuecke: Uint8Array[] = []
+    let gesamt = 0
+    for (;;) {
+      const { done, value } = await leser.read()
+      if (done) break
+      gesamt += value.byteLength
+      if (gesamt > MAX_URL_BYTES) {
+        await leser.cancel().catch(() => undefined)
+        return {
+          fehler: `Die Datei ist größer als ${mb(MAX_URL_BYTES)} MB — abgebrochen.`,
+        }
+      }
+      stuecke.push(value)
+    }
+    return { daten: Buffer.concat(stuecke), mimetype }
+  }
+  return { fehler: 'Zu viele Umleitungen — abgebrochen.' }
+}
 
 /** Wo überall ein Bild verwendet wird — vor dem Löschen geprüft */
 async function fundstellen(payload: Awaited<ReturnType<typeof db>>, id: number) {
@@ -97,25 +225,10 @@ export function registerMedien(server: McpServer) {
       let daten: Buffer
       let mimetype: string
       if (url) {
-        let antwort: Response
-        try {
-          antwort = await fetch(url, { redirect: 'follow' })
-        } catch {
-          return fehler(`Die URL ${url} war nicht erreichbar.`)
-        }
-        if (!antwort.ok) return fehler(`Die URL antwortete mit Status ${antwort.status}.`)
-
-        // Wenn der Server die Größe vorab meldet, gar nicht erst herunterladen
-        const gemeldet = Number(antwort.headers.get('content-length') ?? 0)
-        if (gemeldet > MAX_URL_BYTES) {
-          return fehler(
-            `Die Datei ist ${mb(gemeldet)} MB groß — erlaubt sind höchstens ${mb(MAX_URL_BYTES)} MB.`,
-          )
-        }
-
-        mimetype =
-          antwort.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream'
-        daten = Buffer.from(await antwort.arrayBuffer())
+        const geholt = await dateiHolen(url)
+        if ('fehler' in geholt) return fehler(geholt.fehler)
+        daten = geholt.daten
+        mimetype = geholt.mimetype
       } else {
         daten = Buffer.from(datenBase64!.replace(/^data:[^;]+;base64,/, ''), 'base64')
         const endung = dateiname.split('.').pop()?.toLowerCase() ?? ''

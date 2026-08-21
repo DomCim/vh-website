@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
 import { betraege } from '../lib/betraege'
+import { ANGEBOT_STATUS } from '../lib/listen'
 import { naechsteAngebotsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 
@@ -90,12 +91,7 @@ export const Quotes: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'entwurf',
-      options: [
-        { label: 'Entwurf', value: 'entwurf' },
-        { label: 'Versendet', value: 'versendet' },
-        { label: 'Angenommen', value: 'angenommen' },
-        { label: 'Abgelehnt', value: 'abgelehnt' },
-      ],
+      options: [...ANGEBOT_STATUS],
       admin: { position: 'sidebar' },
     },
     { name: 'title', label: 'Bezeichnung', type: 'text' },

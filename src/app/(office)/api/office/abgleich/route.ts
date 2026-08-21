@@ -4,6 +4,7 @@ import {
   ALLE_BEREICHE,
   BEREICHE,
   type Bereich,
+  bereichErlaubt,
   GRABSTEIN_TAGE,
   istBereich,
   neuerStand,
@@ -52,7 +53,7 @@ type BereichsAntwort = {
 async function rahmen(
   payload: Awaited<ReturnType<typeof payloadClient>>,
   benutzer: { email?: string; username?: string; name?: string },
-  konto: unknown,
+  rechte: string[],
 ) {
   const rahmen = {
     // Ohne E-Mail zeigt die Oberfläche den Benutzernamen — irgendetwas muss
@@ -75,7 +76,7 @@ async function rahmen(
      * Schnittstellen —, sondern eine Frage der Ordnung: Ein Punkt, der beim
      * Antippen „nicht erlaubt" sagt, ist ein Versprechen, das keines war.
      */
-    rechte: (await rechteFuer(payload, konto)) as string[],
+    rechte,
   }
   try {
     const integrationen = await getIntegrations(payload)
@@ -142,7 +143,21 @@ export async function POST(req: Request) {
   const antwort: Record<string, BereichsAntwort> = {}
   const vollstaendig: string[] = []
 
+  const rechte = (await rechteFuer(payload, user)) as string[]
+
   for (const bereich of nurBereiche) {
+    /*
+     * Bereiche, für die das Recht fehlt, werden nicht weggelassen, sondern
+     * leer und mit `voll` beantwortet: So wirft das Gerät auch den Bestand
+     * weg, den es aus Zeiten mit mehr Rechten noch hält. Ein weggelassener
+     * Bereich bliebe dort einfach liegen — entzogen wäre dann nur der
+     * Nachschub, nicht das Wissen.
+     */
+    if (!bereichErlaubt(bereich, rechte)) {
+      vollstaendig.push(bereich)
+      antwort[bereich] = { geaendert: [], geloescht: [], stand: jetzt, mehr: false }
+      continue
+    }
     const sammlung = BEREICHE[bereich]
     const seitRoh = staende[bereich]
     const seit = seitRoh ? new Date(seitRoh) : null
@@ -209,6 +224,10 @@ export async function POST(req: Request) {
     bereiche: antwort,
     // Diese Bereiche bitte vorher leeren — der bisherige Bestand ist zu alt
     voll: vollstaendig,
-    rahmen: await rahmen(payload, user as { email?: string; username?: string; name?: string }, user),
+    rahmen: await rahmen(
+      payload,
+      user as { email?: string; username?: string; name?: string },
+      rechte,
+    ),
   })
 }

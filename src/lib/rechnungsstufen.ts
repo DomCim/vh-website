@@ -9,6 +9,7 @@ import {
   type Vorstufe,
   type Zahlplan,
 } from './anzahlung'
+import { RECHNUNG_STUFEN, textKarte } from './listen'
 import { liveMelden } from './live'
 import { nachCommit } from './nachCommit'
 import { benachrichtige } from './push'
@@ -48,11 +49,7 @@ type Auftrag = {
   meilenstein?: { bezeichnung?: string | null; erreichtAm?: string | null } | null
 }
 
-const BEZEICHNUNG: Record<Stufe, string> = {
-  anzahlung: 'Anzahlung',
-  zwischen: 'Zwischenrechnung',
-  schluss: 'Schlussrechnung',
-}
+const BEZEICHNUNG = textKarte(RECHNUNG_STUFEN) as Record<Stufe, string>
 
 /*
  * Alle Abfragen hier bekommen `req` mit — und das ist keine Formsache.

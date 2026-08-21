@@ -52,6 +52,25 @@ export async function POST(req: Request) {
      * Das Original wird dabei nicht gelöscht und nicht geleert, sondern steht
      * auf „storniert" und zeigt auf sein Storno. Beide Papiere bleiben.
      */
+    /*
+     * Entwurf verwerfen — das Gegenstück zum Storno. Ein Entwurf hat keine
+     * Nummer, also gibt es nichts aufzuheben: Er verschwindet, statt für
+     * immer in der Liste und im Kümmern-Zähler zu stehen. Das gilt auch für
+     * die automatisch angelegten Stufenentwürfe, die keiner mehr braucht.
+     */
+    if (b.aktion === 'verwerfen') {
+      if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      const original = await payload
+        .findByID({ collection: 'outgoing-invoices', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (!original) return NextResponse.json({ error: 'unbekannt' }, { status: 404 })
+      if (original.invoiceNumber || original.status !== 'entwurf') {
+        return NextResponse.json({ error: 'schon-gestellt' }, { status: 409 })
+      }
+      await payload.delete({ collection: 'outgoing-invoices', id: b.id, overrideAccess: true })
+      return NextResponse.json({ ok: true })
+    }
+
     if (b.aktion === 'stornieren') {
       if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
 
@@ -143,6 +162,9 @@ export async function POST(req: Request) {
 
     const daten = {
       status: b.status || 'entwurf',
+      // Verknüpfter Partner — daran hängen Versand-Empfänger, Portal und
+      // Mailsprache. Abwahl (`null` bzw. '') muss durchgehen.
+      customer: b.customer === null || b.customer === '' ? null : Number(b.customer) || undefined,
       customerName: b.customerName || undefined,
       customerAddress: b.customerAddress || undefined,
       customerSiret: b.customerSiret || undefined,

@@ -8,6 +8,8 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
+import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
 
 export type Position = {
@@ -24,6 +26,8 @@ export type RechnungWerte = {
   id?: number | string
   invoiceNumber?: string | null
   status?: string
+  /** Verknüpfter Geschäftspartner — füllt Name, Anschrift, SIRET und TVA vor */
+  customer?: number | '' | null
   customerName?: string | null
   customerAddress?: string | null
   customerSiret?: string | null
@@ -67,6 +71,22 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
 
   const festgeschrieben = Boolean(w.invoiceNumber)
   const setzen = (teil: Partial<RechnungWerte>) => setW((v) => ({ ...v, ...teil }))
+
+  /*
+   * Die E-Rechnungs-Felder brauchen nur Geschäftskunden — bei Privatkundschaft
+   * standen sie trotzdem als Dauerblock im Formular. Eingeklappt, solange
+   * nichts davon gesetzt ist; ein Partner mit SIRET oder TVA klappt sie auf.
+   */
+  const [eRechnungOffen, setERechnungOffen] = useState<boolean>(() =>
+    Boolean(
+      anfang.customerSiret ||
+        anfang.customerVatId ||
+        anfang.buyerReference ||
+        anfang.deliveryDate ||
+        anfang.deliveryAddress ||
+        (anfang.businessType && anfang.businessType !== 'lieferung'),
+    ),
+  )
 
   const summen = useMemo(() => {
     const runden = (n: number) => Math.round(n * 100) / 100
@@ -137,6 +157,24 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={w.customer}
+          aendern={(id, partner) => {
+            // Auswählen heißt übernehmen — wer abweichen will, tippt danach
+            setzen({
+              customer: id,
+              ...(partner
+                ? {
+                    customerName: partner.name ?? '',
+                    customerAddress: partnerAnschrift(partner),
+                    customerSiret: partner.siret ?? '',
+                    customerVatId: partner.vatId ?? '',
+                  }
+                : {}),
+            })
+            if (partner?.siret || partner?.vatId) setERechnungOffen(true)
+          }}
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input
@@ -174,8 +212,22 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       </label>
 
       {/* Angaben für die elektronische Rechnung. Bei Privatkundschaft bleiben
-          sie leer — dort verlangt sie niemand. */}
+          sie leer — dort verlangt sie niemand, also bleiben sie eingeklappt. */}
       <h2 style={{ marginTop: '1.5rem' }}>Elektronische Rechnung</h2>
+      {!eRechnungOffen && (
+        <p className="buero-unterzeile" style={{ marginTop: '-.4rem' }}>
+          Bei Privatkundschaft bleibt hier alles leer.{' '}
+          <button
+            type="button"
+            className="buero-knopf leise schmal"
+            onClick={() => setERechnungOffen(true)}
+          >
+            Geschäftskunde — Felder zeigen
+          </button>
+        </p>
+      )}
+      {eRechnungOffen && (
+        <>
       <p className="buero-unterzeile" style={{ marginTop: '-.4rem' }}>
         Bei Geschäftskunden gehört die Kennung des Empfängers dazu, sonst weist die Plattform die
         Rechnung ab.
@@ -236,6 +288,8 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           placeholder="nur wenn woandershin geliefert wurde"
         />
       </label>
+        </>
+      )}
 
       <h2 style={{ marginTop: '1.5rem' }}>Positionen</h2>
       {(w.items ?? []).map((p, i) => (
@@ -391,6 +445,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           >
             Als bezahlt markieren
           </button>
+        )}
+        {!festgeschrieben && w.id && (
+          <VerwerfenKnopf
+            pfad="/api/office/rechnung"
+            id={w.id}
+            ziel="/office/rechnungen"
+            was="Rechnungsentwurf"
+          />
         )}
         {!festgeschrieben && (
           <button

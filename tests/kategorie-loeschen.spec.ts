@@ -52,9 +52,26 @@ test.describe('Kategorie löschen', () => {
     // ── 2. Kategorie mit einem Artikel ───────────────────────────────────
     const voll = await kategorieAnlegen('Voll')
 
-    // Der Artikel braucht ein Bild; irgendeins aus dem Bestand genügt
+    // Der Artikel braucht ein Bild; irgendeins aus dem Bestand genügt.
+    // Auf leerer Datenbank hängt das sonst davon ab, welcher Spec zufällig
+    // zuerst lief — deshalb lädt die Prüfung notfalls selbst ein Pixel hoch.
     const medien = await request.get(`${BASIS}/api/media?limit=1`, { headers: kopf })
-    const bild = (await medien.json()).docs[0]
+    let bild = (await medien.json()).docs[0]
+    if (!bild) {
+      const pixel = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'base64',
+      )
+      const hochgeladen = await request.post(`${BASIS}/api/media`, {
+        headers: kopf,
+        multipart: {
+          file: { name: 'pruefpixel.png', mimeType: 'image/png', buffer: pixel },
+          _payload: JSON.stringify({ alt: 'Prüfpixel' }),
+        },
+      })
+      expect(hochgeladen.ok(), 'Prüfbild ließ sich hochladen').toBeTruthy()
+      bild = (await hochgeladen.json()).doc
+    }
     expect(bild, 'Für die Prüfung muss mindestens eine Datei in der Mediathek liegen').toBeTruthy()
 
     const artikel = await request.post(`${BASIS}/api/products`, {

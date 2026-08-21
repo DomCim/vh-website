@@ -55,6 +55,57 @@ export function istBereich(wert: string): wert is Bereich {
 }
 
 /**
+ * Welche Rechte einen Bereich ins Gerät bringen — eines genügt.
+ *
+ * Der Abgleich lieferte lange jeden Bereich an jeden, der das Büro öffnen
+ * durfte: Ein Werkstattkonto ohne `zahlen.sehen` bekam sämtliche Rechnungen,
+ * Belege und Kontobewegungen ins Gerät gespielt, nur die Anzeige blendete sie
+ * aus. Die Navigation sagt selbst, dass sie kein Schutz ist — also muss der
+ * Schutz hier sitzen, an der Schnittstelle.
+ *
+ * Die Listen sind ODER-Listen und bewusst großzügiger als die Navigation:
+ * Ein Bereich wird auch von Seiten gelesen, die unter anderem Recht laufen —
+ * die Auftragsseite braucht das Inventar, das Angebot die Partner. Wer hier
+ * kürzt, muss vorher nachsehen, welche Seiten `useBestand('…')` rufen, sonst
+ * steht eine davon mit leerer Liste da.
+ *
+ * Bereiche ohne Eintrag stehen jedem offen, der das Büro öffnen darf:
+ * Artikel, Medien und Kundenstimmen sind ohnehin Website-Inhalt, Unterlagen
+ * braucht, wer das Teil baut, und Meldungen, Wiedervorlagen und
+ * Werkstattwochen sind Arbeitsorganisation ohne Zahlen.
+ */
+export const BEREICH_RECHTE: Partial<Record<Bereich, string[]>> = {
+  anfragen: ['anfragen.bearbeiten', 'angebote.schreiben'],
+  angebote: ['angebote.schreiben', 'auftraege.bearbeiten'],
+  auftraege: ['auftraege.bearbeiten', 'angebote.schreiben', 'zahlen.sehen'],
+  belege: ['belege.erfassen', 'zahlen.sehen'],
+  bestellungen: ['anfragen.bearbeiten', 'auftraege.bearbeiten'],
+  inventar: ['inventar.pflegen', 'auftraege.bearbeiten', 'website.pflegen'],
+  inventur: ['inventar.pflegen'],
+  kontobewegungen: ['rechnungen.schreiben', 'zahlen.sehen'],
+  newsletter: ['newsletter.versenden'],
+  partner: [
+    'partner.pflegen',
+    'anfragen.bearbeiten',
+    'angebote.schreiben',
+    'auftraege.bearbeiten',
+    'rechnungen.schreiben',
+    'belege.erfassen',
+    'inventar.pflegen',
+  ],
+  rechnungen: ['rechnungen.schreiben', 'zahlen.sehen'],
+  mappen: ['angebote.schreiben', 'auftraege.bearbeiten', 'anfragen.bearbeiten'],
+  wareneingaenge: ['inventar.pflegen'],
+}
+
+/** Darf ein Konto mit diesen Rechten diesen Bereich ins Gerät bekommen? */
+export function bereichErlaubt(bereich: Bereich, rechte: readonly string[]): boolean {
+  const noetig = BEREICH_RECHTE[bereich]
+  if (!noetig) return true
+  return noetig.some((r) => rechte.includes(r))
+}
+
+/**
  * Sicherheitsabstand auf den neuen Stand des Abgleichs.
  *
  * Ein Datensatz wird geschrieben, gemeldet — und erst danach festgeschrieben.

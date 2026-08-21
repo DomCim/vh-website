@@ -5,21 +5,13 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
+import { ANFRAGE_ARTEN, ANFRAGE_STATUS, statusKarte, textKarte } from '../../../../lib/listen'
 
 /** Anfragen — neueste zuerst, gerechnet aus dem Bestand im Gerät. */
 
-const STATUS: Record<string, { text: string; art: string }> = {
-  neu: { text: 'Neu', art: 'offen' },
-  inBearbeitung: { text: 'In Bearbeitung', art: 'offen' },
-  beantwortet: { text: 'Beantwortet', art: 'gut' },
-  erledigt: { text: 'Erledigt', art: '' },
-}
+const STATUS = statusKarte(ANFRAGE_STATUS)
 
-const ART: Record<string, string> = {
-  kontakt: 'Kontaktformular',
-  produkt: 'Produktanfrage',
-  massanfertigung: 'Maßanfertigung',
-}
+const ART = textKarte(ANFRAGE_ARTEN)
 
 type Anfrage = {
   id: number | string

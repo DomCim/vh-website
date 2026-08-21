@@ -7,6 +7,7 @@ import { useBestand, useRahmen } from '../../../lib/buero/bestand'
 import { useDarf } from '../../../lib/buero/rechte'
 import { datum, euro } from '../../../lib/format'
 import { istFaellig, istKnapp, istNeueAnfrage, istUeberfaellig, istZuZahlen } from '../../../lib/zuErledigen'
+import { istOffenerPosten, zaehltZumUmsatz } from '../../../lib/zahlungsstand'
 
 /**
  * Übersicht: was dieses Jahr rein- und rausging, was offen ist und woran
@@ -28,6 +29,7 @@ type Rechnung = {
   dueDate?: string | null
   invoiceNumber?: string | null
   customerName?: string | null
+  stornoVon?: unknown
 }
 type Beleg = {
   grossAmount?: number | null
@@ -72,9 +74,7 @@ export function UebersichtAnsicht() {
     const shop = bestellungen.filter(
       (o) => ['paid', 'inProduction', 'shipped'].includes(o.status ?? '') && imJahr(o.createdAt),
     )
-    const gestellt = rechnungen.filter(
-      (r) => ['gestellt', 'bezahlt'].includes(r.status ?? '') && imJahr(r.issueDate),
-    )
+    const gestellt = rechnungen.filter((r) => zaehltZumUmsatz(r) && imJahr(r.issueDate))
     const ausgaben = belege.filter((a) => a.deductible !== false && imJahr(a.invoiceDate))
 
     return {
@@ -101,7 +101,7 @@ export function UebersichtAnsicht() {
   const offeneRechnungen = useMemo(
     () =>
       rechnungen
-        .filter((r) => r.status === 'gestellt')
+        .filter(istOffenerPosten)
         .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
         .slice(0, 10),
     [rechnungen],

@@ -8,14 +8,11 @@ import { AnfrageFormular } from '../../../../../components/office/AnfrageFormula
 import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { useAbgleich, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum } from '../../../../../lib/format'
+import { ANFRAGE_ARTEN, textKarte } from '../../../../../lib/listen'
 
 /** Eine Anfrage im Ganzen — aus dem Bestand im Gerät. */
 
-const ART: Record<string, string> = {
-  kontakt: 'Kontaktformular',
-  produkt: 'Produktanfrage',
-  massanfertigung: 'Maßanfertigung',
-}
+const ART = textKarte(ANFRAGE_ARTEN)
 
 type Anfrage = {
   id: number | string
@@ -80,7 +77,9 @@ export function AnfrageAnsicht() {
         <Link href={antwortLink} className="buero-knopf">
           Antworten
         </Link>
-        <Link href="/office/angebote/neu" className="buero-knopf leise">
+        {/* Mit Bezug: Das Angebot übernimmt Name und Produkt und merkt sich
+            die Anfrage — daran hängt später der Zahlplan des Auftrags. */}
+        <Link href={`/office/angebote/neu?anfrage=${a.id}`} className="buero-knopf leise">
           Angebot schreiben
         </Link>
       </div>

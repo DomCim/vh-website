@@ -307,6 +307,12 @@ export const notifyOnShipped: CollectionAfterChangeHook = async ({
         collection: 'orders',
         id: doc.id,
         overrideAccess: true,
+        // `req` ist hier Pflicht, keine Formsache: Ohne es öffnet dieses
+        // Update eine zweite Transaktion auf derselben Zeile, die die äußere
+        // noch sperrt — die Anfrage stand zwei Minuten, dann Timeout. Die
+        // Falle steht im HANDOVER; aufgefallen ist sie erst, als Abholungen
+        // diesen Weg zum ersten Mal wirklich gehen konnten.
+        req,
         context: { skipShippedMail: true },
         data: { shippedAt: new Date().toISOString() },
       })

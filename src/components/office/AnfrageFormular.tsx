@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
+import { ANFRAGE_STATUS } from '../../lib/listen'
 
 export type AnfrageWerte = {
   id: number | string
@@ -9,12 +10,7 @@ export type AnfrageWerte = {
   internalNote?: string | null
 }
 
-const STATUS = [
-  { wert: 'neu', text: 'Neu' },
-  { wert: 'inBearbeitung', text: 'In Bearbeitung' },
-  { wert: 'beantwortet', text: 'Beantwortet' },
-  { wert: 'erledigt', text: 'Erledigt' },
-]
+const STATUS = ANFRAGE_STATUS.map((s) => ({ wert: s.value, text: s.label }))
 
 /** Stand und Notiz zu einer Anfrage — die Antwort selbst geht übers Postfach. */
 export function AnfrageFormular({ werte }: { werte: AnfrageWerte }) {

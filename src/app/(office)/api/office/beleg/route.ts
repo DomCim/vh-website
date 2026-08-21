@@ -15,7 +15,15 @@ export async function POST(req: Request) {
     }
 
     const b = (await req.json()) as Record<string, any>
-    if (!b.grossAmount || !b.invoiceDate) {
+    // 0,00 € ist ein gültiger Beleg — Gutschrift, Ersatzlieferung, Nullrechnung.
+    // Ein schlichtes `!b.grossAmount` hatte genau die abgewiesen. Leer bleibt
+    // leer: Ein Beleg ganz ohne Betrag ist weiterhin unvollständig.
+    if (
+      b.grossAmount == null ||
+      b.grossAmount === '' ||
+      !Number.isFinite(Number(b.grossAmount)) ||
+      !b.invoiceDate
+    ) {
       return NextResponse.json({ error: 'pflichtfelder' }, { status: 400 })
     }
 

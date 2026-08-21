@@ -157,7 +157,8 @@ export function BelegFormular({
   }
 
   async function speichern() {
-    if (!w.grossAmount || !w.invoiceDate) {
+    // 0,00 € ist erlaubt — nur ganz ohne Betrag geht es nicht
+    if (w.grossAmount == null || !w.invoiceDate) {
       setMeldung('Bruttobetrag und Rechnungsdatum werden gebraucht.')
       return
     }

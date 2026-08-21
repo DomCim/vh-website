@@ -143,6 +143,10 @@ export function RechnungAnsicht() {
           id: r.id,
           invoiceNumber: r.invoiceNumber,
           status: r.status as string,
+          customer:
+            typeof r.customer === 'object'
+              ? ((r.customer as { id?: number })?.id ?? '')
+              : ((r.customer as number) ?? ''),
           customerName: r.customerName,
           customerAddress: r.customerAddress as string,
           customerSiret: r.customerSiret as string,

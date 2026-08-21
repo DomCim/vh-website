@@ -278,6 +278,8 @@ export async function offeneRechnungenMelden(payload: Payload): Promise<number> 
     where: {
       and: [
         { status: { equals: 'gestellt' } },
+        // Die Gegenrechnung eines Stornos wird nie angemahnt.
+        { stornoVon: { exists: false } },
         { dueDate: { exists: true } },
         { dueDate: { less_than: new Date().toISOString() } },
       ],

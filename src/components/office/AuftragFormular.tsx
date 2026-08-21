@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
+import { AUFTRAG_STATUS } from '../../lib/listen'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 import { Meldestand } from './Meldestand'
@@ -71,13 +73,7 @@ export type PostenAuswahl = { id: number; name: string; unit: string; quantity: 
 
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
-const STATUS = [
-  { wert: 'geplant', text: 'Geplant' },
-  { wert: 'inFertigung', text: 'In Fertigung' },
-  { wert: 'fertig', text: 'Fertig' },
-  { wert: 'geliefert', text: 'Geliefert' },
-  { wert: 'abgebrochen', text: 'Abgebrochen' },
-]
+const STATUS = AUFTRAG_STATUS.map((s) => ({ wert: s.value, text: s.label }))
 
 /**
  * Ein Stück durch die Werkstatt begleiten.
@@ -173,6 +169,16 @@ export function AuftragFormular({
       </label>
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={typeof w.contact === 'string' ? Number(w.contact) || '' : w.contact}
+          aendern={(id, partner) =>
+            // Am Partner hängen Mailadresse und Sprache der Statusmeldungen
+            setzen({
+              contact: id,
+              ...(partner ? { customerName: partner.name ?? '' } : {}),
+            })
+          }
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input

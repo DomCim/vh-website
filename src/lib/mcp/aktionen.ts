@@ -7,7 +7,7 @@ import {
   fehler,
   type McpServer,
   ok,
-  resolveIds,
+  resolveIdsStrikt,
   sprache,
 } from './helpers'
 
@@ -82,7 +82,25 @@ export function registerAktionen(server: McpServer) {
       produktSlugs,
       code,
     }) => {
+      // Mehr als 100 % Rabatt heißt Geld herausgeben — das ist immer ein Tippfehler
+      if (rabattTyp === 'percent' && rabattWert > 100) {
+        return fehler('Ein Prozent-Rabatt über 100 ergibt keinen Sinn — es wurde nichts angelegt.')
+      }
       const payload = await db()
+      /*
+       * Vertippte Slugs still zu verschlucken hieße: Die Aktion wird als
+       * „aktiv" gemeldet und gilt für nichts. Also abbrechen und sagen, was
+       * fehlt — wie produkt_anlegen und stueckliste_setzen es auch tun.
+       */
+      const kategorien = await resolveIdsStrikt(payload, 'categories', kategorieSlugs)
+      const produkte = await resolveIdsStrikt(payload, 'products', produktSlugs)
+      const fehlend = [...kategorien.fehlend, ...produkte.fehlend]
+      if (fehlend.length) {
+        return fehler(
+          `Nicht gefunden: ${fehlend.join(', ')}. Die Aktion wurde nicht angelegt — ` +
+            'bitte die Slugs prüfen (produkte_liste / kategorien_liste).',
+        )
+      }
       const doc = await payload.create({
         collection: 'promotions',
         locale: 'de',
@@ -94,8 +112,8 @@ export function registerAktionen(server: McpServer) {
           startDate: new Date().toISOString(),
           endDate: new Date(Date.now() + (tageGueltig ?? 30) * 86400_000).toISOString(),
           appliesTo: giltFuer ?? 'all',
-          categories: await resolveIds(payload, 'categories', kategorieSlugs),
-          products: await resolveIds(payload, 'products', produktSlugs),
+          categories: kategorien.ids,
+          products: produkte.ids,
           code: code?.toUpperCase(),
           active: true,
         },
@@ -150,6 +168,23 @@ export function registerAktionen(server: McpServer) {
         .findByID({ collection: 'promotions', id, depth: 0 })
         .catch(() => null)
       if (!vorhanden) return fehler(`Aktion ${id} nicht gefunden`)
+      // Gegen den Typ prüfen, der nach der Änderung gilt — er kann auch vom Bestand kommen
+      const geltenderTyp = rabattTyp ?? vorhanden.discountType
+      if (geltenderTyp === 'percent' && rabattWert !== undefined && rabattWert > 100) {
+        return fehler('Ein Prozent-Rabatt über 100 ergibt keinen Sinn — es wurde nichts geändert.')
+      }
+      if (bis !== undefined && !Number.isFinite(Date.parse(bis))) {
+        return fehler(`„${bis}" ist kein lesbares Datum — bitte als ISO-Datum (2026-09-01) angeben.`)
+      }
+      const kategorien = await resolveIdsStrikt(payload, 'categories', kategorieSlugs)
+      const produkte = await resolveIdsStrikt(payload, 'products', produktSlugs)
+      const fehlend = [...kategorien.fehlend, ...produkte.fehlend]
+      if (fehlend.length) {
+        return fehler(
+          `Nicht gefunden: ${fehlend.join(', ')}. Es wurde nichts geändert — ` +
+            'bitte die Slugs prüfen (produkte_liste / kategorien_liste).',
+        )
+      }
       const endDate =
         bis ??
         (verlaengernUmTage
@@ -166,12 +201,8 @@ export function registerAktionen(server: McpServer) {
           ...(rabattWert !== undefined && { discountValue: rabattWert }),
           ...(endDate !== undefined && { endDate }),
           ...(giltFuer !== undefined && { appliesTo: giltFuer }),
-          ...(kategorieSlugs !== undefined && {
-            categories: await resolveIds(payload, 'categories', kategorieSlugs),
-          }),
-          ...(produktSlugs !== undefined && {
-            products: await resolveIds(payload, 'products', produktSlugs),
-          }),
+          ...(kategorieSlugs !== undefined && { categories: kategorien.ids }),
+          ...(produktSlugs !== undefined && { products: produkte.ids }),
           ...(code !== undefined && { code: code.toUpperCase() }),
           ...(aktiv !== undefined && { active: aktiv }),
         },

@@ -2,6 +2,7 @@ import type { CollectionConfig, Payload, PayloadRequest } from 'payload'
 
 import { office } from '../access'
 import { geplanteStufen } from '../lib/anzahlung'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN } from '../lib/listen'
 import { betraege } from '../lib/betraege'
 import { naechsteRechnungsBasis, naechsteRechnungsnummer, stufenNummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
@@ -226,12 +227,7 @@ export const OutgoingInvoices: CollectionConfig = {
       label: 'Stufe',
       type: 'select',
       defaultValue: 'vollstaendig',
-      options: [
-        { label: 'Vollständige Rechnung', value: 'vollstaendig' },
-        { label: 'Anzahlung', value: 'anzahlung' },
-        { label: 'Zwischenrechnung', value: 'zwischen' },
-        { label: 'Schlussrechnung', value: 'schluss' },
-      ],
+      options: [...RECHNUNG_STUFEN],
       admin: {
         position: 'sidebar',
         description: 'Bei Zahlung in Stufen — sonst bleibt es bei „Vollständige Rechnung".',
@@ -258,12 +254,7 @@ export const OutgoingInvoices: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'entwurf',
-      options: [
-        { label: 'Entwurf', value: 'entwurf' },
-        { label: 'Gestellt', value: 'gestellt' },
-        { label: 'Bezahlt', value: 'bezahlt' },
-        { label: 'Storniert', value: 'storniert' },
-      ],
+      options: [...RECHNUNG_STATUS],
       admin: {
         position: 'sidebar',
         description: 'Ab „Gestellt" bekommt die Rechnung ihre Nummer und ist verbindlich.',

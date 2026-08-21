@@ -69,6 +69,9 @@ services:
       PAYPAL_SANDBOX: ${PAYPAL_SANDBOX:-false}
       # Schlüssel für den MCP-Endpunkt (leer = deaktiviert)
       MCP_API_KEY: ${MCP_API_KEY:-}
+      # Der Nur-Lese-Schlüssel stand in .env.example und README, wurde hier
+      # aber nie durchgereicht — im Container blieb nur der Weg über den Admin
+      MCP_READONLY_API_KEY: ${MCP_READONLY_API_KEY:-}
       # Nur nötig, wenn Wartung und Postfach zusätzlich von außen angestoßen
       # werden sollen (z.B. aus Home Assistant). Den Takt hält der Server
       # selbst; eingestellt wird er im Admin unter Integrationen → Takt.
