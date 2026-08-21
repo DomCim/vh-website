@@ -2250,3 +2250,122 @@ html.tastatur-offen .buero-inhalt {
     transform: rotate(360deg);
   }
 }
+
+/* ── Wischbare Listenzeilen ─────────────────────────────────────────────── */
+/*
+ * Unter der Zeile liegt die Farbfläche mit dem Wort; die Zeile selbst schiebt
+ * sich per transform darüber hinweg. `touch-action: pan-y` überlässt das
+ * Senkrechte dem Browser — gewischt wird nur waagerecht.
+ */
+.buero-wisch {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  border-radius: 12px;
+}
+
+.buero-wisch-inhalt {
+  position: relative;
+  z-index: 1;
+  background: var(--buero-flaeche);
+}
+
+/* Zeilen in der Liste bringen ihren eigenen Rand mit — der bleibt sichtbar */
+.buero-wisch-inhalt > .buero-zeile {
+  width: 100%;
+}
+
+.buero-wisch-flaeche {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--buero-auf-bronze);
+  opacity: 0;
+}
+
+.buero-wisch-flaeche.links {
+  justify-content: flex-start;
+}
+
+.buero-wisch-flaeche.rechts {
+  justify-content: flex-end;
+}
+
+/* Blass, solange die Schwelle nicht erreicht ist — satt, sobald es zählt */
+.buero-wisch-flaeche.rot {
+  background: color-mix(in srgb, var(--buero-rot) 55%, var(--buero-papier));
+}
+
+.buero-wisch-flaeche.rot.bereit {
+  background: var(--buero-rot);
+}
+
+.buero-wisch-flaeche.bronze {
+  background: color-mix(in srgb, var(--buero-bronze) 55%, var(--buero-papier));
+}
+
+.buero-wisch-flaeche.bronze.bereit {
+  background: var(--buero-bronze);
+}
+
+/* ── Handy-Feinschliff für Felder und Knöpfe ────────────────────────────── */
+/*
+ * Datumsfelder: iOS zeichnet sie sonst mit eigener Höhe und mittigem Text —
+ * neben einem normalen Feld sah das aus wie aus einem anderen Formular.
+ */
+.buero-feld input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+}
+
+.buero-feld input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.buero-feld input::placeholder,
+.buero-feld textarea::placeholder {
+  color: var(--buero-tinte-leise);
+  opacity: 0.75;
+}
+
+@media (max-width: 520px) {
+  /*
+   * Knöpfe mitten im Inhalt nehmen am Handy die volle Breite: Ein schmaler
+   * Knopf zwischen Feldern ist ein kleines Ziel für den Daumen und lässt die
+   * Formulare zerrupft aussehen. Ausgenommen die als `schmal` markierten —
+   * die stehen bewusst neben einem Feld („zeigen") — und die Fußleiste, die
+   * ihre Plätze selbst verteilt.
+   */
+  .buero-karte .buero-knopf:not(.schmal),
+  .buero-karte a.buero-knopf:not(.schmal) {
+    width: 100%;
+  }
+
+  .buero-fussleiste .buero-knopf:not(.schmal),
+  .buero-fussleiste a.buero-knopf:not(.schmal) {
+    width: auto;
+  }
+}
+
+/* Das „⋯"-Menü unter einer Mail-Zeile: Verschieben und Markieren ohne Öffnen */
+.buero-mail-mehr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  margin: 0.15rem 0 0.4rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  background: var(--buero-papier);
+}
+
+.buero-mail-mehr .buero-unterzeile {
+  flex-basis: 100%;
+  margin: 0.15rem 0 0;
+}

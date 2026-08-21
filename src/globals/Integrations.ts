@@ -269,9 +269,13 @@ export const Integrations: GlobalConfig = {
           name: 'signature',
           label: 'Signatur',
           type: 'textarea',
+          // Im Büro erscheint das Feld als Schreibfeld mit Gestaltung — die
+          // Signatur darf fett, farbig und mit Link sein, wie die Mails auch.
+          // Gespeichert wird dann HTML; alter Klartext bleibt gültig.
+          custom: { gestaltet: true },
           admin: {
             description:
-              'Wird unter jede Mail gesetzt, die aus dem Büro rausgeht. Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.',
+              'Wird unter jede Mail gesetzt, die aus dem Büro rausgeht — und lässt sich dort gestalten (fett, Farbe, Link). Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.',
           },
         },
         {

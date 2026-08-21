@@ -20,6 +20,8 @@ export type FeldArt =
   | 'haken'
   | 'auswahl'
   | 'absatz'
+  /** Mehrzeilig mit Gestaltung — im Büro als Schreibfeld, gespeichert als HTML */
+  | 'gestaltet'
   | 'gruppe'
   | 'liste'
 
@@ -98,14 +100,25 @@ export function felderLesen(felder: Field[]): FeldBeschreibung[] {
       case 'email':
         ergebnis.push({ ...gemeinsam, art: 'email' })
         break
-      case 'textarea':
+      case 'textarea': {
         /*
          * Auch ein mehrzeiliges Feld kann ein Geheimnis sein — der private
          * DKIM-Schlüssel ist eines. Stünde er hier offen im Blatt, läge er
          * lesbar auf dem Telefon, das in der Werkstatt herumliegt.
+         *
+         * Und eines kann Gestaltung wollen: Die Signatur trägt dafür
+         * `custom.gestaltet` — im Büro wird daraus das Schreibfeld.
          */
-        ergebnis.push({ ...gemeinsam, art: 'absatz', geheim: istGeheim(feld) || undefined })
+        const gestaltet = Boolean(
+          (feld as { custom?: { gestaltet?: boolean } }).custom?.gestaltet,
+        )
+        ergebnis.push({
+          ...gemeinsam,
+          art: gestaltet ? 'gestaltet' : 'absatz',
+          geheim: istGeheim(feld) || undefined,
+        })
         break
+      }
       case 'select':
         ergebnis.push({
           ...gemeinsam,

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
 import { Schreibfeld } from './Schreibfeld'
+import { WischZeile } from './WischZeile'
 
 type Fach = { id: string; label: string; address: string; signatur?: string | null }
 type Ordner = { pfad: string; name: string; ungelesen: number; art: string; trenner: string }
@@ -82,10 +83,18 @@ function Zeichen({ was }: { was: keyof typeof ZEICHEN }) {
   )
 }
 
-/** Zeilen einer Signatur zu Absätzen — sie kommt als Klartext aus den Einstellungen */
+/**
+ * Die Signatur fürs Schreibfeld. Aus den Einstellungen kommt sie inzwischen
+ * gestaltet (HTML aus dem Schreibfeld dort); ältere Einträge sind Klartext
+ * mit Zeilenumbrüchen — beide Fassungen bleiben gültig.
+ */
 function signaturAlsHtml(signatur?: string | null): string {
   const sauber = (signatur ?? '').trim()
   if (!sauber) return ''
+  if (sauber.includes('<')) {
+    // Schon gestaltet — nur die zwei leeren Absätze davor, für den Zeiger
+    return `<p><br></p><p><br></p>${sauber}`
+  }
   const zeilen = sauber
     .split('\n')
     .map((z) =>
@@ -140,6 +149,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [nichtEingerichtet, setNichtEingerichtet] = useState(false)
   /** Offen, während ein neuer Ordner benannt wird — leer heißt: zu */
   const [neuerOrdner, setNeuerOrdner] = useState<string | null>(null)
+  /** Zeile, deren „⋯"-Menü gerade offen ist — zum Verschieben ohne Öffnen */
+  const [mehrOffen, setMehrOffen] = useState<number | null>(null)
 
   const laden = useCallback(
     async (fachId?: string | null, ordnerPfad?: string) => {
@@ -230,8 +241,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     if (was === 'loeschen') {
       setListe((v) => v.filter((n) => n.uid !== uid))
       setOffen(null)
-    } else if (was === 'ungelesen') {
-      setListe((v) => v.map((n) => (n.uid === uid ? { ...n, gelesen: false } : n)))
+    } else if (was === 'ungelesen' || was === 'gelesen') {
+      setListe((v) => v.map((n) => (n.uid === uid ? { ...n, gelesen: was === 'gelesen' } : n)))
       setOffen(null)
     } else if (was === 'markiert' || was === 'unmarkiert') {
       setListe((v) =>
@@ -642,27 +653,122 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
           <div className="buero-leer">{laeuft ? 'Lädt …' : 'Keine Nachrichten.'}</div>
         ) : (
           liste.map((n) => (
-            <button
-              key={n.uid}
-              type="button"
-              className="buero-zeile buero-zeile-knopf"
-              onClick={() => void oeffnen(n.uid)}
-            >
-              <div className="buero-zeile-haupt">
-                <div className="buero-zeile-titel" style={{ fontWeight: n.gelesen ? 400 : 600 }}>
-                  {n.von}
+            <React.Fragment key={n.uid}>
+              {/*
+                * Die Zeile lässt sich wischen wie in jeder Mail-App: links =
+                * Papierkorb, rechts = gelesen/ungelesen umdrehen. Der Rumpf
+                * ist deshalb ein div mit Knopfrolle — in einem echten <button>
+                * dürfte der „⋯"-Knopf daneben nicht wohnen.
+                */}
+              <WischZeile
+                nachLinks={{
+                  text: 'Löschen',
+                  art: 'rot',
+                  tun: () => void aktion(n.uid, 'loeschen'),
+                }}
+                nachRechts={{
+                  text: n.gelesen ? 'Ungelesen' : 'Gelesen',
+                  art: 'bronze',
+                  tun: () => void aktion(n.uid, n.gelesen ? 'ungelesen' : 'gelesen'),
+                }}
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="buero-zeile buero-zeile-knopf"
+                  onClick={() => void oeffnen(n.uid)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      void oeffnen(n.uid)
+                    }
+                  }}
+                >
+                  <div className="buero-zeile-haupt">
+                    <div
+                      className="buero-zeile-titel"
+                      style={{ fontWeight: n.gelesen ? 400 : 600 }}
+                    >
+                      {n.von}
+                    </div>
+                    <div className="buero-zeile-neben">
+                      {n.betreff}
+                      {n.anhaenge ? ' · Anhang' : ''}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                    {n.markiert && <span className="buero-marker offen">markiert</span>}
+                    {!n.gelesen && <span className="buero-marker gut">neu</span>}
+                    <span className="buero-zeile-neben">{zeit(n.datum)}</span>
+                    <button
+                      type="button"
+                      className="buero-knopf leise schmal"
+                      aria-label="Mehr zu dieser Nachricht"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setMehrOffen((v) => (v === n.uid ? null : n.uid))
+                      }}
+                    >
+                      ⋯
+                    </button>
+                  </div>
                 </div>
-                <div className="buero-zeile-neben">
-                  {n.betreff}
-                  {n.anhaenge ? ' · Anhang' : ''}
+              </WischZeile>
+              {mehrOffen === n.uid && (
+                <div className="buero-mail-mehr">
+                  <button
+                    type="button"
+                    className="buero-knopf leise schmal"
+                    onClick={() => {
+                      setMehrOffen(null)
+                      void aktion(n.uid, n.gelesen ? 'ungelesen' : 'gelesen')
+                    }}
+                  >
+                    Als {n.gelesen ? 'ungelesen' : 'gelesen'} markieren
+                  </button>
+                  <button
+                    type="button"
+                    className="buero-knopf leise schmal"
+                    onClick={() => {
+                      setMehrOffen(null)
+                      void aktion(n.uid, n.markiert ? 'unmarkiert' : 'markiert')
+                    }}
+                  >
+                    {n.markiert ? 'Markierung entfernen' : 'Markieren'}
+                  </button>
+                  <button
+                    type="button"
+                    className="buero-knopf leise schmal"
+                    onClick={() => {
+                      setMehrOffen(null)
+                      void aktion(n.uid, 'loeschen')
+                    }}
+                  >
+                    Löschen
+                  </button>
+                  {ordnerAlle.filter((o) => o.pfad !== ordner).length > 0 && (
+                    <>
+                      <span className="buero-unterzeile">Verschieben nach:</span>
+                      {ordnerAlle
+                        .filter((o) => o.pfad !== ordner)
+                        .map((o) => (
+                          <button
+                            key={o.pfad}
+                            type="button"
+                            className="buero-knopf leise schmal"
+                            onClick={() => {
+                              setMehrOffen(null)
+                              void verschieben(n.uid, o.pfad)
+                            }}
+                          >
+                            {ordnerName(o)}
+                          </button>
+                        ))}
+                    </>
+                  )}
                 </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                {n.markiert && <span className="buero-marker offen">markiert</span>}
-                {!n.gelesen && <span className="buero-marker gut">neu</span>}
-                <span className="buero-zeile-neben">{zeit(n.datum)}</span>
-              </div>
-            </button>
+              )}
+            </React.Fragment>
           ))
         )}
       </div>
