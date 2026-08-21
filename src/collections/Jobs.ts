@@ -523,6 +523,22 @@ export const Jobs: CollectionConfig = {
        * Zugleich ist es das, was das Büro anzeigt: „am 21.08. benachrichtigt"
        * statt einer Lücke, die aussieht wie „ist informiert".
        */
+      /*
+       * Die Abnahme mit Unterschrift auf dem Telefon. Gesetzt wird das nur
+       * von der Abnahme-Route — zusammen mit dem Protokoll-PDF, das bei den
+       * Vorgangsdateien liegt. Ab diesem Zeitpunkt läuft die Gewährleistung.
+       */
+      name: 'abnahme',
+      label: 'Abnahme',
+      type: 'group',
+      admin: { readOnly: true },
+      fields: [
+        { name: 'am', label: 'Abgenommen am', type: 'date' },
+        { name: 'name', label: 'Abgenommen von', type: 'text' },
+        { name: 'ort', label: 'Ort', type: 'text' },
+      ],
+    },
+    {
       name: 'gemeldet',
       label: 'Benachrichtigt am',
       type: 'group',

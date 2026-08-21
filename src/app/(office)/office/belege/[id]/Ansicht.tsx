@@ -62,6 +62,7 @@ export function BelegAnsicht() {
           grossAmount: beleg.grossAmount as number,
           category: beleg.category as string,
           paymentMethod: beleg.paymentMethod as string,
+          turnus: (beleg.turnus as string) ?? 'nein',
           paid: (beleg.paid as boolean) ?? true,
           deductible: (beleg.deductible as boolean) ?? true,
           notes: beleg.notes as string,

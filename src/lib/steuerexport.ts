@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 import { AUSGABEN_KATEGORIEN } from '../collections/Expenses'
-import { jahresZeitraum } from './office'
+import { jahresZeitraum, monatsZeitraum } from './office'
 
 /**
  * Zusammenstellung für den Steuerberater.
@@ -44,8 +44,13 @@ export type Steuerbericht = {
 const runden = (n: number) => Math.round(n * 100) / 100
 const KATEGORIE_TEXT = Object.fromEntries(AUSGABEN_KATEGORIEN.map((k) => [k.value, k.label]))
 
-export async function steuerbericht(payload: Payload, jahr: number): Promise<Steuerbericht> {
-  const { von, bis } = jahresZeitraum(jahr)
+export async function steuerbericht(
+  payload: Payload,
+  jahr: number,
+  /** 1–12: nur diesen Monat — fürs Monatspaket an den Steuerberater */
+  monat?: number,
+): Promise<Steuerbericht> {
+  const { von, bis } = monat ? monatsZeitraum(jahr, monat) : jahresZeitraum(jahr)
 
   const [bestellungen, rechnungen, ausgaben, inventuren, settings] = await Promise.all([
     payload.find({

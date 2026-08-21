@@ -48,6 +48,7 @@ import * as migration_20260820_154207_statistik from './20260820_154207_statisti
 import * as migration_20260820_222645_arbeitsplan from './20260820_222645_arbeitsplan';
 import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_auftragsmeldungen';
 import * as migration_20260821_065058_meldungen from './20260821_065058_meldungen';
+import * as migration_20260821_213813_abnahme_bausteine_belege from './20260821_213813_abnahme_bausteine_belege';
 
 export const migrations = [
   {
@@ -298,6 +299,11 @@ export const migrations = [
   {
     up: migration_20260821_065058_meldungen.up,
     down: migration_20260821_065058_meldungen.down,
-    name: '20260821_065058_meldungen'
+    name: '20260821_065058_meldungen',
+  },
+  {
+    up: migration_20260821_213813_abnahme_bausteine_belege.up,
+    down: migration_20260821_213813_abnahme_bausteine_belege.down,
+    name: '20260821_213813_abnahme_bausteine_belege'
   },
 ];

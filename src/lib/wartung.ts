@@ -97,6 +97,95 @@ export async function belegErinnerungen(payload: Payload): Promise<number> {
   return gemeldet
 }
 
+/** Ein Datum um Kalendermonate weiterschieben; der 31. wird zum Monatsletzten. */
+function monateSpaeter(datum: Date, monate: number): Date {
+  const ziel = new Date(datum)
+  const tag = ziel.getDate()
+  ziel.setDate(1)
+  ziel.setMonth(ziel.getMonth() + monate)
+  const letzter = new Date(ziel.getFullYear(), ziel.getMonth() + 1, 0).getDate()
+  ziel.setDate(Math.min(tag, letzter))
+  return ziel
+}
+
+const TURNUS_MONATE = { monatlich: 1, vierteljaehrlich: 3, jaehrlich: 12 } as const
+const TURNUS_WORT = {
+  monatlich: 'monatlich',
+  vierteljaehrlich: 'vierteljährlich',
+  jaehrlich: 'jährlich',
+} as const
+
+/**
+ * Wiederkehrende Belege: Miete, Internet, Versicherung.
+ *
+ * Der Turnus sitzt immer nur am jüngsten Glied der Kette. Ist sein Termin
+ * erreicht, entsteht der Folgebeleg mit denselben Angaben (unbezahlt, ohne
+ * Scan und ohne Rechnungsnummer — beides gehört zur neuen Periode), der
+ * Turnus wandert mit, und das alte Glied wird einmalig. War das System
+ * länger aus, holt jeder Lauf genau eine Periode nach — nach ein paar
+ * Läufen stimmt die Kette wieder, ohne dass ein Schwung auf einmal entsteht.
+ */
+export async function wiederkehrendeBelege(payload: Payload): Promise<number> {
+  const { docs } = await payload.find({
+    collection: 'expenses',
+    where: { turnus: { in: ['monatlich', 'vierteljaehrlich', 'jaehrlich'] } },
+    limit: 100,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  let angelegt = 0
+  for (const alt of docs) {
+    const turnus = alt.turnus as keyof typeof TURNUS_MONATE
+    if (!alt.invoiceDate || !(turnus in TURNUS_MONATE)) continue
+    const naechster = monateSpaeter(new Date(alt.invoiceDate), TURNUS_MONATE[turnus])
+    if (naechster.getTime() > Date.now()) continue
+
+    const neu = await payload.create({
+      collection: 'expenses',
+      overrideAccess: true,
+      data: {
+        title: alt.title,
+        supplierName: alt.supplierName,
+        ...(alt.supplier ? { supplier: alt.supplier } : {}),
+        invoiceDate: naechster.toISOString(),
+        ...(alt.dueDate
+          ? { dueDate: monateSpaeter(new Date(alt.dueDate), TURNUS_MONATE[turnus]).toISOString() }
+          : {}),
+        netAmount: alt.netAmount,
+        vatRate: alt.vatRate,
+        vatAmount: alt.vatAmount,
+        grossAmount: alt.grossAmount,
+        category: alt.category,
+        paymentMethod: alt.paymentMethod,
+        paid: false,
+        deductible: alt.deductible,
+        notes: alt.notes,
+        turnus,
+      },
+    })
+    await payload.update({
+      collection: 'expenses',
+      id: alt.id,
+      overrideAccess: true,
+      data: { turnus: 'nein' },
+    })
+
+    const betrag = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
+      alt.grossAmount ?? 0,
+    )
+    await benachrichtige(payload, {
+      titel: `Neuer Beleg: ${alt.supplierName || alt.title || 'Wiederkehrend'}`,
+      text: `${betrag} — ${TURNUS_WORT[turnus]}. Bitte prüfen und den Beleg-Scan nachreichen.`,
+      url: `/office/belege/${neu.id}`,
+      tag: `beleg-${neu.id}`,
+    })
+    angelegt += 1
+  }
+
+  return angelegt
+}
+
 /**
  * Aufräumen. Kurzlebige Daten sollen nicht ewig liegen bleiben — die
  * Anmeldecodes des Kundenportals sind nach zehn Minuten wertlos, das
@@ -609,6 +698,7 @@ export type WartungsBericht = {
   bestand: number
   wiedervorlagen: number
   kundenstimmen: number
+  wiederkehrend: number
   aufgeraeumt: Record<string, number>
   stillstand: string[]
 }
@@ -623,6 +713,7 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     bestand: 0,
     wiedervorlagen: 0,
     kundenstimmen: 0,
+    wiederkehrend: 0,
     aufgeraeumt: {},
     stillstand: [],
   }
@@ -637,6 +728,12 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     bericht.belege = await belegErinnerungen(payload)
   } catch (err) {
     payload.logger.error({ err }, 'Wartung: Beleg-Erinnerungen fehlgeschlagen')
+  }
+
+  try {
+    bericht.wiederkehrend = await wiederkehrendeBelege(payload)
+  } catch (err) {
+    payload.logger.error({ err }, 'Wartung: wiederkehrende Belege fehlgeschlagen')
   }
 
   try {

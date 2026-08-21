@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { Monatspaket } from '../../../../components/office/Monatspaket'
 import { payloadClient } from '../../../../lib/data'
 import { bueroBenutzer, datum, euro } from '../../../../lib/office'
+import { getIntegrations } from '../../../../lib/settings'
 import { steuerbericht } from '../../../../lib/steuerexport'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +19,7 @@ export default async function SteuerSeite({
   const jahr = Number(gewaehlt) || new Date().getFullYear()
   const payload = await payloadClient()
   const b = await steuerbericht(payload, jahr)
+  const { email } = await getIntegrations(payload)
 
   const jahre = Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - i)
 
@@ -99,6 +102,9 @@ export default async function SteuerSeite({
           ))
         )}
       </div>
+
+      <h2>Monatspaket für den Steuerberater</h2>
+      <Monatspaket kanzlei={email.steuerberaterEmail ?? null} />
 
       <h2>Herunterladen</h2>
       <div className="buero-karte">

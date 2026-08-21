@@ -39,6 +39,15 @@ export type LieferscheinDaten = {
    */
   beistellung?: { bezeichnung: string; menge: number; einheit?: string | null }[]
   hinweis?: string | null
+  /**
+   * Die geleistete Unterschrift — dann wird aus dem Blatt das Abnahmeprotokoll.
+   *
+   * Der Kunde unterschreibt auf dem Telefon, das Bild kommt hier als PNG an
+   * und steht über der rechten Linie, wo sonst von Hand unterschrieben würde.
+   * Ab diesem Blatt läuft die Gewährleistung — deshalb stehen Name, Ort und
+   * Zeitpunkt ausgeschrieben darunter.
+   */
+  abnahme?: { bild: Buffer; name?: string | null; ort?: string | null; datum: Date }
 }
 
 const tag = (v?: string | null) =>
@@ -64,7 +73,7 @@ export async function lieferscheinPdf(
   for (const zeile of daten.empfaenger.anschrift ?? []) if (zeile) doc.text(zeile)
 
   doc.moveDown(2)
-  doc.fontSize(14).text('Lieferschein', LINKS, doc.y)
+  doc.fontSize(14).text(daten.abnahme ? 'Abnahmeprotokoll' : 'Lieferschein', LINKS, doc.y)
   cortenStrich()
   doc.fontSize(10)
   doc.text(`Lieferscheinnummer: ${daten.nummer}`)
@@ -139,7 +148,9 @@ export async function lieferscheinPdf(
   doc.moveDown(1)
   doc.fontSize(9).fillColor('#444')
   doc.text(
-    'Bitte prüfen Sie die Lieferung auf sichtbare Schäden und bestätigen Sie den Empfang mit Ihrer Unterschrift.',
+    daten.abnahme
+      ? 'Die Lieferung bzw. Leistung wurde geprüft und wie beschrieben übernommen.'
+      : 'Bitte prüfen Sie die Lieferung auf sichtbare Schäden und bestätigen Sie den Empfang mit Ihrer Unterschrift.',
     LINKS,
     doc.y,
     { width: RECHTS - LINKS },
@@ -148,16 +159,44 @@ export async function lieferscheinPdf(
 
   // ── Unterschriften ────────────────────────────────────────────────────────
   doc.moveDown(4)
+  // Der Block bleibt beisammen: Eine Unterschrift, deren Linie auf der
+  // nächsten Seite steht, wäre kein Protokoll, sondern ein Rätsel.
+  if (doc.y > 660) doc.addPage()
   const y = doc.y
   const breite = 210
+
+  if (daten.abnahme) {
+    try {
+      // Die Unterschrift sitzt über der rechten Linie — wie auf Papier
+      doc.image(daten.abnahme.bild, RECHTS - breite, y - 52, { fit: [breite, 50] })
+    } catch (err) {
+      console.warn('Unterschrift nicht eingebettet:', err)
+    }
+  }
+
   doc.moveTo(LINKS, y).lineTo(LINKS + breite, y).strokeColor('#999').stroke()
   doc.moveTo(RECHTS - breite, y).lineTo(RECHTS, y).strokeColor('#999').stroke()
   doc.fontSize(8).fillColor('#666')
   doc.text('Übergeben (Werkstatt)', LINKS, y + 4, { width: breite })
-  doc.text('Empfangen (Datum, Unterschrift)', RECHTS - breite, y + 4, {
-    width: breite,
-    align: 'right',
-  })
+  if (daten.abnahme) {
+    const wann = daten.abnahme.datum.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    const wer = [daten.abnahme.name, daten.abnahme.ort].filter(Boolean).join(', ')
+    doc.text(`Abgenommen${wer ? `: ${wer}` : ''} — ${wann} Uhr`, RECHTS - breite, y + 4, {
+      width: breite,
+      align: 'right',
+    })
+  } else {
+    doc.text('Empfangen (Datum, Unterschrift)', RECHTS - breite, y + 4, {
+      width: breite,
+      align: 'right',
+    })
+  }
   doc.fillColor('#000')
 
   fussZeichnen()
