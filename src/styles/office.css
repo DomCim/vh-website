@@ -190,6 +190,176 @@
   line-height: 1.35;
 }
 
+/* ── Glocke und Zähler ─────────────────────────────────────────────────────
+   Die Glocke steht neben dem Abgleichpunkt und ist genauso gebaut: 44 Pixel
+   zum Antippen, ein Blatt darunter, das sich erklärt. Der Punkt sagt, ob der
+   Stand stimmt; die Glocke sagt, dass etwas etwas will. */
+.buero-glocke-huelle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* Neben dem Seitennamen am Handy darf sie nicht mitschrumpfen */
+  flex: 0 0 auto;
+}
+
+.buero-glocke {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--buero-tinte-leise);
+}
+
+/* Liegt etwas an, wird die Glocke selbst kräftiger — die Zahl allein ist bei
+   Sonne aufs Display schnell übersehen. */
+.buero-glocke.hat-neue {
+  color: var(--buero-tinte);
+}
+
+.buero-glocke svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.buero-glocke-blatt {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 21;
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten, 0 6px 22px rgb(0 0 0 / 14%));
+}
+
+.buero-glocke-leer {
+  margin: 0;
+  padding: 1.1rem 0.9rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.buero-glocke-liste a {
+  display: block;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--buero-linie);
+  border-left: 2px solid transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Ungelesenes trägt den bronzenen Strich — dieselbe Farbe, die im Büro überall
+   „hier ist etwas zu tun" heißt. */
+.buero-glocke-liste a.ist-neu {
+  border-left-color: var(--buero-bronze);
+}
+
+.buero-glocke-liste a:hover {
+  background: var(--buero-papier);
+}
+
+.buero-glocke-liste strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.buero-glocke-liste span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.buero-glocke-liste time {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.72rem;
+}
+
+.buero-glocke-fuss {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.82rem;
+}
+
+/* ── Der Zähler ────────────────────────────────────────────────────────────
+   Bronze, weil das hier „da ist etwas zu tun" heißt — dieselbe Farbe wie der
+   wartende Abgleichpunkt. Rot wäre eine Störung, und ein Rechnungsentwurf,
+   der auf seine Prüfung wartet, ist keine.
+
+   Der Ring in Flächenfarbe trennt die Zahl vom Zeichen darunter. Er ist als
+   Wert gesetzt und nicht als Weiß: Kopfleiste und Tableiste stehen beide auf
+   `--buero-flaeche`, und die kippt im dunklen Modus mit. */
+.buero-zaehler {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.35rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--buero-flaeche);
+  pointer-events: none;
+}
+
+/* In einer Zeile mit Text steht die Zahl am rechten Ende statt in der Ecke */
+.buero-zaehler.inline {
+  position: static;
+  margin-left: auto;
+  box-shadow: none;
+}
+
+/* Steht der Punkt selbst schon auf gefülltem Grund („hier bist du"), kehrt
+   sich der Zähler um — sonst verschwände Bronze auf Bronze. */
+.buero-nav-gruppe > button[aria-current='page'] .buero-zaehler,
+.buero-blatt-punkte a[aria-current='page'] .buero-zaehler {
+  background: var(--buero-auf-bronze, #fff);
+  color: var(--buero-tinte);
+}
+
+/* Nur für Vorleseprogramme: Die Zahl allein sagt nicht, wovon */
+.buero-nur-vorlesen {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .nur-schmal {
   display: none;
 }
@@ -440,6 +610,8 @@
 }
 
 .buero-tab {
+  /* Anker für den Zähler in der Ecke — ohne das säße er am Rand des Fensters */
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;

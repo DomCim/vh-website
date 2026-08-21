@@ -119,6 +119,19 @@ function melden(bereich: Bereich) {
 
 // ── Laden aus dem Gerät ─────────────────────────────────────────────────────
 
+/** Nummer der einmaligen Heilung — wird sie erhöht, läuft sie erneut. */
+const HEILUNG = 1
+
+/** Um so viel werden die Stände bei der Heilung zurückgedreht. */
+const HEILUNG_TAGE = 7
+
+function zurueckgedreht(stand: string | undefined): string | undefined {
+  if (!stand) return stand
+  const zeit = new Date(stand).getTime()
+  if (!Number.isFinite(zeit)) return stand
+  return new Date(zeit - HEILUNG_TAGE * 24 * 3600 * 1000).toISOString()
+}
+
 let ladeVorgang: Promise<void> | null = null
 
 /** Holt den gespeicherten Bestand ins Gedächtnis. Läuft genau einmal. */
@@ -130,13 +143,34 @@ export function bestandLaden(): Promise<void> {
   }
 
   ladeVorgang = (async () => {
+    /*
+     * Einmalig: die gespeicherten Stände ein Stück zurückdrehen.
+     *
+     * Bis vor kurzem konnte ein Abgleich, der genau in eine offene Transaktion
+     * hineinfragte, einen Stand merken, der jünger war als ein gerade
+     * entstandener Datensatz. Der kam danach nie wieder mit — in genau einem
+     * bekannten Fall ein fertiger Rechnungsentwurf. Der Fehler ist behoben
+     * (siehe `neuerStand` in lib/bereiche.ts), aber die krummen Stände liegen
+     * noch in den Geräten.
+     *
+     * Eine Woche zurück holt sie zurück und liegt deutlich unter der Frist für
+     * Grabsteine — es kostet also einen etwas größeren Abgleich, einmal, und
+     * keinen Neuaufbau.
+     */
+    const heilung = await merkenLesen<number>('heilung').catch(() => undefined)
+    const heilen = heilung !== HEILUNG
+
     await Promise.all(
       ALLE_BEREICHE.map(async (bereich) => {
         try {
-          const [datensaetze, stand] = await Promise.all([
+          const [datensaetze, gemerkterStand] = await Promise.all([
             alleLesen<Datensatz>(bereich),
             merkenLesen<string>(`stand:${bereich}`),
           ])
+          const stand = heilen ? zurueckgedreht(gemerkterStand) : gemerkterStand
+          if (heilen && stand && stand !== gemerkterStand) {
+            await merkenSchreiben(`stand:${bereich}`, stand).catch(() => undefined)
+          }
           bestand.set(bereich, datensaetze)
           staende.set(bereich, stand ?? null)
           geladen.add(bereich)
@@ -167,6 +201,7 @@ export function bestandLaden(): Promise<void> {
     } catch {
       // Ohne Rahmen läuft das Büro auch, nur vorsichtiger
     }
+    if (heilen) await merkenSchreiben('heilung', HEILUNG).catch(() => undefined)
     zustandSetzen({ bereit: true })
   })()
 
@@ -326,6 +361,31 @@ export function bestandFreigeben(): void {
   speicherFreigeben()
   ladeVorgang = null
   geladen.clear()
+}
+
+/**
+ * Den ganzen Bestand noch einmal holen — die Notbremse.
+ *
+ * Gedacht für den Fall, dass im Gerät etwas fehlt, von dem man weiß, dass es
+ * da sein müsste. Anders als `bestandVergessen` bleibt das Gerüst im Service
+ * Worker liegen: Es geht hier um die Daten, nicht ums Abmelden — das Büro soll
+ * hinterher auch ohne Netz noch aufgehen.
+ */
+export async function bestandNeuHolen(): Promise<void> {
+  for (const bereich of ALLE_BEREICHE) {
+    // Auch im Gedächtnis leeren: Sonst bliebe stehen, was in der Zwischenzeit
+    // gelöscht wurde — der Abgleich von vorn liefert nur, was es noch gibt.
+    bestand.set(bereich, [])
+    staende.set(bereich, null)
+    try {
+      await leeren(bereich)
+      await merkenSchreiben(`stand:${bereich}`, null)
+    } catch {
+      // Was sich nicht leeren lässt, wird beim Abgleich überschrieben
+    }
+    melden(bereich)
+  }
+  await abgleichen()
 }
 
 /** Beim Abmelden: nichts von den Geschäftsdaten bleibt im Gerät zurück. */

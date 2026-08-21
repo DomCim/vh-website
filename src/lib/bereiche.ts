@@ -20,6 +20,7 @@ export const BEREICHE = {
   kontobewegungen: 'bank-transactions',
   kundenstimmen: 'testimonials',
   medien: 'media',
+  meldungen: 'notifications',
   newsletter: 'newsletter-subscribers',
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',
@@ -51,4 +52,36 @@ export const GRABSTEIN_TAGE = 60
 
 export function istBereich(wert: string): wert is Bereich {
   return Object.prototype.hasOwnProperty.call(BEREICHE, wert)
+}
+
+/**
+ * Sicherheitsabstand auf den neuen Stand des Abgleichs.
+ *
+ * Ein Datensatz wird geschrieben, gemeldet — und erst danach festgeschrieben.
+ * Fragt das Gerät genau in diesem Fenster, bekommt es die Zeile nicht, wohl
+ * aber einen Stand, der jünger ist als ihr `updatedAt`. Danach trifft
+ * `updatedAt > stand` nie mehr: Der Datensatz ist für dieses Gerät für immer
+ * unsichtbar — genau so verschwand ein fertiger Rechnungsentwurf, während die
+ * Meldung dazu längst auf dem Handy lag.
+ *
+ * Eine Minute zurück kostet ein paar doppelt gelieferte Zeilen. Das Gerät legt
+ * sie nach Kennung ab, doppelt ist also folgenlos; verloren ist es nicht.
+ */
+export const UEBERLAPPUNG_MS = 60_000
+
+/**
+ * Der Stand, den das Gerät sich merken soll.
+ *
+ * Bei einem vollen Paket zählt weiter der letzte gelieferte Datensatz: Der ist
+ * festgeschrieben, sein Zeitpunkt ist exakt — und ein Abzug brächte das
+ * Nachfassen in eine Schleife, sobald mehr als ein Paket in dasselbe Fenster
+ * fällt.
+ */
+export function neuerStand(
+  jetzt: string,
+  letzter: string | undefined | null,
+  mehr: boolean,
+): string {
+  if (mehr && letzter) return letzter
+  return new Date(new Date(jetzt).getTime() - UEBERLAPPUNG_MS).toISOString()
 }

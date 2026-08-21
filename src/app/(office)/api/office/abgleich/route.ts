@@ -6,6 +6,7 @@ import {
   type Bereich,
   GRABSTEIN_TAGE,
   istBereich,
+  neuerStand,
 } from '../../../../../lib/bereiche'
 import { payloadClient } from '../../../../../lib/data'
 import { firmenAngaben, getIntegrations } from '../../../../../lib/settings'
@@ -182,10 +183,18 @@ export async function POST(req: Request) {
     }
 
     const mehr = totalDocs > docs.length
-    // Bei einem vollen Paket zählt der letzte gelieferte Datensatz als neuer
-    // Stand — sonst überspränge die nächste Frage alles, was nicht mitkam.
+    /*
+     * Der neue Stand liegt bewusst eine Minute zurück (siehe `neuerStand`).
+     *
+     * Hier stand vorher schlicht `jetzt` — und damit ein Zeitpunkt, der jünger
+     * sein konnte als eine Zeile, die im selben Augenblick noch in einer
+     * offenen Transaktion steckte. Diese Zeile kam dann nie wieder mit.
+     *
+     * Bei einem vollen Paket zählt weiter der letzte gelieferte Datensatz —
+     * sonst überspränge die nächste Frage alles, was nicht mitkam.
+     */
     const letzter = docs[docs.length - 1] as { updatedAt?: string } | undefined
-    const stand = mehr && letzter?.updatedAt ? letzter.updatedAt : jetzt
+    const stand = neuerStand(jetzt, letzter?.updatedAt, mehr)
 
     antwort[bereich] = {
       geaendert: docs as unknown as Record<string, unknown>[],

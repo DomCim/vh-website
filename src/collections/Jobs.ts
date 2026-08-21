@@ -41,10 +41,30 @@ export const Jobs: CollectionConfig = {
   hooks: {
     afterDelete: liveHooks('auftraege').afterDelete,
     beforeChange: [
-      async ({ data, req, operation }) => {
+      async ({ data, originalDoc, req, operation }) => {
         if (operation === 'create' && !data.jobNumber) {
           data.jobNumber = await naechsteAuftragsnummer(req.payload)
         }
+
+        /*
+         * Das Kennzeichen der Materialbuchung wird hier gesetzt, nicht danach.
+         *
+         * Abgebucht wird gleich im `afterChange`; das Kennzeichen dazu stand
+         * bis vor kurzem in einem zweiten `payload.update` **nach** der
+         * Schleife — ein ungesicherter Schreibvorgang mitten in der
+         * Transaktion, die den Auftrag schreibt. Scheiterte er, rollte alles
+         * zurück: der Auftragsstatus, die Abbuchungen und der Rechnungs-
+         * entwurf, der in derselben Transaktion entstanden war. Die Meldung
+         * aufs Handy war da längst draußen.
+         *
+         * In derselben Zeile mitgeschrieben kann das nicht passieren, und
+         * eine doppelte Abbuchung ist damit auch ausgeschlossen: Kennzeichen
+         * und Statuswechsel sind entweder beide da oder beide nicht.
+         */
+        if (data.status === 'fertig' && !originalDoc?.materialGebucht) {
+          data.materialGebucht = true
+        }
+
         return data
       },
     ],
@@ -156,8 +176,10 @@ export const Jobs: CollectionConfig = {
          * der ersten, die erste wartet auf diesen Hook. Damit blieb jedes
          * Fertigmelden hängen, bis irgendwann eine Zeitüberschreitung kam.
          */
+        // Gefragt wird der Stand **vor** dem Speichern: Das Kennzeichen steht
+        // seit dem `beforeChange` schon in `doc`.
         const fertigJetzt = doc.status === 'fertig' && previousDoc?.status !== 'fertig'
-        if (fertigJetzt && !doc.materialGebucht) {
+        if (fertigJetzt && !previousDoc?.materialGebucht) {
           for (const zeile of doc.material ?? []) {
             const id = typeof zeile.item === 'object' ? zeile.item?.id : zeile.item
             if (!id || !zeile.quantity) continue
@@ -202,14 +224,6 @@ export const Jobs: CollectionConfig = {
               req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Material ${id} nicht abgebucht`)
             }
           }
-          await req.payload.update({
-            collection: 'jobs',
-            id: doc.id,
-            overrideAccess: true,
-            req,
-            data: { materialGebucht: true },
-            context: { skipHooks: true },
-          })
         }
 
         return doc

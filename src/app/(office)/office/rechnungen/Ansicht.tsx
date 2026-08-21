@@ -28,6 +28,7 @@ type Rechnung = {
   total?: number | null
   reminders?: unknown[] | null
   stufe?: string | null
+  createdAt?: string | null
 }
 
 const STUFE: Record<string, string> = {
@@ -44,8 +45,20 @@ export function RechnungenAnsicht() {
   const filter = suche.get('filter') ?? undefined
   const alle = useBestand<Rechnung>('rechnungen')
 
+  /*
+   * Sortiert nach Rechnungsdatum — und Entwürfe zählen nach ihrem Anlegedatum.
+   *
+   * Ein Entwurf hat noch kein Rechnungsdatum; er hat ja auch noch keine
+   * Nummer. Verglichen wurde bisher trotzdem nur `issueDate`, und ein leerer
+   * Wert sortiert hinter jeden ausgefüllten: Der frisch vorbereitete Entwurf
+   * landete unter allen Rechnungen des Jahres. Ausgerechnet das eine Blatt,
+   * das noch Arbeit ist, stand am weitesten unten.
+   */
   const sortiert = useMemo(
-    () => [...alle].sort((a, b) => (b.issueDate ?? '').localeCompare(a.issueDate ?? '')),
+    () =>
+      [...alle].sort((a, b) =>
+        (b.issueDate ?? b.createdAt ?? '').localeCompare(a.issueDate ?? a.createdAt ?? ''),
+      ),
     [alle],
   )
 
@@ -147,9 +160,20 @@ export function RechnungenAnsicht() {
                   className="buero-zeile-haupt"
                   style={{ color: 'inherit', textDecoration: 'none' }}
                 >
+                  {/*
+                    * Beim Entwurf steht die Stufe vorn, wo sonst die Nummer steht.
+                    *
+                    * „Entwurf" sagt der Marker rechts ohnehin; vorn war es
+                    * doppelt gemoppelt — und am Handy wurde die Stufe, die
+                    * dahinter als Marker stand, mit dem Kundennamen zusammen
+                    * abgeschnitten. Dann hieß jede Zeile „Entwurf · Famili…",
+                    * und welche der drei Rechnungen zum Auftrag das ist,
+                    * erfuhr man erst beim Aufmachen.
+                    */}
                   <div className="buero-zeile-titel">
-                    {r.invoiceNumber ?? 'Entwurf'} · {r.customerName ?? 'ohne Kunde'}
-                    {r.stufe && STUFE[r.stufe] && (
+                    {r.invoiceNumber ?? (r.stufe && STUFE[r.stufe]) ?? 'Entwurf'} ·{' '}
+                    {r.customerName ?? 'ohne Kunde'}
+                    {r.invoiceNumber && r.stufe && STUFE[r.stufe] && (
                       <span className="buero-marker" style={{ marginLeft: '.5rem' }}>
                         {STUFE[r.stufe]}
                       </span>

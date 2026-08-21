@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRahmen } from '../../lib/buero/bestand'
+import { useZuErledigen } from '../../lib/buero/zuErledigen'
 import { Abmelden } from './Abmelden'
 
 /**
@@ -89,6 +90,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/sicherung', label: 'Sicherung', recht: 'sicherung.ausloesen' },
       // Einstellungen und Neuerungen stehen jedem offen: Dort liegen das eigene
       // Konto, die Meldungen dieses Geräts und der Änderungsverlauf.
+      { href: '/office/meldungen', label: 'Meldungen' },
       { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
       { href: '/admin', label: 'Website-Verwaltung', recht: 'website.pflegen' },
@@ -309,6 +311,13 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8" />
     </>
   ),
+  /* Meldungen: dieselbe Glocke wie oben in der Kopfleiste */
+  '/office/meldungen': (
+    <>
+      <path d="M18 9.5a6 6 0 0 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5z" />
+      <path d="M13.7 19.5a2 2 0 0 1-3.4 0" />
+    </>
+  ),
   '/office/einstellungen': (
     <>
       <path d="M4 7.5h9M17.5 7.5H20M4 16.5h4.5M13 16.5H20" />
@@ -349,6 +358,29 @@ function PunktZeichen({ href }: { href: string }) {
   )
 }
 
+/**
+ * Der Zähler an einem Punkt der Navigation.
+ *
+ * Zeigt, was dort zu erledigen ist — neue Anfragen, ein Rechnungsentwurf, ein
+ * Beleg, der fällig wird. Ausdrücklich **nicht** „ungelesene Meldungen": Ein
+ * Punkt, der durchs Hinsehen verschwindet, sagt nichts über die Arbeit; dieser
+ * geht erst weg, wenn die Arbeit weg ist.
+ *
+ * Die Zahl steht sichtbar da, für Vorleseprogramme kommt der Satz dazu — ein
+ * `aria-label` wäre hier falsch, es ersetzte die Beschriftung des Knopfes.
+ */
+function Zaehler({ anzahl, inline }: { anzahl: number; inline?: boolean }) {
+  if (!anzahl) return null
+  return (
+    <>
+      <span className={inline ? 'buero-zaehler inline' : 'buero-zaehler'} aria-hidden="true">
+        {anzahl > 99 ? '99+' : anzahl}
+      </span>
+      <span className="buero-nur-vorlesen">{anzahl} zu erledigen</span>
+    </>
+  )
+}
+
 const istAktiv = (pfad: string | null, href: string) =>
   href === '/office' ? pfad === '/office' : Boolean(pfad?.startsWith(href))
 
@@ -360,6 +392,11 @@ export function BueroNavigation() {
   const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
   const leiste = useRef<HTMLElement>(null)
   const rahmen = useRahmen()
+  const zuErledigen = useZuErledigen()
+
+  /** Was in einer Gruppe zusammenkommt — die Summe ihrer Punkte. */
+  const gruppenSumme = (punkte: Punkt[]) =>
+    punkte.reduce((summe, p) => summe + (zuErledigen[p.href] ?? 0), 0)
 
   /*
    * Was jemand nicht darf, steht auch nicht in der Leiste.
@@ -447,6 +484,7 @@ export function BueroNavigation() {
                 onClick={() => setOffeneGruppe((v) => (v === b.titel ? null : b.titel))}
               >
                 {b.titel}
+                <Zaehler anzahl={gruppenSumme(b.punkte)} inline />
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="buero-nav-pfeil">
                   <path d="m7 10 5 5 5-5" />
                 </svg>
@@ -468,6 +506,7 @@ export function BueroNavigation() {
                     >
                       <PunktZeichen href={p.href} />
                       {p.label}
+                      <Zaehler anzahl={zuErledigen[p.href] ?? 0} inline />
                     </Link>
                   ))}
                 </div>
@@ -513,6 +552,7 @@ export function BueroNavigation() {
             >
               {Zeichen[b.titel as keyof typeof Zeichen] ?? Zeichen.uebersicht}
               <span>{b.titel}</span>
+              <Zaehler anzahl={gruppenSumme(b.punkte)} />
             </button>
           )
         })}
@@ -544,6 +584,7 @@ export function BueroNavigation() {
                 >
                   <PunktZeichen href={p.href} />
                   {p.label}
+                  <Zaehler anzahl={zuErledigen[p.href] ?? 0} inline />
                 </Link>
               ))}
               {/* Abmelden steht am Handy hier, weil oben in der Leiste kein

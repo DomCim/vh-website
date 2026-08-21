@@ -9,6 +9,8 @@ import {
   type Vorstufe,
   type Zahlplan,
 } from './anzahlung'
+import { liveMelden } from './live'
+import { nachCommit } from './nachCommit'
 import { benachrichtige } from './push'
 
 /**
@@ -238,16 +240,52 @@ export async function entwurfFuerStufe(
    * Die Meldung ist der eigentliche Punkt: Ein Entwurf, von dem niemand weiß,
    * ist so gut wie keiner. Vincent steht meist in der Werkstatt und nicht vor
    * der Rechnungsliste.
+   *
+   * Sie geht aber erst hinaus, wenn der Entwurf wirklich festgeschrieben ist
+   * (siehe `lib/nachCommit.ts`). Vorher lief beides aus der offenen
+   * Transaktion heraus: Das Handy meldete einen Entwurf, den die Rechnungs-
+   * liste im selben Augenblick noch nicht kannte — und wegen des Abgleichs nie
+   * mehr kennenlernte. Wer daraufhin ins Büro schaute, fand nichts und suchte
+   * den Fehler bei sich.
+   *
+   * Das Live-Signal steht hier mit dabei: Der allgemeine Haken an der
+   * Rechnungssammlung feuert weiterhin früh, das ist seit der Überlappung im
+   * Abgleich folgenlos — dieses eine kommt garantiert danach.
    */
-  await benachrichtige(payload, {
-    titel: `${BEZEICHNUNG[stufe]} vorbereitet`,
-    text: `${bezug}: Entwurf über ${new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(betrag)} netto liegt bereit.`,
-    url: `/office/rechnungen/${rechnung.id}`,
-    tag: `stufe-${auftrag.id}-${stufe}`,
-  }).catch(() => undefined)
+  /*
+   * Gemeldet wird, was auf dem Entwurf steht — nicht, was der Zahlplan
+   * vorsah.
+   *
+   * Beides ist meist dasselbe, aber nicht immer: Die Schlussrechnung zieht nur
+   * Stufen ab, die auch gestellt sind. Liegt die Anzahlung noch als Entwurf
+   * herum, steht auf der Schlussrechnung der volle Betrag — die Meldung nannte
+   * bis eben trotzdem den geplanten Anteil. Wer sie las und den Entwurf
+   * aufmachte, fand eine andere Zahl vor und wusste nicht, welche gilt.
+   */
+  const gemeldeterBetrag = Number((rechnung as { netTotal?: number | null }).netTotal) || betrag
+  const betragText = new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(gemeldeterBetrag)
+  const wer = auftrag.customerName?.trim()
+  const worum = auftrag.title?.trim()
+
+  nachCommit(payload, 'outgoing-invoices', rechnung.id, async () => {
+    liveMelden(payload, 'rechnungen', 'neu', rechnung.id)
+    await benachrichtige(payload, {
+      /*
+       * „Entwurf" steht vorn, weil auf dem Sperrbildschirm nur der Anfang
+       * ankommt — und „vorbereitet" ließ offen, ob schon jemand etwas
+       * verschickt hat.
+       */
+      titel: wer
+        ? `Entwurf: ${BEZEICHNUNG[stufe]} für ${wer}`
+        : `Entwurf: ${BEZEICHNUNG[stufe]} ${bezug}`,
+      text: `${bezug}${worum ? ` — ${worum}` : ''}: ${betragText} netto. Bitte prüfen und verschicken — von allein geht sie nicht raus.`,
+      url: `/office/rechnungen/${rechnung.id}`,
+      tag: `stufe-${auftrag.id}-${stufe}`,
+    }).catch(() => undefined)
+  })
 
   return rechnung.id
 }

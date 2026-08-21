@@ -81,6 +81,9 @@ const VORRAT = [
   '/office/uebergabe/_',
   '/office/nachkalkulation',
   '/office/wiedervorlagen',
+  // Die Meldungen: Was das Büro gemeldet hat, will man gerade dann nachlesen,
+  // wenn die Meldung weggewischt ist — und nicht nur am Netz.
+  '/office/meldungen',
   '/office/einstellungen',
   ...BEREICHE.map((b) => `/office/${b}`),
   ...BEREICHE.map((b) => `/office/${b}/_`),

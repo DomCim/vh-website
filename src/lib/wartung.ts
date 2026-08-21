@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { MELDUNG_GELESEN_TAGE, MELDUNG_TAGE } from '../collections/Notifications'
 import { GRABSTEIN_TAGE } from './bereiche'
 import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
@@ -141,6 +142,36 @@ export async function datenAufraeumen(payload: Payload): Promise<Record<string, 
     ergebnis.grabsteine = weg.docs?.length ?? 0
   } catch {
     ergebnis.grabsteine = 0
+  }
+
+  /*
+   * Meldungen: Gelesenes verfällt schnell, Ungelesenes lebt länger.
+   *
+   * Eine abgehakte Meldung hat ihren Zweck erfüllt — sie steht danach nur noch
+   * im Weg. Ungelesenes bleibt ein Vierteljahr: Wer so lange nicht hingesehen
+   * hat, braucht keine Liste mehr, sondern ein Gespräch.
+   */
+  const tageZurueck = (tage: number) =>
+    new Date(Date.now() - tage * 24 * 3600 * 1000).toISOString()
+  for (const [name, tage, nurGelesene] of [
+    ['meldungenGelesen', MELDUNG_GELESEN_TAGE, true],
+    ['meldungen', MELDUNG_TAGE, false],
+  ] as const) {
+    try {
+      const weg = await payload.delete({
+        collection: 'notifications',
+        where: {
+          and: [
+            ...(nurGelesene ? [{ gelesen: { equals: true } }] : []),
+            { createdAt: { less_than: tageZurueck(tage) } },
+          ],
+        },
+        overrideAccess: true,
+      })
+      ergebnis[name] = weg.docs?.length ?? 0
+    } catch {
+      ergebnis[name] = 0
+    }
   }
 
   return ergebnis

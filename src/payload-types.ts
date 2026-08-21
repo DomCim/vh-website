@@ -96,6 +96,7 @@ export interface Config {
     roles: Role;
     'system-state': SystemState;
     'mail-log': MailLog;
+    notifications: Notification;
     'push-subscriptions': PushSubscription;
     media: Media;
     users: User;
@@ -135,6 +136,7 @@ export interface Config {
     roles: RolesSelect<false> | RolesSelect<true>;
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -1672,6 +1674,32 @@ export interface MailLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: number;
+  titel: string;
+  text?: string | null;
+  /**
+   * Wohin der Tipp auf die Meldung führt.
+   */
+  url?: string | null;
+  /**
+   * Gleiche Kennung ersetzt eine ältere, noch ungelesene Meldung, statt sie zu stapeln.
+   */
+  tag?: string | null;
+  /**
+   * Wie oft dieselbe Meldung ausgelöst wurde.
+   */
+  anzahl?: number | null;
+  zuletztAm?: string | null;
+  gelesen?: boolean | null;
+  gelesenAm?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "push-subscriptions".
  */
 export interface PushSubscription {
@@ -1823,6 +1851,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'mail-log';
         value: number | MailLog;
+      } | null)
+    | ({
+        relationTo: 'notifications';
+        value: number | Notification;
       } | null)
     | ({
         relationTo: 'push-subscriptions';
@@ -2700,6 +2732,22 @@ export interface MailLogSelect<T extends boolean = true> {
   order?: T;
   inquiry?: T;
   job?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  titel?: T;
+  text?: T;
+  url?: T;
+  tag?: T;
+  anzahl?: T;
+  zuletztAm?: T;
+  gelesen?: T;
+  gelesenAm?: T;
   updatedAt?: T;
   createdAt?: T;
 }
