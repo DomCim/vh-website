@@ -38,11 +38,39 @@ type Props = {
   platzhalter?: string
 }
 
+/*
+ * Feste, kleine Farbpalette statt Quills 35er-Raster. Der erste Eintrag ist
+ * „Standard": keine festgeschriebene Farbe — der Text folgt damit dem Thema
+ * (hell/dunkel) im Büro und dem Briefbogen in der Mail. Ein hart gesetztes
+ * Schwarz sähe im dunklen Thema aus wie verschwunden, und Weiß ginge in der
+ * Mail unter; deshalb fehlen beide bewusst. Die Töne sind so gewählt, dass
+ * sie auf dem weißen Briefbogen lesbar bleiben.
+ */
+const SCHRIFTFARBEN = [
+  false, // Standard — folgt dem Thema bzw. dem Briefbogen
+  '#666666',
+  '#a86b3d',
+  '#c0392b',
+  '#b26b00',
+  '#006100',
+  '#0047b2',
+  '#6b24b2',
+]
+const HERVORHEBUNGEN = [
+  false, // Standard — keine Hervorhebung
+  '#ffffcc',
+  '#ffebcc',
+  '#facccc',
+  '#cce8cc',
+  '#cce0f5',
+  '#ebd6ff',
+]
+
 /** Was in der Leiste steht — mehr wäre für eine Mail Zierde */
 const LEISTE = [
   [{ header: [1, 2, false] }],
   ['bold', 'italic', 'underline', 'strike'],
-  [{ color: [] }, { background: [] }],
+  [{ color: SCHRIFTFARBEN }, { background: HERVORHEBUNGEN }],
   [{ list: 'ordered' }, { list: 'bullet' }],
   [{ align: [] }],
   ['blockquote', 'link'],
