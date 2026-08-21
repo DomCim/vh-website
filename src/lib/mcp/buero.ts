@@ -44,7 +44,9 @@ export function registerBuero(server: McpServer) {
       const payload = await db()
       const { docs } = await payload.find({
         collection: 'outgoing-invoices',
-        where: { status: { equals: 'gestellt' } },
+        // Gegenrechnungen eines Stornos stehen auch auf „gestellt" —
+        // aus denen ist aber nichts zu zahlen, also gehören sie nicht hierher.
+        where: { and: [{ status: { equals: 'gestellt' } }, { stornoVon: { exists: false } }] },
         limit: 200,
         depth: 0,
         overrideAccess: true,

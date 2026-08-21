@@ -18,12 +18,14 @@
  * eigene Frage.
  */
 
+import { istOffenerPosten } from './zahlungsstand'
+
 /** Der Tag, ab dem ein Beleg als „bald fällig" gilt. */
 const BELEG_VORLAUF_TAGE = 3
 
 export type ZuErledigenBestand = {
   anfragen?: { status?: string | null }[]
-  rechnungen?: { status?: string | null; dueDate?: string | null }[]
+  rechnungen?: { status?: string | null; dueDate?: string | null; stornoVon?: unknown }[]
   belege?: { paid?: boolean | null; dueDate?: string | null }[]
   inventar?: { quantity?: number | null; minQuantity?: number | null }[]
   wiedervorlagen?: { done?: boolean | null; dueDate?: string | null }[]
@@ -42,9 +44,12 @@ export const istNeueAnfrage = (a: { status?: string | null }) => a.status === 'n
  */
 export const istEntwurf = (r: { status?: string | null }) => r.status === 'entwurf'
 
-/** Gestellt, Frist vorbei, kein Geld da. */
-export const istUeberfaellig = (r: { status?: string | null; dueDate?: string | null }, jetzt: number) =>
-  r.status === 'gestellt' && Boolean(r.dueDate) && new Date(r.dueDate as string).getTime() < jetzt
+/** Gestellt, Frist vorbei, kein Geld da. Storno-Gegenrechnungen warten auf nichts. */
+export const istUeberfaellig = (
+  r: { status?: string | null; dueDate?: string | null; stornoVon?: unknown },
+  jetzt: number,
+) =>
+  istOffenerPosten(r) && Boolean(r.dueDate) && new Date(r.dueDate as string).getTime() < jetzt
 
 /** Unbezahlt und in den nächsten Tagen fällig — oder längst gewesen. */
 export const istZuZahlen = (b: { paid?: boolean | null; dueDate?: string | null }, jetzt: number) =>

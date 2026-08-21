@@ -8,6 +8,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
 
 export type Position = {
@@ -391,6 +392,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           >
             Als bezahlt markieren
           </button>
+        )}
+        {!festgeschrieben && w.id && (
+          <VerwerfenKnopf
+            pfad="/api/office/rechnung"
+            id={w.id}
+            ziel="/office/rechnungen"
+            was="Rechnungsentwurf"
+          />
         )}
         {!festgeschrieben && (
           <button

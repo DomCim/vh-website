@@ -126,7 +126,10 @@ export function InventarFormular({
           <input
             inputMode="decimal"
             value={w.minQuantity ?? ''}
-            onChange={(e) => setzen({ minQuantity: Number(e.target.value) || 0 })}
+            onChange={(e) =>
+              // Geleert heißt „kein Mindestbestand" — nicht „Mindestbestand null"
+              setzen({ minQuantity: e.target.value === '' ? null : Number(e.target.value) || 0 })
+            }
           />
           <span style={{ marginTop: '.4rem' }}>
             Darunter meldet sich das Büro und der Posten steht unter „Nachbestellen“.
@@ -140,7 +143,9 @@ export function InventarFormular({
           <input
             inputMode="decimal"
             value={w.orderQuantity ?? ''}
-            onChange={(e) => setzen({ orderQuantity: Number(e.target.value) || 0 })}
+            onChange={(e) =>
+              setzen({ orderQuantity: e.target.value === '' ? null : Number(e.target.value) || 0 })
+            }
             placeholder="z.B. 100"
           />
           <span style={{ marginTop: '.4rem' }}>
@@ -164,7 +169,9 @@ export function InventarFormular({
           <input
             inputMode="decimal"
             value={w.unitValue ?? ''}
-            onChange={(e) => setzen({ unitValue: Number(e.target.value) || 0 })}
+            onChange={(e) =>
+              setzen({ unitValue: e.target.value === '' ? null : Number(e.target.value) || 0 })
+            }
           />
         </label>
         <label className="buero-feld">
@@ -201,7 +208,9 @@ export function InventarFormular({
           <input
             inputMode="decimal"
             value={w.purchaseValue ?? ''}
-            onChange={(e) => setzen({ purchaseValue: Number(e.target.value) || 0 })}
+            onChange={(e) =>
+              setzen({ purchaseValue: e.target.value === '' ? null : Number(e.target.value) || 0 })
+            }
           />
         </label>
       </div>

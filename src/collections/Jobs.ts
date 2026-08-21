@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { bewegung } from '../lib/bestandsbewegung'
 import { AUFTRAG_STATUS } from '../lib/listen'
 import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
@@ -145,9 +146,16 @@ export const Jobs: CollectionConfig = {
                 overrideAccess: true,
                 req,
               })
-              // Versand nur, wenn eine Sendungsnummer vorliegt — sonst ginge
-              // die Versandmail ohne Sendungsverfolgung raus
-              const versandOhneNummer = neuerStatus === 'shipped' && !bestellung?.trackingNumber
+              /*
+               * Versand nur mit Sendungsnummer — sonst ginge die Versandmail
+               * ohne Sendungsverfolgung raus. Ausgenommen die Abholung: Da
+               * gibt es nichts zu verfolgen, und die Sperre hielt solche
+               * Bestellungen für immer auf „in Fertigung" fest.
+               */
+              const abholung =
+                bestellung?.deliveryMethod === 'pickup' || doc.lieferart === 'abholung'
+              const versandOhneNummer =
+                neuerStatus === 'shipped' && !abholung && !bestellung?.trackingNumber
               if (bestellung && bestellung.status !== neuerStatus && !versandOhneNummer) {
                 await req.payload.update({
                   collection: 'orders',
@@ -196,30 +204,18 @@ export const Jobs: CollectionConfig = {
                 req,
               })
               if (!posten) continue
-              const rest = Math.round(((posten.quantity ?? 0) - zeile.quantity) * 100) / 100
+              // Auch die automatische Abbuchung gehört in den Verlauf — sonst
+              // stünden dort nur die Korrekturen von Hand.
               await req.payload.update({
                 collection: 'inventory-items',
                 id,
                 overrideAccess: true,
                 req,
-                data: {
-                  quantity: rest,
-                  /*
-                   * Auch die automatische Abbuchung gehört in den Verlauf.
-                   * Sonst stünden dort nur die Korrekturen von Hand, und der
-                   * größte Teil der Bewegungen fehlte — genau der, den man
-                   * beim Nachrechnen sucht.
-                   */
-                  movements: [
-                    ...(posten.movements ?? []),
-                    {
-                      day: new Date().toISOString(),
-                      delta: -zeile.quantity,
-                      rest,
-                      reason: `Auftrag ${doc.jobNumber}${doc.title ? ` — ${doc.title}` : ''}`,
-                    },
-                  ],
-                },
+                data: bewegung(
+                  posten,
+                  -zeile.quantity,
+                  `Auftrag ${doc.jobNumber}${doc.title ? ` — ${doc.title}` : ''}`,
+                ),
               })
             } catch (err) {
               req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Material ${id} nicht abgebucht`)

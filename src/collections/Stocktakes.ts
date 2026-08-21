@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { office } from '../access'
+import { bewegung } from '../lib/bestandsbewegung'
 import { liveHooks } from '../lib/liveHooks'
 
 /**
@@ -50,16 +51,32 @@ export const Stocktakes: CollectionConfig = {
     afterChange: [
       async ({ doc, previousDoc, req }) => {
         if (doc.status !== 'abgeschlossen' || previousDoc?.status === 'abgeschlossen') return doc
-        // Gezählte Mengen ins Inventar zurückschreiben
+        /*
+         * Gezählte Mengen ins Inventar zurückschreiben — als Buchung mit
+         * Verlaufszeile, nicht als stilles Setzen. Die Inventur ist die
+         * größte Korrektur im Jahr; ausgerechnet sie fehlte im Verlauf.
+         */
         for (const zeile of doc.lines ?? []) {
           const id = typeof zeile.item === 'object' ? zeile.item?.id : zeile.item
           if (!id || typeof zeile.counted !== 'number') continue
           try {
+            const posten = await req.payload.findByID({
+              collection: 'inventory-items',
+              id,
+              depth: 0,
+              overrideAccess: true,
+              req,
+            })
+            if (!posten) continue
+            const delta = Math.round((zeile.counted - (posten.quantity ?? 0)) * 1000) / 1000
+            // Stimmt die Zählung mit dem Bestand überein, gibt es nichts zu buchen
+            if (delta === 0) continue
             await req.payload.update({
               collection: 'inventory-items',
               id,
               overrideAccess: true,
-              data: { quantity: zeile.counted },
+              req,
+              data: bewegung(posten, delta, `Inventur „${doc.title ?? ''}"`),
             })
           } catch (err) {
             req.payload.logger.error({ err }, `Inventur: Posten ${id} nicht aktualisiert`)

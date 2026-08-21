@@ -203,7 +203,9 @@ export async function GET(req: Request) {
 
     const { docs: rechnungen } = await payload.find({
       collection: 'outgoing-invoices',
-      where: { status: { equals: 'gestellt' } },
+      // Storno-Gegenrechnungen stehen auch auf „gestellt", aber auf die
+      // zahlt niemand — sie wären nur falsche Vorschläge beim Abgleich.
+      where: { and: [{ status: { equals: 'gestellt' } }, { stornoVon: { exists: false } }] },
       limit: 300,
       depth: 0,
       overrideAccess: true,

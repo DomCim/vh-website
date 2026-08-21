@@ -49,6 +49,25 @@ export async function POST(req: Request) {
 
     const b = (await req.json()) as Record<string, any>
 
+    // ── Entwurf verwerfen ───────────────────────────────────────────────────
+    if (b.aktion === 'verwerfen') {
+      if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      const angebot = await payload
+        .findByID({ collection: 'quotes', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (!angebot) return NextResponse.json({ error: 'nicht-gefunden' }, { status: 404 })
+      /*
+       * Nur Entwürfe ohne Nummer. Ein versendetes Angebot hat eine Nummer,
+       * die beim Kunden liegt — das wird abgelehnt, nicht gelöscht, sonst
+       * fehlte die Nummer hinterher in der Reihe.
+       */
+      if (angebot.quoteNumber) {
+        return NextResponse.json({ error: 'schon-versendet' }, { status: 409 })
+      }
+      await payload.delete({ collection: 'quotes', id: b.id, overrideAccess: true })
+      return NextResponse.json({ ok: true })
+    }
+
     // ── Umwandeln ───────────────────────────────────────────────────────────
     if (b.aktion === 'in-auftrag' || b.aktion === 'in-rechnung') {
       const angebot = await payload
@@ -57,6 +76,24 @@ export async function POST(req: Request) {
       if (!angebot) return NextResponse.json({ error: 'nicht-gefunden' }, { status: 404 })
 
       if (b.aktion === 'in-auftrag') {
+        /*
+         * Zweimal getippt hieß vorher: zwei Aufträge mit zwei Nummern.
+         * Gibt es zu diesem Angebot schon einen, führt der Knopf dorthin,
+         * statt zu schimpfen — dieselbe Prüfung wie beim Shop-Checkout.
+         */
+        const { docs: vorhandene } = await payload.find({
+          collection: 'jobs',
+          where: { quote: { equals: angebot.id } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+        })
+        if (vorhandene[0]) {
+          return NextResponse.json(
+            { error: 'schon-vorhanden', auftragId: vorhandene[0].id },
+            { status: 409 },
+          )
+        }
         /*
          * Die Zahlungsstufen kommen vom Artikel, über den gesprochen wurde:
          * Anfrage → Angebot → Auftrag. Abgeschrieben, nicht verknüpft — was
@@ -86,6 +123,20 @@ export async function POST(req: Request) {
           },
         })
         return NextResponse.json({ ok: true, auftragId: auftrag.id, nummer: auftrag.jobNumber })
+      }
+
+      const { docs: vorhandeneRechnungen } = await payload.find({
+        collection: 'outgoing-invoices',
+        where: { quote: { equals: angebot.id } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      })
+      if (vorhandeneRechnungen[0]) {
+        return NextResponse.json(
+          { error: 'schon-vorhanden', rechnungId: vorhandeneRechnungen[0].id },
+          { status: 409 },
+        )
       }
 
       const rechnung = await payload.create({

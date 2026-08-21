@@ -99,7 +99,7 @@ export function AuftragAnsicht() {
         <p className="buero-unterzeile">
           {bestellId && (
             <Link
-              href={`/admin/collections/orders/${bestellId}`}
+              href={`/office/bestellungen/${bestellId}`}
               style={{ textDecoration: 'underline' }}
             >
               Zur Bestellung

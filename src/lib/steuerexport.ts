@@ -65,7 +65,9 @@ export async function steuerbericht(payload: Payload, jahr: number): Promise<Ste
       collection: 'outgoing-invoices',
       where: {
         and: [
-          { status: { in: ['gestellt', 'bezahlt'] } },
+          // „storniert" gehört dazu: Original und Gegenrechnung erscheinen
+          // beide und heben sich auf — sonst fehlte der Betrag doppelt.
+          { status: { in: ['gestellt', 'bezahlt', 'storniert'] } },
           { issueDate: { greater_than_equal: von } },
           { issueDate: { less_than: bis } },
         ],
@@ -121,6 +123,12 @@ export async function steuerbericht(payload: Payload, jahr: number): Promise<Ste
   }
 
   for (const r of rechnungen.docs) {
+    // Der Steuerberater soll das Paar ohne Rückfrage erkennen.
+    const stornoHinweis = r.stornoVon
+      ? ' — Storno'
+      : r.status === 'storniert'
+        ? ' — storniert'
+        : ''
     zeilen.push({
       art: 'einnahme',
       quelle: 'Projektrechnung',
@@ -128,7 +136,7 @@ export async function steuerbericht(payload: Payload, jahr: number): Promise<Ste
       nummer: r.invoiceNumber ?? '',
       partner: r.customerName ?? '',
       bezeichnung: (r.items ?? []).map((p) => p.description).join(', '),
-      kategorie: r.reverseCharge ? 'Leistung (Reverse Charge)' : 'Leistung',
+      kategorie: (r.reverseCharge ? 'Leistung (Reverse Charge)' : 'Leistung') + stornoHinweis,
       netto: r.subtotal ?? null,
       steuersatz: r.reverseCharge ? 0 : null,
       steuer: r.vatTotal ?? null,

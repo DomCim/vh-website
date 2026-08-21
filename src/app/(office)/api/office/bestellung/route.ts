@@ -28,9 +28,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'status-unbekannt' }, { status: 400 })
     }
 
-    // Versand ohne Sendungsnummer wäre für die Kundschaft eine leere Mail
+    /*
+     * Versand ohne Sendungsnummer wäre für die Kundschaft eine leere Mail.
+     * Zwei Ausnahmen: Bei Abholung gibt es nichts zu verfolgen — die Sperre
+     * hielt solche Bestellungen für immer auf „bezahlt" fest. Und eine schon
+     * am Datensatz hinterlegte Nummer genügt; der reine Statuswechsel muss
+     * sie nicht noch einmal mitschicken.
+     */
     if (b.status === 'shipped' && !b.trackingNumber?.trim()) {
-      return NextResponse.json({ error: 'sendungsnummer-fehlt' }, { status: 400 })
+      const bisher = await payload.findByID({
+        collection: 'orders',
+        id: b.id,
+        depth: 0,
+        overrideAccess: true,
+      })
+      if (!bisher) return NextResponse.json({ error: 'unbekannt' }, { status: 404 })
+      if (bisher.deliveryMethod !== 'pickup' && !bisher.trackingNumber) {
+        return NextResponse.json({ error: 'sendungsnummer-fehlt' }, { status: 400 })
+      }
     }
 
     const doc = await payload.update({
