@@ -77,7 +77,9 @@ export function AnfrageAnsicht() {
         <Link href={antwortLink} className="buero-knopf">
           Antworten
         </Link>
-        <Link href="/office/angebote/neu" className="buero-knopf leise">
+        {/* Mit Bezug: Das Angebot übernimmt Name und Produkt und merkt sich
+            die Anfrage — daran hängt später der Zahlplan des Auftrags. */}
+        <Link href={`/office/angebote/neu?anfrage=${a.id}`} className="buero-knopf leise">
           Angebot schreiben
         </Link>
       </div>

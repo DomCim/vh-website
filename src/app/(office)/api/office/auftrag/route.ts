@@ -109,7 +109,9 @@ export async function POST(req: Request) {
       trackingUrl: b.trackingUrl || undefined,
       kundeEmail: b.kundeEmail || undefined,
       kundeBenachrichtigen: b.kundeBenachrichtigen !== false,
-      contact: Number(b.contact) || undefined,
+      // Abwahl (`null` bzw. '') muss durchgehen — sonst wird man einen
+      // einmal verknüpften Partner nie wieder los.
+      contact: b.contact === null || b.contact === '' ? null : Number(b.contact) || undefined,
       source: b.source || 'manuell',
       customerOrderRef: b.customerOrderRef || undefined,
       orderedAt: b.orderedAt || undefined,

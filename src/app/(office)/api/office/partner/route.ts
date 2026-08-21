@@ -29,6 +29,8 @@ export async function POST(req: Request) {
       vatId: b.vatId || undefined,
       siret: b.siret || undefined,
       defaultCategory: b.defaultCategory || undefined,
+      // Sprache der Statusmails — auswerten tut sie lib/auftragsmeldung.ts
+      sprache: b.sprache || undefined,
       notes: b.notes || undefined,
     }
 

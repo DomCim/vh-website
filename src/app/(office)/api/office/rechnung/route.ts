@@ -162,6 +162,9 @@ export async function POST(req: Request) {
 
     const daten = {
       status: b.status || 'entwurf',
+      // Verknüpfter Partner — daran hängen Versand-Empfänger, Portal und
+      // Mailsprache. Abwahl (`null` bzw. '') muss durchgehen.
+      customer: b.customer === null || b.customer === '' ? null : Number(b.customer) || undefined,
       customerName: b.customerName || undefined,
       customerAddress: b.customerAddress || undefined,
       customerSiret: b.customerSiret || undefined,

@@ -10,6 +10,7 @@ import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 import { Meldestand } from './Meldestand'
@@ -168,6 +169,16 @@ export function AuftragFormular({
       </label>
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={typeof w.contact === 'string' ? Number(w.contact) || '' : w.contact}
+          aendern={(id, partner) =>
+            // Am Partner hängen Mailadresse und Sprache der Statusmeldungen
+            setzen({
+              contact: id,
+              ...(partner ? { customerName: partner.name ?? '' } : {}),
+            })
+          }
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input

@@ -171,6 +171,14 @@ export async function POST(req: Request) {
     const daten = {
       status: b.status || 'entwurf',
       title: b.title || undefined,
+      /*
+       * Der Partner und die Anfrage machen aus dem Angebot ein verknüpftes:
+       * Versand-Empfänger, Kundenportal und Mailsprache hängen am Partner,
+       * der Zahlplan (Anzahlung/Zwischenrechnung) an der Anfrage. Abwahl
+       * (`null`) muss durchgehen — sonst wird man einen Partner nie wieder los.
+       */
+      customer: b.customer === null || b.customer === '' ? null : Number(b.customer) || undefined,
+      inquiry: b.inquiry === null ? null : Number(b.inquiry) || undefined,
       customerName: b.customerName || undefined,
       customerAddress: b.customerAddress || undefined,
       issueDate: b.issueDate || undefined,

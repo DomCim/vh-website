@@ -10,6 +10,7 @@ import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { ArtikelBezug } from './ArtikelBezug'
+import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 
 export type AngebotPosition = {
@@ -27,6 +28,10 @@ export type AngebotWerte = {
   quoteNumber?: string | null
   status?: string
   title?: string | null
+  /** Verknüpfter Geschäftspartner — füllt Name und Anschrift vor */
+  customer?: number | '' | null
+  /** Die Anfrage, aus der dieses Angebot entstand — daran hängt der Zahlplan */
+  inquiry?: number | null
   customerName?: string | null
   customerAddress?: string | null
   issueDate?: string | null
@@ -156,6 +161,18 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
       </label>
 
       <div className="buero-reihe">
+        <PartnerBezug
+          wert={w.customer}
+          aendern={(id, partner) =>
+            // Auswählen heißt übernehmen — wer abweichen will, tippt danach
+            setzen({
+              customer: id,
+              ...(partner
+                ? { customerName: partner.name ?? '', customerAddress: partnerAnschrift(partner) }
+                : {}),
+            })
+          }
+        />
         <label className="buero-feld">
           <span>Kunde</span>
           <input
