@@ -408,12 +408,33 @@ das zurückkommt.
 
 ## Offen
 
-1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit
-   Datum — **1. September 2026**. Technisch ist alles da: Rechnungen entstehen
-   als Factur-X, eingehende werden aus dem PDF gelesen. Offen ist der Vertrag
-   mit einer zugelassenen Plattform. Der Stand steht jetzt im Büro unter
+1. **Plateforme Agréée: Auswahl und Anbindung.** Das ist der einzige offene
+   Punkt mit Datum — **1. September 2026**. Technisch ist alles da: Rechnungen
+   entstehen als Factur-X, eingehende werden aus dem PDF gelesen. Offen ist
+   der Vertrag mit einer zugelassenen Plattform. Der Stand steht im Büro unter
    Einstellungen → Elektronische Rechnung; bis er auf „angemeldet" steht,
-   erinnert die Übersicht daran. **Das erledigt kein Code.**
+   erinnert die Übersicht daran. **Die Auswahl erledigt kein Code.**
+
+   Mit Dominik besprochen (August 2026): Angebunden wird per
+   **Schnittstelle**, nicht durch Hochladen von Hand. Bei der Auswahl —
+   am besten mit dem Steuerberater, dessen Software oft eine Plattform
+   mitbringt — auf drei Dinge achten: eine ordentliche REST-API mit
+   Webhooks, faire Preise je Rechnung, Zugriff für den Steuerberater.
+   Wichtig: Standardisiert ist nur der Verkehr *zwischen* den Plattformen;
+   die API für die eigenen Kunden ist bei jedem Anbieter anders — die Wahl
+   bestimmt also die Anbindungsarbeit. Nicht auf den letzten Drücker: Die
+   Anbieter laufen gegen den Stichtag voll, und die Strecke soll ein paar
+   Monate im echten Betrieb gelaufen sein, bevor sie Pflicht wird.
+
+   Sobald die Plattform feststeht, wird gebaut: ausgehend Rechnung per API
+   übergeben und Statusmeldungen (zugestellt, abgelehnt, bezahlt) an die
+   Rechnung zurückschreiben; eingehend den Eingangskorb abholen und daraus
+   Belegentwürfe anlegen. Die Bausteine liegen alle im ERP —
+   `facturx.ts` schreibt, `facturxLesen.ts` liest, Belegstrecke und
+   Statuswesen stehen; es fehlt nur das Kabel zur Plattform. Nicht ins
+   Netz gehört: Privatkunden und ausländische Lieferanten bleiben beim
+   heutigen Mail- und Beleg-Weg, deren Umsätze laufen später nur ins
+   E-Reporting über dieselbe Plattform.
 2. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
    („Den Stand Ihres Auftrags sehen Sie unter …/konto"). Vorgeschlagen, noch
    nicht entschieden.
