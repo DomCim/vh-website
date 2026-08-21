@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Versandfenster und Newsletter schreiben im gestalteten Schreibfeld.** Wo bisher ein nacktes Textfeld stand, ist jetzt dasselbe Schreibfeld wie beim Mailschreiben: fett, Farbe, Aufzählung, Link. Im Versandfenster für Angebot, Rechnung und Mahnung steht die Signatur beim Öffnen gleich mit im Feld — was man sieht, geht raus, nichts wird mehr stillschweigend angehängt. Beim Newsletter gilt dasselbe; „Aus einem Beitrag übernehmen" füllt das Feld wie gewohnt vor.
+
 - **Mails und Wiedervorlagen lassen sich wischen.** In der Postliste heißt nach links wischen „in den Papierkorb", nach rechts „gelesen/ungelesen umdrehen" — wie in jeder Mail-App. Dazu hat jede Zeile einen „⋯"-Knopf: markieren, löschen oder in einen anderen Ordner verschieben, ohne die Mail zu öffnen. Bei den Wiedervorlagen gilt dasselbe: links löschen, rechts abhaken. Das Scrollen bleibt ungestört — die erste Bewegung entscheidet, ob gewischt oder gescrollt wird.
 
 - **Die Signatur lässt sich gestalten.** Das Signatur-Feld am Postfach ist jetzt dasselbe Schreibfeld wie beim Mailschreiben: fett, Farbe, Link — statt nacktem Text. Bestehende Klartext-Signaturen bleiben gültig und werden beim Öffnen zu Absätzen; wer die Signatur leert, bekommt wieder den automatischen Rückfall aus Absendername und Kontaktdaten.

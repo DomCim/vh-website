@@ -1,7 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
+
+import { textAlsAbsaetze } from '../../lib/signaturHtml'
 import { Fussleiste } from './Fussleiste'
+import { Schreibfeld } from './Schreibfeld'
 
 export type NewsVorschlag = {
   id: number | string
@@ -28,7 +31,10 @@ export function NewsletterVersand({
   eigeneAdresse?: string | null
 }) {
   const [betreff, setBetreff] = useState('')
-  const [text, setText] = useState('')
+  const [html, setHtml] = useState('')
+  // Das Schreibfeld übernimmt seinen Inhalt nur beim Aufbau — der Zähler
+  // baut es neu auf, wenn ein Beitrag übernommen wird.
+  const [fassung, setFassung] = useState(0)
   const [link, setLink] = useState('')
   const [linkText, setLinkText] = useState('Zum Beitrag')
   const [testAn, setTestAn] = useState(eigeneAdresse ?? '')
@@ -39,7 +45,8 @@ export function NewsletterVersand({
     const b = beitraege.find((x) => String(x.id) === id)
     if (!b) return
     setBetreff(b.titel)
-    setText(b.auszug)
+    setHtml(textAlsAbsaetze(b.auszug))
+    setFassung((f) => f + 1)
     setLink(b.link)
     setLinkText('Zum Beitrag')
   }
@@ -55,7 +62,9 @@ export function NewsletterVersand({
         credentials: 'include',
         body: JSON.stringify({
           betreff,
-          text,
+          // Aus der Rückfallebene des Schreibfelds kommt Klartext ohne
+          // Auszeichnung — der geht als Text, sonst als gestalteter Rumpf
+          ...(html.includes('<') ? { html } : { text: html }),
           link,
           linkText,
           testAn: art === 'test' ? testAn : undefined,
@@ -99,15 +108,10 @@ export function NewsletterVersand({
         <input value={betreff} onChange={(e) => setBetreff(e.target.value)} />
       </label>
 
-      <label className="buero-feld">
+      <div className="buero-feld">
         <span>Text</span>
-        <textarea
-          rows={10}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={'Absätze durch eine Leerzeile trennen.'}
-        />
-      </label>
+        <Schreibfeld key={fassung} wert={html} aendern={setHtml} />
+      </div>
 
       <div className="buero-reihe">
         <label className="buero-feld">

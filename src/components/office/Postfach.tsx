@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
+import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
 import { WischZeile } from './WischZeile'
 
@@ -83,33 +84,8 @@ function Zeichen({ was }: { was: keyof typeof ZEICHEN }) {
   )
 }
 
-/**
- * Die Signatur fürs Schreibfeld. Aus den Einstellungen kommt sie inzwischen
- * gestaltet (HTML aus dem Schreibfeld dort); ältere Einträge sind Klartext
- * mit Zeilenumbrüchen — beide Fassungen bleiben gültig.
- */
-function signaturAlsHtml(signatur?: string | null): string {
-  const sauber = (signatur ?? '').trim()
-  if (!sauber) return ''
-  if (sauber.includes('<')) {
-    // Schon gestaltet — nur die zwei leeren Absätze davor, für den Zeiger
-    return `<p><br></p><p><br></p>${sauber}`
-  }
-  const zeilen = sauber
-    .split('\n')
-    .map((z) =>
-      z
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;'),
-    )
-    .join('<br>')
-  /*
-   * Zwei leere Absätze davor: Der Zeiger steht beim Öffnen oben, und man soll
-   * lostippen können, ohne sich erst Platz zu schaffen.
-   */
-  return `<p><br></p><p><br></p><p style="color: #666666">${zeilen}</p>`
-}
+// Die Aufbereitung der Signatur liegt jetzt in lib/signaturHtml.ts — das
+// Versandfenster und der Newsletter brauchen dieselben Regeln.
 
 /** Kurzer, sprechender Name statt des rohen IMAP-Pfads */
 function ordnerName(o: Ordner): string {

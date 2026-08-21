@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react'
 
+import { signaturAlsHtml, textAlsAbsaetze } from '../../lib/signaturHtml'
+import { Schreibfeld } from './Schreibfeld'
+
 type Art = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
 const BESCHRIFTUNG: Record<Art, string> = {
@@ -31,7 +34,7 @@ export function VersandKnopf({
   const [offen, setOffen] = useState(false)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
-  const [w, setW] = useState({ an: '', betreff: '', text: '', dateiname: '', absender: '' })
+  const [w, setW] = useState({ an: '', betreff: '', html: '', dateiname: '', absender: '' })
 
   async function oeffnen() {
     setLaeuft(true)
@@ -50,10 +53,15 @@ export function VersandKnopf({
         setOffen(true)
         return
       }
+      /*
+       * Vorschlag plus Signatur, beides gleich im Schreibfeld: So sieht man
+       * vor dem Senden genau das, was rausgeht — der Server hängt beim
+       * gestalteten Versand nichts mehr stillschweigend an.
+       */
       setW({
         an: j.an ?? '',
         betreff: j.betreff ?? '',
-        text: j.text ?? '',
+        html: `${textAlsAbsaetze(j.text)}${signaturAlsHtml(j.signatur, false)}`,
         dateiname: j.dateiname ?? '',
         absender: j.absender ?? '',
       })
@@ -78,7 +86,15 @@ export function VersandKnopf({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ art, id, ...w }),
+        body: JSON.stringify({
+          art,
+          id,
+          an: w.an,
+          betreff: w.betreff,
+          // Aus der Rückfallebene des Schreibfelds kommt Klartext ohne
+          // Auszeichnung — der geht als Text, sonst als gestalteter Rumpf
+          ...(w.html.includes('<') ? { html: w.html } : { text: w.html }),
+        }),
       })
       const j = await res.json()
       if (!res.ok) {
@@ -138,14 +154,10 @@ export function VersandKnopf({
         <span>Betreff</span>
         <input value={w.betreff} onChange={(e) => setW({ ...w, betreff: e.target.value })} />
       </label>
-      <label className="buero-feld">
+      <div className="buero-feld">
         <span>Nachricht</span>
-        <textarea
-          rows={8}
-          value={w.text}
-          onChange={(e) => setW({ ...w, text: e.target.value })}
-        />
-      </label>
+        <Schreibfeld wert={w.html} aendern={(html) => setW((v) => ({ ...v, html }))} />
+      </div>
 
       <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void senden()}>
