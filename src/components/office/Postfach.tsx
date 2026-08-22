@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 
+import { alsGelesen, useMeldungen } from '../../lib/buero/meldungen'
+import { istNeuePost } from '../../lib/zuErledigen'
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
@@ -168,6 +170,21 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   useEffect(() => {
     void laden()
   }, [laden])
+
+  /*
+   * Wer ins Postfach sieht, hat die Meldung gesehen.
+   *
+   * Der Zähler an der Navigation zählt ungelesene Post-Meldungen (siehe
+   * `istNeuePost`). Ohne dieses Abhaken bliebe er stehen, bis jemand die
+   * Glocke aufmacht — man stünde also im Postfach und bekäme daneben weiter
+   * gesagt, im Postfach liege etwas.
+   */
+  const meldungen = useMeldungen()
+  useEffect(() => {
+    for (const m of meldungen) {
+      if (istNeuePost(m)) void alsGelesen(m.id)
+    }
+  }, [meldungen])
 
   /*
    * Die Signatur kommt erst, wenn die Postfächer da sind.

@@ -220,6 +220,47 @@ export async function nachrichtenListe(
   })
 }
 
+/**
+ * Die neueste ungelesene Nachricht — nur Absender und Betreff.
+ *
+ * Für die Meldung aufs Telefon. „Neue Post — eine ungelesene Nachricht" sagt
+ * niemandem, ob er das Handy aus der Tasche holen muss; „Amazon.de —
+ * Bestellung versandt" schon. Geholt wird deshalb genau eine Kopfzeile, und
+ * auch die nur, wenn es überhaupt etwas Neues gibt.
+ *
+ * `null`, wenn nichts ungelesen ist oder der Anbieter die Suche verweigert —
+ * die Meldung geht dann mit dem alten Wortlaut hinaus. Eine Benachrichtigung,
+ * die an einer Nebensache scheitert, wäre der schlechtere Tausch.
+ */
+export async function neuesteUngelesene(fach: MailboxKonfiguration): Promise<Kopfzeile | null> {
+  return mitVerbindung(fach, async (client) => {
+    const schloss = await client.getMailboxLock('INBOX')
+    try {
+      const uids = await client.search({ seen: false }, { uid: true })
+      if (!uids || uids.length === 0) return null
+
+      // Die höchste Kennung ist die jüngste
+      const jüngste = uids[uids.length - 1]
+      const m = await client.fetchOne(String(jüngste), { envelope: true, flags: true }, { uid: true })
+      if (!m || typeof m === 'boolean') return null
+
+      return {
+        uid: m.uid,
+        betreff: m.envelope?.subject || '(kein Betreff)',
+        von: adresse(m.envelope?.from) || '(unbekannt)',
+        vonAdresse: ersteAdresse(m.envelope?.from),
+        an: adresse(m.envelope?.to),
+        datum: m.envelope?.date ? new Date(m.envelope.date).toISOString() : null,
+        gelesen: false,
+        markiert: Boolean(m.flags?.has('\\Flagged')),
+        anhaenge: false,
+      }
+    } finally {
+      schloss.release()
+    }
+  })
+}
+
 /** Eine einzelne Nachricht mit Text, HTML und Anhangsliste. */
 export async function nachrichtLesen(
   fach: MailboxKonfiguration,

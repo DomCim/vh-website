@@ -4,7 +4,7 @@ import { MELDUNG_GELESEN_TAGE, MELDUNG_TAGE } from '../collections/Notifications
 import { GRABSTEIN_TAGE } from './bereiche'
 import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
-import { postfaecher, ungeleseneAnzahl } from './postfach'
+import { neuesteUngelesene, postfaecher, ungeleseneAnzahl } from './postfach'
 import { benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben } from './settings'
@@ -672,10 +672,23 @@ export async function postfachPruefen(
         // Auch an die offenen Büro-Seiten: Wer gerade im Postfach steht, soll
         // die neue Nachricht sehen, ohne die Benachrichtigung anzutippen.
         liveMelden(payload, 'post', 'neu', fach.id)
+
+        /*
+         * Wer schreibt und worum es geht — das entscheidet, ob man hingeht.
+         * Scheitert das Holen (Anbieter zickt, Verbindung weg), bleibt es beim
+         * alten Wortlaut: Eine Meldung ohne Absender ist immer noch besser als
+         * keine.
+         */
+        const jüngste = await neuesteUngelesene(fach).catch(() => null)
+        const weitere = ungelesen > 1 ? ` · ${ungelesen} ungelesen` : ''
+
         await benachrichtige(payload, {
-          titel: `Neue Post für ${fach.label}`,
-          text:
-            ungelesen === 1 ? 'Eine ungelesene Nachricht.' : `${ungelesen} ungelesene Nachrichten.`,
+          titel: jüngste ? `Neue Post: ${jüngste.von}` : `Neue Post für ${fach.label}`,
+          text: jüngste
+            ? `${jüngste.betreff}${weitere}`
+            : ungelesen === 1
+              ? 'Eine ungelesene Nachricht.'
+              : `${ungelesen} ungelesene Nachrichten.`,
           url: `/office/post?fach=${fach.id}`,
           tag: `post-${fach.id}`,
         })

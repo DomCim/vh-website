@@ -23,9 +23,11 @@ export function useZuErledigen(): Record<string, number> {
   const wiedervorlagen = useBestand<{ done?: boolean | null; dueDate?: string | null }>(
     'wiedervorlagen',
   )
+  // Neue Post steht als ungelesene Meldung im Gerät — siehe `istNeuePost`
+  const meldungen = useBestand<{ tag?: string | null; gelesen?: boolean | null }>('meldungen')
 
   return useMemo(
-    () => zuErledigen({ anfragen, rechnungen, belege, inventar, wiedervorlagen }),
-    [anfragen, rechnungen, belege, inventar, wiedervorlagen],
+    () => zuErledigen({ anfragen, rechnungen, belege, inventar, wiedervorlagen, meldungen }),
+    [anfragen, rechnungen, belege, inventar, wiedervorlagen, meldungen],
   )
 }

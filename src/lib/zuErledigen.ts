@@ -29,7 +29,24 @@ export type ZuErledigenBestand = {
   belege?: { paid?: boolean | null; dueDate?: string | null }[]
   inventar?: { quantity?: number | null; minQuantity?: number | null }[]
   wiedervorlagen?: { done?: boolean | null; dueDate?: string | null }[]
+  meldungen?: { tag?: string | null; gelesen?: boolean | null }[]
 }
+
+/**
+ * Neue Post, an der Navigation.
+ *
+ * Die Zahl der ungelesenen Mails liegt beim Anbieter und nicht im Gerät — sie
+ * hier zu holen hieße, bei jedem Seitenwechsel das Postfach anzurufen. Was im
+ * Gerät liegt, ist die Meldung, die der Wartungslauf beim Fund geschrieben
+ * hat; sie steht für „da ist etwas, das du noch nicht angesehen hast", und
+ * genau das ist die Aufgabe eines Zählers.
+ *
+ * Er zählt deshalb Postfächer mit neuer Post, nicht einzelne Mails. Wie viele
+ * es je Ordner sind, steht im Postfach — einen Klick weiter, dort, wo es
+ * hingehört.
+ */
+export const istNeuePost = (m: { tag?: string | null; gelesen?: boolean | null }) =>
+  !m.gelesen && String(m.tag ?? '').startsWith('post-')
 
 /** Eine neue Anfrage hat noch niemand angefasst. */
 export const istNeueAnfrage = (a: { status?: string | null }) => a.status === 'neu'
@@ -89,6 +106,7 @@ export function zuErledigen(
     '/office/wiedervorlagen',
     (daten.wiedervorlagen ?? []).filter((w) => istFaellig(w, jetzt)).length,
   )
+  setzen('/office/post', (daten.meldungen ?? []).filter(istNeuePost).length)
 
   return zahlen
 }

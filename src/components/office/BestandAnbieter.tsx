@@ -155,6 +155,24 @@ export function BestandAnbieter() {
       })
     }
 
+    /*
+     * Der Dienstbote schickt das Ziel, wenn jemand eine Meldung antippt.
+     *
+     * Am Telefon kann er die installierte App nicht selbst umleiten
+     * (`navigate()` scheitert dort in der Regel) — die App muss es selbst tun.
+     * Ohne das landete man auf der Seite, auf der man ohnehin schon stand, und
+     * die Meldung fühlte sich an wie ein kaputter Link.
+     */
+    const beiWorkerNachricht = (e: MessageEvent) => {
+      const daten = e.data as { art?: string; ziel?: string } | null
+      if (daten?.art !== 'gehe-zu' || typeof daten.ziel !== 'string') return
+      // Nur ins eigene Büro — eine fremde Adresse aus einer Nachricht ist
+      // nichts, wohin man von selbst springt
+      if (!daten.ziel.startsWith('/office')) return
+      router.push(daten.ziel)
+    }
+    navigator.serviceWorker?.addEventListener('message', beiWorkerNachricht)
+
     if (!navigator.onLine) netzWegMelden()
     void verbinden()
 
@@ -170,6 +188,7 @@ export function BestandAnbieter() {
 
     return () => {
       beendet.current = true
+      navigator.serviceWorker?.removeEventListener('message', beiWorkerNachricht)
       window.clearInterval(uhr)
       document.removeEventListener('visibilitychange', beiSichtbarkeit)
       window.removeEventListener('online', beiOnline)

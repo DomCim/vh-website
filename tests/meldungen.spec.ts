@@ -6,6 +6,7 @@ import {
   istFaellig,
   istKnapp,
   istNeueAnfrage,
+  istNeuePost,
   istUeberfaellig,
   istZuZahlen,
   zuErledigen,
@@ -165,4 +166,30 @@ test.describe('Was zu erledigen ist', () => {
     ])
     expect(Object.values(zahlen).every((n) => n === 1)).toBe(true)
   })
+})
+
+test('neue Post zählt an der Navigation, solange sie ungelesen ist', () => {
+  /*
+   * Die Zahl der Mails liegt beim Anbieter, nicht im Gerät — gezählt wird
+   * deshalb, was im Gerät liegt: die Meldung des Wartungslaufs. Sie steht für
+   * „da ist etwas, das du noch nicht angesehen hast".
+   */
+  expect(istNeuePost({ tag: 'post-1', gelesen: false })).toBe(true)
+  expect(istNeuePost({ tag: 'post-1', gelesen: true })).toBe(false)
+  // Andere Meldungen zählen woanders — eine überfällige Rechnung ist keine Post
+  expect(istNeuePost({ tag: 'rechnung-12', gelesen: false })).toBe(false)
+  expect(istNeuePost({ gelesen: false })).toBe(false)
+
+  const zahlen = zuErledigen({
+    meldungen: [
+      { tag: 'post-1', gelesen: false },
+      { tag: 'post-2', gelesen: false },
+      { tag: 'post-1', gelesen: true },
+      { tag: 'mahnung-3', gelesen: false },
+    ],
+  })
+  expect(zahlen['/office/post']).toBe(2)
+
+  // Nichts Ungelesenes, kein Zähler — eine Null an der Navigation wäre Lärm
+  expect(zuErledigen({ meldungen: [{ tag: 'post-1', gelesen: true }] })['/office/post']).toBeUndefined()
 })

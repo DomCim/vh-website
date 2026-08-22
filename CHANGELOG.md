@@ -6,6 +6,12 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Meldung über neue Post sagt jetzt, von wem sie ist.** Statt „Neue Post für Info · Eine ungelesene Nachricht" steht dort der Absender und der Betreff der jüngsten ungelesenen Mail — daran erkennt man, ob man das Handy aus der Tasche holen muss. Liegt mehr als eine bereit, steht die Zahl dahinter.
+
+- **Antippen führt endlich ins Postfach.** Wer die Meldung am Telefon antippte, landete auf der Seite, auf der er ohnehin schon stand: Die App kann sich in einer installierten Fassung nicht von außen umleiten lassen. Jetzt sagt die Meldung der App, wohin sie gehen soll, und die geht selbst.
+
+- **Neue Post steht als Zähler an der Navigation.** Unter Kundschaft → Postfach erscheint ein Zähler, sobald Post da ist, die noch niemand angesehen hat — wie bei Anfragen, Rechnungen und Belegen. Er verschwindet, sobald man ins Postfach sieht.
+
 - **Der Corten-Strich im Schreibfeld.** In der Leiste steht jetzt „Strich" mit vier Spielarten: **Fein**, **Mittel**, **Kräftig** und **Quer** über die ganze Breite. Gedacht als Trennung vor der Signatur oder zwischen zwei Abschnitten. Was man wählt, sieht man beim Schreiben genauso, wie es beim Empfänger ankommt.
 
 - **Überschriften in Mails tragen ihren Strich von selbst.** Wer „Überschrift 1" oder „Überschrift 2" wählt, bekommt darunter den Corten-Strich der Website — lang unter der großen, kurz unter der kleinen. Das ist dieselbe Handschrift wie auf Angebot, Rechnung und Website; von Hand nachlegen muss man nichts mehr.
