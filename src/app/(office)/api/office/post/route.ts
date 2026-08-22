@@ -28,7 +28,11 @@ async function wache(req: Request) {
 }
 
 /**
- * Steht noch etwas ungelesen? Sonst ist die Meldung erledigt.
+ * Steht im **Posteingang** noch etwas ungelesen? Sonst ist die Meldung erledigt.
+ *
+ * Gezählt wird ausschließlich `INBOX` (`ungeleseneAnzahl`). Wer eine Mail
+ * ungelesen in einen Ordner schiebt, hat sie einsortiert — sie wartet dann
+ * nicht mehr im Eingang, und der Zähler hat dort nichts mehr zu suchen.
  *
  * Gerufen, nachdem im Büro eine Mail geöffnet, abgehakt oder weggeworfen
  * wurde. `nachrichtLesen` setzt die Markierung dabei beim Anbieter (siehe
@@ -148,6 +152,15 @@ export async function POST(req: Request) {
       if (!b.uid) return NextResponse.json({ error: 'uid-fehlt' }, { status: 400 })
       if (!b.ziel?.trim()) return NextResponse.json({ error: 'ziel-fehlt' }, { status: 400 })
       await nachrichtVerschieben(fach, b.ordner || 'INBOX', Number(b.uid), b.ziel)
+      /*
+       * Auch eine ungelesen weggeräumte Mail nimmt den Zähler mit.
+       *
+       * Gezählt wird der Posteingang und nur der: Was in einem Ordner liegt,
+       * ist einsortiert — bearbeitet, aufgehoben, abgelegt. Ein Zähler, der
+       * darauf zeigt, wäre kein Hinweis mehr, sondern eine Erinnerung an ein
+       * Archiv.
+       */
+      await meldungPruefen(payload, fach)
       return NextResponse.json({ ok: true })
     }
 
