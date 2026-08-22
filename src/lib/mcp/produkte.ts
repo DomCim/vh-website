@@ -111,7 +111,7 @@ export function registerProdukte(server: McpServer) {
     'produkt_aendern',
     {
       description:
-        'Ändert ein Produkt (nur die angegebenen Felder). Preisänderungen wirken sofort im Shop. Mit sprache=fr/en werden die übersetzbaren Felder (Titel, Kurzbeschreibung, Beschreibung, Fertigungszeit) in dieser Sprache gesetzt; alle übrigen Felder gelten sprachübergreifend.',
+        'Ändert ein Produkt (nur die angegebenen Felder). Preisänderungen wirken sofort im Shop. Mit sprache=fr/en werden die übersetzbaren Felder (Titel, Kurzbeschreibung, Beschreibung, Fertigungszeit) in dieser Sprache gesetzt; alle übrigen Felder gelten sprachübergreifend. Bei einem Produkt mit Varianten müssen deren Bezeichnungen in derselben Sprachfassung mitgegeben werden — dafür ist "varianten" da.',
       inputSchema: {
         slug: z.string().describe('Slug des Produkts, z.B. outdoor-sofa-os'),
         sprache,
@@ -137,6 +137,41 @@ export function registerProdukte(server: McpServer) {
         nurAufAnfrage: z.boolean().optional(),
         aufStartseite: z.boolean().optional(),
         reihenfolge: z.number().optional(),
+        /*
+         * Warum die Varianten hier noch einmal auftauchen, obwohl es
+         * produkt_varianten_setzen gibt.
+         *
+         * Payload prüft beim Schreiben einer Sprachfassung das **ganze**
+         * Dokument in dieser Sprache. Titel und Variantenbezeichnung sind
+         * beide Pflicht und beide übersetzbar — bei einem Produkt, das noch
+         * gar keine französische Fassung hat, sind beide leer. Damit lief
+         * jeder Weg ins Leere: produkt_aendern scheiterte an den
+         * Bezeichnungen, produkt_varianten_setzen am Titel. Aufgefallen beim
+         * Übersetzen des Brasero, der sechs Varianten hat.
+         *
+         * Beides in einem Aufruf löst das. Für ein Produkt ohne Varianten
+         * ändert sich nichts, und wer nur umbenennen will, nimmt weiterhin
+         * produkt_varianten_setzen.
+         */
+        varianten: z
+          .array(
+            z.object({
+              titel: z.string(),
+              preis: z.number().nonnegative(),
+              kennung: z
+                .string()
+                .optional()
+                .describe(
+                  'Die Kennung einer bestehenden Variante (aus produkt_lesen). Damit bleibt sie ' +
+                    'beim Umbenennen oder Übersetzen dieselbe — daran hängen Stückliste, ' +
+                    'Werkstattdateien und die Bestellungen.',
+                ),
+            }),
+          )
+          .optional()
+          .describe(
+            'Nötig, wenn das Produkt Varianten hat und diese Sprachfassung neu angelegt wird',
+          ),
       },
     },
     async ({
@@ -154,9 +189,13 @@ export function registerProdukte(server: McpServer) {
       nurAufAnfrage,
       aufStartseite,
       reihenfolge,
+      varianten,
     }) => {
       const payload = await db()
-      const produkt = await findeNachSlug<{ id: number }>(payload, 'products', slug)
+      const produkt = await findeNachSlug<{
+        id: number
+        variants?: { id?: string | null; title?: string | null }[] | null
+      }>(payload, 'products', slug, { locale })
       if (!produkt) return fehler(`Produkt "${slug}" nicht gefunden`)
 
       let kategorieId: number | undefined
@@ -183,6 +222,14 @@ export function registerProdukte(server: McpServer) {
           ...(nurAufAnfrage !== undefined && { onRequestOnly: nurAufAnfrage }),
           ...(aufStartseite !== undefined && { featured: aufStartseite }),
           ...(reihenfolge !== undefined && { order: reihenfolge }),
+          // Bestehende Varianten behalten ihre Kennung — siehe variantenZuordnen
+          ...(varianten !== undefined && {
+            variants: variantenZuordnen(produkt.variants ?? [], varianten).map((v) => ({
+              ...(v.id ? { id: v.id } : {}),
+              title: v.titel,
+              price: v.preis,
+            })),
+          }),
         },
       })
       return ok({

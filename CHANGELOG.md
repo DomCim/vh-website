@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Ein Artikel mit Varianten lässt sich per KI-Assistent übersetzen.** Bisher ging das nicht: Titel und Variantenbezeichnung sind beide Pflicht und beide übersetzbar, und bei einem Artikel ohne französische Fassung fehlten beide. Damit lief jeder Weg ins Leere — das eine Werkzeug scheiterte am Titel, das andere an den Bezeichnungen. Jetzt lassen sich beide in einem Zug setzen. Aufgefallen beim Übersetzen des Brasero mit seinen sechs Größen.
+
 - **Rechtstexte stehen jetzt im Büro.** Unter Sonstiges → Rechtstexte lassen sich Impressum, Datenschutzerklärung, AGB, Widerrufsbelehrung, Muster-Widerrufsformular sowie Versand & Zahlung bearbeiten — **in allen drei Sprachen**, mit der Sprachwahl über den Feldern. Bisher ging das nur in der Website-Verwaltung, in einer anderen Oberfläche und für jede Sprache einzeln. Zu jedem Text steht ein Verweis auf die Seite, auf der er draußen erscheint.
 
 - **Die Entwürfe lassen sich mit einem Knopf einspielen.** Widerrufsbelehrung, Muster-Formular sowie Versand & Zahlung gab es als Vorlage schon lange — aber nur über ein Kommando am Server. Genau deshalb blieben diese beiden Seiten leer, bis das Merchant Center darüber stolperte. Jetzt genügt ein Knopf. Geschrieben wird nur dort, wo noch nichts steht: Eine eigene Fassung ist geprüft, der Entwurf ist es nicht.
