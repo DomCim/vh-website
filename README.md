@@ -371,6 +371,36 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 2. Code im Admin unter **Website-Einstellungen → Pinterest-Verifizierungscode** eintragen — das Meta-Tag erscheint automatisch auf allen Seiten.
 3. In Pinterest die Verifizierung abschließen und Produktbilder pinnen bzw. pinnen lassen.
 
+## Gefunden werden: IndexNow und llms.txt
+
+Zwei Dinge laufen von selbst und brauchen keine Pflege — sie sind hier nur
+beschrieben, damit man weiß, dass es sie gibt.
+
+**IndexNow** meldet jede geänderte Seite sofort an die Suchdienste, statt zu
+warten, bis wieder einmal ein Crawler vorbeikommt. Betroffen sind Artikel,
+Kategorien, Referenzen und veröffentlichte News-Beiträge; Gelöschtes wird
+ebenfalls gemeldet, damit es nicht als Fehlerseite im Verzeichnis stehen
+bleibt. Google beteiligt sich nicht daran, **Bing** schon — und hinter der
+Websuche von ChatGPT steht Bing.
+
+Der Nachweis, dass wir für diese Adresse sprechen dürfen, ist eine Datei unter
+`public/<schlüssel>.txt`; derselbe Wert steht in `src/lib/indexnow.ts`. Beides
+muss zusammenpassen, sonst nimmt der Dienst die Meldung zwar an, verwirft sie
+aber still — eine Prüfung (`tests/indexnow.spec.ts`) wacht darüber. Der
+Schlüssel ist **kein Geheimnis**: Er steht öffentlich im Netz und beweist nur,
+dass wir den Server bestücken können. Abschalten lässt sich das Melden mit
+`INDEXNOW_AUS=true`; von einer Adresse, die nicht öffentlich per HTTPS
+erreichbar ist, wird ohnehin nichts gemeldet.
+
+**`llms.txt`** unter `https://vincent-hellmann.com/llms.txt` sagt in schlichtem
+Text, wer wir sind und wo was liegt — Sortiment, lieferbare Stücke mit Preis,
+häufige Fragen, Referenzen, letzte Beiträge. Wenn ChatGPT, Claude oder
+Perplexity auf uns stoßen, lesen sie sonst unser HTML mit Navigation, Galerien
+und Formularen und müssen sich das Wesentliche selbst herausklauben. Die Datei
+kommt bei jedem Abruf frisch aus der Datenbank; für die anderen Sprachen
+`?sprache=fr` bzw. `?sprache=en`. Das ist ein Vorschlag und keine Norm — er
+kostet nichts und schadet nichts.
+
 ## Google Merchant Center (kostenlose Shopping-Einträge)
 
 Wer sein Sortiment im Merchant Center hinterlegt, erscheint in den **kostenlosen

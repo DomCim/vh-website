@@ -1,9 +1,29 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
+import { indexNowHooks } from '../lib/indexnow'
 import { autoSlug } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
+
+/**
+ * Die Adresse eines Artikels steht nur mit seiner Kategorie fest, und die
+ * kommt im Hook als Nummer an — also einmal nachschlagen. Nicht mehr
+ * angebotene Stücke werden trotzdem gemeldet: Die Seite ändert sich (sie sagt
+ * jetzt „nicht verfügbar"), und genau das soll draußen ankommen.
+ */
+const indexNowArtikel = indexNowHooks(async (doc, payload) => {
+  if (!doc.slug) return null
+  const kategorie = doc.category
+  const id = typeof kategorie === 'object' && kategorie !== null
+    ? (kategorie as { id?: number }).id
+    : (kategorie as number | undefined)
+  if (!id) return null
+  const gefunden = await payload
+    .findByID({ collection: 'categories', id, depth: 0, overrideAccess: true })
+    .catch(() => null)
+  return gefunden?.slug ? `/${gefunden.slug}/${doc.slug}` : null
+})
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -24,9 +44,10 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
-    // Offene Büro-Seiten über Änderungen unterrichten
-    afterChange: liveHooks('artikel').afterChange,
-    afterDelete: liveHooks('artikel').afterDelete,
+    // Offene Büro-Seiten über Änderungen unterrichten, und die Suchdienste
+    // über die öffentliche Artikelseite (siehe lib/indexnow.ts)
+    afterChange: [...liveHooks('artikel').afterChange, ...indexNowArtikel.afterChange],
+    afterDelete: [...liveHooks('artikel').afterDelete, ...indexNowArtikel.afterDelete],
   },
   fields: [
     {

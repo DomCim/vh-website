@@ -1,7 +1,12 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
+import { indexNowHooks } from '../lib/indexnow'
 import { autoSlug } from '../lib/slug'
+
+const indexNowProjekte = indexNowHooks((doc) =>
+  doc.slug ? `/projekte/${doc.slug}` : null,
+)
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -22,6 +27,9 @@ export const Projects: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
+    // Neue Referenzen den Suchdiensten melden (siehe lib/indexnow.ts)
+    afterChange: indexNowProjekte.afterChange,
+    afterDelete: indexNowProjekte.afterDelete,
   },
   fields: [
     {
