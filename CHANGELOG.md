@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Eine Oberkategorie zeigt nicht mehr alles doppelt.** Auf „Outdoor" standen die drei Kacheln Möbel, Pflanzen und Feuer — und darunter noch einmal sämtliche Stücke aus allen dreien. Jetzt zeigt eine Kategorie ihre Unterkategorien und die Artikel, die wirklich in ihr liegen. Wer tiefer will, tippt eine Kachel an; dafür sind sie da.
+
+- **Jeder Artikel hat wieder genau eine Adresse.** Das war der eigentliche Schaden hinter der Dopplung: Ein Sofa aus „Möbel" wurde auf der Outdoor-Seite unter `/outdoor/…` verlinkt statt unter `/moebel/…`. Beide Adressen lieferten dieselbe Seite und erklärten sich obendrein jeweils selbst für die maßgebliche — für Google zwei Seiten mit gleichem Inhalt, die sich gegenseitig die Bedeutung wegnehmen. Alte Links bleiben gültig und führen weiter zum Ziel, zählen aber nicht mehr als eigene Seite.
+
 - **Leere Kategorien lassen sich per KI-Assistent entfernen.** Bisher gab es dafür kein Werkzeug — anlegen und ändern ging, wegräumen nicht. Wie beim Löschen eines Artikels ist es zweistufig: Der erste Aufruf zeigt nur, was passieren würde. Liegen noch Artikel darin, wird nichts gelöscht, sondern gesagt, dass sie zuerst umgehängt gehören; Unterkategorien rücken eine Ebene nach oben, und auch das steht vorher da.
 
 - **Ein Artikel mit Varianten lässt sich per KI-Assistent übersetzen.** Bisher ging das nicht: Titel und Variantenbezeichnung sind beide Pflicht und beide übersetzbar, und bei einem Artikel ohne französische Fassung fehlten beide. Damit lief jeder Weg ins Leere — das eine Werkzeug scheiterte am Titel, das andere an den Bezeichnungen. Jetzt lassen sich beide in einem Zug setzen. Aufgefallen beim Übersetzen des Brasero mit seinen sechs Größen.

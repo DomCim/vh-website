@@ -53,8 +53,26 @@ export default async function CategoryPage({
   if (!category) notFound()
 
   const children = await getChildCategories(category.id, locale)
-  const categoryIds = [category.id, ...children.map((c) => c.id)]
-  const products = await getProductsByCategory(categoryIds, locale)
+
+  /*
+   * Nur die Artikel, die **in dieser** Kategorie liegen.
+   *
+   * Vorher standen auch die der Unterkategorien mit hier — auf „Outdoor" also
+   * die drei Kacheln Möbel, Pflanzen und Feuer **und** darunter noch einmal
+   * alle Stücke aus allen dreien. Dieselbe Ware zweimal auf einer Seite, und
+   * die Kacheln darüber wirkten wie Zierde.
+   *
+   * Schlimmer als die Dopplung war die Adresse: Ein Sofa aus „Möbel" bekam auf
+   * der Outdoor-Seite den Link `/de/outdoor/outdoor-sofa-os`, obwohl es unter
+   * `/de/moebel/outdoor-sofa-os` zu Hause ist. Beide Adressen lieferten
+   * dieselbe Seite aus und erklärten sich obendrein jeweils selbst für die
+   * maßgebliche — für Google zwei Seiten mit gleichem Inhalt, die sich
+   * gegenseitig die Bedeutung wegnehmen.
+   *
+   * Eine Kategorie zeigt jetzt ihre Kacheln und ihre eigenen Artikel. Wer
+   * tiefer will, klickt eine Kachel an — dafür sind sie da.
+   */
+  const products = await getProductsByCategory([category.id], locale)
 
   const headerImage = category.image
 

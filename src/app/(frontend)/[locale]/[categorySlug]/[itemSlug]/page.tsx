@@ -48,10 +48,27 @@ export async function generateMetadata({
   const product = await getProductBySlug(itemSlug, locale);
   if (!product) return {};
   const image = absoluteUrl(mediaUrl(product.images?.[0], "large"));
+  /*
+   * Die maßgebliche Adresse kommt vom Artikel, nicht aus dem Aufruf.
+   *
+   * Ein Artikel ist unter jedem Kategoriepfad erreichbar, der auf ihn führt —
+   * das Sofa also unter `/de/moebel/…` wie unter `/de/outdoor/…`. Stand hier
+   * der Pfad aus dem Aufruf, erklärte sich jede dieser Adressen selbst für die
+   * maßgebliche, und Google hatte zwei Seiten mit demselben Inhalt vor sich.
+   * Beide bekommen dann halb so viel Gewicht wie eine.
+   *
+   * Jetzt zeigen alle auf die eine Adresse, unter der der Artikel wirklich
+   * einsortiert ist. Ein alter Link bleibt gültig und führt zum Ziel; er zählt
+   * nur nicht mehr als eigene Seite.
+   */
+  const eigeneKategorie =
+    typeof product.category === "object" && product.category
+      ? ((product.category as { slug?: string }).slug ?? categorySlug)
+      : categorySlug;
   return {
     title: product.title,
     description: product.shortDescription || undefined,
-    alternates: alternatesFor(locale, `/${categorySlug}/${itemSlug}`),
+    alternates: alternatesFor(locale, `/${eigeneKategorie}/${itemSlug}`),
     openGraph: {
       title: product.title,
       description: product.shortDescription || undefined,
@@ -70,6 +87,18 @@ export default async function ProductPage({ params }: { params: PageParams }) {
 
   const product = await getProductBySlug(itemSlug, locale);
   if (!product) notFound();
+
+  /*
+   * Die Adresse, unter der der Artikel wirklich einsortiert ist — siehe die
+   * Begründung bei `alternatesFor` weiter oben. Sie gilt auch für die
+   * Auszeichnungen: Was Google als Adresse des Artikels und als Weg dorthin
+   * bekommt, muss dieselbe sein, die oben als maßgeblich steht.
+   */
+  const kanonischeKategorie =
+    typeof product.category === "object" && product.category
+      ? ((product.category as { slug?: string }).slug ?? categorySlug)
+      : categorySlug;
+  const artikelPfad = `/${kanonischeKategorie}/${itemSlug}`;
 
   const testimonials = await getTestimonialsForProduct(product.id, locale);
   const settings = await getSiteSettings(locale);
@@ -120,7 +149,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
     name: product.title,
     description: product.shortDescription || undefined,
     image: images.map((i) => absoluteUrl(i.url)).filter(Boolean),
-    url: `${BASE_URL}/${locale}/${categorySlug}/${itemSlug}`,
+    url: `${BASE_URL}/${locale}${artikelPfad}`,
     brand: { "@type": "Brand", name: "Vincent Hellmann" },
     ...(schnitt !== null && {
       aggregateRating: {
@@ -148,7 +177,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
             product.available !== false
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
-          url: `${BASE_URL}/${locale}/${categorySlug}/${itemSlug}`,
+          url: `${BASE_URL}/${locale}${artikelPfad}`,
         },
       }),
   });
@@ -156,8 +185,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
   // Der Weg, den Google unter dem Treffer zeigt
   const brotkrumen = breadcrumbJsonLd(locale, [
     { name: dict.nav.collection, pfad: "/kollektion" },
-    { name: category?.name ?? categorySlug, pfad: `/${categorySlug}` },
-    { name: product.title, pfad: `/${categorySlug}/${itemSlug}` },
+    { name: category?.name ?? kanonischeKategorie, pfad: `/${kanonischeKategorie}` },
+    { name: product.title, pfad: artikelPfad },
   ]);
 
   return (
