@@ -6,6 +6,14 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Sterne im Google-Ergebnis.** Kundinnen und Kunden können ihrer Stimme nach der Lieferung freiwillig Sterne geben — der Text bleibt die Hauptsache, die Sterne sind ein Zusatz. Auf der Artikelseite stehen sie über dem Zitat, und im Google-Ergebnis erscheint der Durchschnitt als Sternebewertung. Gerechnet wird nur mit dem, was wirklich vergeben wurde; eine Stimme ohne Sterne zählt gar nicht mit.
+
+- **Häufige Fragen.** Unter Website-Einstellungen lassen sich Fragen und Antworten pflegen. Sie erscheinen aufklappbar auf der Seite „Maßanfertigung" — und ausgezeichnet für Google, das sie unter dem Treffer anzeigt und damit doppelt so viel Platz in der Ergebnisliste einnimmt. Anlegen geht auch per KI-Assistent: `faq_liste`, `faq_ergaenzen` und `faq_setzen`.
+
+- **Der Weg im Suchergebnis.** Unter Artikeln, News-Beiträgen und Referenzen steht bei Google jetzt der Pfad („Kollektion › Pflanzkübel") statt der nackten Adresse. Man sieht vor dem Klick, wo man landet.
+
+- **Google und Bing bestätigen.** Zwei neue Felder in den Website-Einstellungen für die Nachweise der Search Console und der Bing Webmaster Tools — damit lässt sich einsehen, mit welchen Suchanfragen Menschen auf der Seite landen. Bing steht dabei auch hinter der Websuche von ChatGPT.
+
 ## 22.08.2026 — Kein Seed mehr beim Ausrollen
 
 - **Ein Ausrollen bringt keine Beispielinhalte mehr zurück.** Bisher sah der Startlauf bei jedem Ausrollen nach, ob Referenzen, Ratgeber-Beiträge oder „Über uns" fehlen — und legte sie wieder an. Wer eine Beispiel-Referenz gelöscht hatte, weil sie nicht zum Betrieb gehört, hatte sie am nächsten Tag wieder dastehen. Jetzt gilt: Ist die Datenbank eingerichtet, wird nichts mehr angefasst. Nachtragen lässt sich weiterhin, aber nur ausdrücklich.

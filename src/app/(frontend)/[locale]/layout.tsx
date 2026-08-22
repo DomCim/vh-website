@@ -71,9 +71,26 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
       locale,
       type: 'website',
     },
-    // Pinterest-Website-Verifizierung (Code aus den Website-Einstellungen)
-    ...(settings?.pinterestVerification && {
-      other: { 'p:domain_verify': settings.pinterestVerification },
+    /*
+     * Die Nachweise, dass die Seite uns gehört.
+     *
+     * Pinterest, Google und Bing wollen das je einmal wissen und bieten dafür
+     * ein Meta-Tag an. Sie stehen in einer Zeile, weil `other` genau einmal
+     * gesetzt werden darf — zwei Angaben nacheinander überschrieben einander,
+     * und der zweite Dienst fände seinen Nachweis nie.
+     */
+    ...((settings?.pinterestVerification ||
+      settings?.googleVerification ||
+      settings?.bingVerification) && {
+      other: {
+        ...(settings?.pinterestVerification && {
+          'p:domain_verify': settings.pinterestVerification,
+        }),
+        ...(settings?.googleVerification && {
+          'google-site-verification': settings.googleVerification,
+        }),
+        ...(settings?.bingVerification && { 'msvalidate.01': settings.bingVerification }),
+      },
     }),
   }
 }

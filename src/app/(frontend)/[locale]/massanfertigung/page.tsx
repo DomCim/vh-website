@@ -6,7 +6,7 @@ import { MassanfertigungForm } from '../../../../components/MassanfertigungForm'
 import { Reveal } from '../../../../components/motion/Reveal'
 import { getSiteSettings } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
-import { alternatesFor } from '../../../../lib/seo'
+import { alternatesFor, jsonLd } from '../../../../lib/seo'
 
 export async function generateMetadata({
   params,
@@ -33,8 +33,31 @@ export default async function MassanfertigungSeite({
   const dict = t(locale)
   const settings = await getSiteSettings(locale)
 
+  /*
+   * Häufige Fragen — auf der Seite und im Suchergebnis.
+   *
+   * Beides aus derselben Quelle: Google zeigt die Fragen unter dem Treffer
+   * aufklappbar an, verlangt dafür aber, dass sie auf der Seite auch wirklich
+   * stehen. Eine Auszeichnung ohne sichtbaren Inhalt ist keine Abkürzung,
+   * sondern ein Grund, die Seite dauerhaft davon auszuschließen.
+   */
+  const fragen = (settings?.faq ?? []).filter((f) => f.frage && f.antwort)
+  const faqJsonLd = fragen.length
+    ? jsonLd({
+        '@type': 'FAQPage',
+        mainEntity: fragen.map((f) => ({
+          '@type': 'Question',
+          name: f.frage,
+          acceptedAnswer: { '@type': 'Answer', text: f.antwort },
+        })),
+      })
+    : null
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
+      {faqJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd }} />
+      )}
       <Reveal>
         <h1 className="tracking-nav text-ink heading-rule text-2xl font-semibold uppercase">
           {dict.custom.title}
@@ -66,6 +89,31 @@ export default async function MassanfertigungSeite({
           error: dict.custom.error,
         }}
       />
+
+      {fragen.length > 0 && (
+        <Reveal>
+          <section className="mt-16">
+            <h2 className="tracking-nav text-ink heading-rule text-lg font-semibold uppercase">
+              {dict.custom.faqTitle}
+            </h2>
+            <div className="mt-6 space-y-2">
+              {fragen.map((f, i) => (
+                /* Aufklappbar statt untereinander: Zehn Fragen am Stück liest
+                   niemand, und die eine, die man hat, findet man so schneller.
+                   `details` kann das ohne eine Zeile JavaScript. */
+                <details key={i} className="border-line border-b pb-2">
+                  <summary className="text-ink cursor-pointer py-2 text-sm font-semibold">
+                    {f.frage}
+                  </summary>
+                  <p className="text-ink-soft pb-2 text-sm leading-relaxed whitespace-pre-line">
+                    {f.antwort}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
     </div>
   )
 }

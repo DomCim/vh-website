@@ -6,6 +6,7 @@ import { registerAnalyse } from '../../../../lib/mcp/analyse'
 import { registerAnfragen } from '../../../../lib/mcp/anfragen'
 import { registerBestellungen } from '../../../../lib/mcp/bestellungen'
 import { registerBuero } from '../../../../lib/mcp/buero'
+import { registerFaq } from '../../../../lib/mcp/faq'
 import { registerKategorien } from '../../../../lib/mcp/kategorien'
 import { registerKundenstimmen } from '../../../../lib/mcp/kundenstimmen'
 import { registerMedien } from '../../../../lib/mcp/medien'
@@ -63,6 +64,7 @@ function alleWerkzeuge(server: McpServer) {
   registerKategorien(server)
   registerReferenzen(server)
   registerKundenstimmen(server)
+  registerFaq(server)
   registerNews(server)
   registerAktionen(server)
   registerBestellungen(server)

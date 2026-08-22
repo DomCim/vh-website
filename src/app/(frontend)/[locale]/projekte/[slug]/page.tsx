@@ -12,7 +12,7 @@ import { SplitTextReveal } from '../../../../../components/motion/SplitTextRevea
 import { RichText } from '../../../../../components/RichText'
 import { getProjectBySlug, mediaAlt, mediaUrl } from '../../../../../lib/data'
 import { isLocale, t } from '../../../../../lib/i18n'
-import { absoluteUrl, alternatesFor, jsonLd } from '../../../../../lib/seo'
+import { absoluteUrl, alternatesFor, breadcrumbJsonLd, jsonLd } from '../../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +73,15 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: projektJsonLd }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: breadcrumbJsonLd(locale, [
+            { name: dict.nav.projects, pfad: '/projekte' },
+            { name: project.title, pfad: `/projekte/${slug}` },
+          ]),
+        }}
+      />
       <Reveal>
         <Link
           href={`/${locale}/projekte`}

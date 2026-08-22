@@ -260,6 +260,7 @@ const de = {
   },
   custom: {
     title: 'Maßanfertigung',
+    faqTitle: 'Häufige Fragen',
     intro:
       'Nichts Passendes dabei? Wir fertigen ohnehin jedes Stück einzeln — sagen Sie uns, was Ihnen vorschwebt.',
     width: 'Breite (cm)',
@@ -332,6 +333,8 @@ const de = {
     unknown:
       'Zu diesem Link finden wir keine Bestellung. Vielleicht ist er unvollständig — schreiben Sie uns einfach direkt.',
     quoteLabel: 'Was möchten Sie sagen?',
+    ratingLabel: 'Sterne (freiwillig)',
+    ratingHint: 'Nur wenn Sie mögen — der Text ist die Hauptsache.',
     authorLabel: 'Name, wie er dabeistehen soll',
     contextLabel: 'Ort oder Anlass (optional)',
     consent:
@@ -626,6 +629,7 @@ const fr: Dictionary = {
   },
   custom: {
     title: 'Sur mesure',
+    faqTitle: 'Questions fréquentes',
     intro:
       'Rien ne correspond ? Chaque pièce est de toute façon fabriquée à l\'unité — dites-nous ce que vous imaginez.',
     width: 'Largeur (cm)',
@@ -698,6 +702,8 @@ const fr: Dictionary = {
     unknown:
       "Nous ne trouvons aucune commande pour ce lien. Il est peut-être incomplet — écrivez-nous directement.",
     quoteLabel: 'Que souhaitez-vous dire ?',
+    ratingLabel: 'Étoiles (facultatif)',
+    ratingHint: 'Seulement si vous le souhaitez — le texte est l’essentiel.',
     authorLabel: 'Nom tel qu’il apparaîtra',
     contextLabel: 'Lieu ou occasion (facultatif)',
     consent:
@@ -989,6 +995,7 @@ const en: Dictionary = {
   },
   custom: {
     title: 'Made to measure',
+    faqTitle: 'Frequently asked questions',
     intro:
       'Nothing quite right? Every piece is made individually anyway — tell us what you have in mind.',
     width: 'Width (cm)',
@@ -1061,6 +1068,8 @@ const en: Dictionary = {
     unknown:
       'We cannot find an order for this link. It may be incomplete — just write to us directly.',
     quoteLabel: 'What would you like to say?',
+    ratingLabel: 'Stars (optional)',
+    ratingHint: 'Only if you like — the words matter more.',
     authorLabel: 'Name as it should appear',
     contextLabel: 'Place or occasion (optional)',
     consent:
