@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Sichtbare Rabatte, gestaltbare Rechtstexte und eine schärfere Übersetzungsprüfung
+
 - **Eine Aktion steht jetzt am Preis.** Der Sommer-Sale war richtig eingerichtet und die Kasse zog die 40 % auch ab — nur sah man davon nichts: Auf der Übersicht stand am Sofa unverändert **1.990 €**, und der Rabatt tauchte erst im Warenkorb auf. Wer nicht auf gut Glück etwas hineinlegte, erfuhr nie davon. Jetzt trägt die Kachel ein Band mit dem Prozentsatz, und am Preis steht der Aktionspreis mit dem durchgestrichenen alten daneben. Auf der Artikelseite kommen Name der Aktion und das Datum dazu, bis zu dem sie läuft.
 
 - **Google bekommt den Aktionspreis mit.** Im Produktdatenfeed steht der reguläre Preis weiterhin als Preis und der rabattierte als **Aktionspreis** — samt Zeitraum. So zeigt Google Shopping den Streichpreis, statt eine Preisabweichung zu melden. Dasselbe gilt für die Artikelseite, deren Auszeichnung sonst einen anderen Preis genannt hätte als die Seite selbst.
@@ -24,7 +26,7 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 - **Die Sterne einer Kundenstimme waren für den Assistenten unsichtbar.** Sie kamen heute Nachmittag dazu und fehlten in der Schnittstelle — weder lesbar noch setzbar. Dabei entscheiden sie mit darüber, ob im Google-Ergebnis eine Sternebewertung erscheint.
 
-- **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: `## Überschrift`, `### kleinere`, `- Punkt einer Aufzählung`, `**fett**`. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
+- **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: **## Überschrift**, **### kleinere**, **- Punkt einer Aufzählung** und zwei Sternchen für **fett**. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
 
 - **Dasselbe gilt für Artikelbeschreibungen und alles, was der KI-Assistent schreibt.** Eine per Assistent übersetzte Beschreibung wurde bisher zur Textwüste, wo die deutsche Zwischenüberschriften und eine Aufzählung hatte. Jetzt kommt die Gliederung mit.
 
