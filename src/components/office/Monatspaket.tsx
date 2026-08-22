@@ -56,17 +56,17 @@ export function Monatspaket({ kanzlei }: { kanzlei: string | null }) {
       const j = await res.json()
       if (!res.ok) {
         setMeldung(
-          j?.error === 'zu-gross'
-            ? 'Das Paket ist zu groß für eine Mail — bitte herunterladen und anders übergeben.'
-            : j?.error === 'keine-kanzlei'
-              ? 'Keine Kanzlei-Adresse hinterlegt — Einstellungen → Integrationen → E-Mail-Versand.'
-              : 'Der Versand ist fehlgeschlagen.',
+          j?.error === 'keine-kanzlei'
+            ? 'Keine Kanzlei-Adresse hinterlegt — Einstellungen → Integrationen → E-Mail-Versand.'
+            : 'Der Versand ist fehlgeschlagen.',
         )
         return
       }
       setMeldung(
-        `Verschickt an ${j.an} — ${j.dateien} Dateien.` +
-          (j.ohneScan ? ` ${j.ohneScan} Ausgaben ohne Scan fehlen im Anhang.` : ''),
+        (j.alsLink
+          ? `Zu groß für einen Anhang — ${j.an} bekam die Buchungsliste plus einen Abhol-Link, 14 Tage gültig.`
+          : `Verschickt an ${j.an} — ${j.dateien} Dateien.`) +
+          (j.ohneScan ? ` ${j.ohneScan} Ausgaben ohne Scan fehlen im Paket.` : ''),
       )
     } catch {
       setMeldung('Verbindung fehlgeschlagen.')

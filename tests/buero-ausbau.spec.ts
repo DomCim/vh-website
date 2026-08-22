@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import zlib from 'zlib'
 
 import { expect, test } from '@playwright/test'
@@ -163,5 +164,31 @@ test.describe('Büro-Ausbau: Bausteine, Turnus, Abnahme, Monatspaket', () => {
     expect(paket.headers()['content-type']).toContain('application/zip')
     // Jedes ZIP beginnt mit „PK"
     expect((await paket.body()).subarray(0, 2).toString('ascii')).toBe('PK')
+
+    // ── Abhol-Link: gültig signiert liefert, gefälscht und abgelaufen nicht ─
+    const geheimnis = process.env.PAYLOAD_SECRET ?? ''
+    const signieren = (jahr: number, monat: number, bis: number) =>
+      crypto
+        .createHmac('sha256', geheimnis)
+        .update(`steuerpaket:${jahr}:${monat}:${bis}`)
+        .digest('base64url')
+
+    const bis = Date.now() + 24 * 60 * 60 * 1000
+    const echt = await request.get(
+      `${BASIS}/api/steuerpaket?jahr=${jetzt.getFullYear()}&monat=${jetzt.getMonth() + 1}&bis=${bis}&sig=${signieren(jetzt.getFullYear(), jetzt.getMonth() + 1, bis)}`,
+    )
+    expect(echt.status(), 'Abhol-Link ohne Anmeldung nutzbar').toBe(200)
+    expect((await echt.body()).subarray(0, 2).toString('ascii')).toBe('PK')
+
+    const gefaelscht = await request.get(
+      `${BASIS}/api/steuerpaket?jahr=${jetzt.getFullYear()}&monat=${jetzt.getMonth() + 1}&bis=${bis}&sig=falsch`,
+    )
+    expect(gefaelscht.status(), 'gefälschte Signatur abgewiesen').toBe(403)
+
+    const vorbei = Date.now() - 1000
+    const abgelaufen = await request.get(
+      `${BASIS}/api/steuerpaket?jahr=${jetzt.getFullYear()}&monat=${jetzt.getMonth() + 1}&bis=${vorbei}&sig=${signieren(jetzt.getFullYear(), jetzt.getMonth() + 1, vorbei)}`,
+    )
+    expect(abgelaufen.status(), 'abgelaufener Link abgewiesen').toBe(403)
   })
 })
