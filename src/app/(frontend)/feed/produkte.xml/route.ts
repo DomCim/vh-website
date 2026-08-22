@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 
 import { bildQuellen, type BildQuelle } from '../../../../components/Bild'
+import { aktionFuerArtikel, mitRabatt, type Preisaktion } from '../../../../lib/aktionspreis'
 import { payloadClient } from '../../../../lib/data'
 import { type Locale, locales } from '../../../../lib/i18n'
+import { laufendeAktionen } from '../../../../lib/promotions'
 import { absoluteUrl, BASE_URL } from '../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +52,18 @@ const escape = (text: string) =>
 const preis = (wert: number) => `${wert.toFixed(2)} EUR`
 
 /**
+ * Der Zeitraum einer Aktion, wie Google ihn erwartet: zwei Zeitpunkte, durch
+ * einen Schrägstrich getrennt. Der Beginn liegt bewusst in der Vergangenheit —
+ * die Aktion läuft ja bereits, sonst stünde sie hier nicht.
+ */
+const zeitraum = (aktion: Preisaktion) =>
+  `${new Date(Date.now() - 60_000).toISOString().replace(/\.\d+Z$/, 'Z')}/${new Date(
+    aktion.giltBis,
+  )
+    .toISOString()
+    .replace(/\.\d+Z$/, 'Z')}`
+
+/**
  * Für diese Länder steht der Versand im Feed.
  *
  * **Warum überhaupt im Feed und nicht im Merchant Center.** Google nimmt
@@ -92,10 +106,22 @@ export async function GET(req: Request) {
     overrideAccess: true,
   })
 
+  /*
+   * Läuft eine Aktion, gehört sie in den Feed — sonst steht bei Google ein
+   * anderer Preis als auf der Seite, und genau daran nimmt das Merchant
+   * Center Anstoß („Preisabweichung"). Google kennt dafür ein eigenes Feld:
+   * `g:price` bleibt der reguläre Preis, `g:sale_price` ist der Aktionspreis.
+   * Ihn einfach in `g:price` zu schreiben wäre schlechter — dann fiele der
+   * durchgestrichene Preis im Shopping-Ergebnis weg, und der ist der halbe
+   * Grund für eine Aktion.
+   */
+  const aktionen = await laufendeAktionen(payload, locale)
+
   const eintraege: string[] = []
 
   for (const p of docs as unknown as Record<string, any>[]) {
     const kategorie = typeof p.category === 'object' ? p.category : null
+    const aktion = aktionFuerArtikel({ id: p.id, categoryId: kategorie?.id ?? p.category }, aktionen)
     const pfad = `/${locale}/${kategorie?.slug ?? 'kollektion'}/${p.slug}`
     /*
      * Der Zuschnitt und nicht das Original.
@@ -169,6 +195,12 @@ export async function GET(req: Request) {
           `<g:image_link>${escape(bildUrl)}</g:image_link>`,
           `<g:availability>${p.available === false ? 'out_of_stock' : 'in_stock'}</g:availability>`,
           `<g:price>${preis(v.wert)}</g:price>`,
+          ...(aktion
+            ? [
+                `<g:sale_price>${preis(mitRabatt(v.wert, aktion.prozent))}</g:sale_price>`,
+                `<g:sale_price_effective_date>${zeitraum(aktion)}</g:sale_price_effective_date>`,
+              ]
+            : []),
           '<g:condition>new</g:condition>',
           '<g:identifier_exists>no</g:identifier_exists>',
           '<g:brand>Vincent Hellmann</g:brand>',

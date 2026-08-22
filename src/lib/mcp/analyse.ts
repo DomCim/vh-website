@@ -1,22 +1,122 @@
 import { z } from 'zod'
 
+import { richTextZuText } from '../richtextText'
 import { ALLE_BEREICHE, suche, type SuchBereich } from '../search'
 import { BESTELL_STATUS, werteVon } from '../listen'
 import { db, type McpServer, ok, type Sprache, sprache } from './helpers'
 
 const TAG = 86400_000
 
-/** Lokalisierte Pflichtfelder je Inhaltsbereich */
+/**
+ * Lokalisierte Felder je Inhaltsbereich — Textfelder und Fließtexte getrennt.
+ *
+ * **Warum die Fließtexte eigens dastehen.** Sie fehlten hier lange ganz, und
+ * das hatte Folgen: Die Prüfung meldete einen Artikel als übersetzt, während
+ * seine Beschreibung — der längste Text der ganzen Seite — noch leer war oder
+ * aus einem 250-Zeichen-Stummel bestand, wo im Deutschen 2.300 Zeichen
+ * standen. Gefunden wurde das nicht von diesem Werkzeug, sondern von Hand.
+ */
 const UEBERSETZBAR = {
-  produkte: { collection: 'products' as const, felder: ['title', 'shortDescription'], label: 'Produkt' },
-  referenzen: { collection: 'projects' as const, felder: ['title', 'summary'], label: 'Referenz' },
-  news: { collection: 'news' as const, felder: ['title', 'excerpt'], label: 'News-Beitrag' },
-  kategorien: { collection: 'categories' as const, felder: ['name'], label: 'Kategorie' },
-  kundenstimmen: { collection: 'testimonials' as const, felder: ['quote'], label: 'Kundenstimme' },
+  produkte: {
+    collection: 'products' as const,
+    felder: ['title', 'shortDescription'],
+    fliesstext: ['description'],
+    label: 'Produkt',
+  },
+  referenzen: {
+    collection: 'projects' as const,
+    felder: ['title', 'summary'],
+    fliesstext: ['description'],
+    label: 'Referenz',
+  },
+  news: {
+    collection: 'news' as const,
+    felder: ['title', 'excerpt'],
+    fliesstext: [] as string[],
+    label: 'News-Beitrag',
+  },
+  kategorien: {
+    collection: 'categories' as const,
+    felder: ['name', 'description'],
+    fliesstext: [] as string[],
+    label: 'Kategorie',
+  },
+  kundenstimmen: {
+    collection: 'testimonials' as const,
+    felder: ['quote'],
+    fliesstext: [] as string[],
+    label: 'Kundenstimme',
+  },
 }
 
 type BereichName = keyof typeof UEBERSETZBAR
 
+/**
+ * Ab wann ein vorhandener Text als Stummel gilt.
+ *
+ * Eine Übersetzung ist selten genau so lang wie das Original — Französisch
+ * gerät etwas länger, Englisch etwas kürzer. Ein Drittel der deutschen Länge
+ * unterschreitet aber keine ehrliche Übersetzung; dort steht dann ein
+ * Restbestand aus früheren Zeiten.
+ */
+const STUMMEL_ANTEIL = 0.4
+
+/**
+ * Die Gliederung eines Fließtextes als Kürzel: `P H2 P L7 P`.
+ *
+ * Damit lässt sich vergleichen, ob die Übersetzung dieselben
+ * Zwischenüberschriften und Aufzählungen trägt wie das Original. Eine
+ * französische Textwüste neben einem gegliederten deutschen Text ist kein
+ * Schönheitsfehler: Überschriften sind das, woran ein Leser sich orientiert,
+ * und woran Google erkennt, worum es geht.
+ */
+function gliederung(wert: unknown): string {
+  const wurzel = (wert as { root?: { children?: unknown[] } } | null)?.root
+  if (!wurzel) return ''
+  return (wurzel.children ?? [])
+    .map((k) => {
+      const n = k as { type?: string; tag?: string; children?: unknown[] }
+      if (n.type === 'heading') return n.tag === 'h3' ? 'H3' : 'H2'
+      if (n.type === 'list') return `L${(n.children ?? []).length}`
+      return 'P'
+    })
+    .join(' ')
+}
+
+/** Ein Fließtext als reiner Text — für den Längenvergleich */
+function laenge(wert: unknown): number {
+  return richTextZuText(wert).replace(/\s+/g, ' ').trim().length
+}
+
+type Befund = {
+  id: number | string
+  bezeichnung: string
+  /** Felder, in denen in dieser Sprache gar nichts steht */
+  fehlt: string[]
+  /** Felder, in denen etwas steht, das nicht stimmen kann */
+  auffaellig: string[]
+}
+
+/**
+ * Was an einer Sprachfassung fehlt — und was daran nicht stimmt.
+ *
+ * **Warum das mehr prüft als „leer oder nicht".** So fing es an, und so ging
+ * an einem Abend fast alles daneben, was danebengehen konnte:
+ *
+ * — Die **Beschreibungen** waren nicht dabei. Ein Artikel galt als übersetzt,
+ *   während sein längster Text noch leer war.
+ * — Vier Artikel trugen **Stummel** aus einer frühen Einspielung: 250 Zeichen,
+ *   wo im Deutschen 2.300 standen. Gefüllt ist eben nicht übersetzt.
+ * — Zwei Artikel trugen **denselben** fremdsprachigen Text. Eine
+ *   Fahrrad-Wandhalterung wurde auf Französisch als beleuchtetes Herz
+ *   beschrieben, in beiden Sprachen, monatelang.
+ * — Übersetzungen kamen als **Textwüste** zurück, wo das deutsche Original
+ *   Zwischenüberschriften und Aufzählungen hatte.
+ *
+ * Keiner dieser vier Fälle fiel diesem Werkzeug auf. Jetzt fallen alle vier
+ * auf. Was es findet, ist bewusst keine Fehlermeldung, sondern ein Hinweis:
+ * „auffällig" heißt hinsehen, nicht wegwerfen.
+ */
 async function fehlendeUebersetzungen(
   payload: Awaited<ReturnType<typeof db>>,
   ziel: Sprache,
@@ -25,38 +125,94 @@ async function fehlendeUebersetzungen(
   const namen = (nurBereich ? [nurBereich] : (Object.keys(UEBERSETZBAR) as BereichName[])).filter(
     Boolean,
   )
-  const ergebnis: Record<string, { id: number | string; bezeichnung: string; fehlt: string[] }[]> = {}
+  const ergebnis: Record<string, Befund[]> = {}
+
   for (const name of namen) {
-    const { collection, felder, label } = UEBERSETZBAR[name]
-    const { docs: deutsch } = await payload.find({
+    const { collection, felder, fliesstext, label } = UEBERSETZBAR[name]
+    const gemeinsam = {
       collection,
       limit: 200,
       depth: 0,
-      locale: 'de',
       ...(collection === 'news' ? { draft: true } : {}),
-    })
+    }
+    const { docs: deutsch } = await payload.find({ ...gemeinsam, locale: 'de' })
     const { docs: uebersetzt } = await payload.find({
-      collection,
-      limit: 200,
-      depth: 0,
+      ...gemeinsam,
       locale: ziel,
       fallbackLocale: false,
-      ...(collection === 'news' ? { draft: true } : {}),
     })
     const nachId = new Map(uebersetzt.map((d) => [d.id, d as unknown as Record<string, unknown>]))
-    const luecken: { id: number | string; bezeichnung: string; fehlt: string[] }[] = []
+
+    /*
+     * Derselbe Text an zwei Stellen ist fast nie Absicht.
+     *
+     * Zwei Artikel mit wortgleicher fremdsprachiger Beschreibung heißt: Beim
+     * Nachtragen ist eine Zeile verrutscht. Gesammelt wird über den ganzen
+     * Bereich, weil der Fehler zwischen zwei beliebigen Einträgen liegen kann.
+     */
+    const gesehen = new Map<string, (number | string)[]>()
     for (const d of deutsch) {
-      const ziel_ = nachId.get(d.id)
-      const fehlt = felder.filter((f) => {
-        const wert = ziel_?.[f]
-        return typeof wert !== 'string' || wert.trim() === ''
-      })
-      if (fehlt.length) {
-        const doc = d as unknown as Record<string, unknown>
+      const uebersetztDoc = nachId.get(d.id)
+      for (const f of fliesstext) {
+        const text = richTextZuText(uebersetztDoc?.[f]).replace(/\s+/g, ' ').trim()
+        if (text.length < 40) continue
+        const bisher = gesehen.get(text) ?? []
+        bisher.push(d.id)
+        gesehen.set(text, bisher)
+      }
+    }
+    const doppelt = new Set<number | string>()
+    for (const ids of gesehen.values()) if (ids.length > 1) ids.forEach((i) => doppelt.add(i))
+
+    const luecken: Befund[] = []
+    for (const d of deutsch) {
+      const original = d as unknown as Record<string, unknown>
+      const uebersetztDoc = nachId.get(d.id)
+      const fehlt: string[] = []
+      const auffaellig: string[] = []
+
+      for (const f of felder) {
+        const wert = uebersetztDoc?.[f]
+        // Nur prüfen, was auf Deutsch überhaupt gefüllt ist — sonst meldet die
+        // Liste eine fehlende Übersetzung für etwas, das es nicht gibt
+        const deutschLeer = typeof original[f] !== 'string' || !String(original[f]).trim()
+        if (deutschLeer) continue
+        if (typeof wert !== 'string' || !wert.trim()) fehlt.push(f)
+      }
+
+      for (const f of fliesstext) {
+        const deutschLaenge = laenge(original[f])
+        if (!deutschLaenge) continue
+        const zielLaenge = laenge(uebersetztDoc?.[f])
+        if (!zielLaenge) {
+          fehlt.push(f)
+          continue
+        }
+        if (zielLaenge < deutschLaenge * STUMMEL_ANTEIL) {
+          auffaellig.push(
+            `${f}: nur ${zielLaenge} von ${deutschLaenge} Zeichen — sieht nach einem Rest aus früherer Zeit aus`,
+          )
+        }
+        const gd = gliederung(original[f])
+        const gz = gliederung(uebersetztDoc?.[f])
+        if (gd !== gz) {
+          auffaellig.push(
+            `${f}: Gliederung weicht ab (de: ${gd || '—'} · ${ziel}: ${gz || '—'}) — Zwischenüberschriften und Aufzählungen fehlen`,
+          )
+        }
+        if (doppelt.has(d.id)) {
+          auffaellig.push(
+            `${f}: wortgleich mit einem anderen Eintrag — beim Nachtragen ist vermutlich eine Zeile verrutscht`,
+          )
+        }
+      }
+
+      if (fehlt.length || auffaellig.length) {
         luecken.push({
           id: d.id,
-          bezeichnung: String(doc.title ?? doc.name ?? doc.author ?? d.id),
+          bezeichnung: String(original.title ?? original.name ?? original.author ?? d.id),
           fehlt,
+          auffaellig,
         })
       }
     }
@@ -97,7 +253,7 @@ export function registerAnalyse(server: McpServer) {
     'uebersetzungen_pruefen',
     {
       description:
-        'Listet alle Inhalte, bei denen die französische bzw. englische Fassung noch fehlt — die Arbeitsliste zum Nachtragen über die jeweiligen *_aendern-Werkzeuge mit sprache.',
+        'Die Arbeitsliste für eine Sprachfassung. Meldet zweierlei: was FEHLT (Feld ist leer) und was AUFFÄLLIG ist (Text vorhanden, aber viel kürzer als das Original, ohne dessen Zwischenüberschriften und Aufzählungen, oder wortgleich mit einem anderen Eintrag). Auffällig heißt hinsehen, nicht wegwerfen. Nachgetragen wird über die jeweiligen *_aendern-Werkzeuge mit sprache.',
       inputSchema: {
         sprache: z.enum(['fr', 'en']).describe('Welche Sprachfassung geprüft werden soll'),
         bereich: z
@@ -115,7 +271,8 @@ export function registerAnalyse(server: McpServer) {
         anzahlUnvollstaendig: anzahl,
         fehlendeUebersetzungen: luecken,
         hinweis: anzahl
-          ? `Nachtragen über produkt_aendern / referenz_aendern / news_aendern / kategorie_aendern / kundenstimme_aendern mit sprache: '${ziel}'.`
+          ? `Nachtragen über produkt_aendern / referenz_aendern / news_aendern / kategorie_aendern / kundenstimme_aendern mit sprache: '${ziel}'. ` +
+            'Die Gliederung des deutschen Originals übernehmen: ## Überschrift, ### kleinere, - Aufzählung, **fett**.'
           : 'Alles übersetzt.',
       })
     },

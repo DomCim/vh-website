@@ -7,9 +7,11 @@ import { Bild, type BildQuelle } from '../../../../components/Bild'
 import { CategoryTile } from '../../../../components/CategoryTile'
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
 import { ProductCard } from '../../../../components/ProductCard'
+import { aktionFuerArtikel } from '../../../../lib/aktionspreis'
 import {
   getCategoryBySlug,
   getChildCategories,
+  getPreisaktionen,
   getProductsByCategory,
   mediaUrl,
 } from '../../../../lib/data'
@@ -74,6 +76,12 @@ export default async function CategoryPage({
    */
   const products = await getProductsByCategory([category.id], locale)
 
+  /*
+   * Die laufenden Aktionen einmal für die ganze Seite — daraus wird je Artikel
+   * entschieden, ob ein Streichpreis danebensteht.
+   */
+  const aktionen = await getPreisaktionen(locale)
+
   const headerImage = category.image
 
   return (
@@ -135,7 +143,15 @@ export default async function CategoryPage({
                   product={p}
                   categorySlug={categorySlug}
                   locale={locale}
-                  labels={{ from: dict.product.from, onRequest: dict.product.onRequest }}
+                  labels={{
+                    from: dict.product.from,
+                    onRequest: dict.product.onRequest,
+                    instead: dict.product.instead,
+                  }}
+                  aktion={aktionFuerArtikel(
+                    { id: p.id, categoryId: typeof p.category === 'object' ? p.category?.id : p.category },
+                    aktionen,
+                  )}
                 />
               </RevealItem>
             ))}

@@ -20,7 +20,8 @@ export function registerKundenstimmen(server: McpServer) {
   server.registerTool(
     'kundenstimmen_liste',
     {
-      description: 'Listet die Kundenstimmen mit Zitat, Name, Kontext und zugehörigem Produkt.',
+      description:
+        'Listet die Kundenstimmen mit Zitat, Name, Kontext, Sternen und zugehörigem Produkt.',
       inputSchema: { sprache, ohneRueckfall },
     },
     async ({ sprache: locale, ohneRueckfall: ohne }) => {
@@ -39,9 +40,42 @@ export function registerKundenstimmen(server: McpServer) {
           zitat: t.quote,
           name: t.author,
           kontext: t.context ?? null,
+          sterne: t.rating ?? null,
           produkt: typeof t.product === 'object' ? t.product?.slug : (t.product ?? null),
           aufStartseite: Boolean(t.featured),
         })),
+      })
+    },
+  )
+
+  server.registerTool(
+    'kundenstimme_lesen',
+    {
+      description:
+        'Liest eine einzelne Kundenstimme. Mit ohneRueckfall zeigt sich, was in dieser Sprache wirklich übersetzt ist.',
+      inputSchema: { id: z.number().describe('ID aus kundenstimmen_liste'), sprache, ohneRueckfall },
+    },
+    async ({ id, sprache: locale, ohneRueckfall: ohne }) => {
+      const payload = await db()
+      const t = (await payload
+        .findByID({
+          collection: 'testimonials',
+          id,
+          locale,
+          depth: 1,
+          ...(ohne ? { fallbackLocale: false as never } : {}),
+        })
+        .catch(() => null)) as Record<string, any> | null
+      if (!t) return fehler(`Kundenstimme mit der Nummer ${id} nicht gefunden`)
+      return ok({
+        id: t.id,
+        sprache: locale,
+        zitat: t.quote ?? null,
+        name: t.author ?? null,
+        kontext: t.context ?? null,
+        sterne: t.rating ?? null,
+        produkt: typeof t.product === 'object' && t.product ? t.product.slug : (t.product ?? null),
+        aufStartseite: Boolean(t.featured),
       })
     },
   )
@@ -56,9 +90,25 @@ export function registerKundenstimmen(server: McpServer) {
         kontext: z.string().optional().describe('z.B. "Outdoor-Sofa OS, München"'),
         produktSlug: z.string().optional().describe('Wird dann auf der Produktseite angezeigt'),
         aufStartseite: z.boolean().optional(),
+        /*
+         * Die Sterne kamen später dazu und fehlten hier.
+         *
+         * Sie entscheiden mit darüber, ob im Google-Ergebnis eine
+         * Sternebewertung erscheint — der Durchschnitt wird nur aus den
+         * Stimmen gerechnet, die eine tragen. Wer eine Stimme per Assistent
+         * anlegt und die Zahl nicht mitgeben kann, hat sie stillschweigend
+         * unter den Tisch fallen lassen.
+         */
+        sterne: z
+          .number()
+          .int()
+          .min(1)
+          .max(5)
+          .optional()
+          .describe('1 bis 5, freiwillig. Weglassen, wenn die Kundschaft keine vergeben hat.'),
       },
     },
-    async ({ zitat, name, kontext, produktSlug, aufStartseite }) => {
+    async ({ zitat, name, kontext, produktSlug, aufStartseite, sterne }) => {
       const payload = await db()
       let produktId: number | undefined
       if (produktSlug) {
@@ -75,6 +125,7 @@ export function registerKundenstimmen(server: McpServer) {
           context: kontext,
           product: produktId,
           featured: aufStartseite ?? false,
+          ...(sterne !== undefined && { rating: sterne }),
         },
       })
       return ok({
@@ -98,9 +149,16 @@ export function registerKundenstimmen(server: McpServer) {
         kontext: z.string().optional(),
         produktSlug: z.string().optional(),
         aufStartseite: z.boolean().optional(),
+        sterne: z
+          .number()
+          .int()
+          .min(1)
+          .max(5)
+          .optional()
+          .describe('1 bis 5, freiwillig — siehe kundenstimme_anlegen'),
       },
     },
-    async ({ id, sprache: locale, zitat, name, kontext, produktSlug, aufStartseite }) => {
+    async ({ id, sprache: locale, zitat, name, kontext, produktSlug, aufStartseite, sterne }) => {
       const payload = await db()
       let produktId: number | undefined
       if (produktSlug) {
@@ -118,6 +176,7 @@ export function registerKundenstimmen(server: McpServer) {
           ...(kontext !== undefined && { context: kontext }),
           ...(produktId !== undefined && { product: produktId }),
           ...(aufStartseite !== undefined && { featured: aufStartseite }),
+          ...(sterne !== undefined && { rating: sterne }),
         },
       })
       return ok({ ok: true, id, sprache: locale })

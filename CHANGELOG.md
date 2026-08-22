@@ -6,7 +6,27 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
-- **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: `## Überschrift`, `### kleinere`, `- Punkt einer Aufzählung`, `**fett**`. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
+## 22.08.2026 — Sichtbare Rabatte, gestaltbare Rechtstexte und eine schärfere Übersetzungsprüfung
+
+- **Eine Aktion steht jetzt am Preis.** Der Sommer-Sale war richtig eingerichtet und die Kasse zog die 40 % auch ab — nur sah man davon nichts: Auf der Übersicht stand am Sofa unverändert **1.990 €**, und der Rabatt tauchte erst im Warenkorb auf. Wer nicht auf gut Glück etwas hineinlegte, erfuhr nie davon. Jetzt trägt die Kachel ein Band mit dem Prozentsatz, und am Preis steht der Aktionspreis mit dem durchgestrichenen alten daneben. Auf der Artikelseite kommen Name der Aktion und das Datum dazu, bis zu dem sie läuft.
+
+- **Google bekommt den Aktionspreis mit.** Im Produktdatenfeed steht der reguläre Preis weiterhin als Preis und der rabattierte als **Aktionspreis** — samt Zeitraum. So zeigt Google Shopping den Streichpreis, statt eine Preisabweichung zu melden. Dasselbe gilt für die Artikelseite, deren Auszeichnung sonst einen anderen Preis genannt hätte als die Seite selbst.
+
+- **Zwei Fälle bleiben bewusst ohne Streichpreis.** Ein Stück **auf Anfrage** hat keinen Preis und damit keine Ersparnis. Und ein Rabatt mit **Gutscheincode** gilt erst nach Eingabe im Warenkorb — vorab angeschrieben wäre er jedem versprochen, der den Code gar nicht hat. Ebenso zeigt ein Rabatt über einen **festen Betrag** keinen Streichpreis: Er gilt dem ganzen Warenkorb, nicht dem einzelnen Stück.
+
+- **Zur Erinnerung, weil es hier auffiel:** Eine Aktion auf eine Oberkategorie greift **nicht** für die Unterkategorien. Wer alle Outdoor-Stücke meint, muss Möbel, Pflanzen und Feuer einzeln auswählen — an der Kasse war das schon immer so, jetzt sieht man es auch.
+
+- **Versand und Zahlung nennen jetzt beide Zahlungswege.** In der Vorlage für den Rechtstext stand, bezahlt werde über PayPal — mehr nicht. An der Kasse steht der **Kauf auf Rechnung** aber bei jedem Artikel zur Wahl, und bei Einzelanfertigungen verteilt sich der Betrag auf **Anzahlung** mit der Auftragsbestätigung, **Zwischenrechnung** beim erreichten Fertigungsabschnitt und **Schlussrechnung** vor der Auslieferung. Ein Zahlungsweg, der auf der Rechtsseite fehlt, ist im Streitfall keiner. Alle drei Sprachen beschreiben jetzt dasselbe. Die bereits veröffentlichten Texte werden gesondert nachgezogen.
+
+- **Die Übersetzungsprüfung findet jetzt, was sie bisher übersah.** Sie meldete „alles übersetzt", während vier Artikel eine französische Beschreibung von 250 Zeichen trugen, wo im Deutschen 2.300 standen — und zwei davon sogar denselben Text: Eine Fahrrad-Wandhalterung wurde auf Französisch und Englisch als beleuchtetes Herz beschrieben, monatelang. Geprüft werden jetzt auch die Beschreibungen, und zwar auf dreierlei: ob sie **auffällig kürzer** sind als das Original, ob ihnen dessen **Zwischenüberschriften und Aufzählungen** fehlen, und ob **zwei Einträge wortgleich** sind. „Auffällig" heißt dabei hinsehen, nicht wegwerfen.
+
+- **Der KI-Assistent bekommt die Übersetzungsregeln vorab.** In den Hausregeln steht jetzt ein eigener Abschnitt: die Gliederung des Originals übernehmen, gefüllt ist nicht übersetzt, vor dem Schreiben das Original lesen, welche Begriffe stehen bleiben (NEXT CONCEPT, Cimatron, Corten, RAL) — und dass ein Artikel mit Varianten Titel und Bezeichnungen in einem Zug braucht.
+
+- **Sechs fehlende Werkzeuge für den KI-Assistenten.** Aufgefallen ist eines: Bei einer Aktion „gilt für bestimmte Kategorien" verriet die Liste nicht, für welche — wer sie ändern wollte, musste raten. Beim Nachsehen kamen fünf weitere heraus. Neu sind: eine Aktion, eine Kategorie, einen Geschäftspartner und eine Kundenstimme einzeln lesen; eine Wiedervorlage abhaken; und eine leere Kategorie entfernen.
+
+- **Die Sterne einer Kundenstimme waren für den Assistenten unsichtbar.** Sie kamen heute Nachmittag dazu und fehlten in der Schnittstelle — weder lesbar noch setzbar. Dabei entscheiden sie mit darüber, ob im Google-Ergebnis eine Sternebewertung erscheint.
+
+- **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: **## Überschrift**, **### kleinere**, **- Punkt einer Aufzählung** und zwei Sternchen für **fett**. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
 
 - **Dasselbe gilt für Artikelbeschreibungen und alles, was der KI-Assistent schreibt.** Eine per Assistent übersetzte Beschreibung wurde bisher zur Textwüste, wo die deutsche Zwischenüberschriften und eine Aufzählung hatte. Jetzt kommt die Gliederung mit.
 

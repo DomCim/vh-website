@@ -12,8 +12,10 @@ import { MassanfertigungHinweis } from "../../../../../components/Massanfertigun
 import { Reveal } from "../../../../../components/motion/Reveal";
 import { RichText } from "../../../../../components/RichText";
 import { ProductDetail } from "../../../../../components/shop/ProductDetail";
+import { aktionFuerArtikel, mitRabatt } from "../../../../../lib/aktionspreis";
 import {
   getCategoryBySlug,
+  getPreisaktionen,
   getProductBySlug,
   getProjectsForProduct,
   getSiteSettings,
@@ -100,6 +102,21 @@ export default async function ProductPage({ params }: { params: PageParams }) {
       : categorySlug;
   const artikelPfad = `/${kanonischeKategorie}/${itemSlug}`;
 
+  /*
+   * Läuft für diesen Artikel eine Aktion? Dann steht der Rabatt am Preis —
+   * und nicht erst im Warenkorb, wie es bis eben war.
+   */
+  const aktion = aktionFuerArtikel(
+    {
+      id: product.id,
+      categoryId:
+        typeof product.category === "object" && product.category
+          ? (product.category as { id?: number | string }).id
+          : (product.category as number | string | null | undefined),
+    },
+    await getPreisaktionen(locale),
+  );
+
   const testimonials = await getTestimonialsForProduct(product.id, locale);
   const settings = await getSiteSettings(locale);
   const referenzen = await getProjectsForProduct(product.id, locale);
@@ -167,12 +184,21 @@ export default async function ProductPage({ params }: { params: PageParams }) {
         ...(tst.createdAt ? { datePublished: String(tst.createdAt).slice(0, 10) } : {}),
       })),
     }),
+    /*
+     * Der Preis für Google — derselbe, der auf der Seite steht.
+     *
+     * Läuft eine Aktion, ist das der rabattierte. Stünde hier weiter der alte,
+     * wiese die Search Console eine Preisabweichung zwischen Auszeichnung und
+     * Seite aus, und im Zweifel fällt das Suchergebnis samt Sternen weg.
+     * `priceValidUntil` sagt dazu, wie lange die Angabe trägt.
+     */
     ...(minPrice !== undefined &&
       !product.onRequestOnly && {
         offers: {
           "@type": "Offer",
           priceCurrency: "EUR",
-          price: minPrice,
+          price: aktion ? mitRabatt(minPrice, aktion.prozent) : minPrice,
+          ...(aktion ? { priceValidUntil: String(aktion.giltBis).slice(0, 10) } : {}),
           availability:
             product.available !== false
               ? "https://schema.org/InStock"
@@ -248,6 +274,8 @@ export default async function ProductPage({ params }: { params: PageParams }) {
             freeShipping: dict.product.freeShipping,
             pickupAvailable: dict.product.pickupAvailable,
             unavailable: dict.product.unavailable,
+            instead: dict.product.instead,
+            promoUntil: dict.product.promoUntil,
             craftNotice: settings?.craft?.notice ?? null,
             craft: dict.craft,
             inquiry: {
@@ -261,6 +289,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
             },
           }}
           shortDescription={product.shortDescription ?? undefined}
+          aktion={aktion}
         />
       </div>
 
