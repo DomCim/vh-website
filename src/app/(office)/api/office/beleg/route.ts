@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       grossAmount: b.grossAmount,
       category: b.category || 'sonstiges',
       paymentMethod: b.paymentMethod || undefined,
+      turnus: b.turnus || 'nein',
       paid: Boolean(b.paid),
       deductible: Boolean(b.deductible),
       notes: b.notes || undefined,

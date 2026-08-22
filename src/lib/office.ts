@@ -35,4 +35,4 @@ export async function istInhaber(): Promise<boolean> {
   return darf(payload, user, 'buero.oeffnen')
 }
 
-export { datum, euro, jahresZeitraum } from './format'
+export { datum, euro, jahresZeitraum, monatsZeitraum } from './format'

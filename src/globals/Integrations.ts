@@ -137,6 +137,15 @@ export const Integrations: GlobalConfig = {
             description: 'Empfängt Kontaktanfragen und Bestell-Benachrichtigungen',
           },
         },
+        {
+          name: 'steuerberaterEmail',
+          label: 'Steuerberater (Kanzlei-Adresse)',
+          type: 'email',
+          admin: {
+            description:
+              'Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.',
+          },
+        },
       ],
     },
     {
@@ -269,9 +278,13 @@ export const Integrations: GlobalConfig = {
           name: 'signature',
           label: 'Signatur',
           type: 'textarea',
+          // Im Büro erscheint das Feld als Schreibfeld mit Gestaltung — die
+          // Signatur darf fett, farbig und mit Link sein, wie die Mails auch.
+          // Gespeichert wird dann HTML; alter Klartext bleibt gültig.
+          custom: { gestaltet: true },
           admin: {
             description:
-              'Wird unter jede Mail gesetzt, die aus dem Büro rausgeht. Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.',
+              'Wird unter jede Mail gesetzt, die aus dem Büro rausgeht — und lässt sich dort gestalten (fett, Farbe, Link). Ohne Eintrag entsteht sie aus Absendername und den Kontaktdaten der Website-Einstellungen. Firmierung, SIRET und TVA werden ohnehin automatisch angehängt — das ist Pflicht.',
           },
         },
         {
@@ -343,6 +356,42 @@ export const Integrations: GlobalConfig = {
               },
             },
           ],
+        },
+      ],
+    },
+    {
+      /*
+       * Wiederkehrende Absätze fürs Schreibfeld.
+       *
+       * Grußformeln, Zahlungshinweise, Gewährleistungstexte — was in jeder
+       * zweiten Mail steht, soll niemand jedes Mal neu tippen. Im Schreibfeld
+       * öffnet „::" die Auswahl; der Titel ist das, wonach man dort sucht.
+       */
+      name: 'textbausteine',
+      label: 'Textbausteine',
+      labels: { singular: 'Textbaustein', plural: 'Textbausteine' },
+      type: 'array',
+      admin: {
+        description:
+          'Fertige Absätze für Mails, Versandfenster und Newsletter. Im Schreibfeld „::" tippen, Baustein wählen — eingefügt. Der Titel dient zum Finden, z.B. „Gruß französisch" oder „Zahlungshinweis".',
+      },
+      fields: [
+        {
+          name: 'titel',
+          label: 'Titel',
+          type: 'text',
+          required: true,
+          admin: { description: 'Steht in der Auswahl — kurz und eindeutig.' },
+        },
+        {
+          name: 'inhalt',
+          label: 'Inhalt',
+          type: 'textarea',
+          required: true,
+          custom: { gestaltet: true },
+          admin: {
+            description: 'Der Text, der eingefügt wird — mit Gestaltung, wenn gewünscht.',
+          },
         },
       ],
     },

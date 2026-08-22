@@ -22,6 +22,7 @@ export type BelegWerte = {
   grossAmount?: number | null
   category?: string
   paymentMethod?: string | null
+  turnus?: string | null
   paid?: boolean
   deductible?: boolean
   notes?: string | null
@@ -346,6 +347,20 @@ export function BelegFormular({
             <option value="bar">Bar</option>
             <option value="lastschrift">Lastschrift</option>
             <option value="paypal">PayPal</option>
+          </select>
+        </label>
+        <label className="buero-feld">
+          <span>Wiederkehrend</span>
+          {/* Miete, Internet & Co.: Der Folgebeleg entsteht zum Termin von
+              selbst — nur der Scan der neuen Rechnung ist nachzureichen. */}
+          <select
+            value={w.turnus ?? 'nein'}
+            onChange={(e) => setzen({ turnus: e.target.value })}
+          >
+            <option value="nein">Einmalig</option>
+            <option value="monatlich">Monatlich</option>
+            <option value="vierteljaehrlich">Vierteljährlich</option>
+            <option value="jaehrlich">Jährlich</option>
           </select>
         </label>
       </div>

@@ -142,6 +142,30 @@ export const Expenses: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      /*
+       * Wiederkehrende Ausgaben — Miete, Internet, Versicherung. Ist ein
+       * Turnus gesetzt, legt der Wartungslauf zum Termin den nächsten Beleg
+       * an und nimmt den Turnus mit dorthin: Er sitzt immer nur am jüngsten
+       * Glied der Kette, sonst entstünden Doppelgänger. Beenden heißt darum
+       * einfach: am jüngsten Beleg auf „einmalig" stellen.
+       */
+      name: 'turnus',
+      label: 'Wiederkehrend',
+      type: 'select',
+      defaultValue: 'nein',
+      options: [
+        { label: 'Einmalig', value: 'nein' },
+        { label: 'Monatlich', value: 'monatlich' },
+        { label: 'Vierteljährlich', value: 'vierteljaehrlich' },
+        { label: 'Jährlich', value: 'jaehrlich' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Miete, Internet & Co.: Zum nächsten Termin entsteht der Folgebeleg von selbst — nur der Beleg-Scan ist dann noch nachzureichen.',
+      },
+    },
+    {
       // Damit die tägliche Erinnerung wirklich täglich kommt und nicht bei
       // jedem Lauf des Wartungs-Cron. Wird ausschließlich vom Cron gesetzt.
       name: 'reminderSentAt',

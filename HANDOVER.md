@@ -376,6 +376,41 @@ unter `/[locale]/uebergabe/[token]`.
 
 ---
 
+## Dateien weitergeben (`/api/weitergabe`)
+
+Der kurze Weg zum Zulieferer, neben der Mappe und bewusst nicht in ihr.
+
+**Warum nicht die Mappe.** Bei Lohnfertigung ohne eigenen Artikel ist die
+Mappe richtig: Es gibt einen Ordner, es geht hin und her, es wird hochgeladen.
+Für „hier ist die DXF, bitte schneiden" ist sie zu viel Apparat — anlegen,
+Bezug wählen, Datei erneut hochladen, Passwort erzeugen. Am Ende lag dieselbe
+Zeichnung zweimal im Haus, mit zwei Ständen.
+
+**Wie es läuft.** An der Artikeldatei ein Kästchen, Adresse, abschicken
+(`components/office/Werkstattdateien.tsx` → `/api/office/weitergabe`). Je
+Datei entsteht ein Link, dessen Signatur Kennung und Ablaufzeit festnagelt
+(HMAC mit `PAYLOAD_SECRET`, `lib/weitergabe.ts`); vierzehn Tage, kein
+Passwort, kein Konto. Gespeichert wird **nichts** — kein Datensatz, keine
+Migration. Dieselbe Bauart wie beim Abhol-Link des Monatspakets.
+
+**Was das kostet.** Ein verschickter Link lässt sich nicht zurückziehen; dazu
+müsste festgehalten werden, welche es gibt, und dann wäre es eine halbe Mappe.
+Wer einen loswerden muss, löscht die Datei oder ersetzt sie — beides wirkt
+sofort, weil immer der Stand von jetzt ausgeliefert wird. Genau das ist auch
+der Gewinn: Eine Revision geht automatisch mit hinaus, der Anhang in der Mail
+veraltet ab dem Absenden.
+
+**Recht.** `auftraege.bearbeiten`, nicht `website.pflegen`: Wer Dateien am
+Artikel pflegt, arbeitet im Haus; wer sie hinausgibt, entscheidet über
+Fremdfertigung. Die Werkstattrolle, die unter „Unterlagen" nachschlägt, sieht
+die Kästchen deshalb nicht.
+
+Dateien: `lib/weitergabe.ts` (Signatur, Frist), `api/weitergabe` (Abholung,
+Strom von der Platte), `api/office/weitergabe` (Auswahl und Mail),
+`components/office/Werkstattdateien.tsx` (die Kästchen).
+
+---
+
 ## Dateien am Vorgang, im Portal und beigestelltes Material
 
 **Am Vorgang.** `product-files` trägt neben `product` jetzt `anfrage`,
@@ -408,12 +443,33 @@ das zurückkommt.
 
 ## Offen
 
-1. **Plateforme Agréée: Anmeldung.** Das ist der einzige offene Punkt mit
-   Datum — **1. September 2026**. Technisch ist alles da: Rechnungen entstehen
-   als Factur-X, eingehende werden aus dem PDF gelesen. Offen ist der Vertrag
-   mit einer zugelassenen Plattform. Der Stand steht jetzt im Büro unter
+1. **Plateforme Agréée: Auswahl und Anbindung.** Das ist der einzige offene
+   Punkt mit Datum — **1. September 2026**. Technisch ist alles da: Rechnungen
+   entstehen als Factur-X, eingehende werden aus dem PDF gelesen. Offen ist
+   der Vertrag mit einer zugelassenen Plattform. Der Stand steht im Büro unter
    Einstellungen → Elektronische Rechnung; bis er auf „angemeldet" steht,
-   erinnert die Übersicht daran. **Das erledigt kein Code.**
+   erinnert die Übersicht daran. **Die Auswahl erledigt kein Code.**
+
+   Mit Dominik besprochen (August 2026): Angebunden wird per
+   **Schnittstelle**, nicht durch Hochladen von Hand. Bei der Auswahl —
+   am besten mit dem Steuerberater, dessen Software oft eine Plattform
+   mitbringt — auf drei Dinge achten: eine ordentliche REST-API mit
+   Webhooks, faire Preise je Rechnung, Zugriff für den Steuerberater.
+   Wichtig: Standardisiert ist nur der Verkehr *zwischen* den Plattformen;
+   die API für die eigenen Kunden ist bei jedem Anbieter anders — die Wahl
+   bestimmt also die Anbindungsarbeit. Nicht auf den letzten Drücker: Die
+   Anbieter laufen gegen den Stichtag voll, und die Strecke soll ein paar
+   Monate im echten Betrieb gelaufen sein, bevor sie Pflicht wird.
+
+   Sobald die Plattform feststeht, wird gebaut: ausgehend Rechnung per API
+   übergeben und Statusmeldungen (zugestellt, abgelehnt, bezahlt) an die
+   Rechnung zurückschreiben; eingehend den Eingangskorb abholen und daraus
+   Belegentwürfe anlegen. Die Bausteine liegen alle im ERP —
+   `facturx.ts` schreibt, `facturxLesen.ts` liest, Belegstrecke und
+   Statuswesen stehen; es fehlt nur das Kabel zur Plattform. Nicht ins
+   Netz gehört: Privatkunden und ausländische Lieferanten bleiben beim
+   heutigen Mail- und Beleg-Weg, deren Umsätze laufen später nur ins
+   E-Reporting über dieselbe Plattform.
 2. **Hinweis aufs Kundenportal** in Bestätigungsmail und auf der Rechnung
    („Den Stand Ihres Auftrags sehen Sie unter …/konto"). Vorgeschlagen, noch
    nicht entschieden.

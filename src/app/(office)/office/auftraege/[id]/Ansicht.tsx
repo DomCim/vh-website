@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
+import { AbnahmeKnopf } from '../../../../../components/office/AbnahmeKnopf'
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
 import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
@@ -93,6 +94,10 @@ export function AuftragAnsicht() {
           Lieferschein
         </a>
         <VersandKnopf art="lieferschein" id={j.id} leise />
+        <AbnahmeKnopf
+          id={j.id}
+          abgenommen={j.abnahme as { am?: string | null; name?: string | null } | null}
+        />
       </div>
 
       {(bestellId || angebotId) && (

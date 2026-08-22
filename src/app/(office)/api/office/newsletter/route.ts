@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { htmlHatInhalt, mailHtmlSaeubern } from '../../../../../lib/mailhtml'
 import { newsletterVersenden, type Sprache } from '../../../../../lib/newsletter'
 import { darf } from '../../../../../lib/wache'
 
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic'
 // Ein paar hundert Empfänger nacheinander brauchen Zeit
 export const maxDuration = 900
 
-/** Absätze aus dem Eingabefeld in schlichtes HTML — kein Editor, keine Überraschungen. */
+/** Absätze aus Klartext in schlichtes HTML — Rückfallebene, wenn kein gestalteter Rumpf kommt. */
 function absaetze(text: string): string {
   return text
     .split(/\n\s*\n/)
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
     const b = (await req.json()) as {
       betreff?: string
       text?: string
+      html?: string
       link?: string
       linkText?: string
       testAn?: string
@@ -43,7 +45,12 @@ export async function POST(req: Request) {
 
     const betreff = b.betreff?.trim()
     const text = b.text?.trim()
-    if (!betreff || !text) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+    // Gestalteter Rumpf aus dem Schreibfeld; Klartext bleibt als Rückfallebene gültig
+    const gestaltet =
+      typeof b.html === 'string' && htmlHatInhalt(b.html) ? mailHtmlSaeubern(b.html) : null
+    if (!betreff || (!gestaltet && !text)) {
+      return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+    }
 
     const knopf = b.link?.trim()
       ? `<p style="margin:24px 0"><a href="${b.link.trim()}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">${
@@ -53,7 +60,7 @@ export async function POST(req: Request) {
 
     const bericht = await newsletterVersenden(
       payload,
-      { betreff, html: `${absaetze(text)}${knopf}` },
+      { betreff, html: `${gestaltet ?? absaetze(text ?? '')}${knopf}` },
       { nurAn: b.testAn?.trim() || undefined, sprachen: b.sprachen },
     )
 

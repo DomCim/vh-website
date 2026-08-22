@@ -20,6 +20,14 @@ export function jahresZeitraum(jahr: number) {
   }
 }
 
+/** Anfang und Ende eines Monats (1–12) als ISO-Zeitpunkte */
+export function monatsZeitraum(jahr: number, monat: number) {
+  return {
+    von: new Date(Date.UTC(jahr, monat - 1, 1)).toISOString(),
+    bis: new Date(Date.UTC(jahr, monat, 1)).toISOString(),
+  }
+}
+
 /**
  * „vor 12 Minuten" — wie alt etwas ist, in einem Satzteil.
  *

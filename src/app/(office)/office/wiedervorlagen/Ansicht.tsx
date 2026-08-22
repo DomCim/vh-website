@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum } from '../../../../lib/format'
+import { WischZeile } from '../../../../components/office/WischZeile'
 
 /**
  * Alle Wiedervorlagen an einem Ort.
@@ -114,7 +115,25 @@ export function WiedervorlagenAnsicht() {
   const zeile = (w: Wiedervorlage, erledigen: boolean) => {
     const bezug = bezugText(w)
     return (
-      <div key={w.id} className="buero-zeile">
+      // Wischen wie im Postfach: links löschen, rechts abhaken bzw. öffnen
+      <WischZeile
+        key={w.id}
+        nachLinks={{
+          text: 'Löschen',
+          art: 'rot',
+          tun: () => void schicken({ aktion: 'loeschen', id: w.id }),
+        }}
+        nachRechts={{
+          text: erledigen ? 'Erledigt' : 'Wieder offen',
+          art: 'bronze',
+          tun: () =>
+            void schicken(
+              { aktion: erledigen ? 'erledigt' : 'offen', id: w.id },
+              { done: erledigen },
+            ),
+        }}
+      >
+      <div className="buero-zeile">
         <div className="buero-zeile-haupt">
           <div className="buero-zeile-titel">{w.title}</div>
           <div className="buero-zeile-neben">
@@ -144,6 +163,7 @@ export function WiedervorlagenAnsicht() {
           </button>
         </div>
       </div>
+      </WischZeile>
     )
   }
 
