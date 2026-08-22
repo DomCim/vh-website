@@ -33,6 +33,16 @@ export type FeldBeschreibung = {
   pflicht?: boolean
   /** Wie ein Passwort behandeln: verdeckt, aber kopierfähig */
   geheim?: boolean
+  /**
+   * Gibt es das Feld je Sprache?
+   *
+   * Das Büro schrieb bisher immer die deutsche Fassung — auch dann, wenn
+   * jemand die häufigen Fragen oder den Seitentitel für Google auf
+   * Französisch pflegen wollte. Gemerkt hat man es nicht: Das Formular sah
+   * gleich aus, und der französische Text landete stillschweigend im
+   * deutschen Feld. Mit dieser Angabe weiß das Blatt, was übersetzbar ist.
+   */
+  uebersetzt?: boolean
   optionen?: { wert: string; text: string }[]
   /** Bei Gruppen und Listen: was darin steht */
   felder?: FeldBeschreibung[]
@@ -82,6 +92,7 @@ export function felderLesen(felder: Field[]): FeldBeschreibung[] {
       label: beschriftung(feld),
       hinweis: hinweisAus(feld),
       pflicht: 'required' in feld ? Boolean(feld.required) : undefined,
+      uebersetzt: 'localized' in feld && feld.localized ? true : undefined,
     }
 
     switch (feld.type) {

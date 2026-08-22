@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Einstellungen lassen sich im Büro in allen drei Sprachen pflegen.** Bisher schrieb das Büro immer die deutsche Fassung — auch dann, wenn jemand die häufigen Fragen, den Untertitel oder die SEO-Standardtexte auf Französisch pflegen wollte. Gemerkt hat man es nicht: Das Formular sah gleich aus, und der französische Text landete stillschweigend im deutschen Feld. Jetzt steht die Sprachwahl über den Feldern. In einer fremden Sprache erscheinen **nur** die Felder, die es je Sprache gibt — Anschrift, Bankverbindung und Stundensatz bleiben unter Deutsch, denn die gibt es nur einmal. Bei den Integrationen gibt es keine Sprachwahl, dort ist nichts zu übersetzen.
+
+- **Eine leere Übersetzung sieht jetzt leer aus.** Wo noch nichts übersetzt ist, zeigte das Formular bisher den deutschen Text — es sah aus, als sei übersetzt, und beim Speichern stand der deutsche Text als französischer fest.
+
 - **Eine Oberkategorie zeigt nicht mehr alles doppelt.** Auf „Outdoor" standen die drei Kacheln Möbel, Pflanzen und Feuer — und darunter noch einmal sämtliche Stücke aus allen dreien. Jetzt zeigt eine Kategorie ihre Unterkategorien und die Artikel, die wirklich in ihr liegen. Wer tiefer will, tippt eine Kachel an; dafür sind sie da.
 
 - **Jeder Artikel hat wieder genau eine Adresse.** Das war der eigentliche Schaden hinter der Dopplung: Ein Sofa aus „Möbel" wurde auf der Outdoor-Seite unter `/outdoor/…` verlinkt statt unter `/moebel/…`. Beide Adressen lieferten dieselbe Seite und erklärten sich obendrein jeweils selbst für die maßgebliche — für Google zwei Seiten mit gleichem Inhalt, die sich gegenseitig die Bedeutung wegnehmen. Alte Links bleiben gültig und führen weiter zum Ziel, zählen aber nicht mehr als eigene Seite.
