@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Empfänger mit Vorschlägen, Kopie und Blindkopie, und der Zähler fürs Postfach
+
 - **Empfänger vorschlagen statt tippen.** Wer im Postfach eine Mail schreibt, bekommt beim Tippen im Feld „An" Vorschläge aus den Geschäftspartnern — gesucht wird in Name und Adresse, angezeigt werden Name, Adresse und Art (Kunde, Lieferant). Gewählte Empfänger stehen als Plättchen mit ihrem **Namen** da und lassen sich einzeln wegnehmen; die Rücktaste im leeren Feld nimmt das letzte. Das läuft aus dem Bestand im Gerät, also auch ohne Netz und ohne Wartezeit.
 
 - **Kopie und Blindkopie.** Über dem Betreff steht jetzt „Kopie (CC) & Blindkopie (BCC)" zum Aufklappen — mit denselben Vorschlägen und Plättchen. Steht schon etwas drin, ist der Bereich von selbst offen: Ein Empfänger, den man nicht sieht, ist der gefährlichste von allen. Die Blindkopie bleibt für die Empfänger unsichtbar, steht aber in der eigenen Kopie unter „Gesendet" — dort will man später wissen, wer sie bekommen hat.
