@@ -27,6 +27,10 @@ export const dynamic = 'force-dynamic'
  * bei Einzelanfertigung nicht; `identifier_exists: no` sagt das ausdrücklich,
  * sonst weist Google die Ware zurück.
  *
+ * **Der Versand steht mit drin** — für Frankreich, Deutschland und Österreich,
+ * mit derselben Zahl, die auch die Kasse berechnet. Ohne Versandangabe weist
+ * Google für ein Zielland alle Artikel ab.
+ *
  * **Was draußen bleibt:** Stücke auf Anfrage und alles ohne Bild. Ein Eintrag
  * ohne Preis ist im Merchant Center kein Eintrag, sondern ein Fehler — und ein
  * erfundener Preis wäre schlimmer als kein Eintrag.
@@ -43,6 +47,33 @@ const escape = (text: string) =>
 
 /** Google will „1490.00 EUR" — Punkt statt Komma, Währung dahinter */
 const preis = (wert: number) => `${wert.toFixed(2)} EUR`
+
+/**
+ * Für diese Länder steht der Versand im Feed.
+ *
+ * **Warum überhaupt im Feed und nicht im Merchant Center.** Google nimmt
+ * beides — eine Regel im Konto oder die Angabe je Stück. Fehlt für ein
+ * Zielland aber beides, weist es dort **alle** Artikel ab, nicht einzelne.
+ * Die Angabe hier kommt aus derselben Zahl, die auch die Kasse berechnet;
+ * eine Regel im Konto wäre eine zweite Quelle für dieselbe Wahrheit, und die
+ * beiden laufen früher oder später auseinander.
+ *
+ * **Warum dieselbe Zahl für alle drei Länder.** Weil der Shop es so hält: In
+ * `lib/checkout.ts` ist der Versand ein fester Betrag je Stück, ohne Blick
+ * auf die Anschrift. Wer in München bestellt, zahlt denselben Versand wie
+ * jemand in Straßburg. Google verlangt, dass die Angabe im Feed dem
+ * entspricht, was an der Kasse wirklich verlangt wird — und genau das tut
+ * sie damit.
+ *
+ * Daran hängt auch, warum eine Frachtberechnung über DHL hier **nicht**
+ * hilft: Sie käme auf einen anderen Betrag als die Kasse, und die Abweichung
+ * ist genau das, was Google beanstandet.
+ *
+ * Wer die Liste erweitert, prüft zweierlei: Wird dorthin wirklich geliefert,
+ * und stimmt die Währung? Der Feed rechnet ausschließlich in Euro — für
+ * Polen, Schweden oder die Schweiz wäre er falsch.
+ */
+const VERSANDLAENDER = ['FR', 'DE', 'AT'] as const
 
 export async function GET(req: Request) {
   const gewuenscht = new URL(req.url).searchParams.get('sprache')
@@ -124,11 +155,18 @@ export async function GET(req: Request) {
           '<g:condition>new</g:condition>',
           '<g:identifier_exists>no</g:identifier_exists>',
           '<g:brand>Vincent Hellmann</g:brand>',
-          ...(typeof p.shippingCost === 'number'
-            ? [
-                `<g:shipping><g:country>FR</g:country><g:price>${preis(p.shippingCost)}</g:price></g:shipping>`,
-              ]
-            : []),
+          /*
+           * Auch die Null steht ausdrücklich da.
+           *
+           * Ist am Stück kein Versand hinterlegt, schlägt die Kasse nichts
+           * auf — es ist also versandkostenfrei und keine fehlende Angabe.
+           * Ließe man den Block weg, sucht Google die Zahl in den
+           * Kontoeinstellungen und findet dort nichts.
+           */
+          ...VERSANDLAENDER.map(
+            (land) =>
+              `<g:shipping><g:country>${land}</g:country><g:price>${preis(typeof p.shippingCost === 'number' ? p.shippingCost : 0)}</g:price></g:shipping>`,
+          ),
           '</item>',
         ].join(''),
       )
