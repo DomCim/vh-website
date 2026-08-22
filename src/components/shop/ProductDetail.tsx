@@ -3,7 +3,9 @@
 import { motion } from "motion/react";
 import React, { useMemo, useState } from "react";
 
+import { type Preisaktion } from "../../lib/aktionspreis";
 import { formatPrice, type Locale } from "../../lib/i18n";
+import { Preis } from "../Preis";
 import { useCart } from "./CartProvider";
 import { ProductInquiryForm } from "./ProductInquiryForm";
 
@@ -42,6 +44,8 @@ type Dict = {
   freeShipping: string;
   pickupAvailable: string;
   unavailable: string;
+  instead: string;
+  promoUntil: string;
   craftNotice?: string | null;
   craft: {
     productionTime: string;
@@ -64,11 +68,14 @@ export function ProductDetail({
   product,
   dict,
   shortDescription,
+  aktion,
 }: {
   locale: Locale;
   product: ProductProps;
   dict: Dict;
   shortDescription?: string;
+  /** Läuft für diesen Artikel gerade eine Aktion? */
+  aktion?: Preisaktion | null;
 }) {
   const { addItem } = useCart();
   const [imageIndex, setImageIndex] = useState(0);
@@ -242,9 +249,30 @@ export function ProductDetail({
             </>
           ) : (
             <>
-              <p className="text-ink text-2xl font-semibold">
-                {formatPrice(unitPrice, locale)}
-              </p>
+              <div className="text-2xl font-semibold">
+                <Preis
+                  betrag={unitPrice}
+                  aktion={aktion}
+                  locale={locale}
+                  labels={{ instead: dict.instead }}
+                  gross
+                />
+              </div>
+              {aktion ? (
+                /*
+                 * Titel und Ende der Aktion gehören dazu. „−40 %" allein sagt
+                 * nicht, worauf sich das gründet und wie lange es gilt — und
+                 * ein Rabatt ohne Frist wirkt wie der neue Normalpreis.
+                 */
+                <p className="text-accent mt-1 text-xs font-medium">
+                  {aktion.titel} · {dict.promoUntil}{" "}
+                  {new Date(aktion.giltBis).toLocaleDateString(locale, {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </p>
+              ) : null}
               <p className="text-ink-soft mt-1 text-xs">
                 {dict.priceNote}
                 {" · "}

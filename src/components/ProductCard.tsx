@@ -1,8 +1,10 @@
 import Link from "next/link";
 import React from "react";
 
-import { formatPrice, type Locale } from "../lib/i18n";
+import { preisaktionAnzeigen, type Preisaktion } from "../lib/aktionspreis";
+import { type Locale } from "../lib/i18n";
 import { Bild, type BildQuelle } from "./Bild";
+import { Preis, Rabattband } from "./Preis";
 
 type Product = {
   slug?: string | null;
@@ -19,11 +21,14 @@ export function ProductCard({
   categorySlug,
   locale,
   labels,
+  aktion,
 }: {
   product: Product;
   categorySlug: string;
   locale: Locale;
-  labels: { from: string; onRequest: string };
+  labels: { from: string; onRequest: string; instead: string };
+  /** Läuft für diesen Artikel gerade eine Aktion? */
+  aktion?: Preisaktion | null;
 }) {
   const image = product.images?.[0];
   const prices = [
@@ -33,12 +38,17 @@ export function ProductCard({
   const minPrice = prices.length ? Math.min(...prices) : undefined;
   const hasVariants = (product.variants?.length ?? 0) > 0;
 
+  const zeigtAktion = preisaktionAnzeigen(
+    { onRequestOnly: product.onRequestOnly, preis: minPrice },
+    aktion,
+  );
+
   return (
     <Link
       href={`/${locale}/${categorySlug}/${product.slug}`}
       className="group border-line block border bg-paper transition-shadow hover:shadow-lg"
     >
-      <div className="bg-paper-soft aspect-[4/3] overflow-hidden">
+      <div className="bg-paper-soft relative aspect-[4/3] overflow-hidden">
         {image ? (
           <Bild
             media={image as BildQuelle}
@@ -46,6 +56,9 @@ export function ProductCard({
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
+        ) : null}
+        {zeigtAktion && aktion ? (
+          <Rabattband prozent={aktion.prozent} className="absolute left-0 top-3" />
         ) : null}
       </div>
       <div className="p-5">
@@ -57,11 +70,20 @@ export function ProductCard({
             {product.shortDescription}
           </p>
         )}
-        <p className="text-ink mt-3 text-sm font-medium">
-          {product.onRequestOnly || minPrice === undefined
-            ? labels.onRequest
-            : `${hasVariants ? `${labels.from} ` : ""}${formatPrice(minPrice, locale)}`}
-        </p>
+        <div className="mt-3 text-sm">
+          {product.onRequestOnly || minPrice === undefined ? (
+            <span className="text-ink font-medium">{labels.onRequest}</span>
+          ) : (
+            <Preis
+              betrag={minPrice}
+              aktion={zeigtAktion ? aktion : null}
+              locale={locale}
+              labels={{ instead: labels.instead, from: labels.from }}
+              ab={hasVariants}
+              ohneBand
+            />
+          )}
+        </div>
       </div>
     </Link>
   );

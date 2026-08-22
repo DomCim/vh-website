@@ -6,6 +6,14 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Eine Aktion steht jetzt am Preis.** Der Sommer-Sale war richtig eingerichtet und die Kasse zog die 40 % auch ab — nur sah man davon nichts: Auf der Übersicht stand am Sofa unverändert **1.990 €**, und der Rabatt tauchte erst im Warenkorb auf. Wer nicht auf gut Glück etwas hineinlegte, erfuhr nie davon. Jetzt trägt die Kachel ein Band mit dem Prozentsatz, und am Preis steht der Aktionspreis mit dem durchgestrichenen alten daneben. Auf der Artikelseite kommen Name der Aktion und das Datum dazu, bis zu dem sie läuft.
+
+- **Google bekommt den Aktionspreis mit.** Im Produktdatenfeed steht der reguläre Preis weiterhin als Preis und der rabattierte als **Aktionspreis** — samt Zeitraum. So zeigt Google Shopping den Streichpreis, statt eine Preisabweichung zu melden. Dasselbe gilt für die Artikelseite, deren Auszeichnung sonst einen anderen Preis genannt hätte als die Seite selbst.
+
+- **Zwei Fälle bleiben bewusst ohne Streichpreis.** Ein Stück **auf Anfrage** hat keinen Preis und damit keine Ersparnis. Und ein Rabatt mit **Gutscheincode** gilt erst nach Eingabe im Warenkorb — vorab angeschrieben wäre er jedem versprochen, der den Code gar nicht hat. Ebenso zeigt ein Rabatt über einen **festen Betrag** keinen Streichpreis: Er gilt dem ganzen Warenkorb, nicht dem einzelnen Stück.
+
+- **Zur Erinnerung, weil es hier auffiel:** Eine Aktion auf eine Oberkategorie greift **nicht** für die Unterkategorien. Wer alle Outdoor-Stücke meint, muss Möbel, Pflanzen und Feuer einzeln auswählen — an der Kasse war das schon immer so, jetzt sieht man es auch.
+
 - **Versand und Zahlung nennen jetzt beide Zahlungswege.** In der Vorlage für den Rechtstext stand, bezahlt werde über PayPal — mehr nicht. An der Kasse steht der **Kauf auf Rechnung** aber bei jedem Artikel zur Wahl, und bei Einzelanfertigungen verteilt sich der Betrag auf **Anzahlung** mit der Auftragsbestätigung, **Zwischenrechnung** beim erreichten Fertigungsabschnitt und **Schlussrechnung** vor der Auslieferung. Ein Zahlungsweg, der auf der Rechtsseite fehlt, ist im Streitfall keiner. Alle drei Sprachen beschreiben jetzt dasselbe. Die bereits veröffentlichten Texte werden gesondert nachgezogen.
 
 - **Die Übersetzungsprüfung findet jetzt, was sie bisher übersah.** Sie meldete „alles übersetzt", während vier Artikel eine französische Beschreibung von 250 Zeichen trugen, wo im Deutschen 2.300 standen — und zwei davon sogar denselben Text: Eine Fahrrad-Wandhalterung wurde auf Französisch und Englisch als beleuchtetes Herz beschrieben, monatelang. Geprüft werden jetzt auch die Beschreibungen, und zwar auf dreierlei: ob sie **auffällig kürzer** sind als das Original, ob ihnen dessen **Zwischenüberschriften und Aufzählungen** fehlen, und ob **zwei Einträge wortgleich** sind. „Auffällig" heißt dabei hinsehen, nicht wegwerfen.

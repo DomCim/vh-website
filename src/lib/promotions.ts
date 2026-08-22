@@ -1,5 +1,8 @@
 import type { Payload } from 'payload'
 
+import type { Aktionsregel } from './aktionspreis'
+import type { Locale } from './i18n'
+
 type PromotionDoc = {
   id: number | string
   title: string
@@ -82,4 +85,35 @@ export async function findBestPromotion(
     }
   }
   return best
+}
+
+/**
+ * Die Aktionen, die gerade laufen und sich an den Preis schreiben lassen.
+ *
+ * Einmal je Seite laden und an alle Artikel weiterreichen — nicht je Kachel
+ * einzeln abfragen.
+ */
+export async function laufendeAktionen(
+  payload: Payload,
+  locale: Locale,
+): Promise<Aktionsregel[]> {
+  const now = new Date().toISOString()
+  const { docs } = await payload.find({
+    collection: 'promotions',
+    where: {
+      and: [
+        { active: { equals: true } },
+        { startDate: { less_than_equal: now } },
+        { endDate: { greater_than_equal: now } },
+        { discountType: { equals: 'percent' } },
+      ],
+    },
+    locale,
+    limit: 100,
+    depth: 0,
+  })
+
+  return (docs as unknown as (Aktionsregel & { code?: string | null })[]).filter(
+    (doc) => !doc.code?.trim() && doc.discountValue > 0 && doc.discountValue <= 100,
+  )
 }

@@ -45,6 +45,9 @@ const de = {
     pickupAvailable: 'Abholung möglich',
     unavailable: 'Derzeit nicht verfügbar',
     backToCategory: 'Zurück zur Übersicht',
+    instead: 'statt',
+    saveShort: 'sparen',
+    promoUntil: 'noch bis',
   },
   cart: {
     title: 'Warenkorb',
@@ -418,6 +421,9 @@ const fr: Dictionary = {
     pickupAvailable: 'Retrait sur place possible',
     unavailable: 'Actuellement indisponible',
     backToCategory: "Retour à l'aperçu",
+    instead: 'au lieu de',
+    saveShort: "d'économie",
+    promoUntil: "jusqu'au",
   },
   cart: {
     title: 'Panier',
@@ -784,6 +790,9 @@ const en: Dictionary = {
     pickupAvailable: 'Pickup available',
     unavailable: 'Currently unavailable',
     backToCategory: 'Back to overview',
+    instead: 'instead of',
+    saveShort: 'off',
+    promoUntil: 'until',
   },
   cart: {
     title: 'Cart',

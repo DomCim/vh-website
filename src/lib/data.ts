@@ -1,7 +1,9 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
+import type { Aktionsregel } from './aktionspreis'
 import type { Locale } from './i18n'
+import { laufendeAktionen } from './promotions'
 
 /** Payload Local API — Server-seitiger Datenzugriff */
 export async function payloadClient() {
@@ -253,4 +255,15 @@ export async function getProjectsForProduct(productId: number | string, locale: 
     sort: 'order',
   })
   return docs
+}
+
+/**
+ * Die Aktionen, die gerade an den Preisen stehen sollen.
+ *
+ * Einmal je Seite, nicht je Kachel: Zwölf Artikel auf einer Kategorieseite
+ * hießen sonst zwölf gleiche Abfragen.
+ */
+export async function getPreisaktionen(locale: Locale): Promise<Aktionsregel[]> {
+  const payload = await payloadClient()
+  return laufendeAktionen(payload, locale)
 }
