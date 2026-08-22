@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Gefunden werden: Sterne, häufige Fragen, Shopping-Einträge und ein schnellerer erster Besuch
+
 - **Sterne im Google-Ergebnis.** Kundinnen und Kunden können ihrer Stimme nach der Lieferung freiwillig Sterne geben — der Text bleibt die Hauptsache, die Sterne sind ein Zusatz. Auf der Artikelseite stehen sie über dem Zitat, und im Google-Ergebnis erscheint der Durchschnitt als Sternebewertung. Gerechnet wird nur mit dem, was wirklich vergeben wurde; eine Stimme ohne Sterne zählt gar nicht mit.
 
 - **Häufige Fragen.** Unter Website-Einstellungen lassen sich Fragen und Antworten pflegen. Sie erscheinen aufklappbar auf der Seite „Maßanfertigung" — und ausgezeichnet für Google, das sie unter dem Treffer anzeigt und damit doppelt so viel Platz in der Ergebnisliste einnimmt. Anlegen geht auch per KI-Assistent: `faq_liste`, `faq_ergaenzen` und `faq_setzen`.
