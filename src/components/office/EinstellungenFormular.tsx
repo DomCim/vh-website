@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { FeldBeschreibung } from '../../lib/felderLesen'
+import { locales, type Locale } from '../../lib/i18n'
 import { htmlHatInhalt } from '../../lib/mailhtml'
 import { Fussleiste } from './Fussleiste'
 import { Schreibfeld } from './Schreibfeld'
@@ -375,6 +376,40 @@ function Ebene({
   )
 }
 
+const SPRACHNAMEN: Record<Locale, string> = {
+  de: 'Deutsch',
+  fr: 'Französisch',
+  en: 'Englisch',
+}
+
+/**
+ * Was es je Sprache gibt — und nur das.
+ *
+ * Bei einer fremden Sprachfassung sollen nicht alle Felder dastehen. Nicht aus
+ * Ordnungsliebe: Die IBAN, der Stundensatz und die Zugangsdaten gibt es nur
+ * einmal. Stünden sie in der französischen Ansicht, sähe es aus, als könne man
+ * dort eine französische IBAN eintragen — und beim Speichern überschriebe man
+ * die einzige, die es gibt.
+ *
+ * Gruppen sind selbst nicht übersetzbar, ihre Felder darin aber schon (die
+ * SEO-Standardtexte etwa). Eine Gruppe bleibt deshalb stehen, wenn wenigstens
+ * ein Feld darin übersetzbar ist — mit genau diesen Feldern.
+ */
+function nurUebersetzbareFelder(felder: FeldBeschreibung[]): FeldBeschreibung[] {
+  const raus: FeldBeschreibung[] = []
+  for (const feld of felder) {
+    if (feld.uebersetzt) {
+      raus.push(feld)
+      continue
+    }
+    if (feld.art === 'gruppe' && feld.felder) {
+      const innen = nurUebersetzbareFelder(feld.felder)
+      if (innen.length) raus.push({ ...feld, felder: innen })
+    }
+  }
+  return raus
+}
+
 export function EinstellungenFormular({
   bereich,
   titel,
@@ -390,14 +425,16 @@ export function EinstellungenFormular({
   const [laeuft, setLaeuft] = useState(false)
   /** Wo man gerade ist: [] = Übersicht, ['email'] = Bereich, ['mailboxes','0'] = Eintrag */
   const [weg, setWeg] = useState<string[]>([])
+  const [sprache, setSprache] = useState<Locale>('de')
 
   useEffect(() => {
     let abgebrochen = false
     void (async () => {
       try {
-        const antwort = await fetch(`/api/office/einstellungen?bereich=${bereich}`, {
-          credentials: 'include',
-        })
+        const antwort = await fetch(
+          `/api/office/einstellungen?bereich=${bereich}&sprache=${sprache}`,
+          { credentials: 'include' },
+        )
         if (!antwort.ok) throw new Error('nicht erreichbar')
         const daten = await antwort.json()
         if (abgebrochen) return
@@ -411,22 +448,31 @@ export function EinstellungenFormular({
     return () => {
       abgebrochen = true
     }
-  }, [bereich])
+  }, [bereich, sprache])
 
   const setzen = useCallback((pfad: string[], wert: unknown) => {
     setWerte((v) => tiefSetzen(v, pfad, wert) as Werte)
     setMeldung(null)
   }, [])
 
+  /** Gibt es hier überhaupt etwas zu übersetzen? Entscheidet über die Sprachwahl. */
+  const uebersetzbares = useMemo(() => (felder ? nurUebersetzbareFelder(felder) : []), [felder])
+
+  /** In einer fremden Sprachfassung steht nur, was es je Sprache gibt */
+  const sichtbareFelder = useMemo(
+    () => (!felder ? null : sprache === 'de' ? felder : nurUebersetzbareFelder(felder)),
+    [felder, sprache],
+  )
+
   /** Das Feld, auf das der Weg zeigt — und der Datenpfad dorthin */
   const ziel = useMemo(() => {
-    if (!felder || weg.length === 0) return null
-    const oben = felder.find((f) => f.name === weg[0])
+    if (!sichtbareFelder || weg.length === 0) return null
+    const oben = sichtbareFelder.find((f) => f.name === weg[0])
     if (!oben) return null
     // Zweiter Schritt ist immer eine Nummer: der Eintrag einer Liste
     const eintrag = weg.length > 1 ? weg[1] : null
     return { feld: oben, eintrag }
-  }, [felder, weg])
+  }, [sichtbareFelder, weg])
 
   async function speichern() {
     /*
@@ -456,7 +502,7 @@ export function EinstellungenFormular({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ bereich, werte: geaendert }),
+        body: JSON.stringify({ bereich, sprache, werte: geaendert }),
       })
       if (antwort.ok) {
         setUrspruenglich(werte)
@@ -488,7 +534,7 @@ export function EinstellungenFormular({
     </Fussleiste>
   )
 
-  if (!felder) {
+  if (!felder || !sichtbareFelder) {
     return (
       <>
         <h2>{titel}</h2>
@@ -586,10 +632,41 @@ export function EinstellungenFormular({
   return (
     <>
       <h2>{titel}</h2>
+      {/*
+        * Die Sprachwahl steht nur dort, wo es überhaupt etwas zu übersetzen
+        * gibt. Bei den Integrationen — Zugangsdaten, Schlüssel, Server — wäre
+        * sie eine Einladung zu einem Missverständnis.
+        */}
+      {uebersetzbares.length > 0 && (
+        <div className="buero-reiter" role="tablist">
+          {locales.map((l) => (
+            <button
+              key={l}
+              type="button"
+              role="tab"
+              aria-selected={l === sprache}
+              className={`buero-knopf schmal ${l === sprache ? '' : 'leise'}`}
+              onClick={() => {
+                setSprache(l)
+                setWeg([])
+                setMeldung(null)
+              }}
+            >
+              {SPRACHNAMEN[l]}
+            </button>
+          ))}
+        </div>
+      )}
+      {sprache !== 'de' && (
+        <p className="buero-unterzeile">
+          Nur die Felder, die es je Sprache gibt. Alles Übrige — Anschrift, Bankverbindung,
+          Stundensatz — gilt sprachübergreifend und steht unter Deutsch.
+        </p>
+      )}
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
       <div className="buero-liste">
-        {felder.map((feld) => {
+        {sichtbareFelder.map((feld) => {
           const wert = tiefLesen(werte, [feld.name])
           const gefuellt = istGefuellt(wert)
           const anzahl = Array.isArray(wert) ? wert.length : null

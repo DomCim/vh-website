@@ -2723,3 +2723,35 @@ html.tastatur-offen .buero-inhalt {
   flex-basis: 100%;
   margin: 0.15rem 0 0;
 }
+
+/*
+ * Ein Rechtstext, der hier nicht bearbeitet werden darf.
+ *
+ * Der Fall: Im Datensatz steht mehr als Absätze — eine Aufzählung etwa, die
+ * jemand in der Website-Verwaltung angelegt hat. Als Textfeld ginge sie beim
+ * Speichern verloren, und zwar lautlos. Deshalb wird der Text hier nur
+ * gezeigt, mit dem Hinweis, wo er hingehört.
+ */
+.buero-warnung {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 9px;
+  border: 1.5px solid var(--buero-bronze);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.buero-vorschau {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 9px;
+  background: var(--buero-flaeche);
+  font: inherit;
+  font-size: 0.9rem;
+  /* Ein Rechtstext ist lang: umbrechen statt seitlich hinauslaufen */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 18rem;
+  overflow-y: auto;
+}

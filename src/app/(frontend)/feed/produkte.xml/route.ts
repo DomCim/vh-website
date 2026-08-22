@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { bildQuellen, type BildQuelle } from '../../../../components/Bild'
 import { payloadClient } from '../../../../lib/data'
 import { type Locale, locales } from '../../../../lib/i18n'
 import { absoluteUrl, BASE_URL } from '../../../../lib/seo'
@@ -96,8 +97,24 @@ export async function GET(req: Request) {
   for (const p of docs as unknown as Record<string, any>[]) {
     const kategorie = typeof p.category === 'object' ? p.category : null
     const pfad = `/${locale}/${kategorie?.slug ?? 'kollektion'}/${p.slug}`
+    /*
+     * Der Zuschnitt und nicht das Original.
+     *
+     * Die hochgeladenen Dateien sind Archivware: Das Foto des Coeur wiegt
+     * 5,9 MB, der Kübel 3,1 MB. Payload legt daneben WebP-Fassungen an, und
+     * `large` hat dieselbe Auflösung bei einem Bruchteil der Größe — beim
+     * Coeur 122 KB statt 5,9 MB. Google lädt jedes Bild im Feed herunter, und
+     * zwar wieder und wieder; das Original hinauszureichen kostet Bandbreite
+     * auf beiden Seiten und bringt kein einziges Pixel mehr.
+     *
+     * Gibt es keinen Zuschnitt — bei Bildern, die vor der Größenstaffelung
+     * hochgeladen wurden —, nimmt `bildQuellen` die größte vorhandene Fassung
+     * und zur Not das Original. Ein Eintrag ohne Bild wäre der schlechteste
+     * Ausgang von allen.
+     */
     const bild = Array.isArray(p.images) ? p.images[0] : null
-    const bildUrl = absoluteUrl(typeof bild === 'object' ? bild?.url : undefined)
+    const gewaehlt = bildQuellen(bild as BildQuelle, 'large')?.src
+    const bildUrl = absoluteUrl(gewaehlt ?? (typeof bild === 'object' ? bild?.url : undefined))
     // Ohne Bild kein Eintrag — Google nimmt ihn ohnehin nicht an
     if (!bildUrl) continue
 

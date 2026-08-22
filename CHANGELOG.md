@@ -6,6 +6,28 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Drei Sprachen im Büro, Bilder mit Gedächtnis und eine Adresse je Artikel
+
+- **Die Einstellungen lassen sich im Büro in allen drei Sprachen pflegen.** Bisher schrieb das Büro immer die deutsche Fassung — auch dann, wenn jemand die häufigen Fragen, den Untertitel oder die SEO-Standardtexte auf Französisch pflegen wollte. Gemerkt hat man es nicht: Das Formular sah gleich aus, und der französische Text landete stillschweigend im deutschen Feld. Jetzt steht die Sprachwahl über den Feldern. In einer fremden Sprache erscheinen **nur** die Felder, die es je Sprache gibt — Anschrift, Bankverbindung und Stundensatz bleiben unter Deutsch, denn die gibt es nur einmal. Bei den Integrationen gibt es keine Sprachwahl, dort ist nichts zu übersetzen.
+
+- **Eine leere Übersetzung sieht jetzt leer aus.** Wo noch nichts übersetzt ist, zeigte das Formular bisher den deutschen Text — es sah aus, als sei übersetzt, und beim Speichern stand der deutsche Text als französischer fest.
+
+- **Eine Oberkategorie zeigt nicht mehr alles doppelt.** Auf „Outdoor" standen die drei Kacheln Möbel, Pflanzen und Feuer — und darunter noch einmal sämtliche Stücke aus allen dreien. Jetzt zeigt eine Kategorie ihre Unterkategorien und die Artikel, die wirklich in ihr liegen. Wer tiefer will, tippt eine Kachel an; dafür sind sie da.
+
+- **Jeder Artikel hat wieder genau eine Adresse.** Das war der eigentliche Schaden hinter der Dopplung: Ein Sofa aus „Möbel" wurde auf der Outdoor-Seite unter `/outdoor/…` verlinkt statt unter `/moebel/…`. Beide Adressen lieferten dieselbe Seite und erklärten sich obendrein jeweils selbst für die maßgebliche — für Google zwei Seiten mit gleichem Inhalt, die sich gegenseitig die Bedeutung wegnehmen. Alte Links bleiben gültig und führen weiter zum Ziel, zählen aber nicht mehr als eigene Seite.
+
+- **Leere Kategorien lassen sich per KI-Assistent entfernen.** Bisher gab es dafür kein Werkzeug — anlegen und ändern ging, wegräumen nicht. Wie beim Löschen eines Artikels ist es zweistufig: Der erste Aufruf zeigt nur, was passieren würde. Liegen noch Artikel darin, wird nichts gelöscht, sondern gesagt, dass sie zuerst umgehängt gehören; Unterkategorien rücken eine Ebene nach oben, und auch das steht vorher da.
+
+- **Ein Artikel mit Varianten lässt sich per KI-Assistent übersetzen.** Bisher ging das nicht: Titel und Variantenbezeichnung sind beide Pflicht und beide übersetzbar, und bei einem Artikel ohne französische Fassung fehlten beide. Damit lief jeder Weg ins Leere — das eine Werkzeug scheiterte am Titel, das andere an den Bezeichnungen. Jetzt lassen sich beide in einem Zug setzen. Aufgefallen beim Übersetzen des Brasero mit seinen sechs Größen.
+
+- **Rechtstexte stehen jetzt im Büro.** Unter Sonstiges → Rechtstexte lassen sich Impressum, Datenschutzerklärung, AGB, Widerrufsbelehrung, Muster-Widerrufsformular sowie Versand & Zahlung bearbeiten — **in allen drei Sprachen**, mit der Sprachwahl über den Feldern. Bisher ging das nur in der Website-Verwaltung, in einer anderen Oberfläche und für jede Sprache einzeln. Zu jedem Text steht ein Verweis auf die Seite, auf der er draußen erscheint.
+
+- **Die Entwürfe lassen sich mit einem Knopf einspielen.** Widerrufsbelehrung, Muster-Formular sowie Versand & Zahlung gab es als Vorlage schon lange — aber nur über ein Kommando am Server. Genau deshalb blieben diese beiden Seiten leer, bis das Merchant Center darüber stolperte. Jetzt genügt ein Knopf. Geschrieben wird nur dort, wo noch nichts steht: Eine eigene Fassung ist geprüft, der Entwurf ist es nicht.
+
+- **Bilder bleiben im Browser, statt bei jedem Besuch neu zu laden.** Die Bilder kamen bisher ohne jede Angabe dazu, wie lange sie aufgehoben werden dürfen — der Browser lud sie deshalb bei **jedem** Seitenaufruf vollständig neu. Auf der Startseite ist das über ein Megabyte, bei jedem einzelnen Besuch derselben Person. Jetzt darf er sie ein Jahr behalten. Wer ein Bild austauscht, bekommt automatisch eine neue Adresse; es kann also niemand ein altes Bild zu sehen bekommen.
+
+- **Der Produktdatenfeed reicht nicht mehr die Originalfotos hinaus.** Google lud für jeden Eintrag die Archivdatei herunter — beim Coeur 5,9 MB. Jetzt geht die Fassung mit derselben Auflösung hinaus, die nur 122 KB wiegt.
+
 - **Google darf die Produktbilder endlich holen.** Die Bilder der Artikel werden unter `/api/media/…` ausgeliefert — und genau dieser Bereich war für Suchmaschinen gesperrt, weil dort auch Bestellungen, Postfach und Zugänge liegen. Aufgefallen ist es nie, denn die Seiten selbst waren ja zu sehen; nur die Bilder darin nicht. Bemerkt hat es erst das Merchant Center, und dort betraf es **alle 19 Artikel**: Ohne Bild kein Eintrag bei Google Shopping, und in der Bildersuche stand ohnehin nichts. Die Bilder sind jetzt ausdrücklich freigegeben, alles andere hinter `/api/` bleibt gesperrt.
 
 - **Der Versand steht im Produktfeed — für Frankreich, Deutschland und Österreich.** Ohne Versandangabe weist Google für ein Zielland nicht einzelne Artikel ab, sondern alle. Die Angabe kommt aus derselben Zahl, die auch die Kasse berechnet, und gilt für alle drei Länder gleich — weil der Shop es so hält: ein fester Betrag je Stück, ohne Blick auf die Anschrift. Wo nichts hinterlegt ist, steht ausdrücklich „0,00 €", denn dann ist es versandkostenfrei und keine fehlende Angabe. Eine eigene Versandregel im Merchant Center braucht es dadurch nicht.
