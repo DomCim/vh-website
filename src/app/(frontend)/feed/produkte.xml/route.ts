@@ -93,7 +93,21 @@ export async function GET(req: Request) {
           : []
 
     for (const v of varianten) {
-      const beschreibung = String(p.shortDescription ?? p.title ?? '').slice(0, 5000)
+      /*
+       * `||` und nicht `??` — an echten Daten aufgefallen.
+       *
+       * Payload legt für ein Textfeld, das nie ausgefüllt wurde, eine leere
+       * Zeichenkette an und nicht `null`. Mit `??` kam die leere Zeichenkette
+       * durch, und im Feed stand `<g:description></g:description>`. Google
+       * verlangt eine Beschreibung und weist den Eintrag sonst ab — es waren
+       * auf Anhieb 7 von 19 Stücken, und gemerkt hätte man es erst an einer
+       * roten Datenquelle im Merchant Center.
+       *
+       * Der Titel ist dabei die Notlösung und keine gute Beschreibung. Wo er
+       * einspringt, gehört im Büro eine Kurzbeschreibung nachgetragen: Sie
+       * steht nicht nur hier, sondern auch auf der Artikelseite.
+       */
+      const beschreibung = String(p.shortDescription || p.title || '').slice(0, 5000)
       eintraege.push(
         [
           '<item>',
