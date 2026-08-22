@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Rechtstexte stehen jetzt im Büro.** Unter Sonstiges → Rechtstexte lassen sich Impressum, Datenschutzerklärung, AGB, Widerrufsbelehrung, Muster-Widerrufsformular sowie Versand & Zahlung bearbeiten — **in allen drei Sprachen**, mit der Sprachwahl über den Feldern. Bisher ging das nur in der Website-Verwaltung, in einer anderen Oberfläche und für jede Sprache einzeln. Zu jedem Text steht ein Verweis auf die Seite, auf der er draußen erscheint.
+
+- **Die Entwürfe lassen sich mit einem Knopf einspielen.** Widerrufsbelehrung, Muster-Formular sowie Versand & Zahlung gab es als Vorlage schon lange — aber nur über ein Kommando am Server. Genau deshalb blieben diese beiden Seiten leer, bis das Merchant Center darüber stolperte. Jetzt genügt ein Knopf. Geschrieben wird nur dort, wo noch nichts steht: Eine eigene Fassung ist geprüft, der Entwurf ist es nicht.
+
 - **Bilder bleiben im Browser, statt bei jedem Besuch neu zu laden.** Die Bilder kamen bisher ohne jede Angabe dazu, wie lange sie aufgehoben werden dürfen — der Browser lud sie deshalb bei **jedem** Seitenaufruf vollständig neu. Auf der Startseite ist das über ein Megabyte, bei jedem einzelnen Besuch derselben Person. Jetzt darf er sie ein Jahr behalten. Wer ein Bild austauscht, bekommt automatisch eine neue Adresse; es kann also niemand ein altes Bild zu sehen bekommen.
 
 - **Der Produktdatenfeed reicht nicht mehr die Originalfotos hinaus.** Google lud für jeden Eintrag die Archivdatei herunter — beim Coeur 5,9 MB. Jetzt geht die Fassung mit derselben Auflösung hinaus, die nur 122 KB wiegt.

@@ -93,6 +93,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/meldungen', label: 'Meldungen' },
       { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
+      { href: '/office/rechtliches', label: 'Rechtstexte', recht: 'website.pflegen' },
       { href: '/admin', label: 'Website-Verwaltung', recht: 'website.pflegen' },
     ],
   },
