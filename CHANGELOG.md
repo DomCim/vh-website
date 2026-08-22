@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Versand steht im Produktfeed — für Frankreich, Deutschland und Österreich.** Ohne Versandangabe weist Google für ein Zielland nicht einzelne Artikel ab, sondern alle. Die Angabe kommt aus derselben Zahl, die auch die Kasse berechnet, und gilt für alle drei Länder gleich — weil der Shop es so hält: ein fester Betrag je Stück, ohne Blick auf die Anschrift. Wo nichts hinterlegt ist, steht ausdrücklich „0,00 €", denn dann ist es versandkostenfrei und keine fehlende Angabe. Eine eigene Versandregel im Merchant Center braucht es dadurch nicht.
+
 - **Kein Eintrag im Produktfeed bleibt ohne Beschreibung.** Bei sieben von neunzehn Stücken stand im Feed eine leere Beschreibung — bei allen, für die im Büro nie eine Kurzbeschreibung eingetragen wurde. Google verlangt eine und hätte diese Einträge abgewiesen; gemerkt hätte man es erst an einer roten Datenquelle. Fehlt sie, steht jetzt der Artikelname darin. Das ist eine Notlösung und kein Ersatz: Betroffen sind die **Rennradwandhalterung** und der **Brasero** in allen sechs Größen. Eine Kurzbeschreibung dort nachzutragen lohnt doppelt, denn sie steht auch auf der Artikelseite.
 
 ## 22.08.2026 — Gefunden werden: Sterne, häufige Fragen, Shopping-Einträge und ein schnellerer erster Besuch
