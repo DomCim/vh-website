@@ -162,6 +162,38 @@ const nextConfig = {
         source: '/admin/:pfad*',
         headers: [...grundlegend, { key: 'Content-Security-Policy', value: verwaltung }],
       },
+      /**
+       * Bilder dürfen ein Jahr im Browser bleiben.
+       *
+       * **Was vorher geschah.** Payload liefert die Mediendateien ohne jede
+       * Angabe zur Zwischenspeicherung aus — kein `Cache-Control`, kein
+       * `ETag`, kein `Last-Modified`. Der Browser kann dann nicht einmal
+       * nachfragen, ob sich etwas geändert hat; er lädt jedes Bild bei jedem
+       * Seitenaufruf vollständig neu. Auf der Startseite sind das über ein
+       * Megabyte, bei jedem einzelnen Besuch derselben Person.
+       *
+       * Lange fiel das nicht auf, weil der Nginx Proxy Manager mit
+       * „Cache Assets" seine eigene Angabe darüberlegte. Die war allerdings
+       * schlechter als nötig (alles lief zur selben Uhrzeit ab) und traf auch
+       * die Dateien von Next, die es von Haus aus richtig machen. Seit die
+       * Einstellung aus ist, stimmen die Next-Dateien — und die Bilder stehen
+       * ohne Angabe da.
+       *
+       * **Warum ein Jahr und „unveränderlich".** Eine Mediendatei wird nie
+       * überschrieben: Payload hängt bei einem belegten Namen eine Nummer an
+       * (aus `Brasero_1.png` wird `Brasero_1-1.png`). Eine Adresse zeigt also
+       * für immer auf dasselbe Bild, und der Browser darf sie behalten, ohne
+       * je nachzufragen. Wer ein Bild austauscht, bekommt ohnehin eine neue
+       * Adresse — die Seiten holen sie sich aus der Datenbank.
+       *
+       * Gilt nur für `/api/media/file/…`, also die Dateien selbst. Die
+       * Datenabfragen unter `/api/media` bleiben unangetastet; die dürfen
+       * nicht zwischengespeichert werden.
+       */
+      {
+        source: '/api/media/file/:pfad*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       {
         source: '/office',
         headers: [...grundlegend, { key: 'Content-Security-Policy', value: buero }],

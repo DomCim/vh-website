@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Bilder bleiben im Browser, statt bei jedem Besuch neu zu laden.** Die Bilder kamen bisher ohne jede Angabe dazu, wie lange sie aufgehoben werden dürfen — der Browser lud sie deshalb bei **jedem** Seitenaufruf vollständig neu. Auf der Startseite ist das über ein Megabyte, bei jedem einzelnen Besuch derselben Person. Jetzt darf er sie ein Jahr behalten. Wer ein Bild austauscht, bekommt automatisch eine neue Adresse; es kann also niemand ein altes Bild zu sehen bekommen.
+
+- **Der Produktdatenfeed reicht nicht mehr die Originalfotos hinaus.** Google lud für jeden Eintrag die Archivdatei herunter — beim Coeur 5,9 MB. Jetzt geht die Fassung mit derselben Auflösung hinaus, die nur 122 KB wiegt.
+
 - **Google darf die Produktbilder endlich holen.** Die Bilder der Artikel werden unter `/api/media/…` ausgeliefert — und genau dieser Bereich war für Suchmaschinen gesperrt, weil dort auch Bestellungen, Postfach und Zugänge liegen. Aufgefallen ist es nie, denn die Seiten selbst waren ja zu sehen; nur die Bilder darin nicht. Bemerkt hat es erst das Merchant Center, und dort betraf es **alle 19 Artikel**: Ohne Bild kein Eintrag bei Google Shopping, und in der Bildersuche stand ohnehin nichts. Die Bilder sind jetzt ausdrücklich freigegeben, alles andere hinter `/api/` bleibt gesperrt.
 
 - **Der Versand steht im Produktfeed — für Frankreich, Deutschland und Österreich.** Ohne Versandangabe weist Google für ein Zielland nicht einzelne Artikel ab, sondern alle. Die Angabe kommt aus derselben Zahl, die auch die Kasse berechnet, und gilt für alle drei Länder gleich — weil der Shop es so hält: ein fester Betrag je Stück, ohne Blick auf die Anschrift. Wo nichts hinterlegt ist, steht ausdrücklich „0,00 €", denn dann ist es versandkostenfrei und keine fehlende Angabe. Eine eigene Versandregel im Merchant Center braucht es dadurch nicht.
