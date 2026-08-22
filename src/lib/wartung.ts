@@ -5,7 +5,7 @@ import { GRABSTEIN_TAGE } from './bereiche'
 import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
 import { neuesteUngelesene, postfaecher, ungeleseneAnzahl } from './postfach'
-import { benachrichtige } from './push'
+import { abhaken, benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben } from './settings'
 import { sicherungAutomatik, zustandLesen, zustandMerken } from './sicherung'
@@ -693,6 +693,17 @@ export async function postfachPruefen(
           tag: `post-${fach.id}`,
         })
       }
+      /*
+       * Nichts mehr ungelesen — dann ist die Meldung erledigt, auch wenn sie
+       * niemand im Büro angesehen hat.
+       *
+       * Gelesen wird meistens am Telefon im Mailprogramm, und die Markierung
+       * liegt bei IMAP, nicht bei uns. Ohne dieses Abhaken stünde im Büro
+       * weiter „neue Post", bis jemand die Glocke aufmacht — und der Zähler an
+       * der Navigation zeigte auf ein Postfach, in dem nichts wartet.
+       */
+      if (ungelesen === 0) await abhaken(payload, `post-${fach.id}`)
+
       ergebnis.push({ fach: fach.label, ungelesen, gemeldet: neu })
     } catch (err) {
       payload.logger.warn({ err }, `Postfach ${fach.label} nicht erreichbar`)

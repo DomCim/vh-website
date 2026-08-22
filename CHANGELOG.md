@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Am Telefon gelesen heißt auch im Büro gelesen.** Wer eine Mail im Mailprogramm des Handys liest, sieht im Büro bisher weiter „neue Post" — die Markierung liegt beim Anbieter, die Meldung im Gerät wusste nichts davon. Der Postfach-Blick hakt die Meldung jetzt selbst ab, sobald beim Anbieter nichts mehr ungelesen ist. Damit verschwindet auch der Zähler an der Navigation von allein.
+
 ## 22.08.2026 — Mails wie geschrieben, der Corten-Strich im Schreibfeld und die Meldung über neue Post
 
 - **Die Meldung über neue Post sagt jetzt, von wem sie ist.** Statt „Neue Post für Info · Eine ungelesene Nachricht" steht dort der Absender und der Betreff der jüngsten ungelesenen Mail — daran erkennt man, ob man das Handy aus der Tasche holen muss. Liegt mehr als eine bereit, steht die Zahl dahinter.
