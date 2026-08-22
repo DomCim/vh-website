@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Drei Sprachen im Büro, Bilder mit Gedächtnis und eine Adresse je Artikel
+
 - **Die Einstellungen lassen sich im Büro in allen drei Sprachen pflegen.** Bisher schrieb das Büro immer die deutsche Fassung — auch dann, wenn jemand die häufigen Fragen, den Untertitel oder die SEO-Standardtexte auf Französisch pflegen wollte. Gemerkt hat man es nicht: Das Formular sah gleich aus, und der französische Text landete stillschweigend im deutschen Feld. Jetzt steht die Sprachwahl über den Feldern. In einer fremden Sprache erscheinen **nur** die Felder, die es je Sprache gibt — Anschrift, Bankverbindung und Stundensatz bleiben unter Deutsch, denn die gibt es nur einmal. Bei den Integrationen gibt es keine Sprachwahl, dort ist nichts zu übersetzen.
 
 - **Eine leere Übersetzung sieht jetzt leer aus.** Wo noch nichts übersetzt ist, zeigte das Formular bisher den deutschen Text — es sah aus, als sei übersetzt, und beim Speichern stand der deutsche Text als französischer fest.
