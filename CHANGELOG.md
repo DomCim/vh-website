@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Kein Eintrag im Produktfeed bleibt ohne Beschreibung.** Bei sieben von neunzehn Stücken stand im Feed eine leere Beschreibung — bei allen, für die im Büro nie eine Kurzbeschreibung eingetragen wurde. Google verlangt eine und hätte diese Einträge abgewiesen; gemerkt hätte man es erst an einer roten Datenquelle. Fehlt sie, steht jetzt der Artikelname darin. Das ist eine Notlösung und kein Ersatz: Betroffen sind die **Rennradwandhalterung** und der **Brasero** in allen sechs Größen. Eine Kurzbeschreibung dort nachzutragen lohnt doppelt, denn sie steht auch auf der Artikelseite.
+
 ## 22.08.2026 — Gefunden werden: Sterne, häufige Fragen, Shopping-Einträge und ein schnellerer erster Besuch
 
 - **Sterne im Google-Ergebnis.** Kundinnen und Kunden können ihrer Stimme nach der Lieferung freiwillig Sterne geben — der Text bleibt die Hauptsache, die Sterne sind ein Zusatz. Auf der Artikelseite stehen sie über dem Zitat, und im Google-Ergebnis erscheint der Durchschnitt als Sternebewertung. Gerechnet wird nur mit dem, was wirklich vergeben wurde; eine Stimme ohne Sterne zählt gar nicht mit.
