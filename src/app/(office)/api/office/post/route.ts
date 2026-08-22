@@ -11,7 +11,9 @@ import {
   ordnerListe,
   postfachFinden,
   postfaecher,
+  ungeleseneAnzahl,
 } from '../../../../../lib/postfach'
+import { abhaken } from '../../../../../lib/push'
 import { ordnernameGueltig, ordnerPfadNeben } from '../../../../../lib/ordnerpfad'
 import { darf } from '../../../../../lib/wache'
 
@@ -23,6 +25,30 @@ async function wache(req: Request) {
   const { user } = await payload.auth({ headers: req.headers })
   if (!user || !(await darf(payload, user, 'postfach.lesen'))) return { payload, user: null }
   return { payload, user }
+}
+
+/**
+ * Steht noch etwas ungelesen? Sonst ist die Meldung erledigt.
+ *
+ * Gerufen, nachdem im Büro eine Mail geöffnet, abgehakt oder weggeworfen
+ * wurde. `nachrichtLesen` setzt die Markierung dabei beim Anbieter (siehe
+ * `lib/postfach.ts`) — die Frage danach kostet eine STATUS-Abfrage und spart
+ * das Warten auf den nächsten Postfach-Blick.
+ *
+ * Umgekehrt gilt ausdrücklich: Das bloße **Aufmachen** des Postfachs hakt
+ * nichts ab. Wer die Liste ansieht und die Mail ungelesen lässt, hat sie nicht
+ * gelesen — und dann soll der Zähler stehen bleiben.
+ */
+async function meldungPruefen(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+  fach: { id: string | number },
+): Promise<void> {
+  try {
+    const offen = await ungeleseneAnzahl(fach as never)
+    if (offen === 0) await abhaken(payload, `post-${fach.id}`)
+  } catch {
+    // Der nächste Postfach-Blick holt es nach — dafür bricht hier nichts ab
+  }
 }
 
 /**
@@ -63,6 +89,7 @@ export async function GET(req: Request) {
     if (uid) {
       const nachricht = await nachrichtLesen(fach, ordner, Number(uid))
       if (!nachricht) return NextResponse.json({ error: 'nicht-gefunden' }, { status: 404 })
+      await meldungPruefen(payload, fach)
       return NextResponse.json({ fach: fach.id, faecher: oeffentlich, nachricht })
     }
 
@@ -147,6 +174,8 @@ export async function POST(req: Request) {
     if (!b.uid) return NextResponse.json({ error: 'uid-fehlt' }, { status: 400 })
 
     await nachrichtAendern(fach, b.ordner || 'INBOX', Number(b.uid), b.aktion)
+    // Auch von Hand abhaken oder wegwerfen kann das letzte Ungelesene erledigen
+    if (['gelesen', 'loeschen'].includes(b.aktion)) await meldungPruefen(payload, fach)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Postfach-Aktion fehlgeschlagen:', err)
