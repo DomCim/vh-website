@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -22,6 +23,48 @@ import { alsCsv, steuerbericht, type Steuerbericht } from './steuerexport'
  */
 
 const MEDIEN = process.env.MEDIA_DIR || path.join(process.cwd(), 'media')
+
+/*
+ * Der Abhol-Link für Pakete, die zu groß für eine Mail sind.
+ *
+ * Kein Konto, kein Passwort, kein monatliches Telefonat mit der Kanzlei:
+ * Der Link trägt seine eigene Prüfsumme (HMAC über Monat und Ablaufzeit,
+ * geschlüsselt mit dem Server-Geheimnis). Wer den Link hat, kann abholen —
+ * dasselbe Vertrauensniveau wie der Mail-Anhang, denn beide reisen durch
+ * dieselbe Mail. Verändern lässt sich nichts: Ein anderer Monat oder ein
+ * späteres Ablaufdatum ergäbe eine andere Signatur. Gespeichert wird auch
+ * nichts — das Paket entsteht beim Abholen frisch.
+ */
+export const ABHOL_TAGE = 14
+
+export function abholSignatur(jahr: number, monat: number, bis: number): string {
+  return crypto
+    .createHmac('sha256', process.env.PAYLOAD_SECRET ?? '')
+    .update(`steuerpaket:${jahr}:${monat}:${bis}`)
+    .digest('base64url')
+}
+
+export function abholLink(jahr: number, monat: number): { url: string; bis: Date } {
+  const bis = Date.now() + ABHOL_TAGE * 24 * 60 * 60 * 1000
+  const basis = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+  const sig = abholSignatur(jahr, monat, bis)
+  return {
+    url: `${basis}/api/steuerpaket?jahr=${jahr}&monat=${monat}&bis=${bis}&sig=${sig}`,
+    bis: new Date(bis),
+  }
+}
+
+export function abholLinkGueltig(
+  jahr: number,
+  monat: number,
+  bis: number,
+  sig: string,
+): boolean {
+  if (!Number.isInteger(bis) || bis < Date.now()) return false
+  const soll = Buffer.from(abholSignatur(jahr, monat, bis))
+  const ist = Buffer.from(sig)
+  return soll.length === ist.length && crypto.timingSafeEqual(soll, ist)
+}
 
 /** Dateinamen fürs ZIP entschärfen — Schrägstriche wären dort Ordner */
 const sauber = (name: string) => name.replace(/[^\wäöüÄÖÜß.\- ]+/g, '_')

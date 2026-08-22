@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../../lib/data'
 import { sendMail } from '../../../../../../lib/sendMail'
 import { getIntegrations } from '../../../../../../lib/settings'
-import { steuerpaket } from '../../../../../../lib/steuerpaket'
+import { alsCsv } from '../../../../../../lib/steuerexport'
+import { ABHOL_TAGE, abholLink, steuerpaket } from '../../../../../../lib/steuerpaket'
 import { darf } from '../../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -26,9 +27,11 @@ const MONATE = [
 ]
 
 /*
- * Größer schicken wir nicht per Mail: Viele Postfächer weisen ab etwa 25 MB
- * ab, und eine abgewiesene Mail an die Kanzlei fällt niemandem auf, bis der
- * Steuerberater mahnt. Darüber gibt es das Paket nur als Download.
+ * Größer schicken wir nicht als Anhang: Viele Postfächer weisen ab etwa
+ * 25 MB ab, und eine abgewiesene Mail an die Kanzlei fällt niemandem auf,
+ * bis der Steuerberater mahnt. Darüber geht stattdessen ein signierter
+ * Abhol-Link hinaus — die Buchungsliste fährt als kleiner Anhang trotzdem
+ * mit, damit die Zahlen sofort da sind.
  */
 const MAIL_GRENZE = 18 * 1024 * 1024
 
@@ -85,34 +88,52 @@ export async function POST(req: Request) {
     if (!an) return NextResponse.json({ error: 'keine-kanzlei' }, { status: 409 })
 
     const paket = await steuerpaket(payload, zeitraum.jahr, zeitraum.monat)
-    if (paket.zip.length > MAIL_GRENZE) {
-      return NextResponse.json(
-        { error: 'zu-gross', groesse: paket.zip.length },
-        { status: 413 },
-      )
-    }
+    const alsLink = paket.zip.length > MAIL_GRENZE
 
     const monatsname = `${MONATE[zeitraum.monat - 1]} ${zeitraum.jahr}`
     const euro = (n: number) =>
       new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n)
     const hinweisScans = paket.ohneScan
-      ? `<p>Hinweis: Zu ${paket.ohneScan} Ausgabe${paket.ohneScan === 1 ? '' : 'n'} liegt kein Beleg-Scan vor — diese fehlen im Anhang.</p>`
+      ? `<p>Hinweis: Zu ${paket.ohneScan} Ausgabe${paket.ohneScan === 1 ? '' : 'n'} liegt kein Beleg-Scan vor — diese fehlen im Paket.</p>`
       : ''
+    const mm = String(zeitraum.monat).padStart(2, '0')
+
+    let rumpf: string
+    let anhaenge: { filename: string; content: Buffer; contentType?: string }[]
+    if (alsLink) {
+      const { url, bis } = abholLink(zeitraum.jahr, zeitraum.monat)
+      rumpf =
+        `<p>die Unterlagen für ${monatsname} sind diesmal zu umfangreich für einen Anhang ` +
+        `(${Math.round(paket.zip.length / 1024 / 1024)} MB). Sie können das Paket hier abholen:</p>` +
+        `<p><a href="${url}">${url}</a></p>` +
+        `<p>Der Link ist bis zum ${bis.toLocaleDateString('de-DE')} gültig (${ABHOL_TAGE} Tage) und ` +
+        `liefert eine ZIP-Datei mit den Scans der Ausgabenbelege und den Ausgangsrechnungen als PDF. ` +
+        `Die Buchungsliste hängt dieser Mail bereits als CSV an.</p>`
+      anhaenge = [
+        {
+          filename: `buchungen-${zeitraum.jahr}-${mm}.csv`,
+          content: Buffer.from(alsCsv(paket.bericht), 'utf8'),
+          contentType: 'text/csv',
+        },
+      ]
+    } else {
+      rumpf =
+        `<p>anbei die Unterlagen für ${monatsname}: die Buchungsliste als CSV, ` +
+        `die Scans der Ausgabenbelege und die Ausgangsrechnungen als PDF.</p>`
+      anhaenge = [{ filename: paket.dateiname, content: paket.zip, contentType: 'application/zip' }]
+    }
 
     await sendMail(payload, {
       to: an,
       subject: `Monatsunterlagen ${monatsname}`,
       html:
         `<p>Guten Tag,</p>` +
-        `<p>anbei die Unterlagen für ${monatsname}: die Buchungsliste als CSV, ` +
-        `die Scans der Ausgabenbelege und die Ausgangsrechnungen als PDF.</p>` +
+        rumpf +
         `<p>Einnahmen ${euro(paket.bericht.einnahmen)} · Ausgaben ${euro(paket.bericht.ausgaben)} · ` +
-        `${paket.dateien} ${paket.dateien === 1 ? 'Datei' : 'Dateien'} im Anhang.</p>` +
+        `${paket.dateien} ${paket.dateien === 1 ? 'Datei' : 'Dateien'} im Paket.</p>` +
         hinweisScans +
         `<p>Diese Mail kommt direkt aus dem Bürosystem — Rückfragen bitte an die gewohnte Adresse.</p>`,
-      attachments: [
-        { filename: paket.dateiname, content: paket.zip, contentType: 'application/zip' },
-      ],
+      attachments: anhaenge,
       art: 'sonstiges',
     })
 
@@ -121,6 +142,7 @@ export async function POST(req: Request) {
       an,
       dateien: paket.dateien,
       ohneScan: paket.ohneScan,
+      alsLink,
     })
   } catch (err) {
     console.error('Monatspaket-Versand fehlgeschlagen:', err)
