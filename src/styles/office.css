@@ -2087,12 +2087,13 @@ html.tastatur-offen .buero-inhalt {
   width: 40px;
   border-radius: 9999px;
   background-color: #a5622d;
-  margin: 7px 0 12px;
+  /* Eng an der Überschrift — dieselben Maße wie in `lib/mailhtml.ts` */
+  margin: 4px 0 12px;
 }
 .buero-schreibfeld .ql-editor h1::after {
   height: 3px;
   width: 112px;
-  margin: 12px 0 20px;
+  margin: 6px 0 16px;
 }
 
 /*

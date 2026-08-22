@@ -178,10 +178,18 @@ const STRICH_STILE: Record<string, string> = {
  * zwischen zwei Abschnitten, wo es keine Überschrift gibt.
  */
 function ueberschriftenStriche(html: string): string {
-  return html.replace(
-    /<\/(h1|h2|h3)>/gi,
-    (_ganz, name: string) => `</${name}>${cortenStrich(name.toLowerCase() === 'h1')}`,
-  )
+  return html.replace(/<\/(h1|h2|h3)>/gi, (_ganz, name: string) => {
+    const gross = name.toLowerCase() === 'h1'
+    /*
+     * Eng an die Überschrift, nicht in die Mitte des Absatzabstands.
+     *
+     * Die Überschrift trägt unten 4 px, der Strich brächte von Haus aus 12
+     * beziehungsweise 7 mit — zusammen genug, dass er nicht mehr zur
+     * Überschrift gehört, sondern zwischen den Zeilen schwebt. Unter dem
+     * Strich darf es dafür ruhig atmen; dort beginnt der Text.
+     */
+    return `</${name}>${cortenStrich(gross, { oben: gross ? 6 : 4, unten: gross ? 16 : 12 })}`
+  })
 }
 
 function stricheSetzen(html: string): string {
