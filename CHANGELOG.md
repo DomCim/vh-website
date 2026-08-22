@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Übersetzungsprüfung findet jetzt, was sie bisher übersah.** Sie meldete „alles übersetzt", während vier Artikel eine französische Beschreibung von 250 Zeichen trugen, wo im Deutschen 2.300 standen — und zwei davon sogar denselben Text: Eine Fahrrad-Wandhalterung wurde auf Französisch und Englisch als beleuchtetes Herz beschrieben, monatelang. Geprüft werden jetzt auch die Beschreibungen, und zwar auf dreierlei: ob sie **auffällig kürzer** sind als das Original, ob ihnen dessen **Zwischenüberschriften und Aufzählungen** fehlen, und ob **zwei Einträge wortgleich** sind. „Auffällig" heißt dabei hinsehen, nicht wegwerfen.
+
+- **Der KI-Assistent bekommt die Übersetzungsregeln vorab.** In den Hausregeln steht jetzt ein eigener Abschnitt: die Gliederung des Originals übernehmen, gefüllt ist nicht übersetzt, vor dem Schreiben das Original lesen, welche Begriffe stehen bleiben (NEXT CONCEPT, Cimatron, Corten, RAL) — und dass ein Artikel mit Varianten Titel und Bezeichnungen in einem Zug braucht.
+
 - **Sechs fehlende Werkzeuge für den KI-Assistenten.** Aufgefallen ist eines: Bei einer Aktion „gilt für bestimmte Kategorien" verriet die Liste nicht, für welche — wer sie ändern wollte, musste raten. Beim Nachsehen kamen fünf weitere heraus. Neu sind: eine Aktion, eine Kategorie, einen Geschäftspartner und eine Kundenstimme einzeln lesen; eine Wiedervorlage abhaken; und eine leere Kategorie entfernen.
 
 - **Die Sterne einer Kundenstimme waren für den Assistenten unsichtbar.** Sie kamen heute Nachmittag dazu und fehlten in der Schnittstelle — weder lesbar noch setzbar. Dabei entscheiden sie mit darüber, ob im Google-Ergebnis eine Sternebewertung erscheint.
