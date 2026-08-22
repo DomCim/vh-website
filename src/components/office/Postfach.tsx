@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 
+import { alsGelesen, useMeldungen } from '../../lib/buero/meldungen'
+import { istNeuePost } from '../../lib/zuErledigen'
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
@@ -170,6 +172,21 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   }, [laden])
 
   /*
+   * Wer ins Postfach sieht, hat die Meldung gesehen.
+   *
+   * Der Zähler an der Navigation zählt ungelesene Post-Meldungen (siehe
+   * `istNeuePost`). Ohne dieses Abhaken bliebe er stehen, bis jemand die
+   * Glocke aufmacht — man stünde also im Postfach und bekäme daneben weiter
+   * gesagt, im Postfach liege etwas.
+   */
+  const meldungen = useMeldungen()
+  useEffect(() => {
+    for (const m of meldungen) {
+      if (istNeuePost(m)) void alsGelesen(m.id)
+    }
+  }, [meldungen])
+
+  /*
    * Die Signatur kommt erst, wenn die Postfächer da sind.
    *
    * Beim Aufruf über `/office/post?an=…` steht der Entwurf schon, bevor der
@@ -301,12 +318,19 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         credentials: 'include',
         body: JSON.stringify({ aktion: 'senden', fach, ...entwurf }),
       })
+      const daten = (await res.json().catch(() => null)) as { kopie?: boolean } | null
       if (!res.ok) {
         setMeldung('Die Mail ging nicht raus.')
         return
       }
       setEntwurf(null)
-      setMeldung('Gesendet.')
+      // Verschickt ist verschickt — aber wenn die Kopie fehlt, sucht man sie
+      // später vergeblich im eigenen Ordner und hält die Mail für nie geschrieben
+      setMeldung(
+        daten?.kopie === false
+          ? 'Gesendet — aber die Kopie liegt nicht im Ordner „Gesendet". Bitte den Ordnernamen unter Einstellungen prüfen.'
+          : 'Gesendet.',
+      )
     } catch {
       setMeldung('Verbindung fehlgeschlagen.')
     } finally {

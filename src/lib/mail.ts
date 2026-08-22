@@ -1,3 +1,7 @@
+import fs from 'fs'
+import path from 'path'
+
+import { BRONZE, cortenStrich } from './corten'
 import type { Locale } from './i18n'
 
 type OrderLike = {
@@ -135,7 +139,16 @@ function vatRow(order: OrderLike, company?: CompanyInfo, sprache: Locale = 'de')
 export function firmenzeile(company?: CompanyInfo): string {
   if (!company) return ''
   const name = company.legalName || company.name || ''
-  const teile = [name, company.legalForm].filter(Boolean).join(' ')
+  /*
+   * „Next-Concept SAS SAS au capital de 1 000 €" — so stand es unter jeder
+   * Mail, weil die Rechtsform schon im Firmennamen steckte und danach noch
+   * einmal angehängt wurde. Wer den Namen einträgt, schreibt sie eben mit;
+   * das ist kein Fehler des Menschen, sondern einer der Vorlage.
+   */
+  const doppelt =
+    company.legalForm &&
+    new RegExp(`(^|\\s)${company.legalForm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i').test(name)
+  const teile = [name, doppelt ? null : company.legalForm].filter(Boolean).join(' ')
   const kapital =
     typeof company.shareCapital === 'number' && company.shareCapital > 0
       ? ` au capital de ${new Intl.NumberFormat('fr-FR').format(company.shareCapital)} €`
@@ -156,7 +169,12 @@ export function pflichtangaben(company?: CompanyInfo): string[] {
     firmenzeile(company),
     company.siret ? `SIRET: ${company.siret}` : null,
     company.vatId ? `TVA: ${company.vatId}` : null,
-    company.rcsNumber ? `RCS ${company.rcsCity ?? ''} ${company.rcsNumber}`.trim() : null,
+    // Dasselbe beim Handelsregister: Steht „RCS" schon im Ort, nicht noch einmal davor
+    company.rcsNumber
+      ? `${/^rcs\b/i.test(company.rcsCity ?? '') ? '' : 'RCS '}${company.rcsCity ?? ''} ${company.rcsNumber}`
+          .replace(/\s+/g, ' ')
+          .trim()
+      : null,
   ].filter(Boolean) as string[]
 }
 
@@ -167,25 +185,9 @@ function companyFooter(company?: CompanyInfo): string {
   return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`
 }
 
-/** Corten-Ton der Website */
-export const BRONZE = '#a5622d'
-
-/**
- * Corten-Strich unter einer Überschrift — dieselbe Form wie auf der Website:
- * 112 × 3 px bei großen, 40 × 2 px bei kleinen Überschriften, nach rechts
- * auslaufend.
- *
- * Der Verlauf liegt als `background-image` über einer einfarbigen Fläche:
- * Outlook kann keine Verläufe und zeigt dann den vollen Strich — richtig
- * aussehen tut es in beiden Fällen.
- */
-export function cortenStrich(gross = false): string {
-  const breite = gross ? 112 : 40
-  const hoehe = gross ? 3 : 2
-  const oben = gross ? 12 : 7
-  const unten = gross ? 20 : 12
-  return `<div style="width:${breite}px;height:${hoehe}px;border-radius:9999px;background-color:${BRONZE};background-image:linear-gradient(to right,${BRONZE} 0%,${BRONZE} 30%,rgba(165,98,45,0) 100%);margin:${oben}px 0 ${unten}px"></div>`
-}
+// Der Strich wohnt in `corten.ts`, damit ihn auch das Büro-Bündel laden kann —
+// diese Datei liest das Logo von der Platte und taugt dafür nicht
+export { BRONZE, cortenStrich } from './corten'
 
 /** Überschrift mit Corten-Strich darunter */
 export function ueberschrift(text: string, gross = false): string {
@@ -199,14 +201,67 @@ export function ueberschrift(text: string, gross = false): string {
  * Das Logo wird über `cid:vh-logo` eingebunden und als Anhang mitgeschickt;
  * ein aus dem Netz nachgeladenes Bild blockieren die meisten Mailprogramme,
  * und dann stünde die Mail ohne Kopf da.
+ *
+ * **Warum die Mail sagt, dass sie hell ist.** Wer sein Mailprogramm dunkel
+ * gestellt hat, bekam von uns einen schwarzen Schriftzug auf schwarzem Grund
+ * — das Logo war schlicht nicht da. Der Grund: Ohne Angabe stellt das
+ * Programm seinen eigenen dunklen Hintergrund darunter, und das Bild ist nun
+ * einmal schwarz.
+ *
+ * Dagegen steht hier dreierlei, absichtlich mehrfach:
+ *
+ * 1. `color-scheme` und `supported-color-schemes` — die Angabe, auf die
+ *    Apple Mail und die gutwilligen Programme hören: „diese Mail ist hell
+ *    gemeint, bitte nicht umfärben".
+ * 2. Ein ausdrücklich weißer Grund samt gesetzter Schriftfarbe. Ein Programm,
+ *    das nichts umfärbt, hat damit alles, was es braucht.
+ * 3. Ein Logo, das seinen hellen Grund **im Bild** mitbringt
+ *    (`logo-mail.png`). Bilder färbt keines dieser Programme um — deshalb
+ *    bleibt der Schriftzug auch dort lesbar, wo Punkt 1 und 2 überfahren
+ *    werden. Auf weißem Grund ist das Feld unsichtbar, auf dunklem wird es
+ *    zur Karte.
  */
 export function briefbogen(inhalt: string, company?: CompanyInfo, mitFuss = true): string {
-  return `<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;max-width:560px;font-size:14px;line-height:1.55">
-  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:18px;display:block;border:0" />
+  return `<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+<style>:root{color-scheme:light;supported-color-schemes:light}</style>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff">
+<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;background-color:#ffffff;max-width:560px;font-size:14px;line-height:1.55">
+  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:26px;display:block;border:0" />
   ${cortenStrich(true)}
   ${inhalt}
   ${mitFuss ? companyFooter(company) : ''}
-</div>`
+</div>
+</body>
+</html>`
+}
+
+/**
+ * Das Logo als Anhang — für jeden Weg, der eine Mail verschickt.
+ *
+ * Steht hier und nicht zweimal daneben: `sendMail` und das Postfach hatten
+ * bisher je ihre eigene Fassung derselben vier Zeilen, und eine davon hätte
+ * die weiße Fassung irgendwann nicht mitbekommen.
+ *
+ * Ohne `cid:vh-logo` im Text wird nichts angehängt — eine Mail mit einem
+ * Bild, das nirgends vorkommt, zeigen manche Programme als „Anhang" an.
+ */
+export function logoAnhang(html: string): { filename: string; path: string; cid: string }[] {
+  if (!html.includes('cid:vh-logo')) return []
+  const ordner = path.join(process.cwd(), 'public')
+  // Die weiße Fassung zuerst; die alte bleibt der Rückfall, damit ein Stand
+  // ohne die neue Datei nicht ohne Kopf verschickt
+  for (const name of ['logo-mail.png', 'logo.png']) {
+    const datei = path.join(ordner, name)
+    if (fs.existsSync(datei)) return [{ filename: name, path: datei, cid: 'vh-logo' }]
+  }
+  return []
 }
 
 function orderTable(order: OrderLike, company?: CompanyInfo, sprache: Locale = 'de'): string {

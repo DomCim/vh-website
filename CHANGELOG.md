@@ -6,6 +6,28 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Mails wie geschrieben, der Corten-Strich im Schreibfeld und die Meldung über neue Post
+
+- **Die Meldung über neue Post sagt jetzt, von wem sie ist.** Statt „Neue Post für Info · Eine ungelesene Nachricht" steht dort der Absender und der Betreff der jüngsten ungelesenen Mail — daran erkennt man, ob man das Handy aus der Tasche holen muss. Liegt mehr als eine bereit, steht die Zahl dahinter.
+
+- **Antippen führt endlich ins Postfach.** Wer die Meldung am Telefon antippte, landete auf der Seite, auf der er ohnehin schon stand: Die App kann sich in einer installierten Fassung nicht von außen umleiten lassen. Jetzt sagt die Meldung der App, wohin sie gehen soll, und die geht selbst.
+
+- **Neue Post steht als Zähler an der Navigation.** Unter Kundschaft → Postfach erscheint ein Zähler, sobald Post da ist, die noch niemand angesehen hat — wie bei Anfragen, Rechnungen und Belegen. Er verschwindet, sobald man ins Postfach sieht.
+
+- **Der Corten-Strich im Schreibfeld.** In der Leiste steht jetzt „Strich" mit vier Spielarten: **Fein**, **Mittel**, **Kräftig** und **Quer** über die ganze Breite. Gedacht als Trennung vor der Signatur oder zwischen zwei Abschnitten. Was man wählt, sieht man beim Schreiben genauso, wie es beim Empfänger ankommt.
+
+- **Überschriften in Mails tragen ihren Strich von selbst.** Wer „Überschrift 1" oder „Überschrift 2" wählt, bekommt darunter den Corten-Strich der Website — lang unter der großen, kurz unter der kleinen. Das ist dieselbe Handschrift wie auf Angebot, Rechnung und Website; von Hand nachlegen muss man nichts mehr.
+
+- **Fehlt die Kopie in „Gesendet", steht es im Ausgangsprotokoll.** Bisher stand ein solcher Fehlschlag nur im Serverprotokoll, wo niemand nachsieht, der gerade eine Mail vermisst. Jetzt steht der Grund beim betreffenden Eintrag unter Postfach → Ausgangsprotokoll.
+
+- **Mails kommen so an, wie sie geschrieben wurden.** Vier Zeilen untereinander standen beim Empfänger mit einer Leerzeile dazwischen, weil jedes Mailprogramm Absätzen seinen eigenen Abstand gibt — und die Leerzeile, die man vor der Grußformel wirklich getippt hatte, fehlte dafür. Beides steht jetzt fest in der Mail: eng, wo eng geschrieben wurde, und eine Leerzeile, wo eine gemacht wurde.
+
+- **Der Briefkopf bleibt auch im dunklen Mailprogramm sichtbar.** Wer seine Mails dunkel liest, bekam einen schwarzen Schriftzug auf schwarzem Grund — das Logo war schlicht weg. Die Mail sagt jetzt ausdrücklich, dass sie hell gemeint ist, und das Logo bringt seinen hellen Grund im Bild mit. Damit steht der Kopf auch dort, wo ein Programm sich um Angaben nicht schert.
+
+- **„Gesendet" bekommt seine Kopie.** Verschickte Mails landeten nicht im eigenen Ordner „Gesendet", wenn der beim Anbieter anders heißt als in den Einstellungen eingetragen — und das blieb stumm. Der Ordner wird jetzt beim Anbieter erfragt statt geraten; klappt die Ablage trotzdem nicht, steht es nach dem Senden als Hinweis da, statt dass man die Mail Wochen später vergeblich sucht.
+
+- **Die Rechtsform steht einmal unter der Mail, nicht zweimal.** In der Fußzeile stand „Next-Concept SAS SAS au capital de 1 000 €" und „RCS RCS Strasbourg", weil Name und Rechtsform beide die Angabe trugen. Doppeltes wird jetzt erkannt und weggelassen — auf Mails wie auf Rechnungen.
+
 ## 22.08.2026 — Die Sprache des Besuchers und Kleingedrucktes im Schreibfeld
 
 - **Kleingedrucktes im Schreibfeld.** Neben der Überschriften-Liste steht jetzt eine zweite mit der Schriftgröße: **Klein** oder **Normal**. Gedacht für das, was unter eine Mail gehört, aber nicht ins Auge springen soll — Signatur, Pflichtangaben, ein Hinweis zur Zahlungsfrist. Die kleine Schrift ist ein Vielfaches der normalen und keine feste Punktzahl: Wer beim Empfänger die Schrift größer gestellt hat, bekommt auch das Kleingedruckte größer und nicht stur winzig. Nebenbei sind die Listen auf Deutsch beschriftet — aus „Heading 1" wird „Überschrift 1", und die Größenliste heißt „Größe" statt ein zweites Mal „Normal".

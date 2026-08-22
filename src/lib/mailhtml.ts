@@ -1,5 +1,7 @@
 import { FilterXSS } from 'xss'
 
+import { cortenStrich } from './corten'
+
 /**
  * Was aus dem Schreibfeld in eine Mail darf.
  *
@@ -80,7 +82,9 @@ const filter = new FilterXSS({
     a: ['href', 'title', 'style'],
     code: [],
     pre: [],
-    hr: [],
+    // Das Kennzeichen der Spielart überlebt die Säuberung; den Stil dazu setzt
+    // `stricheSetzen`, nicht der Schreibende
+    hr: ['data-strich'],
   },
   // Was nicht auf der Liste steht, fliegt samt Inhalt raus — bei <script>
   // wäre es sonst der Inhalt, der übrig bleibt
@@ -106,7 +110,129 @@ const filter = new FilterXSS({
 })
 
 /**
- * Fremdes HTML auf das reduzieren, was in eine Mail darf.
+ * Die Abstände, die ein Absatz in der Mail bekommt.
+ *
+ * **Warum das überhaupt sein muss.** Quill setzt seine Absätze im Schreibfeld
+ * auf `margin: 0` — vier Zeilen untereinander stehen dort untereinander.
+ * Beim Empfänger gilt das Stylesheet des Mailprogramms, und dessen
+ * Voreinstellung für `<p>` ist rund eine Leerzeile oben und unten. Aus vier
+ * Zeilen wird damit eine Seite mit Lücken, und niemand versteht, warum — im
+ * Schreibfeld sah es ja richtig aus.
+ *
+ * Deshalb steht der Abstand an jedem einzelnen Absatz. Ein `<style>`-Block im
+ * Kopf wäre die schönere Lösung und wird von einem guten Teil der
+ * Mailprogramme weggeworfen; was zählt, ist, was ankommt.
+ *
+ * Gesetzt wird **vorn** im Stilattribut: Was der Schreibende gewählt hat —
+ * Ausrichtung, Farbe — steht dahinter und behält damit das letzte Wort.
+ */
+const ABSTAENDE: Record<string, string> = {
+  // Wie im Schreibfeld: kein Abstand. Eine Leerzeile entsteht durch eine
+  // leere Zeile, nicht durch den Absatz selbst — was man tippt, kommt an.
+  p: 'margin:0;',
+  h1: 'margin:16px 0 4px;',
+  h2: 'margin:14px 0 4px;',
+  h3: 'margin:12px 0 4px;',
+  // Die Einrückung der Liste gehört uns, sonst rückt jedes Programm anders ein
+  ul: 'margin:4px 0;padding-left:22px;',
+  ol: 'margin:4px 0;padding-left:22px;',
+  blockquote: 'margin:8px 0;padding-left:12px;border-left:3px solid #ddd;',
+}
+
+/**
+ * Der Corten-Strich, wie er beim Empfänger steht.
+ *
+ * Vier Spielarten, gesetzt vom Schreibfeld als `data-strich` (siehe
+ * `Schreibfeld.tsx`). Hier bekommen sie ihre Maße — und zwar **als
+ * Inline-Stil**, denn eine Mail bringt kein Stylesheet mit. Die zweite
+ * Fassung derselben Maße steht in `office.css` für das Schreibfeld; wer hier
+ * etwas ändert, ändert sie dort mit, sonst sieht der Schreibende etwas
+ * anderes als der Empfänger.
+ *
+ * Was der Text mitbringt, wird dabei **überschrieben**: Ein `<hr>` aus einer
+ * fremden Mail, die jemand zitiert hat, sieht danach aus wie unserer statt wie
+ * ein grauer Balken quer über das Blatt.
+ */
+const STRICH_STILE: Record<string, string> = {
+  fein: 'border:0;height:1px;width:60px;border-radius:9999px;background-color:#a5622d;margin:16px 0 10px;',
+  mittel:
+    'border:0;height:2px;width:84px;border-radius:9999px;background-color:#a5622d;margin:16px 0 10px;',
+  kraeftig:
+    'border:0;height:3px;width:140px;border-radius:9999px;background-color:#a5622d;margin:18px 0 10px;',
+  // Quer über die Breite: kein Ausrufezeichen, sondern eine Kante — deshalb
+  // hauchdünn und im hellen Corten-Ton statt in vollem Bronze
+  quer: 'border:0;height:1px;width:100%;background-color:#e3d5ca;margin:18px 0 12px;',
+}
+
+/**
+ * Jede Überschrift bekommt ihren Corten-Strich — von selbst.
+ *
+ * Die Website trägt ihn unter jeder Überschrift, das Angebot und die Rechnung
+ * tragen ihn, und die Mails des Shops tragen ihn (`ueberschrift()` in
+ * `mail.ts`). Nur wer im Büro eine Mail schrieb, hätte ihn von Hand setzen
+ * müssen — unter jede Überschrift, in der richtigen Länge, jedes Mal.
+ *
+ * Das ist keine Arbeit, die ein Mensch machen sollte: Die Länge folgt der
+ * Größe der Überschrift, und diese Regel steht ohnehin schon im Haus. Der
+ * Strich von Hand bleibt trotzdem — für die Trennung vor der Signatur oder
+ * zwischen zwei Abschnitten, wo es keine Überschrift gibt.
+ */
+function ueberschriftenStriche(html: string): string {
+  return html.replace(/<\/(h1|h2|h3)>/gi, (_ganz, name: string) => {
+    const gross = name.toLowerCase() === 'h1'
+    /*
+     * Eng an die Überschrift, nicht in die Mitte des Absatzabstands.
+     *
+     * Die Überschrift trägt unten 4 px, der Strich brächte von Haus aus 12
+     * beziehungsweise 7 mit — zusammen genug, dass er nicht mehr zur
+     * Überschrift gehört, sondern zwischen den Zeilen schwebt. Unter dem
+     * Strich darf es dafür ruhig atmen; dort beginnt der Text.
+     */
+    return `</${name}>${cortenStrich(gross, { oben: gross ? 6 : 4, unten: gross ? 16 : 12 })}`
+  })
+}
+
+function stricheSetzen(html: string): string {
+  return html.replace(/<hr([^>]*)>/gi, (_ganz, rest: string) => {
+    const art = /data-strich\s*=\s*"([^"]*)"/i.exec(rest ?? '')?.[1] ?? 'mittel'
+    const stil = STRICH_STILE[art] ?? STRICH_STILE.mittel
+    return `<hr style="${stil}" />`
+  })
+}
+
+/**
+ * Eine leere Zeile bleibt eine leere Zeile.
+ *
+ * Quill schreibt sie als `<p></p>` — ein Absatz ohne Inhalt. Solange die
+ * Mailprogramme jedem Absatz ihren eigenen Abstand gaben, fiel das nicht auf.
+ * Mit `margin:0` fällt ein leerer Absatz auf null Höhe zusammen, und die
+ * Leerzeile zwischen letzter Zeile und Grußformel wäre weg — man tippt sie,
+ * und beim Empfänger fehlt sie.
+ *
+ * Ein `<br>` darin gibt ihm wieder eine Zeilenhöhe. Das ist dieselbe Fassung,
+ * die Quill im Editor selbst benutzt.
+ */
+function leereAbsaetzeFuellen(html: string): string {
+  return html.replace(/<p([^>]*)>\s*<\/p>/gi, '<p$1><br></p>')
+}
+
+function abstaendeSetzen(html: string): string {
+  return html.replace(
+    /<(p|h1|h2|h3|ul|ol|blockquote)(\s[^>]*)?>/gi,
+    (ganz, name: string, rest: string | undefined) => {
+      const abstand = ABSTAENDE[name.toLowerCase()]
+      if (!abstand) return ganz
+      const anhang = rest ?? ''
+      const vorhanden = /\sstyle\s*=\s*"([^"]*)"/i.exec(anhang)
+      if (!vorhanden) return `<${name}${anhang} style="${abstand}">`
+      return `<${name}${anhang.replace(vorhanden[0], ` style="${abstand}${vorhanden[1]}"`)}>`
+    },
+  )
+}
+
+/**
+ * Fremdes HTML auf das reduzieren, was in eine Mail darf — und so setzen, wie
+ * es beim Empfänger stehen soll.
  *
  * Zum Schluss werden **geschützte Leerzeichen wieder zu gewöhnlichen**. Quill
  * schreibt jedes einzelne Leerzeichen als `&nbsp;` — im Editor richtig, in
@@ -114,9 +240,14 @@ const filter = new FilterXSS({
  * Ein Absatz aus vierzig Wörtern wird damit zu einer einzigen Zeile, die am
  * Telefon seitwärts aus dem Bild läuft. Man sieht es beim Schreiben nicht und
  * erst beim Empfänger.
+ *
+ * Die Abstände stehen hier und nicht bei den Aufrufern, damit kein Weg nach
+ * draußen sie vergessen kann: Postfach, Versandfenster und Newsletter gehen
+ * alle durch diese eine Tür.
  */
 export function mailHtmlSaeubern(html: string): string {
-  return filter.process(String(html ?? '')).replace(/&nbsp;/g, ' ')
+  const sauber = filter.process(String(html ?? '')).replace(/&nbsp;/g, ' ')
+  return ueberschriftenStriche(stricheSetzen(abstaendeSetzen(leereAbsaetzeFuellen(sauber))))
 }
 
 /**

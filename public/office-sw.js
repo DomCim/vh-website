@@ -355,20 +355,40 @@ self.addEventListener('push', (event) => {
   )
 })
 
+/*
+ * Antippen soll dorthin führen, wovon die Meldung handelt.
+ *
+ * Das tat es nicht: `navigate()` wurde zwar gerufen, aber ohne auf sein
+ * Versprechen zu warten — und am Telefon scheitert es in einer installierten
+ * App regelmäßig. Das Fenster kam dann nach vorne und stand auf der Seite, auf
+ * der es vorher stand. Aus Sicht dessen, der tippt, ist das ein kaputter Link.
+ *
+ * Deshalb jetzt drei Wege hintereinander, bis einer trägt:
+ *
+ * 1. `navigate()` — der gerade Weg, wo er funktioniert.
+ * 2. Eine Nachricht an die offene App: Die hat einen eigenen Wegweiser und
+ *    kommt auch dorthin, wo der Dienstbote nicht hinreicht (`BestandAnbieter`
+ *    hört darauf). Sie kostet nichts, wenn Weg 1 schon geklappt hat — die App
+ *    steht dann bereits am Ziel.
+ * 3. Kein Fenster offen: eines öffnen.
+ */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const ziel = (event.notification.data && event.notification.data.url) || '/office'
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenster) => {
-      // Ein schon offenes Büro-Fenster nach vorne holen, statt ein zweites zu öffnen
-      for (const f of fenster) {
-        if (f.url.includes('/office') && 'focus' in f) {
-          f.navigate(ziel)
-          return f.focus()
-        }
-      }
-      return self.clients.openWindow(ziel)
-    }),
+    (async () => {
+      const fenster = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const offen = fenster.find((f) => f.url.includes('/office'))
+
+      if (!offen) return self.clients.openWindow(ziel)
+
+      // Manche Systeme verweigern das Fokussieren, am Telefon scheitert
+      // `navigate()` in einer installierten App fast immer — beides darf den
+      // dritten Weg nicht aufhalten
+      await offen.focus().catch(() => undefined)
+      await offen.navigate(ziel).catch(() => undefined)
+      offen.postMessage({ art: 'gehe-zu', ziel })
+    })(),
   )
 })

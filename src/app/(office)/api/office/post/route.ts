@@ -105,14 +105,16 @@ export async function POST(req: Request) {
 
     if (b.aktion === 'senden') {
       if (!b.an?.trim()) return NextResponse.json({ error: 'empfaenger-fehlt' }, { status: 400 })
-      await nachrichtSenden(payload, fach, {
+      const { kopie } = await nachrichtSenden(payload, fach, {
         an: b.an,
         betreff: b.betreff || '(kein Betreff)',
         text: b.text || '',
         html: typeof b.html === 'string' ? b.html : undefined,
         antwortAufMessageId: b.antwortAufMessageId || undefined,
       })
-      return NextResponse.json({ ok: true })
+      // Die Mail ist raus; ob sie auch im eigenen Ordner liegt, ist eine
+      // zweite Frage — und eine, die der Mensch davor beantwortet haben will
+      return NextResponse.json({ ok: true, kopie })
     }
 
     if (b.aktion === 'verschieben') {
