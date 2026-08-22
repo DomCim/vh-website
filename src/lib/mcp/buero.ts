@@ -233,6 +233,37 @@ export function registerBuero(server: McpServer) {
   )
 
   server.registerTool(
+    'partner_lesen',
+    {
+      description:
+        'Liest einen Geschäftspartner vollständig — Anschrift, Kontakt, Art und Notiz. Vor partner_aendern aufrufen.',
+      inputSchema: { id: z.number().describe('Partner-ID aus partner_liste') },
+    },
+    async ({ id }) => {
+      const payload = await db()
+      const p = (await payload
+        .findByID({ collection: 'contacts', id, depth: 0, overrideAccess: true })
+        .catch(() => null)) as Record<string, any> | null
+      if (!p) return fehler(`Partner mit der Nummer ${id} nicht gefunden`)
+      return ok({
+        id: p.id,
+        name: p.name,
+        art: p.role ?? null,
+        ansprechpartner: p.contactPerson ?? null,
+        email: p.email ?? null,
+        telefon: p.phone ?? null,
+        strasse: p.street ?? null,
+        plz: p.postalCode ?? null,
+        ort: p.city ?? null,
+        land: p.country ?? null,
+        ustId: p.vatId ?? null,
+        webseite: p.website ?? null,
+        notiz: p.note ?? null,
+      })
+    },
+  )
+
+  server.registerTool(
     'partner_anlegen',
     {
       description:
@@ -541,6 +572,52 @@ export function registerBuero(server: McpServer) {
     einheit: z.string().optional().describe('Standard: Stück'),
     steuersatz: z.number().optional().describe('Prozent; Standard 20'),
   })
+
+  server.registerTool(
+    'wiedervorlage_erledigen',
+    {
+      description:
+        'Hakt eine Wiedervorlage ab. Mit erledigt=false wird sie wieder geöffnet — etwa wenn die Nachfrage doch noch offen ist.',
+      inputSchema: {
+        id: z.number().describe('Wiedervorlage-ID aus wiedervorlagen_liste'),
+        erledigt: z.boolean().optional().describe('Ohne Angabe: erledigt'),
+        notiz: z.string().optional().describe('Was dabei herauskam — wird an die Notiz angehängt'),
+      },
+    },
+    async ({ id, erledigt, notiz }) => {
+      const payload = await db()
+      const w = (await payload
+        .findByID({ collection: 'follow-ups', id, depth: 0, overrideAccess: true })
+        .catch(() => null)) as Record<string, any> | null
+      if (!w) return fehler(`Wiedervorlage mit der Nummer ${id} nicht gefunden`)
+
+      const fertig = erledigt !== false
+      /*
+       * Die Notiz wird angehängt, nicht ersetzt.
+       *
+       * In der Notiz steht, warum die Wiedervorlage überhaupt entstand — beim
+       * Abhaken kommt dazu, was daraus wurde. Beides zusammen ist die
+       * Geschichte des Vorgangs; das eine mit dem anderen zu überschreiben
+       * hieße, den Anfang zu verlieren.
+       */
+      const notizNeu = notiz
+        ? [w.note, notiz].filter((t) => typeof t === 'string' && t.trim()).join('\n\n')
+        : undefined
+
+      await payload.update({
+        collection: 'follow-ups',
+        id,
+        overrideAccess: true,
+        data: {
+          done: fertig,
+          // Wann es erledigt wurde, steht am Vorgang — beim Öffnen fällt es weg
+          doneAt: fertig ? new Date().toISOString() : null,
+          ...(notizNeu !== undefined && { note: notizNeu }),
+        },
+      })
+      return ok({ ok: true, id, erledigt: fertig, titel: w.title })
+    },
+  )
 
   server.registerTool(
     'angebot_entwurf_anlegen',

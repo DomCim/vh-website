@@ -50,6 +50,58 @@ export function registerAktionen(server: McpServer) {
   )
 
   server.registerTool(
+    'aktion_lesen',
+    {
+      description:
+        'Liest eine Aktion vollständig — mit Beschreibung und, bei einer Aktion für bestimmte Kategorien oder Artikel, den betroffenen Slugs. Vor jedem aktion_aendern aufrufen.',
+      inputSchema: { id: z.number().describe('Aktions-ID aus aktionen_liste'), sprache },
+    },
+    async ({ id, sprache: locale }) => {
+      const payload = await db()
+      const p = (await payload
+        .findByID({ collection: 'promotions', id, locale, depth: 1 })
+        .catch(() => null)) as Record<string, any> | null
+      if (!p) return fehler(`Aktion mit der Nummer ${id} nicht gefunden`)
+
+      /*
+       * Die Slugs statt der Nummern.
+       *
+       * aktionen_liste sagt nur „gilt für Kategorien" — welche, stand nirgends.
+       * Wer eine Aktion ändern wollte, musste raten oder sie neu anlegen. Und
+       * weil aktion_aendern die Auswahl mit `kategorieSlugs` bzw.
+       * `produktSlugs` entgegennimmt, kommt sie hier in derselben Form heraus:
+       * lesen, ergänzen, zurückschreiben — ohne Umrechnen dazwischen.
+       */
+      const slugs = (feld: unknown) =>
+        (Array.isArray(feld) ? feld : [])
+          .map((e) => (typeof e === 'object' && e ? (e as { slug?: string }).slug : undefined))
+          .filter(Boolean)
+
+      const jetzt = Date.now()
+      return ok({
+        id: p.id,
+        sprache: locale,
+        titel: p.title,
+        beschreibung: p.description ?? null,
+        rabattTyp: p.discountType,
+        rabattWert: p.discountValue,
+        rabatt: p.discountType === 'percent' ? `${p.discountValue} %` : `${p.discountValue} €`,
+        von: p.startDate,
+        bis: p.endDate,
+        code: p.code ?? null,
+        aktiv: Boolean(p.active),
+        laeuftGerade:
+          Boolean(p.active) &&
+          new Date(p.startDate).getTime() <= jetzt &&
+          new Date(p.endDate).getTime() >= jetzt,
+        giltFuer: p.appliesTo,
+        kategorieSlugs: p.appliesTo === 'categories' ? slugs(p.categories) : [],
+        produktSlugs: p.appliesTo === 'products' ? slugs(p.products) : [],
+      })
+    },
+  )
+
+  server.registerTool(
     'aktion_anlegen',
     {
       description:

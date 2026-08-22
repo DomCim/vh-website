@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Sechs fehlende Werkzeuge für den KI-Assistenten.** Aufgefallen ist eines: Bei einer Aktion „gilt für bestimmte Kategorien" verriet die Liste nicht, für welche — wer sie ändern wollte, musste raten. Beim Nachsehen kamen fünf weitere heraus. Neu sind: eine Aktion, eine Kategorie, einen Geschäftspartner und eine Kundenstimme einzeln lesen; eine Wiedervorlage abhaken; und eine leere Kategorie entfernen.
+
+- **Die Sterne einer Kundenstimme waren für den Assistenten unsichtbar.** Sie kamen heute Nachmittag dazu und fehlten in der Schnittstelle — weder lesbar noch setzbar. Dabei entscheiden sie mit darüber, ob im Google-Ergebnis eine Sternebewertung erscheint.
+
 - **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: `## Überschrift`, `### kleinere`, `- Punkt einer Aufzählung`, `**fett**`. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
 
 - **Dasselbe gilt für Artikelbeschreibungen und alles, was der KI-Assistent schreibt.** Eine per Assistent übersetzte Beschreibung wurde bisher zur Textwüste, wo die deutsche Zwischenüberschriften und eine Aufzählung hatte. Jetzt kommt die Gliederung mit.

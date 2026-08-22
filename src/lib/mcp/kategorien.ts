@@ -53,6 +53,58 @@ export function registerKategorien(server: McpServer) {
   )
 
   server.registerTool(
+    'kategorie_lesen',
+    {
+      description:
+        'Liest eine Kategorie samt Beschreibung, übergeordneter Kategorie, Unterkategorien und der Zahl der Artikel darin. Vor kategorie_aendern oder kategorie_loeschen aufrufen.',
+      inputSchema: { slug: z.string(), sprache, ohneRueckfall },
+    },
+    async ({ slug, sprache: locale, ohneRueckfall: ohne }) => {
+      const payload = await db()
+      const kat = await findeNachSlug<Record<string, unknown>>(payload, 'categories', slug, {
+        locale,
+        depth: 1,
+        ...(ohne ? { fallbackLocale: false as never } : {}),
+      })
+      if (!kat) return fehler(`Kategorie "${slug}" nicht gefunden`)
+
+      const [artikel, unter] = await Promise.all([
+        payload.count({
+          collection: 'products',
+          where: { category: { equals: kat.id } },
+          overrideAccess: true,
+        }),
+        payload.find({
+          collection: 'categories',
+          where: { parent: { equals: kat.id } },
+          locale,
+          depth: 0,
+          limit: 50,
+          sort: 'order',
+          overrideAccess: true,
+        }),
+      ])
+
+      const eltern = kat.parent
+      return ok({
+        id: kat.id,
+        slug,
+        sprache: locale,
+        name: kat.name ?? null,
+        beschreibung: kat.description ?? null,
+        reihenfolge: kat.order ?? 0,
+        uebergeordnet:
+          typeof eltern === 'object' && eltern
+            ? { slug: (eltern as { slug?: string }).slug, name: (eltern as { name?: string }).name }
+            : null,
+        unterkategorien: unter.docs.map((u) => ({ slug: u.slug, name: u.name })),
+        // Sagt vor dem Löschen, ob überhaupt gelöscht werden kann
+        artikelDarin: artikel.totalDocs,
+      })
+    },
+  )
+
+  server.registerTool(
     'kategorie_anlegen',
     {
       description:
