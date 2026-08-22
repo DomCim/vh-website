@@ -1,32 +1,17 @@
-/** Wandelt einfachen Text (Absätze durch Leerzeilen getrennt) in Lexical-RichText um */
+import { textZuRichText } from './richtextText'
+
+/**
+ * Wandelt lesbaren Text in Payload-Richtext um.
+ *
+ * Früher konnte das hier nur Absätze. Seit die Rechtstexte im Büro und die
+ * Artikelbeschreibungen über die KI-Schnittstelle geschrieben werden, ist das
+ * zu wenig: Eine per Assistent übersetzte Beschreibung wurde zur Textwüste, wo
+ * die deutsche Zwischenüberschriften und eine Aufzählung hatte.
+ *
+ * Die Umsetzung steht jetzt in `lib/richtextText.ts` und versteht dazu
+ * `## Überschrift`, `### Kleinere`, `- Punkt` und `**fett**`. Für einen Text
+ * ohne diese Zeichen ändert sich nichts — er wird zu Absätzen wie bisher.
+ */
 export function richText(text: string) {
-  const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim() !== '')
-  return {
-    root: {
-      type: 'root',
-      format: '' as const,
-      indent: 0,
-      version: 1,
-      direction: 'ltr' as const,
-      children: (paragraphs.length > 0 ? paragraphs : ['']).map((p) => ({
-        type: 'paragraph',
-        format: '' as const,
-        indent: 0,
-        version: 1,
-        direction: 'ltr' as const,
-        textFormat: 0,
-        children: [
-          {
-            type: 'text',
-            text: p.trim(),
-            format: 0,
-            detail: 0,
-            mode: 'normal',
-            style: '',
-            version: 1,
-          },
-        ],
-      })),
-    },
-  }
+  return textZuRichText(text)
 }

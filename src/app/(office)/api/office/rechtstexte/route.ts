@@ -3,8 +3,13 @@ import { NextResponse } from 'next/server'
 import { locales, type Locale } from '../../../../../lib/i18n'
 import { payloadClient } from '../../../../../lib/data'
 import { rechtstexteEinspielen } from '../../../../../lib/rechtstexte'
-import { nurAbsaetze, RECHTSTEXT_FELDER, textAusRichText } from '../../../../../lib/rechtstexteFelder'
-import { richText } from '../../../../../lib/richtext'
+import {
+  AUSZEICHNUNG,
+  nurAbsaetze,
+  RECHTSTEXT_FELDER,
+  textAusRichText,
+  textZuRichText,
+} from '../../../../../lib/rechtstexteFelder'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -69,6 +74,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     sprache,
+    auszeichnung: AUSZEICHNUNG,
     texte: RECHTSTEXT_FELDER.map(({ feld, label, pfad, hinweis }) => ({
       feld,
       label,
@@ -108,7 +114,7 @@ export async function POST(req: Request) {
     for (const { feld } of RECHTSTEXT_FELDER) {
       const text = texte[feld]
       if (typeof text !== 'string') continue
-      daten[feld] = text.trim() ? richText(text) : null
+      daten[feld] = text.trim() ? textZuRichText(text) : null
     }
 
     if (!Object.keys(daten).length) {

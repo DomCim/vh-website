@@ -6,6 +6,12 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Rechtstexte lassen sich gestalten.** Impressum, AGB und Widerrufsbelehrung waren bisher eine Wand aus Absätzen. Jetzt gibt es Zwischenüberschriften, Aufzählungen und Fettes — mit vier Zeichenfolgen, die über den Feldern zum Aufklappen erklärt sind: `## Überschrift`, `### kleinere`, `- Punkt einer Aufzählung`, `**fett**`. Alles Übrige bleibt Absatz. Wer nichts davon braucht, tippt weiter einfach Text.
+
+- **Dasselbe gilt für Artikelbeschreibungen und alles, was der KI-Assistent schreibt.** Eine per Assistent übersetzte Beschreibung wurde bisher zur Textwüste, wo die deutsche Zwischenüberschriften und eine Aufzählung hatte. Jetzt kommt die Gliederung mit.
+
+- **Der KI-Assistent kann die Rechtstexte endlich lesen und schreiben.** Bisher bekam er beim Lesen den rohen Textbaum — für ein einziges Impressum mehrere Bildschirmseiten unlesbares Zeug —, und zum Schreiben hätte er ihn genauso wieder aufbauen müssen. Jetzt geht lesbarer Text hinein und heraus, mit denselben vier Zeichenfolgen wie im Büro.
+
 ## 22.08.2026 — Drei Sprachen im Büro, Bilder mit Gedächtnis und eine Adresse je Artikel
 
 - **Die Einstellungen lassen sich im Büro in allen drei Sprachen pflegen.** Bisher schrieb das Büro immer die deutsche Fassung — auch dann, wenn jemand die häufigen Fragen, den Untertitel oder die SEO-Standardtexte auf Französisch pflegen wollte. Gemerkt hat man es nicht: Das Formular sah gleich aus, und der französische Text landete stillschweigend im deutschen Feld. Jetzt steht die Sprachwahl über den Feldern. In einer fremden Sprache erscheinen **nur** die Felder, die es je Sprache gibt — Anschrift, Bankverbindung und Stundensatz bleiben unter Deutsch, denn die gibt es nur einmal. Bei den Integrationen gibt es keine Sprachwahl, dort ist nichts zu übersetzen.
