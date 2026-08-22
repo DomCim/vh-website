@@ -2009,6 +2009,93 @@ html.tastatur-offen .buero-inhalt {
 }
 
 /*
+ * Der Corten-Strich: ein Wähler in der Leiste, ein Strich im Text.
+ *
+ * Quill kennt keine Trennlinie und bringt für einen eigenen Eintrag auch keine
+ * Beschriftung mit — ohne das Folgende stünde in der Liste der nackte Name der
+ * Spielart („kraeftig"). Und die Maße stehen hier ein zweites Mal, weil eine
+ * Mail kein Stylesheet mitbringt: Die maßgebliche Fassung für das, was
+ * hinausgeht, ist `STRICH_STILE` in `lib/mailhtml.ts`. Wer eine ändert, ändert
+ * die andere mit — sonst sieht der Schreibende etwas anderes als der
+ * Empfänger.
+ */
+.buero-schreibfeld .ql-snow .ql-picker.ql-trennstrich {
+  width: 88px;
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-trennstrich .ql-picker-label::before {
+  content: 'Strich';
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-trennstrich .ql-picker-item[data-value='fein']::before {
+  content: 'Fein';
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-trennstrich .ql-picker-item[data-value='mittel']::before {
+  content: 'Mittel';
+}
+.buero-schreibfeld
+  .ql-snow
+  .ql-picker.ql-trennstrich
+  .ql-picker-item[data-value='kraeftig']::before {
+  content: 'Kräftig';
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-trennstrich .ql-picker-item[data-value='quer']::before {
+  content: 'Quer';
+}
+
+/*
+ * Und so stehen sie im Text.
+ *
+ * Der Ton ist fest und folgt nicht dem Thema des Büros: Was hier steht, soll
+ * zeigen, was beim Empfänger ankommt — und dort ist es Corten auf hellem
+ * Blatt, ganz gleich, wie das Büro gerade eingestellt ist.
+ */
+.buero-schreibfeld .ql-editor hr {
+  border: 0;
+  height: 2px;
+  width: 84px;
+  border-radius: 9999px;
+  background-color: #a5622d;
+  margin: 16px 0 10px;
+}
+.buero-schreibfeld .ql-editor hr[data-strich='fein'] {
+  height: 1px;
+  width: 60px;
+}
+.buero-schreibfeld .ql-editor hr[data-strich='kraeftig'] {
+  height: 3px;
+  width: 140px;
+  margin-top: 18px;
+}
+.buero-schreibfeld .ql-editor hr[data-strich='quer'] {
+  height: 1px;
+  width: 100%;
+  border-radius: 0;
+  background-color: #e3d5ca;
+  margin: 18px 0 12px;
+}
+
+/*
+ * Überschriften tragen ihren Strich von selbst — hier gezeichnet, damit man
+ * beim Schreiben sieht, was die Mail später zeigt (dort setzt ihn
+ * `ueberschriftenStriche` in `lib/mailhtml.ts`).
+ */
+.buero-schreibfeld .ql-editor h1::after,
+.buero-schreibfeld .ql-editor h2::after,
+.buero-schreibfeld .ql-editor h3::after {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 40px;
+  border-radius: 9999px;
+  background-color: #a5622d;
+  margin: 7px 0 12px;
+}
+.buero-schreibfeld .ql-editor h1::after {
+  height: 3px;
+  width: 112px;
+  margin: 12px 0 20px;
+}
+
+/*
  * Die Beschriftungen der Aufklapplisten, auf Deutsch.
  *
  * Quill liefert sie fest verdrahtet auf Englisch mit („Heading 1", „Normal")

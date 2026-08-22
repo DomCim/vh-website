@@ -39,6 +39,36 @@ test('die eigene Gestaltung behält das letzte Wort', () => {
   expect(html.indexOf('margin:0;')).toBeLessThan(html.indexOf('text-align'))
 })
 
+test('der Strich aus der Leiste bekommt seine Maße für die Mail', () => {
+  // Im gespeicherten Text steht nur die Spielart; die Maße kommen erst hier
+  // dazu, weil eine Mail kein Stylesheet mitbringt
+  const fein = mailHtmlSaeubern('<p>Text</p><hr data-strich="fein">')
+  expect(fein).toContain('height:1px')
+  expect(fein).toContain('width:60px')
+  expect(fein).toContain('#a5622d')
+
+  expect(mailHtmlSaeubern('<hr data-strich="kraeftig">')).toContain('width:140px')
+  // Quer über die Breite: eine Kante, kein Ausrufezeichen
+  expect(mailHtmlSaeubern('<hr data-strich="quer">')).toContain('width:100%')
+
+  // Ein fremdes <hr> aus einer zitierten Mail sieht danach aus wie unseres
+  expect(mailHtmlSaeubern('<hr>')).toContain('width:84px')
+  expect(mailHtmlSaeubern('<hr style="border:5px solid red">')).not.toContain('red')
+})
+
+test('Überschriften tragen ihren Corten-Strich von selbst', () => {
+  const html = mailHtmlSaeubern('<h1>Große Überschrift</h1><h2>Kleine</h2><p>Text</p>')
+  // Dieselbe Regel wie auf der Website und auf dem Angebot: 112 × 3 unter der
+  // großen, 40 × 2 unter der kleinen
+  expect(html).toContain('width:112px')
+  expect(html).toContain('width:40px')
+  expect(html.indexOf('width:112px')).toBeGreaterThan(html.indexOf('Große Überschrift'))
+  expect(html.indexOf('width:112px')).toBeLessThan(html.indexOf('Kleine'))
+
+  // Ein Absatz bekommt keinen — sonst stünde unter jeder Zeile ein Strich
+  expect(mailHtmlSaeubern('<p>Nur Text</p>')).not.toContain('width:40px')
+})
+
 test('das Logo reist nur mit, wenn es im Text vorkommt', () => {
   const mit = logoAnhang('<img src="cid:vh-logo" />')
   expect(mit).toHaveLength(1)

@@ -111,6 +111,22 @@ const HERVORHEBUNGEN = [
  */
 const KLEIN = '0.85em'
 
+/*
+ * Die Spielarten des Corten-Strichs.
+ *
+ * Vier, nicht zwanzig: Ein Strich ist ein Trennzeichen und kein Werkzeugkasten.
+ * Drei kurze in aufsteigender Stärke — für die Trennung vor der Signatur, für
+ * einen Abschnitt, für einen Einschnitt — und einer quer über die ganze
+ * Breite, wo es weniger um Betonung als um eine saubere Kante geht.
+ *
+ * Wie sie **aussehen**, steht nicht hier, sondern zweimal woanders: im
+ * Schreibfeld in `office.css`, in der Mail in `mailhtml.ts`. Zwei Fassungen,
+ * weil eine Mail kein Stylesheet mitbringt — wer eine ändert, ändert die
+ * andere mit. Im gespeicherten Text steht nur der Name der Spielart, damit
+ * eine alte Signatur später nicht ihre eigenen Maße mit sich herumträgt.
+ */
+const STRICHE = ['fein', 'mittel', 'kraeftig', 'quer'] as const
+
 /** Was in der Leiste steht — mehr wäre für eine Mail Zierde */
 const LEISTE = [
   [{ header: [1, 2, false] }, { size: [KLEIN, false] }],
@@ -118,7 +134,7 @@ const LEISTE = [
   [{ color: SCHRIFTFARBEN }, { background: HERVORHEBUNGEN }],
   [{ list: 'ordered' }, { list: 'bullet' }],
   [{ align: [] }],
-  ['blockquote', 'link'],
+  ['blockquote', 'link', { trennstrich: STRICHE }],
   ['clean'],
 ]
 
@@ -183,10 +199,73 @@ export function Schreibfeld({ wert, aendern, platzhalter = 'Nachricht …' }: Pr
           Quill.register(groesse as never, true)
         }
 
+        /*
+         * Der Corten-Strich als eigener Baustein.
+         *
+         * Quill kennt von Haus aus keine Trennlinie — es gibt keinen Knopf und
+         * kein Format dafür. Ein `<hr>` ist aber genau das, was gebraucht wird:
+         * ein schmaler Strich vor der Signatur, wie ihn die Website unter jeder
+         * Überschrift trägt.
+         *
+         * Wie er aussieht, steht **nicht** hier: Im Schreibfeld macht das
+         * `office.css`, in der Mail `mailhtml.ts`. Ein Strich, dessen Maße im
+         * gespeicherten Text stünden, ließe sich später nicht mehr ändern —
+         * jede alte Signatur trüge ihre eigene Fassung mit sich herum.
+         */
+        const Einbettung = Quill.import('blots/block/embed') as unknown as {
+          new (...args: unknown[]): Record<string, unknown>
+          create(wert?: unknown): HTMLElement
+        }
+        class Trennstrich extends Einbettung {
+          static blotName = 'trennstrich'
+          static tagName = 'hr'
+
+          /* Die Spielart steht als Kennzeichen am Strich — nur so findet sie
+             beim späteren Öffnen einer gespeicherten Signatur zurück */
+          static create(wert: unknown): HTMLElement {
+            /*
+             * `super.create` und nicht die Basisklasse selbst: Parchment liest
+             * den Tag aus `this`, und das ist nur beim Aufruf über `super`
+             * diese Klasse hier. Direkt gerufen fehlt ihm der Tag — mit einer
+             * Meldung, die auf alles Mögliche zeigt, nur nicht auf die Zeile.
+             */
+            const knoten = super.create(wert)
+            const art = String(wert ?? '')
+            knoten.setAttribute(
+              'data-strich',
+              (STRICHE as readonly string[]).includes(art) ? art : 'mittel',
+            )
+            return knoten
+          }
+
+          static value(knoten: HTMLElement): string {
+            return knoten.getAttribute('data-strich') ?? 'mittel'
+          }
+        }
+        Quill.register(Trennstrich as never, true)
+
         const q = new Quill(behaelter.current, {
           theme: 'snow',
           placeholder: platzhalter,
           modules: { toolbar: LEISTE },
+        })
+
+        /*
+         * Eingefügt wird **hinter** der Zeile, in der die Schreibmarke steht,
+         * und danach steht sie darunter — sonst tippt man weiter und landet
+         * über dem Strich, den man gerade gesetzt hat.
+         */
+        const leiste = q.getModule('toolbar') as {
+          addHandler(name: string, hand: (wert: string) => void): void
+        }
+        leiste.addHandler('trennstrich', (wert) => {
+          // Der Wähler meldet sich auch beim Zurückstellen auf „leer" — dann
+          // ist nichts zu tun, sonst stünde bei jedem Zuklappen ein Strich da
+          if (!wert) return
+          const stelle = q.getSelection(true)?.index ?? q.getLength()
+          q.insertEmbed(stelle, 'trennstrich', wert, 'user')
+          q.setSelection(stelle + 1, 0, 'silent')
+          aendern(q.getSemanticHTML())
         })
 
         if (wert) {

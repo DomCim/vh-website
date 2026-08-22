@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
+import { BRONZE, cortenStrich } from './corten'
 import type { Locale } from './i18n'
 
 type OrderLike = {
@@ -184,25 +185,9 @@ function companyFooter(company?: CompanyInfo): string {
   return `<p style="margin-top:28px;border-top:1px solid #eee;padding-top:10px;color:#999;font-size:11px">${parts.join(' · ')}</p>`
 }
 
-/** Corten-Ton der Website */
-export const BRONZE = '#a5622d'
-
-/**
- * Corten-Strich unter einer Überschrift — dieselbe Form wie auf der Website:
- * 112 × 3 px bei großen, 40 × 2 px bei kleinen Überschriften, nach rechts
- * auslaufend.
- *
- * Der Verlauf liegt als `background-image` über einer einfarbigen Fläche:
- * Outlook kann keine Verläufe und zeigt dann den vollen Strich — richtig
- * aussehen tut es in beiden Fällen.
- */
-export function cortenStrich(gross = false): string {
-  const breite = gross ? 112 : 40
-  const hoehe = gross ? 3 : 2
-  const oben = gross ? 12 : 7
-  const unten = gross ? 20 : 12
-  return `<div style="width:${breite}px;height:${hoehe}px;border-radius:9999px;background-color:${BRONZE};background-image:linear-gradient(to right,${BRONZE} 0%,${BRONZE} 30%,rgba(165,98,45,0) 100%);margin:${oben}px 0 ${unten}px"></div>`
-}
+// Der Strich wohnt in `corten.ts`, damit ihn auch das Büro-Bündel laden kann —
+// diese Datei liest das Logo von der Platte und taugt dafür nicht
+export { BRONZE, cortenStrich } from './corten'
 
 /** Überschrift mit Corten-Strich darunter */
 export function ueberschrift(text: string, gross = false): string {

@@ -1,5 +1,7 @@
 import { FilterXSS } from 'xss'
 
+import { cortenStrich } from './corten'
+
 /**
  * Was aus dem Schreibfeld in eine Mail darf.
  *
@@ -80,7 +82,9 @@ const filter = new FilterXSS({
     a: ['href', 'title', 'style'],
     code: [],
     pre: [],
-    hr: [],
+    // Das Kennzeichen der Spielart überlebt die Säuberung; den Stil dazu setzt
+    // `stricheSetzen`, nicht der Schreibende
+    hr: ['data-strich'],
   },
   // Was nicht auf der Liste steht, fliegt samt Inhalt raus — bei <script>
   // wäre es sonst der Inhalt, der übrig bleibt
@@ -136,6 +140,59 @@ const ABSTAENDE: Record<string, string> = {
 }
 
 /**
+ * Der Corten-Strich, wie er beim Empfänger steht.
+ *
+ * Vier Spielarten, gesetzt vom Schreibfeld als `data-strich` (siehe
+ * `Schreibfeld.tsx`). Hier bekommen sie ihre Maße — und zwar **als
+ * Inline-Stil**, denn eine Mail bringt kein Stylesheet mit. Die zweite
+ * Fassung derselben Maße steht in `office.css` für das Schreibfeld; wer hier
+ * etwas ändert, ändert sie dort mit, sonst sieht der Schreibende etwas
+ * anderes als der Empfänger.
+ *
+ * Was der Text mitbringt, wird dabei **überschrieben**: Ein `<hr>` aus einer
+ * fremden Mail, die jemand zitiert hat, sieht danach aus wie unserer statt wie
+ * ein grauer Balken quer über das Blatt.
+ */
+const STRICH_STILE: Record<string, string> = {
+  fein: 'border:0;height:1px;width:60px;border-radius:9999px;background-color:#a5622d;margin:16px 0 10px;',
+  mittel:
+    'border:0;height:2px;width:84px;border-radius:9999px;background-color:#a5622d;margin:16px 0 10px;',
+  kraeftig:
+    'border:0;height:3px;width:140px;border-radius:9999px;background-color:#a5622d;margin:18px 0 10px;',
+  // Quer über die Breite: kein Ausrufezeichen, sondern eine Kante — deshalb
+  // hauchdünn und im hellen Corten-Ton statt in vollem Bronze
+  quer: 'border:0;height:1px;width:100%;background-color:#e3d5ca;margin:18px 0 12px;',
+}
+
+/**
+ * Jede Überschrift bekommt ihren Corten-Strich — von selbst.
+ *
+ * Die Website trägt ihn unter jeder Überschrift, das Angebot und die Rechnung
+ * tragen ihn, und die Mails des Shops tragen ihn (`ueberschrift()` in
+ * `mail.ts`). Nur wer im Büro eine Mail schrieb, hätte ihn von Hand setzen
+ * müssen — unter jede Überschrift, in der richtigen Länge, jedes Mal.
+ *
+ * Das ist keine Arbeit, die ein Mensch machen sollte: Die Länge folgt der
+ * Größe der Überschrift, und diese Regel steht ohnehin schon im Haus. Der
+ * Strich von Hand bleibt trotzdem — für die Trennung vor der Signatur oder
+ * zwischen zwei Abschnitten, wo es keine Überschrift gibt.
+ */
+function ueberschriftenStriche(html: string): string {
+  return html.replace(
+    /<\/(h1|h2|h3)>/gi,
+    (_ganz, name: string) => `</${name}>${cortenStrich(name.toLowerCase() === 'h1')}`,
+  )
+}
+
+function stricheSetzen(html: string): string {
+  return html.replace(/<hr([^>]*)>/gi, (_ganz, rest: string) => {
+    const art = /data-strich\s*=\s*"([^"]*)"/i.exec(rest ?? '')?.[1] ?? 'mittel'
+    const stil = STRICH_STILE[art] ?? STRICH_STILE.mittel
+    return `<hr style="${stil}" />`
+  })
+}
+
+/**
  * Eine leere Zeile bleibt eine leere Zeile.
  *
  * Quill schreibt sie als `<p></p>` — ein Absatz ohne Inhalt. Solange die
@@ -182,7 +239,7 @@ function abstaendeSetzen(html: string): string {
  */
 export function mailHtmlSaeubern(html: string): string {
   const sauber = filter.process(String(html ?? '')).replace(/&nbsp;/g, ' ')
-  return abstaendeSetzen(leereAbsaetzeFuellen(sauber))
+  return ueberschriftenStriche(stricheSetzen(abstaendeSetzen(leereAbsaetzeFuellen(sauber))))
 }
 
 /**

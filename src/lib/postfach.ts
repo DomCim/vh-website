@@ -548,7 +548,6 @@ export async function nachrichtSenden(
     await protokoll(payload, fach, eingabe, 'fehler', err instanceof Error ? err.message : String(err))
     throw err
   }
-  await protokoll(payload, fach, eingabe, 'gesendet')
 
   /*
    * Die Kopie darf den Versand nie aufhalten — die Mail ist raus, das ist das
@@ -556,6 +555,7 @@ export async function nachrichtSenden(
    * glaubt, seine Mail liege im Ordner, und sie liegt nicht dort, merkt es
    * erst Wochen später beim Suchen.
    */
+  let kopieFehler: string | null = null
   try {
     await mitVerbindung(fach, async (client) => {
       const ziel = await gesendetOrdner(client, fach)
@@ -566,11 +566,28 @@ export async function nachrichtSenden(
       }
       await client.append(ziel, roh, ['\\Seen'])
     })
-    return { kopie: true }
   } catch (err) {
+    kopieFehler = err instanceof Error ? err.message : String(err)
     payload.logger.warn({ err }, 'Kopie der gesendeten Mail konnte nicht abgelegt werden')
-    return { kopie: false }
   }
+
+  /*
+   * Protokolliert wird **nach** dem Ablegen, damit der Vermerk mit hineinkommt.
+   *
+   * Das Ausgangsprotokoll im Büro ist die Stelle, an der man nachsieht, was
+   * hinausgegangen ist — dort gehört auch hin, was dabei nicht geklappt hat.
+   * Im Serverprotokoll steht es zwar auch, aber dort kommt niemand hin, der
+   * gerade eine Mail vermisst.
+   */
+  await protokoll(
+    payload,
+    fach,
+    eingabe,
+    'gesendet',
+    kopieFehler ? `Verschickt, aber keine Kopie in „Gesendet": ${kopieFehler}` : undefined,
+  )
+
+  return { kopie: !kopieFehler }
 }
 
 async function protokoll(

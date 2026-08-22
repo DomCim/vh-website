@@ -6,6 +6,12 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Corten-Strich im Schreibfeld.** In der Leiste steht jetzt „Strich" mit vier Spielarten: **Fein**, **Mittel**, **Kräftig** und **Quer** über die ganze Breite. Gedacht als Trennung vor der Signatur oder zwischen zwei Abschnitten. Was man wählt, sieht man beim Schreiben genauso, wie es beim Empfänger ankommt.
+
+- **Überschriften in Mails tragen ihren Strich von selbst.** Wer „Überschrift 1" oder „Überschrift 2" wählt, bekommt darunter den Corten-Strich der Website — lang unter der großen, kurz unter der kleinen. Das ist dieselbe Handschrift wie auf Angebot, Rechnung und Website; von Hand nachlegen muss man nichts mehr.
+
+- **Fehlt die Kopie in „Gesendet", steht es im Ausgangsprotokoll.** Bisher stand ein solcher Fehlschlag nur im Serverprotokoll, wo niemand nachsieht, der gerade eine Mail vermisst. Jetzt steht der Grund beim betreffenden Eintrag unter Postfach → Ausgangsprotokoll.
+
 - **Mails kommen so an, wie sie geschrieben wurden.** Vier Zeilen untereinander standen beim Empfänger mit einer Leerzeile dazwischen, weil jedes Mailprogramm Absätzen seinen eigenen Abstand gibt — und die Leerzeile, die man vor der Grußformel wirklich getippt hatte, fehlte dafür. Beides steht jetzt fest in der Mail: eng, wo eng geschrieben wurde, und eine Leerzeile, wo eine gemacht wurde.
 
 - **Der Briefkopf bleibt auch im dunklen Mailprogramm sichtbar.** Wer seine Mails dunkel liest, bekam einen schwarzen Schriftzug auf schwarzem Grund — das Logo war schlicht weg. Die Mail sagt jetzt ausdrücklich, dass sie hell gemeint ist, und das Logo bringt seinen hellen Grund im Bild mit. Damit steht der Kopf auch dort, wo ein Programm sich um Angaben nicht schert.
