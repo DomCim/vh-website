@@ -2,7 +2,17 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
 import { postNewsToFacebook } from '../lib/facebook'
+import { indexNowHooks } from '../lib/indexnow'
 import { autoSlug } from '../lib/slug'
+
+/**
+ * Nur Veröffentlichtes wird gemeldet — ein Entwurf hat draußen keine Seite,
+ * und eine gemeldete Adresse, hinter der nichts steht, ist eine Fehlerseite
+ * im Suchergebnis.
+ */
+const indexNowNews = indexNowHooks((doc) =>
+  doc._status === 'published' && doc.slug ? `/news/${doc.slug}` : null,
+)
 
 export const News: CollectionConfig = {
   slug: 'news',
@@ -26,7 +36,10 @@ export const News: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
-    afterChange: [postNewsToFacebook],
+    // Ein Beitrag, den niemand kennt, ist kein Beitrag: veröffentlichte
+    // Beiträge werden den Suchdiensten sofort gemeldet (siehe lib/indexnow.ts)
+    afterChange: [postNewsToFacebook, ...indexNowNews.afterChange],
+    afterDelete: indexNowNews.afterDelete,
   },
   fields: [
     {

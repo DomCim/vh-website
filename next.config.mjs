@@ -174,4 +174,44 @@ const nextConfig = {
   },
 }
 
-export default withPayload(nextConfig)
+/**
+ * Payloads Beigabe für die Farbwahl gilt nur noch fürs Admin-Panel.
+ *
+ * **Was Payload tut.** `withPayload` hängt an **jeden** Pfad drei Kopfzeilen:
+ * `Accept-CH`, `Vary` und `Critical-CH`, alle drei mit
+ * `Sec-CH-Prefers-Color-Scheme`. Damit erfährt der Server schon vor dem
+ * Ausliefern, ob der Besucher hell oder dunkel eingestellt hat — das
+ * Admin-Panel baut sich dann gleich richtig herum auf, statt einmal
+ * umzuspringen.
+ *
+ * **Was es kostet.** `Critical-CH` heißt für den Browser: „Diese Angabe
+ * brauche ich, bevor du weitermachst." Beim allerersten Aufruf hat er sie
+ * noch nicht mitgeschickt — also wirft er die begonnene Verbindung weg und
+ * fängt von vorn an. Gemessen mit Lighthouse waren das **rund 0,6 Sekunden**,
+ * geführt als Weiterleitung der Startseite auf sich selbst.
+ *
+ * Das trifft ausgerechnet den ersten Besuch, und bei einer Website, die
+ * Menschen über die Suche finden, ist der erste Besuch meistens der einzige.
+ * Im Admin-Panel, in dem täglich dieselben zwei Menschen arbeiten, ist
+ * derselbe Aufwand gut angelegt — dort bleibt die Regel deshalb.
+ *
+ * Angefasst wird nur die eine Regel, die Payload selbst anlegt (erkennbar an
+ * `Critical-CH`); alles andere aus dem Baukasten bleibt unberührt. Sollte
+ * Payload das eines Tages anders lösen, greift die Umschreibung ins Leere und
+ * schadet nichts — die Regel wird dann schlicht nicht mehr gefunden.
+ */
+const mitPayload = withPayload(nextConfig)
+
+const nurFuersAdmin = (regeln) =>
+  regeln.map((regel) =>
+    regel.source === '/:path*' && regel.headers?.some((kopf) => kopf.key === 'Critical-CH')
+      ? { ...regel, source: '/admin/:path*' }
+      : regel,
+  )
+
+const konfiguration = {
+  ...mitPayload,
+  headers: async () => nurFuersAdmin((await mitPayload.headers?.()) ?? []),
+}
+
+export default konfiguration

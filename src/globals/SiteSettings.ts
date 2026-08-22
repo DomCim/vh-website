@@ -334,6 +334,66 @@ export const SiteSettings: GlobalConfig = {
       },
     },
     {
+      /*
+       * Die Nachweise für Search Console und Bing.
+       *
+       * Beide Dienste wollen wissen, dass die Seite einem gehört, bevor sie
+       * ihre Zahlen herausgeben — und beide bieten dafür ein Meta-Tag an. Der
+       * Weg über den DNS-Eintrag ist der sauberere, aber er verlangt Zugang
+       * zur Domainverwaltung; hier genügt Einfügen und Speichern.
+       *
+       * Warum das mehr ist als Statistik: In der Search Console steht, mit
+       * welchen Suchanfragen Menschen auf der Seite landen — und welche knapp
+       * daneben liegen. Ohne sie ist jede Aussage über Reichweite geraten.
+       * Bing wiederum steht hinter der Websuche von ChatGPT.
+       */
+      type: 'row',
+      fields: [
+        {
+          name: 'googleVerification',
+          label: 'Google-Search-Console-Code',
+          type: 'text',
+          admin: {
+            description:
+              'Nur der content-Wert aus dem Meta-Tag der Search Console, nicht das ganze Tag.',
+          },
+        },
+        {
+          name: 'bingVerification',
+          label: 'Bing-Webmaster-Code',
+          type: 'text',
+          admin: { description: 'Der content-Wert aus dem Meta-Tag der Bing Webmaster Tools.' },
+        },
+      ],
+    },
+    {
+      /*
+       * Häufige Fragen — für die Seite und für die Suchmaschine.
+       *
+       * Google zeigt sie unter dem Treffer aufklappbar an, wenn sie
+       * ausgezeichnet sind (`FAQPage`). Das kostet nichts und nimmt in der
+       * Ergebnisliste doppelt so viel Platz ein wie ein gewöhnlicher Treffer.
+       *
+       * Zwei Regeln, sonst wird daraus Zierde: **Echte** Fragen, die wirklich
+       * gestellt werden („Wie lange dauert eine Maßanfertigung?"), und eine
+       * Antwort, die die Frage beantwortet — nicht eine, die zum Anruf
+       * auffordert.
+       */
+      name: 'faq',
+      label: 'Häufige Fragen',
+      type: 'array',
+      localized: true,
+      labels: { singular: 'Frage', plural: 'Fragen' },
+      admin: {
+        description:
+          'Erscheinen auf der Seite „Maßanfertigung" und als aufklappbare Fragen im Google-Ergebnis.',
+      },
+      fields: [
+        { name: 'frage', label: 'Frage', type: 'text', required: true },
+        { name: 'antwort', label: 'Antwort', type: 'textarea', required: true },
+      ],
+    },
+    {
       name: 'seo',
       label: 'SEO-Standardwerte',
       type: 'group',

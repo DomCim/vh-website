@@ -651,6 +651,10 @@ export interface Testimonial {
    */
   author: string;
   /**
+   * 1 bis 5. Leer lassen, wenn die Kundschaft keine vergeben hat.
+   */
+  rating?: number | null;
+  /**
    * z.B. "Outdoor-Sofa OS, München"
    */
   context?: string | null;
@@ -2076,6 +2080,7 @@ export interface ProjectsSelect<T extends boolean = true> {
 export interface TestimonialsSelect<T extends boolean = true> {
   quote?: T;
   author?: T;
+  rating?: T;
   context?: T;
   product?: T;
   pending?: T;
@@ -3121,6 +3126,24 @@ export interface SiteSetting {
    * Der Code aus dem Pinterest-Meta-Tag (Business-Konto → Einstellungen → Website beanspruchen). Nur der content-Wert, nicht das ganze Tag.
    */
   pinterestVerification?: string | null;
+  /**
+   * Nur der content-Wert aus dem Meta-Tag der Search Console, nicht das ganze Tag.
+   */
+  googleVerification?: string | null;
+  /**
+   * Der content-Wert aus dem Meta-Tag der Bing Webmaster Tools.
+   */
+  bingVerification?: string | null;
+  /**
+   * Erscheinen auf der Seite „Maßanfertigung" und als aufklappbare Fragen im Google-Ergebnis.
+   */
+  faq?:
+    | {
+        frage: string;
+        antwort: string;
+        id?: string | null;
+      }[]
+    | null;
   seo?: {
     metaTitle?: string | null;
     metaDescription?: string | null;
@@ -3649,6 +3672,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         scriptUrl?: T;
       };
   pinterestVerification?: T;
+  googleVerification?: T;
+  bingVerification?: T;
+  faq?:
+    | T
+    | {
+        frage?: T;
+        antwort?: T;
+        id?: T;
+      };
   seo?:
     | T
     | {

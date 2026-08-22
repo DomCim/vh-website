@@ -42,6 +42,31 @@ export const Testimonials: CollectionConfig = {
       },
     },
     {
+      /*
+       * Die Bewertung in Sternen — **freiwillig**.
+       *
+       * Ursprünglich stand hier bewusst keine: „Bei fünf Stücken im Monat sagt
+       * 4,6 von 5 nichts." Das stimmt für den Menschen, der die Seite liest —
+       * er liest den Satz, nicht die Zahl. Für Google gilt es nicht: Ohne eine
+       * Zahl gibt es keine Sterne im Suchergebnis, und die entscheiden mit
+       * darüber, ob überhaupt jemand klickt.
+       *
+       * Deshalb der Kompromiss: Der Satz bleibt Pflicht und die Hauptsache,
+       * die Sterne sind ein Zusatz. Wer keine vergibt, dessen Stimme steht
+       * trotzdem — und in den Durchschnitt geht nur ein, was wirklich vergeben
+       * wurde.
+       */
+      name: 'rating',
+      label: 'Sterne (freiwillig)',
+      type: 'number',
+      min: 1,
+      max: 5,
+      admin: {
+        description: '1 bis 5. Leer lassen, wenn die Kundschaft keine vergeben hat.',
+        step: 1,
+      },
+    },
+    {
       name: 'context',
       label: 'Kontext (optional)',
       type: 'text',

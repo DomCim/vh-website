@@ -26,6 +26,7 @@ import {
   absoluteUrl,
   alternatesFor,
   BASE_URL,
+  breadcrumbJsonLd,
   jsonLd,
 } from "../../../../../lib/seo";
 
@@ -93,6 +94,27 @@ export default async function ProductPage({ params }: { params: PageParams }) {
     ...(typeof product.price === "number" ? [product.price] : []),
   ];
   const minPrice = prices.length ? Math.min(...prices) : undefined;
+  /*
+   * Sterne im Suchergebnis — aus denselben Stimmen, die unten auf der Seite
+   * stehen.
+   *
+   * Zwei Regeln, und beide sind nicht verhandelbar: Google verlangt, dass die
+   * Bewertung **auf der Seite sichtbar** ist (ist sie, weiter unten), und
+   * gerechnet wird nur mit dem, was wirklich vergeben wurde. Eine Stimme ohne
+   * Sterne zählt deshalb nicht als „5" und auch nicht als „0", sondern gar
+   * nicht — sonst stünde am Ende eine Zahl da, die niemand abgegeben hat.
+   *
+   * Erfundene Bewertungen wären hier nicht nur unlauter, sondern kurzsichtig:
+   * Google nimmt die Auszeichnung dauerhaft weg, wenn sie nicht zur Seite
+   * passt.
+   */
+  const bewertet = testimonials.filter(
+    (tst) => typeof tst.rating === 'number' && tst.rating >= 1 && tst.rating <= 5,
+  )
+  const schnitt = bewertet.length
+    ? Math.round((bewertet.reduce((summe, tst) => summe + Number(tst.rating), 0) / bewertet.length) * 10) / 10
+    : null
+
   const productJsonLd = jsonLd({
     "@type": "Product",
     name: product.title,
@@ -100,6 +122,22 @@ export default async function ProductPage({ params }: { params: PageParams }) {
     image: images.map((i) => absoluteUrl(i.url)).filter(Boolean),
     url: `${BASE_URL}/${locale}/${categorySlug}/${itemSlug}`,
     brand: { "@type": "Brand", name: "Vincent Hellmann" },
+    ...(schnitt !== null && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: schnitt,
+        reviewCount: bewertet.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: bewertet.slice(0, 5).map((tst) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: tst.author },
+        reviewRating: { "@type": "Rating", ratingValue: tst.rating, bestRating: 5, worstRating: 1 },
+        reviewBody: tst.quote,
+        ...(tst.createdAt ? { datePublished: String(tst.createdAt).slice(0, 10) } : {}),
+      })),
+    }),
     ...(minPrice !== undefined &&
       !product.onRequestOnly && {
         offers: {
@@ -115,11 +153,22 @@ export default async function ProductPage({ params }: { params: PageParams }) {
       }),
   });
 
+  // Der Weg, den Google unter dem Treffer zeigt
+  const brotkrumen = breadcrumbJsonLd(locale, [
+    { name: dict.nav.collection, pfad: "/kollektion" },
+    { name: category?.name ?? categorySlug, pfad: `/${categorySlug}` },
+    { name: product.title, pfad: `/${categorySlug}/${itemSlug}` },
+  ]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: brotkrumen }}
       />
       <Reveal>
         <Link
@@ -200,6 +249,18 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           {testimonials.map((tst) => (
             <Reveal key={tst.id}>
               <figure className="border-line border bg-paper p-6">
+                {/* Sichtbar auf der Seite — sonst darf die Bewertung auch
+                    nicht im Suchergebnis stehen. Wer keine Sterne vergeben
+                    hat, dessen Stimme steht ohne, und das ist kein Mangel. */}
+                {typeof tst.rating === "number" && (
+                  <div
+                    className="text-bronze mb-2 text-sm"
+                    aria-label={`${tst.rating} von 5`}
+                  >
+                    {"★".repeat(tst.rating)}
+                    <span className="text-line">{"★".repeat(5 - tst.rating)}</span>
+                  </div>
+                )}
                 <blockquote className="text-ink-soft leading-relaxed">
                   „{tst.quote}&ldquo;
                 </blockquote>

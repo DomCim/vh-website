@@ -6,6 +6,24 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Gefunden werden: Sterne, häufige Fragen, Shopping-Einträge und ein schnellerer erster Besuch
+
+- **Sterne im Google-Ergebnis.** Kundinnen und Kunden können ihrer Stimme nach der Lieferung freiwillig Sterne geben — der Text bleibt die Hauptsache, die Sterne sind ein Zusatz. Auf der Artikelseite stehen sie über dem Zitat, und im Google-Ergebnis erscheint der Durchschnitt als Sternebewertung. Gerechnet wird nur mit dem, was wirklich vergeben wurde; eine Stimme ohne Sterne zählt gar nicht mit.
+
+- **Häufige Fragen.** Unter Website-Einstellungen lassen sich Fragen und Antworten pflegen. Sie erscheinen aufklappbar auf der Seite „Maßanfertigung" — und ausgezeichnet für Google, das sie unter dem Treffer anzeigt und damit doppelt so viel Platz in der Ergebnisliste einnimmt. Anlegen geht auch per KI-Assistent: `faq_liste`, `faq_ergaenzen` und `faq_setzen`.
+
+- **Der Weg im Suchergebnis.** Unter Artikeln, News-Beiträgen und Referenzen steht bei Google jetzt der Pfad („Kollektion › Pflanzkübel") statt der nackten Adresse. Man sieht vor dem Klick, wo man landet.
+
+- **Der erste Besuch ist eine halbe Sekunde schneller.** An jeder Seite hing eine Kopfzeile, mit der der Browser vor dem Weitermachen erst noch die Helligkeitseinstellung nachreichen sollte — und weil er sie beim allerersten Aufruf noch nicht mitgeschickt hatte, warf er die begonnene Verbindung weg und fing von vorn an. Gemessen waren das **rund 0,6 Sekunden**, und zwar genau bei dem Besucher, der frisch über Google kommt. Die Kopfzeile gilt jetzt nur noch für die Verwaltung, wo sie hingehört. Im Messwerkzeug von Google stieg die Leistungsnote der Startseite dadurch von **93 auf 97**, der größte Bildaufbau von 2,9 auf 2,5 Sekunden.
+
+- **Neues wird gemeldet, statt auf Besuch zu warten.** Bisher stand ein neuer Beitrag in der Sitemap und wartete darauf, dass ein Suchdienst vorbeischaut — bei einer kleinen Seite können das Tage sein, und dann ist die Aktion vorbei, über die er berichtet. Jetzt geht in dem Moment, in dem ein Artikel, eine Referenz, eine Kategorie oder ein veröffentlichter Beitrag gespeichert wird, eine Meldung an die Suchdienste hinaus. Gelöschtes wird ebenso gemeldet, damit es nicht wochenlang als Fehlerseite im Verzeichnis steht. Google macht dabei nicht mit, Bing schon — und hinter der Websuche von ChatGPT steht Bing.
+
+- **Eine Seite für die Sprachmodelle.** Unter `/llms.txt` steht ab jetzt in schlichtem Text, wer wir sind, was wir fertigen und wo was zu finden ist — Sortiment, lieferbare Stücke mit Preis, häufige Fragen, Referenzen und die letzten Beiträge. Wenn ChatGPT, Claude oder Perplexity nach Stahlmöbeln gefragt werden und dabei auf uns stoßen, lesen sie sonst unser HTML mit allem Beiwerk und setzen sich das Wesentliche selbst zusammen. Die Datei pflegt sich von selbst aus der Datenbank und gibt es in allen drei Sprachen.
+
+- **Das Sortiment bei Google Shopping.** Es gibt jetzt einen Produktdatenfeed unter `/feed/produkte.xml`, mit dem sich das Sortiment im Google Merchant Center hinterlegen lässt — dort erscheinen die Stücke in den kostenlosen Shopping-Einträgen, mit Bild, Preis und Verfügbarkeit und ohne Anzeigenbudget. Der Feed pflegt sich selbst: Preisänderung, neues Bild, ausverkauft — beim nächsten Abruf stimmt es, ohne dass jemand eine Tabelle hochlädt. Jede Größe steht mit ihrem eigenen Preis darin, die Größen eines Stücks bleiben aber als Familie zusammen. Stücke auf Anfrage und Stücke ohne Bild bleiben draußen, weil Google sie ohnehin zurückweist. Wie das Konto eingerichtet wird, steht in der Anleitung.
+
+- **Google und Bing bestätigen.** Zwei neue Felder in den Website-Einstellungen für die Nachweise der Search Console und der Bing Webmaster Tools — damit lässt sich einsehen, mit welchen Suchanfragen Menschen auf der Seite landen. Bing steht dabei auch hinter der Websuche von ChatGPT.
+
 ## 22.08.2026 — Kein Seed mehr beim Ausrollen
 
 - **Ein Ausrollen bringt keine Beispielinhalte mehr zurück.** Bisher sah der Startlauf bei jedem Ausrollen nach, ob Referenzen, Ratgeber-Beiträge oder „Über uns" fehlen — und legte sie wieder an. Wer eine Beispiel-Referenz gelöscht hatte, weil sie nicht zum Betrieb gehört, hatte sie am nächsten Tag wieder dastehen. Jetzt gilt: Ist die Datenbank eingerichtet, wird nichts mehr angefasst. Nachtragen lässt sich weiterhin, aber nur ausdrücklich.

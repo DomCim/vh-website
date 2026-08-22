@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 import { APIError } from 'payload'
 
 import { admins, anyone } from '../access'
+import { indexNowHooks } from '../lib/indexnow'
+
+const indexNowKategorie = indexNowHooks((doc) => (doc.slug ? `/${doc.slug}` : null))
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -21,6 +24,9 @@ export const Categories: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    // Die Kategorieseite den Suchdiensten melden (siehe lib/indexnow.ts)
+    afterChange: indexNowKategorie.afterChange,
+    afterDelete: indexNowKategorie.afterDelete,
     beforeDelete: [
       /**
        * Eine Kategorie, in der noch Artikel liegen, wird nicht gelöscht — und

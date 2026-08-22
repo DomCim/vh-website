@@ -49,6 +49,7 @@ import * as migration_20260820_222645_arbeitsplan from './20260820_222645_arbeit
 import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_auftragsmeldungen';
 import * as migration_20260821_065058_meldungen from './20260821_065058_meldungen';
 import * as migration_20260821_213813_abnahme_bausteine_belege from './20260821_213813_abnahme_bausteine_belege';
+import * as migration_20260822_135017_reichweite_sterne_faq from './20260822_135017_reichweite_sterne_faq';
 
 export const migrations = [
   {
@@ -304,6 +305,11 @@ export const migrations = [
   {
     up: migration_20260821_213813_abnahme_bausteine_belege.up,
     down: migration_20260821_213813_abnahme_bausteine_belege.down,
-    name: '20260821_213813_abnahme_bausteine_belege'
+    name: '20260821_213813_abnahme_bausteine_belege',
+  },
+  {
+    up: migration_20260822_135017_reichweite_sterne_faq.up,
+    down: migration_20260822_135017_reichweite_sterne_faq.down,
+    name: '20260822_135017_reichweite_sterne_faq'
   },
 ];

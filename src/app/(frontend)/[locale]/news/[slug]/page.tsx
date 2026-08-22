@@ -7,8 +7,8 @@ import { Bild, type BildQuelle } from '../../../../../components/Bild'
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { RichText } from '../../../../../components/RichText'
 import { getNewsBySlug, mediaUrl } from '../../../../../lib/data'
-import { formatDate, isLocale } from '../../../../../lib/i18n'
-import { absoluteUrl, alternatesFor, BASE_URL, jsonLd } from '../../../../../lib/seo'
+import { formatDate, isLocale, t } from '../../../../../lib/i18n'
+import { absoluteUrl, alternatesFor, BASE_URL, breadcrumbJsonLd, jsonLd } from '../../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,6 +60,16 @@ export default async function NewsDetailPage({
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: articleJsonLd }} />
+      {/* Der Weg im Suchergebnis: vincent-hellmann.com › News › Titel */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: breadcrumbJsonLd(locale, [
+            { name: t(locale).nav.news, pfad: '/news' },
+            { name: article.title, pfad: `/news/${slug}` },
+          ]),
+        }}
+      />
       <Reveal>
         <p className="text-ink-soft text-sm">{formatDate(article.publishedDate, locale)}</p>
         <h1 className="tracking-nav text-ink mt-2 mb-8 text-2xl font-semibold uppercase sm:text-3xl">

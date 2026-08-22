@@ -27,11 +27,24 @@ export async function POST(req: Request) {
       quote?: string
       author?: string
       context?: string
+      rating?: number
       einverstanden?: boolean
       website?: string
     }
 
     if (b.website?.trim()) return NextResponse.json({ ok: true })
+
+    /*
+     * Sterne sind freiwillig — und werden trotzdem geprüft.
+     *
+     * Was von außen kommt, gehört nicht ungeprüft in eine Zahl, die später
+     * einen Durchschnitt bildet und als Sternebewertung bei Google steht.
+     * Alles außer 1 bis 5 fällt still weg; die Stimme selbst bleibt.
+     */
+    const sterne =
+      Number.isInteger(b.rating) && Number(b.rating) >= 1 && Number(b.rating) <= 5
+        ? Number(b.rating)
+        : undefined
 
     const quote = b.quote?.trim()
     const author = b.author?.trim()
@@ -64,6 +77,7 @@ export async function POST(req: Request) {
       data: {
         quote,
         author,
+        rating: sterne,
         context: b.context?.trim() || undefined,
         product: typeof produkt === 'number' ? produkt : undefined,
         pending: true,

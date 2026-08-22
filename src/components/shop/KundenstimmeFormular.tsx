@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 
 export type KundenstimmeDict = {
+  ratingLabel: string
+  ratingHint: string
   quoteLabel: string
   authorLabel: string
   contextLabel: string
@@ -15,8 +17,15 @@ export type KundenstimmeDict = {
 /**
  * Formular für die Kundenstimme aus der Mail nach der Lieferung.
  *
- * Bewusst kein Sternesystem: Bei fünf Stücken im Monat sagt „4,6 von 5"
- * nichts. Zwei Sätze über das Stück am eigenen Platz sagen alles.
+ * **Der Text ist die Hauptsache, die Sterne sind ein Zusatz.** Ursprünglich
+ * gab es hier bewusst keine: Bei fünf Stücken im Monat sagt „4,6 von 5"
+ * nichts, und zwei Sätze über das Stück am eigenen Platz sagen alles. Für den
+ * Menschen, der die Seite liest, gilt das weiterhin.
+ *
+ * Für Google gilt es nicht. Ohne Zahl gibt es keine Sterne im Suchergebnis,
+ * und die entscheiden mit darüber, ob überhaupt jemand klickt. Deshalb der
+ * Kompromiss: freiwillig, ohne Vorauswahl, und wer keine vergibt, dessen
+ * Stimme steht genauso da.
  */
 export function KundenstimmeFormular({
   token,
@@ -27,6 +36,7 @@ export function KundenstimmeFormular({
   name?: string | null
   dict: KundenstimmeDict
 }) {
+  const [sterne, setSterne] = useState(0)
   const [quote, setQuote] = useState('')
   const [author, setAuthor] = useState(name ?? '')
   const [kontext, setKontext] = useState('')
@@ -45,6 +55,7 @@ export function KundenstimmeFormular({
           token,
           quote,
           author,
+          rating: sterne || undefined,
           context: kontext,
           einverstanden,
           website: honig,
@@ -62,6 +73,28 @@ export function KundenstimmeFormular({
 
   return (
     <form onSubmit={absenden} className="mt-8 space-y-4">
+      {/* Sterne zuerst, weil sie schnell gehen — und ohne Vorauswahl, damit
+          niemand eine Wertung abgibt, die er gar nicht gemeint hat */}
+      <fieldset className="block">
+        <legend className="text-ink-soft mb-1 block text-sm">{dict.ratingLabel}</legend>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n}`}
+              aria-pressed={sterne === n}
+              onClick={() => setSterne(sterne === n ? 0 : n)}
+              className={`cursor-pointer px-1 text-2xl leading-none transition-colors ${
+                n <= sterne ? 'text-bronze' : 'text-line hover:text-ink-soft'
+              }`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        <p className="text-ink-soft mt-1 text-xs">{dict.ratingHint}</p>
+      </fieldset>
       <label className="block">
         <span className="text-ink-soft mb-1 block text-sm">{dict.quoteLabel}</span>
         <textarea
