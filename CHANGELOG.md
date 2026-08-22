@@ -12,6 +12,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 - **Der Weg im Suchergebnis.** Unter Artikeln, News-Beiträgen und Referenzen steht bei Google jetzt der Pfad („Kollektion › Pflanzkübel") statt der nackten Adresse. Man sieht vor dem Klick, wo man landet.
 
+- **Das Sortiment bei Google Shopping.** Es gibt jetzt einen Produktdatenfeed unter `/feed/produkte.xml`, mit dem sich das Sortiment im Google Merchant Center hinterlegen lässt — dort erscheinen die Stücke in den kostenlosen Shopping-Einträgen, mit Bild, Preis und Verfügbarkeit und ohne Anzeigenbudget. Der Feed pflegt sich selbst: Preisänderung, neues Bild, ausverkauft — beim nächsten Abruf stimmt es, ohne dass jemand eine Tabelle hochlädt. Jede Größe steht mit ihrem eigenen Preis darin, die Größen eines Stücks bleiben aber als Familie zusammen. Stücke auf Anfrage und Stücke ohne Bild bleiben draußen, weil Google sie ohnehin zurückweist. Wie das Konto eingerichtet wird, steht in der Anleitung.
+
 - **Google und Bing bestätigen.** Zwei neue Felder in den Website-Einstellungen für die Nachweise der Search Console und der Bing Webmaster Tools — damit lässt sich einsehen, mit welchen Suchanfragen Menschen auf der Seite landen. Bing steht dabei auch hinter der Websuche von ChatGPT.
 
 ## 22.08.2026 — Kein Seed mehr beim Ausrollen

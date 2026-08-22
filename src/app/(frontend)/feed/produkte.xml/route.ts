@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../lib/data'
-import { locales, type Locale } from '../../../../lib/i18n'
+import { type Locale, locales } from '../../../../lib/i18n'
 import { absoluteUrl, BASE_URL } from '../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -16,9 +16,10 @@ export const dynamic = 'force-dynamic'
  * nicht bekommt: Wer „Pflanzkübel Stahl 100 cm" sucht, sieht das Stück, statt
  * es zu suchen.
  *
- * **Warum eine Datei und kein Hochladen von Hand.** Ein Feed aus der Datenbank
- * ist immer richtig: Preisänderung, neues Bild, ausverkauft — Google holt sich
- * die Datei täglich selbst. Eine Tabelle, die jemand pflegt, ist am zweiten
+ * **Warum eine Adresse und kein Hochladen von Hand.** Was hier steht, kommt
+ * bei jedem Abruf aus der Datenbank: Preisänderung, neues Bild, ausverkauft —
+ * beim nächsten Abruf stimmt es. Google holt sich die Adresse nach einem
+ * eingestellten Takt selbst. Eine Tabelle, die jemand pflegt, ist am zweiten
  * Tag falsch.
  *
  * **Was Google verlangt.** Kennung, Titel, Beschreibung, Link, Bild,
@@ -26,9 +27,9 @@ export const dynamic = 'force-dynamic'
  * bei Einzelanfertigung nicht; `identifier_exists: no` sagt das ausdrücklich,
  * sonst weist Google die Ware zurück.
  *
- * **Was draußen bleibt:** Stücke auf Anfrage. Ein Eintrag ohne Preis ist im
- * Merchant Center kein Eintrag, sondern ein Fehler — und ein erfundener Preis
- * wäre schlimmer als kein Eintrag.
+ * **Was draußen bleibt:** Stücke auf Anfrage und alles ohne Bild. Ein Eintrag
+ * ohne Preis ist im Merchant Center kein Eintrag, sondern ein Fehler — und ein
+ * erfundener Preis wäre schlimmer als kein Eintrag.
  *
  * Aufruf: `/feed/produkte.xml`, für die französische Fassung `?sprache=fr`.
  */
@@ -75,7 +76,8 @@ export async function GET(req: Request) {
      * Ein Kübel in 100 × 50 kostet anderes als derselbe in 60 × 30; ein
      * einzelner Eintrag „ab 1.490 €" wäre ein falscher Preis, und falsche
      * Preise sperrt Google. `item_group_id` hält die Varianten trotzdem als
-     * eine Familie zusammen.
+     * eine Familie zusammen — im Ergebnis stehen sie dann nebeneinander und
+     * nicht als vier fremde Stücke.
      */
     const varianten: { id: string; titel: string; wert: number }[] =
       Array.isArray(p.variants) && p.variants.length
@@ -132,7 +134,8 @@ ${eintraege.join('\n')}
   return new NextResponse(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      // Google holt den Feed täglich; eine Stunde Zwischenspeicher genügt
+      // Google holt den Feed nach eigenem Takt; eine Stunde Zwischenspeicher
+      // genügt und hält neugierige Abrufe vom Rechnen ab
       'Cache-Control': 'public, max-age=3600',
     },
   })

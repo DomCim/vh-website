@@ -371,6 +371,45 @@ Möbel- und Garteninhalte funktionieren auf Pinterest hervorragend, und die Prod
 2. Code im Admin unter **Website-Einstellungen → Pinterest-Verifizierungscode** eintragen — das Meta-Tag erscheint automatisch auf allen Seiten.
 3. In Pinterest die Verifizierung abschließen und Produktbilder pinnen bzw. pinnen lassen.
 
+## Google Merchant Center (kostenlose Shopping-Einträge)
+
+Wer sein Sortiment im Merchant Center hinterlegt, erscheint in den **kostenlosen
+Einträgen** von Google Shopping — mit Bild, Preis und Verfügbarkeit, ohne
+Anzeigenbudget. Für einen Betrieb mit wenigen, teuren Stücken ist das die Sorte
+Reichweite, die man sonst nicht bekommt.
+
+Der Datenfeed wird **nicht** von Hand gepflegt, sondern liegt als Adresse bereit:
+
+```
+https://vincent-hellmann.com/feed/produkte.xml
+```
+
+**Er hält sich von selbst aktuell.** Was dort steht, kommt bei jedem Abruf frisch
+aus der Datenbank: Preisänderung, neues Bild, ausverkauft — beim nächsten Abruf
+stimmt es. Google holt die Adresse nach dem eingestellten Takt selbst ab (bei
+„Geplanter Abruf" täglich einstellen). Eine Tabelle, die jemand pflegt, ist am
+zweiten Tag falsch.
+
+Einrichten:
+
+1. Konto unter `merchants.google.com` anlegen, Land Frankreich, Währung EUR.
+2. Website bestätigen — am einfachsten über die Search Console, die mit dem
+   Nachweis unter **Website-Einstellungen → Google-Bestätigungscode** ohnehin
+   schon eingerichtet ist.
+3. Unter **Produkte → Feeds** einen Feed anlegen, Abrufart „Geplanter Abruf",
+   und obige Adresse eintragen. Für die französische Fassung ein zweiter Feed
+   mit `?sprache=fr`, für die englische mit `?sprache=en`.
+4. Versand und Rückgabebedingungen im Merchant Center hinterlegen — ohne die
+   nimmt Google keinen Eintrag an.
+
+**Was im Feed steht und was nicht.** Jede Variante ist ein eigener Eintrag mit
+ihrem eigenen Preis, zusammengehalten über `item_group_id` — ein einzelner
+Eintrag „ab 1.490 €" wäre ein falscher Preis, und falsche Preise sperrt Google.
+Draußen bleiben Stücke **auf Anfrage** (kein Preis) und Stücke **ohne Bild**;
+beides würde Google ohnehin zurückweisen. Eine EAN gibt es bei Einzelanfertigung
+nicht — der Feed sagt das ausdrücklich (`identifier_exists: no`), sonst gilt die
+Ware als unvollständig ausgezeichnet.
+
 ## Besucherzählung einrichten (Plausible, ohne Cookie-Banner)
 
 Gezählt wird mit **selbst betriebenem Plausible**. Kein Cookie, keine Kennung, keine Daten außer Haus — und deshalb auch **kein Banner**: Wo nichts auf dem Gerät des Besuchers gespeichert oder ausgelesen wird, gibt es nichts, wozu er einwilligen müsste.
