@@ -122,6 +122,32 @@ export function Rechtstexte() {
 
       {stand === 'laedt' && <p className="buero-unterzeile">Wird geholt …</p>}
 
+      {/*
+        * Die Auszeichnung steht einmal oben statt an jedem Feld. Vier Zeichen
+        * reichen für einen Rechtstext, und wer sie nicht braucht, tippt
+        * einfach Absätze.
+        */}
+      <details className="buero-aufklapper">
+        <summary>Gestaltung: Überschriften, Aufzählungen, Fettes</summary>
+        <ul className="buero-auszeichnung">
+          <li>
+            <code>## Überschrift</code> — große Zwischenüberschrift
+          </li>
+          <li>
+            <code>### Kleinere</code> — kleine Zwischenüberschrift
+          </li>
+          <li>
+            <code>- Punkt</code> — Aufzählung, eine Zeile je Punkt
+          </li>
+          <li>
+            <code>**fett**</code> — fett im Fließtext
+          </li>
+        </ul>
+        <p className="buero-unterzeile">
+          Alles Übrige ist Absatz. Eine Leerzeile trennt zwei Absätze.
+        </p>
+      </details>
+
       {texte.map((t) => (
         <div key={t.feld} className="buero-karte" style={{ marginBottom: '1rem' }}>
           <div className="buero-feld">
@@ -141,8 +167,8 @@ export function Rechtstexte() {
                   Speichern würde die Formatierung stillschweigend wegwerfen.
                 */}
                 <p className="buero-warnung">
-                  Dieser Text enthält Formatierungen, die hier nicht dargestellt werden können.
-                  Bitte in der Website-Verwaltung bearbeiten.
+                  Dieser Text enthält etwas, das sich hier nicht abbilden lässt — einen Verweis,
+                  ein Bild oder eine Tabelle. Bitte in der Website-Verwaltung bearbeiten.
                 </p>
                 <pre className="buero-vorschau">{t.text}</pre>
               </>

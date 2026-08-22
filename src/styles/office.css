@@ -2755,3 +2755,19 @@ html.tastatur-offen .buero-inhalt {
   max-height: 18rem;
   overflow-y: auto;
 }
+
+/* Die vier Zeichen der Auszeichnung, aufgeklappt über den Rechtstexten */
+.buero-auszeichnung {
+  margin: 0.4rem 0 0.6rem;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.buero-auszeichnung code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-rahmen);
+  font-size: 0.85em;
+}

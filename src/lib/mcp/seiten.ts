@@ -1,7 +1,37 @@
 import type { GlobalSlug } from 'payload'
 import { z } from 'zod'
 
+import { darstellbar, richTextZuText, textZuRichText } from '../richtextText'
 import { db, fehler, type McpServer, ohneRueckfall, ok, sprache } from './helpers'
+
+/**
+ * Richtext geht als lesbarer Text hinaus und kommt als lesbarer Text zurück.
+ *
+ * **Warum.** Ein Rechtstext ist im Datenmodell ein Baum aus Knoten. Roh
+ * herausgereicht sind das für ein einziges Impressum mehrere Bildschirmseiten
+ * JSON — unlesbar, und beim Schreiben müsste derselbe Baum von Hand wieder
+ * aufgebaut werden. Genau daran scheiterte das Pflegen der Rechtstexte über
+ * die Schnittstelle.
+ *
+ * Umgesetzt wird mit derselben winzigen Auszeichnung, die auch das Büro
+ * benutzt (`## Überschrift`, `### kleinere`, `- Punkt`, `**fett**`) — siehe
+ * lib/richtextText.ts. Damit lesen und schreiben Büro und Assistent dasselbe.
+ *
+ * **Die Ausnahme:** Enthält ein Feld etwas, das sich so nicht abbilden lässt —
+ * einen Verweis, ein Bild, eine Tabelle —, geht es unverändert als Baum
+ * hinaus. Sonst würfe ein Zurückschreiben es lautlos weg.
+ */
+function istRichtext(wert: unknown): boolean {
+  return Boolean(wert && typeof wert === 'object' && 'root' in (wert as Record<string, unknown>))
+}
+
+function felderLesbar(felder: Record<string, unknown>): Record<string, unknown> {
+  const raus: Record<string, unknown> = {}
+  for (const [name, wert] of Object.entries(felder)) {
+    raus[name] = istRichtext(wert) && darstellbar(wert) ? richTextZuText(wert) : wert
+  }
+  return raus
+}
 
 /**
  * Die redaktionell pflegbaren Seitentexte (Payload-Globals).
@@ -68,7 +98,12 @@ export function registerSeiten(server: McpServer) {
       void globalType
       // Bankverbindung & Co. gehen auch lesend nicht raus — siehe GESPERRTE_FELDER
       for (const feld of GESPERRTE_FELDER[seite as SeitenName] ?? []) delete felder[feld]
-      return ok({ seite, sprache: locale, felder })
+      return ok({
+        seite,
+        sprache: locale,
+        auszeichnung: '## Überschrift · ### kleinere · - Aufzählung · **fett**',
+        felder: felderLesbar(felder),
+      })
     },
   )
 
@@ -76,7 +111,7 @@ export function registerSeiten(server: McpServer) {
     'seite_schreiben',
     {
       description:
-        'Überschreibt Felder einer Seite. WICHTIG: vorher seite_lesen aufrufen und nur die geänderten Felder mitschicken — Listen (Hero-Slider, Zeitleiste, Highlights, Werte) müssen immer vollständig übergeben werden, weil sie komplett ersetzt werden. Mit sprache=fr/en wird die jeweilige Sprachfassung geschrieben.',
+        'Überschreibt Felder einer Seite. WICHTIG: vorher seite_lesen aufrufen und nur die geänderten Felder mitschicken — Listen (Hero-Slider, Zeitleiste, Highlights, Werte) müssen immer vollständig übergeben werden, weil sie komplett ersetzt werden. Mit sprache=fr/en wird die jeweilige Sprachfassung geschrieben. Fließtextfelder (Impressum, AGB, Widerruf …) nehmen lesbaren Text entgegen und verstehen darin `## Überschrift`, `### kleinere`, `- Aufzählung` und `**fett**`.',
       inputSchema: {
         seite: seiteEnum,
         sprache,
@@ -99,10 +134,32 @@ export function registerSeiten(server: McpServer) {
       }
       const payload = await db()
       const slug = SEITEN[seite as SeitenName] as GlobalSlug
+
+      /*
+       * Was als Text kommt, wird zu Richtext — aber nur dort, wo im Datenmodell
+       * auch Richtext steht.
+       *
+       * Erkannt wird das am bisherigen Inhalt: Ist das Feld heute ein Baum,
+       * ist es ein Richtext-Feld. Ein gewöhnliches Textfeld (der Seitentitel
+       * etwa) bleibt unangetastet — dort wäre `## ` kein Formatzeichen,
+       * sondern der Text selbst.
+       */
+      const bisher = (await payload.findGlobal({
+        slug,
+        locale,
+        depth: 0,
+      })) as unknown as Record<string, unknown>
+
+      const daten: Record<string, unknown> = {}
+      for (const [name, wert] of Object.entries(felder)) {
+        daten[name] =
+          typeof wert === 'string' && istRichtext(bisher?.[name]) ? textZuRichText(wert) : wert
+      }
+
       await payload.updateGlobal({
         slug,
         locale,
-        data: felder as never,
+        data: daten as never,
       })
       return ok({
         ok: true,
