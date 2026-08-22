@@ -376,6 +376,35 @@ unter `/[locale]/uebergabe/[token]`.
 
 ---
 
+## Sprache beim ersten Aufruf (`middleware.ts`)
+
+Bis hierher leitete `/` fest auf `/de` um. Für eine Werkstatt in Frankreich mit
+Kundschaft auf beiden Seiten der Grenze war das die falsche Voreinstellung für
+die halbe Zielgruppe.
+
+**Die Reihenfolge** (`lib/sprachwahl.ts`, dort auch die Begründungen): eigene
+Wahl aus dem Cookie `vh-sprache` — dann `Accept-Language` — dann `de`. Die
+Region wird **nicht** gelesen: Sie sagt, wo jemand steht, nicht was er liest.
+
+**Gemerkt wird nur der Klick** in der Sprachwahl (`SprachWahl.tsx` setzt das
+Cookie, ein Jahr). Nicht jeder Aufruf einer französischen Adresse — sonst
+stellte ein weitergeleiteter Link die Sprache eines Menschen um, der ihn bloß
+angesehen hat.
+
+**Was die Middleware nicht anfasst**, und zwar aus gutem Grund: `/api`,
+`/office`, `/admin`, `/_next`, `/media`, `/js` und alles mit einem Punkt im
+Namen. Eine Umleitung dort wäre kein Sprachwechsel, sondern ein Ausfall — der
+Abhol-Link des Zulieferers zeigt auf `/api/weitergabe`, die installierte
+Büro-App holt `/office-sw.js`. Der Filter steht in `config.matcher`; wer ihn
+anfasst, prüft ihn gegen genau diese Pfade nach.
+
+Umgeleitet wird mit **307**, nie 308: Das Ziel hängt am Besucher und darf sich
+nicht dauerhaft in einem Zwischenspeicher festsetzen. `Vary: Accept-Language,
+Cookie` steht aus demselben Grund dabei. `x-default` in den hreflang-Angaben
+bleibt Deutsch.
+
+---
+
 ## Dateien weitergeben (`/api/weitergabe`)
 
 Der kurze Weg zum Zulieferer, neben der Mappe und bewusst nicht in ihr.

@@ -4,6 +4,16 @@ import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { type Locale, locales } from '../../lib/i18n'
+import { SPRACH_COOKIE, SPRACH_COOKIE_TAGE } from '../../lib/sprachwahl'
+
+/*
+ * Ohne `secure`, mit Absicht: In der Entwicklung läuft die Seite auf `http`,
+ * und ein Cookie, das dort stillschweigend verfällt, sieht aus wie ein Fehler
+ * im Merken. Schützenswert ist hier nichts — es steht ein Sprachkürzel drin.
+ */
+function merken(sprache: Locale) {
+  document.cookie = `${SPRACH_COOKIE}=${sprache}; path=/; max-age=${SPRACH_COOKIE_TAGE * 86400}; samesite=lax`
+}
 
 /**
  * Die Sprachwahl — am Rechner nebeneinander, am Telefon zusammengeklappt.
@@ -17,7 +27,15 @@ import { type Locale, locales } from '../../lib/i18n'
  * Zusammengeklappt steht dort nur noch die aktuelle Sprache. Das ist die
  * Angabe, die man tatsächlich braucht — die anderen beiden interessieren
  * genau dann, wenn man wechseln will.
+ *
+ * **Der Klick wird gemerkt.** Wer hier wählt, hat gesprochen: Das Kürzel geht
+ * in ein Cookie, und beim nächsten Besuch ohne Sprache in der Adresse führt
+ * die Middleware ihn dorthin zurück. Gemerkt wird **nur** dieser Klick — nicht
+ * jeder Aufruf einer französischen Adresse. Sonst stellte ein einziger
+ * weitergeleiteter Link die Sprache eines Menschen um, der ihn bloß angesehen
+ * hat.
  */
+
 export function SprachWahl({
   locale,
   pfadFuer,
@@ -57,6 +75,7 @@ export function SprachWahl({
             {i > 0 && <span className="text-line">|</span>}
             <Link
               href={pfadFuer(code)}
+              onClick={() => merken(code)}
               className={code === locale ? 'text-ink font-semibold' : 'hover:text-ink'}
             >
               {code.toUpperCase()}
@@ -100,7 +119,10 @@ export function SprachWahl({
                 key={code}
                 role="menuitem"
                 href={pfadFuer(code)}
-                onClick={() => setOffen(false)}
+                onClick={() => {
+                  merken(code)
+                  setOffen(false)
+                }}
                 className={`tracking-nav block px-4 py-2 text-xs uppercase ${
                   code === locale ? 'text-ink font-semibold' : 'text-ink-soft hover:text-ink'
                 }`}
