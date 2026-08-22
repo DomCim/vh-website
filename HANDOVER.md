@@ -383,8 +383,12 @@ Kundschaft auf beiden Seiten der Grenze war das die falsche Voreinstellung für
 die halbe Zielgruppe.
 
 **Die Reihenfolge** (`lib/sprachwahl.ts`, dort auch die Begründungen): eigene
-Wahl aus dem Cookie `vh-sprache` — dann `Accept-Language` — dann `de`. Die
-Region wird **nicht** gelesen: Sie sagt, wo jemand steht, nicht was er liest.
+Wahl aus dem Cookie `vh-sprache` — dann `Accept-Language` — dann **Englisch**,
+wenn ein Wunsch da war, den wir nicht erfüllen können (Italienisch, Spanisch) —
+und `de` nur, wenn gar kein Wunsch geäußert wurde. Der letzte Fall ist kein
+Mensch mit Vorliebe, sondern ein Programm; dort gilt dieselbe Sprache wie in
+`x-default`. Die Region wird **nicht** gelesen: Sie sagt, wo jemand steht,
+nicht was er liest.
 
 **Gemerkt wird nur der Klick** in der Sprachwahl (`SprachWahl.tsx` setzt das
 Cookie, ein Jahr). Nicht jeder Aufruf einer französischen Adresse — sonst

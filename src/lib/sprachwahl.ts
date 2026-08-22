@@ -23,6 +23,13 @@ import { defaultLocale, isLocale, type Locale, locales } from './i18n'
  * an dem er gerade steht. Ein deutscher Kunde im Urlaub an der Küste bekäme
  * sonst Französisch, und geteilte Links führten je nach Standort woandershin.
  *
+ * **Und wenn wir seine Sprache nicht sprechen: Englisch.** Wer Italienisch
+ * eingestellt hat, ist mit einer deutschen Seite nicht besser bedient als mit
+ * einer englischen — im Zweifel schlechter. Deutsch bleibt nur da, wo gar kein
+ * Wunsch geäußert wird: Ein Aufruf ohne `Accept-Language` kommt von keinem
+ * Menschen mit einer Vorliebe, sondern von einem Programm, und für das gilt
+ * dieselbe Sprache wie in `x-default` — die des Hauses.
+ *
  * **Eine Adresse mit Sprachkürzel bleibt, wie sie ist.** `/fr/kontakt` ist eine
  * Zusage: Wer den Link weitergibt, gibt die Sprache mit. Umgeleitet wird nur,
  * was gar keine Sprache nennt.
@@ -62,11 +69,19 @@ export function spracheAusKopf(kopf?: string | null): Locale | null {
 }
 
 /**
+ * Die Sprache, in die wir einen Besucher schicken, der keine genannt hat.
+ *
+ * Wer eine Sprache verlangt, die wir nicht sprechen, bekommt Englisch — die
+ * Sprache, in der man sich im Zweifel verständigt. Siehe oben.
+ */
+export const AUSWEICHSPRACHE: Locale = 'en'
+
+/**
  * Die Sprache für einen Besuch ohne Sprachkürzel in der Adresse.
  *
- * Reihenfolge wie oben: eigene Wahl, dann Browser, dann Deutsch. Deutsch als
- * letzter Halt ist keine Bevorzugung, sondern die Sprache des Hauses — und
- * `x-default` zeigt für Suchmaschinen ohnehin dorthin.
+ * Vier Stufen, und jede ist oben begründet: eigene Wahl, dann eine Sprache aus
+ * dem Wunsch des Browsers, dann Englisch für jeden anderen Wunsch — und
+ * Deutsch nur, wenn überhaupt keiner geäußert wurde.
  */
 export function spracheWaehlen({
   gemerkt,
@@ -76,7 +91,12 @@ export function spracheWaehlen({
   kopf?: string | null
 }): Locale {
   if (gemerkt && isLocale(gemerkt)) return gemerkt
-  return spracheAusKopf(kopf) ?? defaultLocale
+
+  const gewuenscht = spracheAusKopf(kopf)
+  if (gewuenscht) return gewuenscht
+
+  // Ein Wunsch war da, nur keiner, den wir erfüllen können
+  return kopf?.trim() ? AUSWEICHSPRACHE : defaultLocale
 }
 
 /** Nennt dieser Pfad schon eine Sprache? */

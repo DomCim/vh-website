@@ -40,11 +40,23 @@ test.describe('Die Wahl', () => {
     expect(spracheWaehlen({ gemerkt: 'fr', kopf: 'de-DE,de;q=0.9' })).toBe('fr')
   })
 
-  test('ohne Klick zählt der Browser, ohne beides das Haus', () => {
+  test('ohne Klick zählt der Browser', () => {
     expect(spracheWaehlen({ kopf: 'fr-FR,fr;q=0.9' })).toBe('fr')
     expect(spracheWaehlen({ gemerkt: 'klingonisch', kopf: 'fr' })).toBe('fr')
+  })
+
+  test('eine fremde Sprache führt zu Englisch, nicht zu Deutsch', () => {
+    // Wer Italienisch eingestellt hat, ist mit Deutsch nicht besser bedient
+    expect(spracheWaehlen({ kopf: 'it-IT,it;q=0.9' })).toBe('en')
+    expect(spracheWaehlen({ kopf: 'es,pt;q=0.8' })).toBe('en')
+  })
+
+  test('ohne jeden Wunsch die Sprache des Hauses', () => {
+    // Kein Kopf heißt kein Mensch mit Vorliebe, sondern ein Programm — und für
+    // das gilt dasselbe wie für `x-default`
     expect(spracheWaehlen({})).toBe('de')
-    expect(spracheWaehlen({ gemerkt: null, kopf: 'it' })).toBe('de')
+    expect(spracheWaehlen({ gemerkt: null, kopf: '' })).toBe('de')
+    expect(spracheWaehlen({ kopf: '   ' })).toBe('de')
   })
 })
 
