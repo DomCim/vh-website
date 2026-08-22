@@ -2008,6 +2008,46 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-bronze);
 }
 
+/*
+ * Die Beschriftungen der Aufklapplisten, auf Deutsch.
+ *
+ * Quill liefert sie fest verdrahtet auf Englisch mit („Heading 1", „Normal")
+ * — im Schreibfeld eines deutschen Büros steht damit als einziges Wort weit
+ * und breit ein englisches. Bei der Schriftgröße kommt hinzu, dass dort sonst
+ * der nackte Wert stünde („0.85em"); das ist keine Beschriftung, sondern ein
+ * Blick in den Quelltext.
+ *
+ * Die Werte müssen zu `KLEIN` in `Schreibfeld.tsx` passen. Wer den ändert,
+ * ändert ihn hier mit — sonst steht in der Liste wieder die Zahl.
+ */
+.buero-schreibfeld .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='1']::before,
+.buero-schreibfeld .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='1']::before {
+  content: 'Überschrift 1';
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='2']::before,
+.buero-schreibfeld .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='2']::before {
+  content: 'Überschrift 2';
+}
+/*
+ * Zugeklappt heißt die Größenliste „Größe" und nicht „Normal".
+ *
+ * Quill beschriftet beide Listen im Ruhezustand mit „Normal" — nebeneinander
+ * stünde dann zweimal dasselbe Wort, und keines sagte, wofür es zuständig ist.
+ * Sobald etwas gewählt ist, trägt die Beschriftung ohnehin den Wert.
+ */
+.buero-schreibfeld .ql-snow .ql-picker.ql-size .ql-picker-label:not([data-value])::before {
+  content: 'Größe';
+}
+.buero-schreibfeld .ql-snow .ql-picker.ql-size .ql-picker-label[data-value='0.85em']::before,
+.buero-schreibfeld .ql-snow .ql-picker.ql-size .ql-picker-item[data-value='0.85em']::before {
+  content: 'Klein';
+}
+/* Und in der Liste soll „Klein" auch klein aussehen — sonst wählt man ein Wort
+   statt einer Größe */
+.buero-schreibfeld .ql-snow .ql-picker.ql-size .ql-picker-item[data-value='0.85em']::before {
+  font-size: 0.85em;
+}
+
 /* Die aufklappbaren Listen (Überschrift, Farbe) haben eigene Flächen */
 .buero-schreibfeld .ql-snow .ql-picker-options {
   background: var(--buero-flaeche);

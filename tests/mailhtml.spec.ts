@@ -55,6 +55,17 @@ test('erlaubte Gestaltung bleibt stehen', () => {
   expect(gesaeubert).toContain('<li>')
 })
 
+test('Kleingedrucktes kommt beim Empfänger klein an', () => {
+  // Das „Klein" aus dem Schreibfeld — als Vielfaches, damit es mitwächst, wenn
+  // jemand seine Schrift größer stellt
+  const gesaeubert = mailHtmlSaeubern('<p><span style="font-size: 0.85em;">Kleingedrucktes</span></p>')
+  expect(gesaeubert).toContain('font-size')
+  expect(gesaeubert).toContain('0.85em')
+
+  // Eine Größe, die eine Adresse mitbringt, bleibt trotzdem draußen
+  expect(mailHtmlSaeubern('<p style="font-size: url(http://x)">T</p>')).not.toContain('url(')
+})
+
 test('Stile, die nachladen oder rechnen, fliegen raus', () => {
   // Ein Hintergrundbild aus der Mail heraus wäre ein Zählpixel
   expect(mailHtmlSaeubern('<p style="background-image: url(http://x/y.png)">T</p>')).not.toContain(

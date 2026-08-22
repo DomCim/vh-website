@@ -28,6 +28,8 @@ const ERLAUBTE_STILE = new Set([
   'font-weight',
   'font-style',
   'text-decoration',
+  // Kleingedrucktes aus dem Schreibfeld — als Vielfaches, siehe `Schreibfeld.tsx`
+  'font-size',
 ])
 
 /**

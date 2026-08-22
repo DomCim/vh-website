@@ -56,6 +56,19 @@ Alle drei, jedes Mal, und zwar bevor gepusht wird — nicht danach. Schlägt
 etwas fehl, das mit der eigenen Änderung nichts zu tun hat, gehört das in die
 Antwort und nicht ins Schweigen.
 
+**Die Prüfung macht Claude, nicht GitHub.** Der Workflow
+`.github/workflows/ci.yml` wird **nicht** angestoßen — weder vor einem Merge
+noch sonst. Er läuft nur von Hand, und zwar aus einem handfesten Grund: Das
+Actions-Kontingent war schon zweimal aufgebraucht, und danach steht auch das
+Ausrollen still, weil derselbe Topf das Docker-Abbild baut. Ein Lauf zur
+Beruhigung kostet Minuten, die im Ernstfall fehlen.
+
+Was hier läuft, ist deshalb die Prüfung — nicht ein Vorlauf zu einer zweiten.
+Lässt sich ein Teil davon in der Arbeitsumgebung nicht fahren (die Rauchtests
+brauchen einen laufenden Server samt Datenbank), dann steht **das** in der
+Antwort: welche Prüfungen liefen, welche nicht und warum. Nicht geprüft und
+ehrlich gesagt ist besser als ein Lauf, den niemand bestellt hat.
+
 Nach Änderungen an einer Collection zusätzlich:
 
 ```bash
