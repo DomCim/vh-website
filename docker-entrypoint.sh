@@ -50,10 +50,15 @@ until node_modules/.bin/payload migrate; do
   sleep 3
 done
 
-# Optional: Startdaten einspielen (SEED=true im Stack setzen, nur beim ersten Start)
+# Optional: Startdaten einspielen (SEED=true im Stack setzen).
+#
+# Das Skript sieht selbst nach, ob die Datenbank schon eingerichtet ist, und
+# tut dann nichts. Ein `SEED=true`, das im Stack stehen geblieben ist, richtet
+# damit keinen Schaden mehr an — früher trug es bei jedem Ausrollen gelöschte
+# Beispielinhalte wieder nach.
 if [ "$SEED" = "true" ]; then
-  echo "Führe Seed aus …"
-  node_modules/.bin/payload run scripts/seed.ts || echo "Seed fehlgeschlagen oder bereits vorhanden."
+  echo "Prüfe Startdaten …"
+  node_modules/.bin/payload run scripts/seed.ts || echo "Seed fehlgeschlagen."
 fi
 
 # Optional: Büro-Zugänge anlegen (BENUTZER=true im Stack setzen, danach wieder

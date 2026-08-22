@@ -6,7 +6,11 @@
  * geladen (eigene Produktfotos des Betreibers).
  *
  * Aufruf:  pnpm seed   (bzw. `payload run scripts/seed.ts`)
- * Idempotent: bereits geseedete Daten werden nicht doppelt angelegt.
+ *
+ * **Läuft nur auf einer leeren Datenbank.** Ist schon eingerichtet, bricht das
+ * Skript ab, statt „nachzutragen" — sonst käme gelöschtes Beispielmaterial bei
+ * jedem Ausrollen zurück. Wer neue Beispielinhalte will, setzt einmalig
+ * `SEED_NACHTRAGEN=true`.
  *
  * WICHTIG: Preise sind Platzhalter/Demowerte und müssen im Admin unter
  * „Produkte" mit den echten Verkaufspreisen ersetzt werden.
@@ -80,7 +84,26 @@ async function run() {
     limit: 1,
   })
   if (seeded.totalDocs > 0) {
-    console.log('Basis-Daten bereits vorhanden — nur neue Inhalte werden ergänzt.')
+    /*
+     * Eine eingerichtete Datenbank wird nicht noch einmal angefasst.
+     *
+     * Bisher liefen hier die „Extras" bei **jedem** Start mit — und die legen
+     * an, was gerade fehlt. Wer eine Beispiel-Referenz oder einen
+     * Ratgeber-Beitrag gelöscht hat, weil er nicht zum Betrieb gehört, hatte
+     * ihn beim nächsten Ausrollen wieder dastehen. Das ist kein Nachtragen,
+     * das ist Zurücknehmen einer Entscheidung, die jemand getroffen hat.
+     *
+     * Bleibt `SEED=true` im Stack stehen — und es bleibt stehen, weil niemand
+     * daran denkt, es wieder herauszunehmen —, dann passiert ab jetzt genau
+     * nichts. Neue Beispielinhalte trägt nur nach, wer ausdrücklich darum
+     * bittet: `SEED_NACHTRAGEN=true`, einmalig, und danach wieder weg.
+     */
+    if (process.env.SEED_NACHTRAGEN !== 'true') {
+      console.log('Datenbank ist eingerichtet — Seed übersprungen.')
+      console.log('  (Neue Beispielinhalte nachtragen: SEED_NACHTRAGEN=true setzen.)')
+      return
+    }
+    console.log('Basis-Daten vorhanden — neue Beispielinhalte werden nachgetragen …')
     await seedExtras(payload)
     return
   }

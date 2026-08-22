@@ -45,7 +45,7 @@ Die Kette: **vincent-hellmann.com → Nginx Proxy Manager (TLS) → Traefik (Net
 3. **Umgebungsvariablen** im Stack setzen — Minimum:
    - `PAYLOAD_SECRET` (z.B. `openssl rand -hex 32`)
    - `POSTGRES_PASSWORD`
-   - `SEED=true` **nur beim allerersten Start** (spielt Kategorien, Produkte, Bilder usw. ein; danach wieder auf `false`)
+   - `SEED=true` beim allerersten Start (spielt Kategorien, Produkte, Bilder usw. ein). Es darf danach stehen bleiben: Das Skript sieht nach, ob die Datenbank schon eingerichtet ist, und tut dann nichts. Neue Beispielinhalte trägt nur nach, wer einmalig `SEED_NACHTRAGEN=true` dazusetzt — und das will man selten, denn es bringt auch zurück, was jemand absichtlich gelöscht hat
    - optional: SMTP-, PayPal- und Facebook-Variablen (siehe `.env.example`)
 4. **NPM-Weiterleitung**: `vincent-hellmann.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vincent-hellmann.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`). Die anderen Domains kommen als Weiterleitung dazu — siehe **Domains** gleich darunter.
 5. **Erster Login**: `https://vincent-hellmann.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**

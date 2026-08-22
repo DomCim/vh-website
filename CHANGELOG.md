@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Ein Ausrollen bringt keine Beispielinhalte mehr zurück.** Bisher sah der Startlauf bei jedem Ausrollen nach, ob Referenzen, Ratgeber-Beiträge oder „Über uns" fehlen — und legte sie wieder an. Wer eine Beispiel-Referenz gelöscht hatte, weil sie nicht zum Betrieb gehört, hatte sie am nächsten Tag wieder dastehen. Jetzt gilt: Ist die Datenbank eingerichtet, wird nichts mehr angefasst. Nachtragen lässt sich weiterhin, aber nur ausdrücklich.
+
 ## 22.08.2026 — Empfänger mit Vorschlägen, Kopie und Blindkopie, und der Zähler fürs Postfach
 
 - **Empfänger vorschlagen statt tippen.** Wer im Postfach eine Mail schreibt, bekommt beim Tippen im Feld „An" Vorschläge aus den Geschäftspartnern — gesucht wird in Name und Adresse, angezeigt werden Name, Adresse und Art (Kunde, Lieferant). Gewählte Empfänger stehen als Plättchen mit ihrem **Namen** da und lassen sich einzeln wegnehmen; die Rücktaste im leeren Feld nimmt das letzte. Das läuft aus dem Bestand im Gerät, also auch ohne Netz und ohne Wartezeit.
