@@ -45,7 +45,7 @@ Die Kette: **vincent-hellmann.com → Nginx Proxy Manager (TLS) → Traefik (Net
 3. **Umgebungsvariablen** im Stack setzen — Minimum:
    - `PAYLOAD_SECRET` (z.B. `openssl rand -hex 32`)
    - `POSTGRES_PASSWORD`
-   - `SEED=true` **nur beim allerersten Start** (spielt Kategorien, Produkte, Bilder usw. ein; danach wieder auf `false`)
+   - `SEED=true` beim allerersten Start (spielt Kategorien, Produkte, Bilder usw. ein). Es darf danach stehen bleiben: Das Skript sieht nach, ob die Datenbank schon eingerichtet ist, und tut dann nichts. Neue Beispielinhalte trägt nur nach, wer einmalig `SEED_NACHTRAGEN=true` dazusetzt — und das will man selten, denn es bringt auch zurück, was jemand absichtlich gelöscht hat
    - optional: SMTP-, PayPal- und Facebook-Variablen (siehe `.env.example`)
 4. **NPM-Weiterleitung**: `vincent-hellmann.com` als Proxy-Host auf Traefik zeigen lassen (TLS im NPM). Traefik routet über das Label `Host(vincent-hellmann.com)` auf den Container (Entrypoint per `TRAEFIK_ENTRYPOINT`, Standard `web`). Die anderen Domains kommen als Weiterleitung dazu — siehe **Domains** gleich darunter.
 5. **Erster Login**: `https://vincent-hellmann.com/admin` — Zugangsdaten aus dem Seed (`admin@vincent-hellmann.com` / `change-me-123`) → **Passwort sofort ändern!**
@@ -193,6 +193,41 @@ tragen die Adresse aus dem Stack.
 4. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** anlegen: `HA_DEPLOY_WEBHOOK` (die Webhook-Adresse) und `HA_DEPLOY_TOKEN` (dasselbe Token). Der letzte Schritt in `.github/workflows/docker.yml` ruft den Webhook nach jedem erfolgreichen `latest`-Build auf; ohne hinterlegte Secrets überspringt er sich stillschweigend.
 
 Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
+
+**Von welcher Adresse aus gefragt wird, entscheidet, ob die Prüfung taugt.**
+Home Assistant steht im selben Heimnetz wie die Container. Fragt es über die
+öffentliche Adresse (`https://vincent-hellmann.com/api/healthz`), muss der
+Router den Weg nach außen und wieder herein können — viele tun das nicht
+(Stichwort Hairpin-NAT), und dann kommt **nie** eine Antwort. Die
+Automatisierung meldet daraufhin „Ausrollen hakt", obwohl alles längst läuft;
+von außen gemessen ist zur selben Zeit alles in Ordnung.
+
+Deshalb im Heimnetz die **innere** Adresse abfragen, also den Container direkt
+über Traefik oder seine IP:
+
+```
+http://<traefik-oder-container>/api/healthz          → {"status":"ok","db":true,"version":"…"}
+http://<traefik-oder-container>/api/office/healthz   → {"status":"ok","version":"…","rolle":"buero"}
+```
+
+Zwei Fallen dabei, beide schon erlebt:
+
+- **Immer dieselbe Meldung** heißt: Die Prüfung erreicht die Adresse gar nicht.
+  Ein Ausrollen, das wirklich hakt, meldet die **alte** Nummer, nicht
+  „nichts". Wer „nichts" bekommt, sucht am falschen Ende.
+
+  Der erste Blick gilt dabei der Adresse in der Automatisierung selbst: Beim
+  Wechsel auf `vincent-hellmann.com` blieb dort die alte (`vh.dominikdill.com`)
+  stehen, und die Prüfung lief seither ins Leere — gemeldet wurde „Ausrollen
+  hakt", während von außen beide Hälften brav den richtigen Stand nannten.
+  Eine Adresse wechselt man an mehr Stellen, als man beim Wechseln denkt (siehe
+  „Was ein Adresswechsel mitnimmt" weiter oben) — die Ausroll-Prüfung gehört
+  dazu.
+- **Genug Geduld.** Seit Website und Büro getrennt laufen, zieht Portainer bei
+  einer Veröffentlichung zwei Abbilder und startet zwei Container. Bis beide
+  antworten, vergehen Minuten; wer nach fünf aufgibt, meldet einen Fehler, den
+  es nicht gibt. Alle fünfzehn Sekunden fragen und erst nach einer
+  Viertelstunde Alarm schlagen ist die ehrlichere Einstellung.
 
 ### Zwei Container: Website und Büro
 
