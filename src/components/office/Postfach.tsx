@@ -386,13 +386,25 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
             onChange={(e) => setEntwurf({ ...entwurf, betreff: e.target.value })}
           />
         </label>
-        <label className="buero-feld">
+        {/*
+          * Ein `div` und **kein** `label` — so wie beim Newsletter und im
+          * Versandfenster auch.
+          *
+          * Ein Tipp irgendwo in ein Label reicht der Browser an dessen
+          * Formularfeld weiter. Quills Leiste bringt für jede Auswahlliste ein
+          * verstecktes `select` mit; der Tipp landete also dort statt auf der
+          * Liste, und am Telefon ging keine einzige Auswahl mehr auf — Größe
+          * nicht, Überschrift nicht, Strich nicht. Am Rechner fiel es nicht
+          * auf, weil Quill dort schon beim Drücken der Maustaste aufklappt,
+          * bevor das Label an die Reihe kommt.
+          */}
+        <div className="buero-feld">
           <span>Nachricht</span>
           <Schreibfeld
             wert={entwurf.html}
             aendern={(html) => setEntwurf((v) => (v ? { ...v, html } : v))}
           />
-        </label>
+        </div>
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void senden()}>
             Senden
