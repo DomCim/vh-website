@@ -98,9 +98,22 @@ const HERVORHEBUNGEN = [
   '#ebd6ff',
 ]
 
+/*
+ * Die kleine Schrift, als Vielfaches der Grundschrift und nicht in Punkt.
+ *
+ * `0.85em` folgt dem Briefbogen: Der setzt 14 px, daraus werden knapp 12 —
+ * und wenn der Empfänger seine Schrift größer stellt, wächst der Kleingedruckte
+ * mit. Eine feste Punktzahl bliebe stur klein, gerade dort, wo jemand sie
+ * vergrößert hat, weil er sie sonst nicht liest.
+ *
+ * Nur eine Stufe nach unten und keine nach oben: Größer als normal gibt es in
+ * einer Geschäftsmail die Überschrift, und die steht schon in der Leiste.
+ */
+const KLEIN = '0.85em'
+
 /** Was in der Leiste steht — mehr wäre für eine Mail Zierde */
 const LEISTE = [
-  [{ header: [1, 2, false] }],
+  [{ header: [1, 2, false] }, { size: [KLEIN, false] }],
   ['bold', 'italic', 'underline', 'strike'],
   [{ color: SCHRIFTFARBEN }, { background: HERVORHEBUNGEN }],
   [{ list: 'ordered' }, { list: 'bullet' }],
@@ -152,6 +165,22 @@ export function Schreibfeld({ wert, aendern, platzhalter = 'Nachricht …' }: Pr
         ]) {
           const stil = Quill.import(pfad) as unknown
           if (stil) Quill.register(stil as never, true)
+        }
+
+        /*
+         * Die Schriftgröße ebenso — mit **eigener** Liste.
+         *
+         * Quill bringt für den Stil-Weg ab Werk `10px`, `18px` und `32px` mit.
+         * Feste Punktzahlen in einer Mail sind aber genau der Fehler von oben:
+         * Sie ignorieren, was der Empfänger eingestellt hat. Zugelassen ist
+         * deshalb nur unser eigener Wert; alles andere wird von Quill gar nicht
+         * erst geschrieben und käme an der Prüfung in `mailhtml.ts` ohnehin
+         * nicht vorbei.
+         */
+        const groesse = Quill.import('attributors/style/size') as { whitelist?: string[] } | null
+        if (groesse) {
+          groesse.whitelist = [KLEIN]
+          Quill.register(groesse as never, true)
         }
 
         const q = new Quill(behaelter.current, {
