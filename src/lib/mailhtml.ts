@@ -106,7 +106,68 @@ const filter = new FilterXSS({
 })
 
 /**
- * Fremdes HTML auf das reduzieren, was in eine Mail darf.
+ * Die Abstände, die ein Absatz in der Mail bekommt.
+ *
+ * **Warum das überhaupt sein muss.** Quill setzt seine Absätze im Schreibfeld
+ * auf `margin: 0` — vier Zeilen untereinander stehen dort untereinander.
+ * Beim Empfänger gilt das Stylesheet des Mailprogramms, und dessen
+ * Voreinstellung für `<p>` ist rund eine Leerzeile oben und unten. Aus vier
+ * Zeilen wird damit eine Seite mit Lücken, und niemand versteht, warum — im
+ * Schreibfeld sah es ja richtig aus.
+ *
+ * Deshalb steht der Abstand an jedem einzelnen Absatz. Ein `<style>`-Block im
+ * Kopf wäre die schönere Lösung und wird von einem guten Teil der
+ * Mailprogramme weggeworfen; was zählt, ist, was ankommt.
+ *
+ * Gesetzt wird **vorn** im Stilattribut: Was der Schreibende gewählt hat —
+ * Ausrichtung, Farbe — steht dahinter und behält damit das letzte Wort.
+ */
+const ABSTAENDE: Record<string, string> = {
+  // Wie im Schreibfeld: kein Abstand. Eine Leerzeile entsteht durch eine
+  // leere Zeile, nicht durch den Absatz selbst — was man tippt, kommt an.
+  p: 'margin:0;',
+  h1: 'margin:16px 0 4px;',
+  h2: 'margin:14px 0 4px;',
+  h3: 'margin:12px 0 4px;',
+  // Die Einrückung der Liste gehört uns, sonst rückt jedes Programm anders ein
+  ul: 'margin:4px 0;padding-left:22px;',
+  ol: 'margin:4px 0;padding-left:22px;',
+  blockquote: 'margin:8px 0;padding-left:12px;border-left:3px solid #ddd;',
+}
+
+/**
+ * Eine leere Zeile bleibt eine leere Zeile.
+ *
+ * Quill schreibt sie als `<p></p>` — ein Absatz ohne Inhalt. Solange die
+ * Mailprogramme jedem Absatz ihren eigenen Abstand gaben, fiel das nicht auf.
+ * Mit `margin:0` fällt ein leerer Absatz auf null Höhe zusammen, und die
+ * Leerzeile zwischen letzter Zeile und Grußformel wäre weg — man tippt sie,
+ * und beim Empfänger fehlt sie.
+ *
+ * Ein `<br>` darin gibt ihm wieder eine Zeilenhöhe. Das ist dieselbe Fassung,
+ * die Quill im Editor selbst benutzt.
+ */
+function leereAbsaetzeFuellen(html: string): string {
+  return html.replace(/<p([^>]*)>\s*<\/p>/gi, '<p$1><br></p>')
+}
+
+function abstaendeSetzen(html: string): string {
+  return html.replace(
+    /<(p|h1|h2|h3|ul|ol|blockquote)(\s[^>]*)?>/gi,
+    (ganz, name: string, rest: string | undefined) => {
+      const abstand = ABSTAENDE[name.toLowerCase()]
+      if (!abstand) return ganz
+      const anhang = rest ?? ''
+      const vorhanden = /\sstyle\s*=\s*"([^"]*)"/i.exec(anhang)
+      if (!vorhanden) return `<${name}${anhang} style="${abstand}">`
+      return `<${name}${anhang.replace(vorhanden[0], ` style="${abstand}${vorhanden[1]}"`)}>`
+    },
+  )
+}
+
+/**
+ * Fremdes HTML auf das reduzieren, was in eine Mail darf — und so setzen, wie
+ * es beim Empfänger stehen soll.
  *
  * Zum Schluss werden **geschützte Leerzeichen wieder zu gewöhnlichen**. Quill
  * schreibt jedes einzelne Leerzeichen als `&nbsp;` — im Editor richtig, in
@@ -114,9 +175,14 @@ const filter = new FilterXSS({
  * Ein Absatz aus vierzig Wörtern wird damit zu einer einzigen Zeile, die am
  * Telefon seitwärts aus dem Bild läuft. Man sieht es beim Schreiben nicht und
  * erst beim Empfänger.
+ *
+ * Die Abstände stehen hier und nicht bei den Aufrufern, damit kein Weg nach
+ * draußen sie vergessen kann: Postfach, Versandfenster und Newsletter gehen
+ * alle durch diese eine Tür.
  */
 export function mailHtmlSaeubern(html: string): string {
-  return filter.process(String(html ?? '')).replace(/&nbsp;/g, ' ')
+  const sauber = filter.process(String(html ?? '')).replace(/&nbsp;/g, ' ')
+  return abstaendeSetzen(leereAbsaetzeFuellen(sauber))
 }
 
 /**

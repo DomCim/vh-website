@@ -1,6 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-
 import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
@@ -9,7 +6,12 @@ import type { Payload } from 'payload'
 
 import { dkimFuer } from './dkim'
 import { htmlAlsText, mailHtmlSaeubern } from './mailhtml'
-import { briefbogen as briefbogenVorlage, pflichtangaben, type CompanyInfo } from './mail'
+import {
+  briefbogen as briefbogenVorlage,
+  logoAnhang,
+  pflichtangaben,
+  type CompanyInfo,
+} from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
 
@@ -98,6 +100,35 @@ async function mitVerbindung<T>(
   } finally {
     await client.logout().catch(() => client.close())
   }
+}
+
+/**
+ * Wo die Kopie einer verschickten Mail hingehört.
+ *
+ * Bisher stand dort stur der eingestellte Name („Sent"). Heißt der Ordner beim
+ * Anbieter anders — „INBOX.Sent", „Gesendete Objekte", „Gesendet" —, dann
+ * scheitert das Ablegen, und zwar lautlos: Die Mail ist beim Empfänger, im
+ * eigenen Postfach fehlt sie. Wer am Rechner nachsieht, hält sie für nie
+ * verschickt und schreibt sie ein zweites Mal.
+ *
+ * Deshalb wird gefragt statt geraten: IMAP kennzeichnet den Ordner selbst mit
+ * `\Sent`. Nur wenn der Anbieter das nicht tut, gilt der eingestellte Name —
+ * und auch der erst, wenn es ihn wirklich gibt.
+ */
+async function gesendetOrdner(
+  client: ImapFlow,
+  fach: MailboxKonfiguration,
+): Promise<string | null> {
+  const liste = await client.list()
+  const gekennzeichnet = liste.find((o) => o.specialUse === '\\Sent')
+  if (gekennzeichnet) return gekennzeichnet.path
+
+  const gewuenscht = fach.sentMailbox?.trim().toLowerCase()
+  if (!gewuenscht) return null
+  const passend = liste.find(
+    (o) => o.path.toLowerCase() === gewuenscht || o.name.toLowerCase() === gewuenscht,
+  )
+  return passend?.path ?? null
 }
 
 const adresse = (a: { name?: string; address?: string }[] | undefined) =>
@@ -427,7 +458,8 @@ export async function nachrichtSenden(
     antwortAufMessageId?: string
     dateien?: { name: string; inhalt: Buffer; typ?: string }[]
   },
-): Promise<void> {
+  /** `kopie` sagt, ob die Mail auch im Ordner „Gesendet" gelandet ist */
+): Promise<{ kopie: boolean }> {
   const { email } = await getIntegrations(payload)
 
   const host = fach.smtpHost || email.smtpHost
@@ -465,10 +497,6 @@ export async function nachrichtSenden(
   })
   const angaben = pflichtangaben(firma)
 
-  const logoDatei = path.join(process.cwd(), 'public', 'logo.png')
-  const logoAnhang = fs.existsSync(logoDatei)
-    ? [{ filename: 'logo.png', path: logoDatei, cid: 'vh-logo' }]
-    : []
 
   /*
    * Zwei Wege in denselben Briefbogen.
@@ -484,6 +512,11 @@ export async function nachrichtSenden(
   const gestaltet = eingabe.html?.trim() ? mailHtmlSaeubern(eingabe.html) : null
   const nurText = gestaltet ? htmlAlsText(gestaltet) : eingabe.text
 
+  // Einmal bauen: Der Briefbogen entscheidet auch, ob das Logo mitreist
+  const html = gestaltet
+    ? briefbogenAusHtml(gestaltet, firma)
+    : briefbogen(eingabe.text, signatur, firma)
+
   const nachricht = {
     from: `"${email.fromName}" <${fach.address}>`,
     to: eingabe.an,
@@ -492,13 +525,11 @@ export async function nachrichtSenden(
     text: [nurText, gestaltet ? null : signatur, angaben.join(' · ')]
       .filter(Boolean)
       .join('\n\n--\n'),
-    html: gestaltet
-      ? briefbogenAusHtml(gestaltet, firma)
-      : briefbogen(eingabe.text, signatur, firma),
+    html,
     inReplyTo: eingabe.antwortAufMessageId,
     references: eingabe.antwortAufMessageId,
     attachments: [
-      ...logoAnhang,
+      ...logoAnhang(html),
       ...(eingabe.dateien ?? []).map((d) => ({
         filename: d.name,
         content: d.inhalt,
@@ -519,12 +550,26 @@ export async function nachrichtSenden(
   }
   await protokoll(payload, fach, eingabe, 'gesendet')
 
+  /*
+   * Die Kopie darf den Versand nie aufhalten — die Mail ist raus, das ist das
+   * Wichtigere. Aber verschweigen darf man den Fehlschlag auch nicht: Wer
+   * glaubt, seine Mail liege im Ordner, und sie liegt nicht dort, merkt es
+   * erst Wochen später beim Suchen.
+   */
   try {
     await mitVerbindung(fach, async (client) => {
-      await client.append(fach.sentMailbox, roh, ['\\Seen'])
+      const ziel = await gesendetOrdner(client, fach)
+      if (!ziel) {
+        throw new Error(
+          `Kein Ordner „Gesendet" gefunden (eingestellt: ${fach.sentMailbox || 'nichts'})`,
+        )
+      }
+      await client.append(ziel, roh, ['\\Seen'])
     })
+    return { kopie: true }
   } catch (err) {
     payload.logger.warn({ err }, 'Kopie der gesendeten Mail konnte nicht abgelegt werden')
+    return { kopie: false }
   }
 }
 

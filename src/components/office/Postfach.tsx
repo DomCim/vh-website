@@ -301,12 +301,19 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         credentials: 'include',
         body: JSON.stringify({ aktion: 'senden', fach, ...entwurf }),
       })
+      const daten = (await res.json().catch(() => null)) as { kopie?: boolean } | null
       if (!res.ok) {
         setMeldung('Die Mail ging nicht raus.')
         return
       }
       setEntwurf(null)
-      setMeldung('Gesendet.')
+      // Verschickt ist verschickt — aber wenn die Kopie fehlt, sucht man sie
+      // später vergeblich im eigenen Ordner und hält die Mail für nie geschrieben
+      setMeldung(
+        daten?.kopie === false
+          ? 'Gesendet — aber die Kopie liegt nicht im Ordner „Gesendet". Bitte den Ordnernamen unter Einstellungen prüfen.'
+          : 'Gesendet.',
+      )
     } catch {
       setMeldung('Verbindung fehlgeschlagen.')
     } finally {
