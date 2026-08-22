@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Kein Seed mehr beim Ausrollen
+
 - **Ein Ausrollen bringt keine Beispielinhalte mehr zurück.** Bisher sah der Startlauf bei jedem Ausrollen nach, ob Referenzen, Ratgeber-Beiträge oder „Über uns" fehlen — und legte sie wieder an. Wer eine Beispiel-Referenz gelöscht hatte, weil sie nicht zum Betrieb gehört, hatte sie am nächsten Tag wieder dastehen. Jetzt gilt: Ist die Datenbank eingerichtet, wird nichts mehr angefasst. Nachtragen lässt sich weiterhin, aber nur ausdrücklich.
 
 ## 22.08.2026 — Empfänger mit Vorschlägen, Kopie und Blindkopie, und der Zähler fürs Postfach
