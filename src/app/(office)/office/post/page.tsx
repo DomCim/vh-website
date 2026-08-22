@@ -42,7 +42,9 @@ export default async function PostSeite({
         * hinein, sobald es weiß, über welches Postfach verschickt wird — und
         * das entscheidet sich erst im Browser.
         */}
-      <Postfach vorgabe={an ? { an, betreff: betreff ?? '', text: '', html: '' } : null} />
+      <Postfach
+        vorgabe={an ? { an, cc: '', bcc: '', betreff: betreff ?? '', text: '', html: '' } : null}
+      />
     </>
   )
 }

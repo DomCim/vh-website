@@ -131,6 +131,41 @@ async function merken(payload: Payload, nachricht: PushNachricht): Promise<void>
  * Fehler eines einzelnen Geräts halten die anderen nicht auf; abgemeldete
  * Geräte (410/404) werden gleich entfernt, damit die Liste nicht verwahrlost.
  */
+/**
+ * Eine Meldung abhaken, weil sich ihr Anlass von selbst erledigt hat.
+ *
+ * Der Fall, für den es das gibt: Die Post ist gelesen — aber am Telefon, im
+ * Mailprogramm, nicht im Büro. Der Server weiß es (die Markierung liegt bei
+ * IMAP), die Meldung im Gerät nicht. Ohne dieses Abhaken stünde im Büro
+ * weiter „da ist neue Post", obwohl längst niemand mehr hinsehen muss.
+ *
+ * Gilt für alle Meldungen mit dieser Kennung — mehr als eine ungelesene gibt
+ * es je Kennung ohnehin nicht (siehe `merken`).
+ */
+export async function abhaken(payload: Payload, tag: string): Promise<number> {
+  try {
+    const { docs } = await payload.find({
+      collection: 'notifications',
+      where: { and: [{ tag: { equals: tag } }, { gelesen: { equals: false } }] },
+      limit: 20,
+      depth: 0,
+      overrideAccess: true,
+    })
+    for (const m of docs) {
+      await payload.update({
+        collection: 'notifications',
+        id: m.id,
+        overrideAccess: true,
+        data: { gelesen: true, gelesenAm: new Date().toISOString() },
+      })
+    }
+    return docs.length
+  } catch (err) {
+    payload.logger.warn({ err }, 'Meldung konnte nicht abgehakt werden')
+    return 0
+  }
+}
+
 export async function benachrichtige(
   payload: Payload,
   nachricht: PushNachricht,

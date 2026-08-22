@@ -1947,6 +1947,162 @@ html.tastatur-offen .buero-inhalt {
   overflow: hidden;
 }
 
+/* ══ Vorschlagsfeld (Empfänger) ═════════════════════════════════════════════
+
+   Dieselbe Form wie das Blatt der Meldungsglocke: Wer im Büro etwas
+   Aufklappendes sieht, soll es nicht jedes Mal neu deuten müssen. */
+
+.buero-vorschlag-feld {
+  position: relative;
+}
+
+/*
+ * Gewählte Empfänger als Plättchen, das Eingabefeld schwimmt daneben.
+ *
+ * Der Rahmen sitzt außen um beides — innen darf das Feld deshalb keinen
+ * eigenen tragen, sonst stünde ein Kasten im Kasten. Es wächst mit dem, was
+ * getippt wird (`flex: 1`), und bricht mit den Plättchen um.
+ */
+.buero-empfaenger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--buero-rahmen);
+  border-radius: 9px;
+  background: var(--buero-papier);
+  cursor: text;
+}
+
+.buero-empfaenger input {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.buero-plaettchen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.2rem 0.3rem 0.2rem 0.55rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 999px;
+  background: var(--buero-flaeche);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+/* Der Name darf abschneiden, das Kreuz nie — sonst nimmt man den falschen weg */
+.buero-plaettchen {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buero-plaettchen button {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--buero-tinte-leise);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.buero-plaettchen button:hover,
+.buero-plaettchen button:focus-visible {
+  background: var(--buero-linie);
+  color: var(--buero-tinte);
+}
+
+/* Der Aufklapper für Kopie und Blindkopie — eine Zeile, kein Kasten */
+.buero-aufklapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.7rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--buero-tinte-leise);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.buero-aufklapper:hover,
+.buero-aufklapper:focus-visible {
+  color: var(--buero-tinte);
+}
+
+.buero-vorschlag-blatt {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  z-index: 21;
+  width: min(26rem, 100%);
+  max-height: min(50vh, 20rem);
+  overflow-y: auto;
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten, 0 6px 22px rgb(0 0 0 / 14%));
+}
+
+.buero-vorschlag-blatt button {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--buero-linie);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.buero-vorschlag-blatt button:last-child {
+  border-bottom: 0;
+}
+
+.buero-vorschlag-blatt button:hover,
+.buero-vorschlag-blatt button:focus-visible {
+  background: var(--buero-papier);
+}
+
+.buero-vorschlag-blatt strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+/* Adresse und Art in eine Zeile: Der Name führt, die Adresse bestätigt */
+.buero-vorschlag-blatt span {
+  color: var(--buero-tinte-leise);
+  font-size: 0.82rem;
+}
+
+.buero-vorschlag-blatt em {
+  margin-left: 0.4rem;
+  color: var(--buero-tinte-leise);
+  font-size: 0.74rem;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* ══ Schreibfeld (Quill) ════════════════════════════════════════════════════
 
    Quills Standardaussehen ist hell: weißer Grund, graue Rahmen, dunkle

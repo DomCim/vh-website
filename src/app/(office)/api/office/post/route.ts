@@ -11,7 +11,9 @@ import {
   ordnerListe,
   postfachFinden,
   postfaecher,
+  ungeleseneAnzahl,
 } from '../../../../../lib/postfach'
+import { abhaken } from '../../../../../lib/push'
 import { ordnernameGueltig, ordnerPfadNeben } from '../../../../../lib/ordnerpfad'
 import { darf } from '../../../../../lib/wache'
 
@@ -23,6 +25,34 @@ async function wache(req: Request) {
   const { user } = await payload.auth({ headers: req.headers })
   if (!user || !(await darf(payload, user, 'postfach.lesen'))) return { payload, user: null }
   return { payload, user }
+}
+
+/**
+ * Steht im **Posteingang** noch etwas ungelesen? Sonst ist die Meldung erledigt.
+ *
+ * Gezählt wird ausschließlich `INBOX` (`ungeleseneAnzahl`). Wer eine Mail
+ * ungelesen in einen Ordner schiebt, hat sie einsortiert — sie wartet dann
+ * nicht mehr im Eingang, und der Zähler hat dort nichts mehr zu suchen.
+ *
+ * Gerufen, nachdem im Büro eine Mail geöffnet, abgehakt oder weggeworfen
+ * wurde. `nachrichtLesen` setzt die Markierung dabei beim Anbieter (siehe
+ * `lib/postfach.ts`) — die Frage danach kostet eine STATUS-Abfrage und spart
+ * das Warten auf den nächsten Postfach-Blick.
+ *
+ * Umgekehrt gilt ausdrücklich: Das bloße **Aufmachen** des Postfachs hakt
+ * nichts ab. Wer die Liste ansieht und die Mail ungelesen lässt, hat sie nicht
+ * gelesen — und dann soll der Zähler stehen bleiben.
+ */
+async function meldungPruefen(
+  payload: Awaited<ReturnType<typeof payloadClient>>,
+  fach: { id: string | number },
+): Promise<void> {
+  try {
+    const offen = await ungeleseneAnzahl(fach as never)
+    if (offen === 0) await abhaken(payload, `post-${fach.id}`)
+  } catch {
+    // Der nächste Postfach-Blick holt es nach — dafür bricht hier nichts ab
+  }
 }
 
 /**
@@ -63,6 +93,7 @@ export async function GET(req: Request) {
     if (uid) {
       const nachricht = await nachrichtLesen(fach, ordner, Number(uid))
       if (!nachricht) return NextResponse.json({ error: 'nicht-gefunden' }, { status: 404 })
+      await meldungPruefen(payload, fach)
       return NextResponse.json({ fach: fach.id, faecher: oeffentlich, nachricht })
     }
 
@@ -107,6 +138,8 @@ export async function POST(req: Request) {
       if (!b.an?.trim()) return NextResponse.json({ error: 'empfaenger-fehlt' }, { status: 400 })
       const { kopie } = await nachrichtSenden(payload, fach, {
         an: b.an,
+        cc: b.cc || undefined,
+        bcc: b.bcc || undefined,
         betreff: b.betreff || '(kein Betreff)',
         text: b.text || '',
         html: typeof b.html === 'string' ? b.html : undefined,
@@ -121,6 +154,15 @@ export async function POST(req: Request) {
       if (!b.uid) return NextResponse.json({ error: 'uid-fehlt' }, { status: 400 })
       if (!b.ziel?.trim()) return NextResponse.json({ error: 'ziel-fehlt' }, { status: 400 })
       await nachrichtVerschieben(fach, b.ordner || 'INBOX', Number(b.uid), b.ziel)
+      /*
+       * Auch eine ungelesen weggeräumte Mail nimmt den Zähler mit.
+       *
+       * Gezählt wird der Posteingang und nur der: Was in einem Ordner liegt,
+       * ist einsortiert — bearbeitet, aufgehoben, abgelegt. Ein Zähler, der
+       * darauf zeigt, wäre kein Hinweis mehr, sondern eine Erinnerung an ein
+       * Archiv.
+       */
+      await meldungPruefen(payload, fach)
       return NextResponse.json({ ok: true })
     }
 
@@ -147,6 +189,8 @@ export async function POST(req: Request) {
     if (!b.uid) return NextResponse.json({ error: 'uid-fehlt' }, { status: 400 })
 
     await nachrichtAendern(fach, b.ordner || 'INBOX', Number(b.uid), b.aktion)
+    // Auch von Hand abhaken oder wegwerfen kann das letzte Ungelesene erledigen
+    if (['gelesen', 'loeschen'].includes(b.aktion)) await meldungPruefen(payload, fach)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Postfach-Aktion fehlgeschlagen:', err)
