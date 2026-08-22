@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Empfänger vorschlagen statt tippen.** Wer im Postfach eine Mail schreibt, bekommt beim Tippen im Feld „An" Vorschläge aus den Geschäftspartnern — gesucht wird in Name und Adresse, angezeigt werden Name, Adresse und Art (Kunde, Lieferant). Gewählte Empfänger stehen als Plättchen mit ihrem **Namen** da und lassen sich einzeln wegnehmen; die Rücktaste im leeren Feld nimmt das letzte. Das läuft aus dem Bestand im Gerät, also auch ohne Netz und ohne Wartezeit.
+
+- **Kopie und Blindkopie.** Über dem Betreff steht jetzt „Kopie (CC) & Blindkopie (BCC)" zum Aufklappen — mit denselben Vorschlägen und Plättchen. Steht schon etwas drin, ist der Bereich von selbst offen: Ein Empfänger, den man nicht sieht, ist der gefährlichste von allen. Die Blindkopie bleibt für die Empfänger unsichtbar, steht aber in der eigenen Kopie unter „Gesendet" — dort will man später wissen, wer sie bekommen hat.
+
 - **Am Telefon gehen die Auswahllisten beim Mailschreiben wieder auf.** Größe, Überschrift und Strich ließen sich beim Schreiben einer Mail am Handy antippen, ohne dass sich etwas rührte — am Rechner ging alles. Ursache war die Beschriftung „Nachricht" über dem Schreibfeld: Ein Tipp irgendwo in eine Beschriftung reicht der Browser an das zugehörige Eingabefeld weiter, und dort landete er statt auf der Liste.
 
 - **Gelesen ist gelesen — auf jedem Gerät.** Der Zähler an der Navigation hängt jetzt daran, ob wirklich noch etwas ungelesen ist, und nicht daran, ob jemand hingesehen hat. Wer die Mail am Handy im Mailprogramm liest, bei dem verschwindet der Zähler im Büro von allein; wer eine Mail im Büro öffnet, bei dem gilt sie auch am Handy als gelesen, und der Zähler geht sofort weg. Wer das Postfach nur aufmacht und die Mail ungelesen lässt, behält seinen Zähler — Ansehen ist kein Lesen. Gezählt wird dabei allein der Posteingang: Eine Mail, die ungelesen in einen Ordner wandert, ist einsortiert und nimmt den Zähler mit.

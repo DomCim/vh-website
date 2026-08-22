@@ -138,6 +138,8 @@ export async function POST(req: Request) {
       if (!b.an?.trim()) return NextResponse.json({ error: 'empfaenger-fehlt' }, { status: 400 })
       const { kopie } = await nachrichtSenden(payload, fach, {
         an: b.an,
+        cc: b.cc || undefined,
+        bcc: b.bcc || undefined,
         betreff: b.betreff || '(kein Betreff)',
         text: b.text || '',
         html: typeof b.html === 'string' ? b.html : undefined,

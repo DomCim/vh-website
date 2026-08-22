@@ -491,6 +491,9 @@ export async function nachrichtSenden(
   fach: MailboxKonfiguration,
   eingabe: {
     an: string
+    /** Kopie und Blindkopie, jeweils als Kommaliste — beide freiwillig */
+    cc?: string
+    bcc?: string
     betreff: string
     /** Nur-Text-Fassung; wird aus `html` abgeleitet, wenn dieses da ist */
     text: string
@@ -561,6 +564,14 @@ export async function nachrichtSenden(
   const nachricht = {
     from: `"${email.fromName}" <${fach.address}>`,
     to: eingabe.an,
+    ...(eingabe.cc?.trim() ? { cc: eingabe.cc.trim() } : {}),
+    /*
+     * Die Blindkopie steht im Umschlag, nicht im Brief: Nodemailer schickt an
+     * sie und lässt die Zeile im Kopf weg. In der Kopie unter „Gesendet" ist
+     * sie dagegen zu sehen — dort will man später wissen, wer sie bekommen
+     * hat, und dort liest sie außer dem Haus niemand.
+     */
+    ...(eingabe.bcc?.trim() ? { bcc: eingabe.bcc.trim() } : {}),
     subject: eingabe.betreff,
     // Nur-Text-Fassung bleibt dabei: Manche lesen so, und Spamfilter mögen es
     text: [nurText, gestaltet ? null : signatur, angaben.join(' · ')]

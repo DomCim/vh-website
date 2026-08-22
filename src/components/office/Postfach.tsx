@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
+import { EmpfaengerFeld } from './EmpfaengerFeld'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
 import { WischZeile } from './WischZeile'
@@ -37,6 +38,10 @@ type Nachricht = Kopfzeile & {
  */
 type Entwurf = {
   an: string
+  /* Kopie und Blindkopie stehen im Entwurf, auch wenn sie meist leer sind —
+     sonst ginge beim Aufklappen und Zuklappen verloren, was schon getippt war */
+  cc: string
+  bcc: string
   betreff: string
   text: string
   html: string
@@ -120,6 +125,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [liste, setListe] = useState<Kopfzeile[]>([])
   const [offen, setOffen] = useState<Nachricht | null>(null)
   const [entwurf, setEntwurf] = useState<Entwurf | null>(vorgabe ?? null)
+  /* Zugeklappt, solange nichts drinsteht: Die meisten Mails haben keine Kopie,
+     und zwei leere Felder über der Nachricht sind zwei Zeilen Rauschen. */
+  const [kopieOffen, setKopieOffen] = useState(false)
   const [laeuft, setLaeuft] = useState(true)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [nichtEingerichtet, setNichtEingerichtet] = useState(false)
@@ -344,6 +352,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
 
     setEntwurf({
       an: n.antwortAn || n.vonAdresse,
+      cc: '',
+      bcc: '',
       betreff: n.betreff.startsWith('Re:') ? n.betreff : `Re: ${n.betreff}`,
       text: '',
       html:
@@ -372,13 +382,52 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     return (
       <div className="buero-karte">
         {meldung && <p className="buero-hinweis">{meldung}</p>}
-        <label className="buero-feld">
+        {/* Kein `label` um das Feld: Es bringt eine eigene Liste mit, und ein
+            Tipp in ein Label geht ans Eingabefeld statt auf den Vorschlag —
+            derselbe Grund wie beim Schreibfeld weiter unten. */}
+        <div className="buero-feld">
           <span>An</span>
-          <input
-            value={entwurf.an}
-            onChange={(e) => setEntwurf({ ...entwurf, an: e.target.value })}
+          <EmpfaengerFeld
+            wert={entwurf.an}
+            aendern={(an) => setEntwurf((v) => (v ? { ...v, an } : v))}
           />
-        </label>
+        </div>
+        {/*
+          * Kopie und Blindkopie hinter einem Aufklapper.
+          *
+          * Sie sind selten und sollen trotzdem in einem Griff erreichbar sein.
+          * Steht schon etwas drin — beim Antworten oder aus einem Entwurf —,
+          * geht der Aufklapper von selbst auf: Ein Empfänger, den man nicht
+          * sieht, ist der gefährlichste von allen.
+          */}
+        <button
+          type="button"
+          className="buero-aufklapper"
+          aria-expanded={kopieOffen || Boolean(entwurf.cc || entwurf.bcc)}
+          onClick={() => setKopieOffen((v) => !v)}
+        >
+          {kopieOffen || entwurf.cc || entwurf.bcc ? '⌄' : '›'} Kopie (CC) & Blindkopie (BCC)
+        </button>
+
+        {(kopieOffen || entwurf.cc || entwurf.bcc) && (
+          <>
+            <div className="buero-feld">
+              <span>Kopie (CC)</span>
+              <EmpfaengerFeld
+                wert={entwurf.cc}
+                aendern={(cc) => setEntwurf((v) => (v ? { ...v, cc } : v))}
+              />
+            </div>
+            <div className="buero-feld">
+              <span>Blindkopie (BCC)</span>
+              <EmpfaengerFeld
+                wert={entwurf.bcc}
+                aendern={(bcc) => setEntwurf((v) => (v ? { ...v, bcc } : v))}
+              />
+            </div>
+          </>
+        )}
+
         <label className="buero-feld">
           <span>Betreff</span>
           <input
@@ -568,7 +617,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
           type="button"
           className="buero-knopf"
           onClick={() =>
-            setEntwurf({ an: '', betreff: '', text: '', html: signaturJetzt() })
+            setEntwurf({ an: '', cc: '', bcc: '', betreff: '', text: '', html: signaturJetzt() })
           }
         >
           Schreiben
