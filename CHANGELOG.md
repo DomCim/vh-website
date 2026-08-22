@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Mails wie geschrieben, der Corten-Strich im Schreibfeld und die Meldung über neue Post
+
 - **Die Meldung über neue Post sagt jetzt, von wem sie ist.** Statt „Neue Post für Info · Eine ungelesene Nachricht" steht dort der Absender und der Betreff der jüngsten ungelesenen Mail — daran erkennt man, ob man das Handy aus der Tasche holen muss. Liegt mehr als eine bereit, steht die Zahl dahinter.
 
 - **Antippen führt endlich ins Postfach.** Wer die Meldung am Telefon antippte, landete auf der Seite, auf der er ohnehin schon stand: Die App kann sich in einer installierten Fassung nicht von außen umleiten lassen. Jetzt sagt die Meldung der App, wohin sie gehen soll, und die geht selbst.
