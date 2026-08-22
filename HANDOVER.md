@@ -376,6 +376,41 @@ unter `/[locale]/uebergabe/[token]`.
 
 ---
 
+## Dateien weitergeben (`/api/weitergabe`)
+
+Der kurze Weg zum Zulieferer, neben der Mappe und bewusst nicht in ihr.
+
+**Warum nicht die Mappe.** Bei Lohnfertigung ohne eigenen Artikel ist die
+Mappe richtig: Es gibt einen Ordner, es geht hin und her, es wird hochgeladen.
+Für „hier ist die DXF, bitte schneiden" ist sie zu viel Apparat — anlegen,
+Bezug wählen, Datei erneut hochladen, Passwort erzeugen. Am Ende lag dieselbe
+Zeichnung zweimal im Haus, mit zwei Ständen.
+
+**Wie es läuft.** An der Artikeldatei ein Kästchen, Adresse, abschicken
+(`components/office/Werkstattdateien.tsx` → `/api/office/weitergabe`). Je
+Datei entsteht ein Link, dessen Signatur Kennung und Ablaufzeit festnagelt
+(HMAC mit `PAYLOAD_SECRET`, `lib/weitergabe.ts`); vierzehn Tage, kein
+Passwort, kein Konto. Gespeichert wird **nichts** — kein Datensatz, keine
+Migration. Dieselbe Bauart wie beim Abhol-Link des Monatspakets.
+
+**Was das kostet.** Ein verschickter Link lässt sich nicht zurückziehen; dazu
+müsste festgehalten werden, welche es gibt, und dann wäre es eine halbe Mappe.
+Wer einen loswerden muss, löscht die Datei oder ersetzt sie — beides wirkt
+sofort, weil immer der Stand von jetzt ausgeliefert wird. Genau das ist auch
+der Gewinn: Eine Revision geht automatisch mit hinaus, der Anhang in der Mail
+veraltet ab dem Absenden.
+
+**Recht.** `auftraege.bearbeiten`, nicht `website.pflegen`: Wer Dateien am
+Artikel pflegt, arbeitet im Haus; wer sie hinausgibt, entscheidet über
+Fremdfertigung. Die Werkstattrolle, die unter „Unterlagen" nachschlägt, sieht
+die Kästchen deshalb nicht.
+
+Dateien: `lib/weitergabe.ts` (Signatur, Frist), `api/weitergabe` (Abholung,
+Strom von der Platte), `api/office/weitergabe` (Auswahl und Mail),
+`components/office/Werkstattdateien.tsx` (die Kästchen).
+
+---
+
 ## Dateien am Vorgang, im Portal und beigestelltes Material
 
 **Am Vorgang.** `product-files` trägt neben `product` jetzt `anfrage`,

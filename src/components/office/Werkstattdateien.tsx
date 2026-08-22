@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react'
 
 import { useBestand } from '../../lib/buero/bestand'
+import { useDarf } from '../../lib/buero/rechte'
 import { absenden } from '../../lib/buero/warteschlange'
 
 /**
@@ -25,6 +26,12 @@ import { absenden } from '../../lib/buero/warteschlange'
  * vorbereitet, legt erst die Struktur an und füllt sie danach. Ein Ordner
  * muss deshalb auch leer bestehen bleiben; er steht am Artikel, nicht an der
  * Datei.
+ *
+ * **Weitergeben an den Zulieferer.** Was hier liegt, geht bei Fremdfertigung
+ * hinaus — die DXF zum Laserschneider, die Zeichnung zum Beschichter.
+ * Ankreuzen, Adresse, abschicken: Es entsteht dabei keine zweite Fassung der
+ * Zeichnung, sondern nur ein Abhol-Link auf diese hier (`lib/weitergabe.ts`).
+ * Wer den Auftrag nicht führt, sieht die Kästchen nicht.
  */
 
 export type Werkstattdatei = {
@@ -72,8 +79,18 @@ export function Werkstattdateien({
   const alleDateien = useBestand<Werkstattdatei>('werkstattdateien')
   const artikel = useBestand<ProduktMitOrdnern>('artikel')
 
+  const darfWeitergeben = useDarf()('auftraege.bearbeiten')
+
   const [laeuft, setLaeuft] = useState<string | null>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
+  const [auswahl, setAuswahl] = useState<string[]>([])
+  const [anAdresse, setAnAdresse] = useState('')
+  const [notiz, setNotiz] = useState('')
+  const [versand, setVersand] = useState<{
+    links: { id: number | string; name: string; url: string }[]
+    bis: string
+    verschickt: boolean
+  } | null>(null)
   const [neuerOrdner, setNeuerOrdner] = useState('')
   const [umbenennen, setUmbenennen] = useState<string | null>(null)
   const [neuerName, setNeuerName] = useState('')
@@ -168,8 +185,67 @@ export function Werkstattdateien({
     }
   }
 
+  /*
+   * Dateien, die noch in der Warteschlange stehen, haben keine Kennung beim
+   * Server — ein Link darauf zeigte ins Leere. Sie lassen sich deshalb nicht
+   * ankreuzen; sobald sie durch sind, stehen sie mit Kennung da.
+   */
+  const auswaehlbar = (d: Werkstattdatei) =>
+    darfWeitergeben && !(typeof d.id === 'string' && d.id.startsWith('warte'))
+
+  async function weitergeben() {
+    if (auswahl.length === 0) return
+    setLaeuft('weitergabe')
+    setMeldung(null)
+    try {
+      const res = await fetch('/api/office/weitergabe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateien: auswahl,
+          an: anAdresse.trim() || undefined,
+          notiz: notiz.trim() || undefined,
+        }),
+      })
+      const daten = await res.json()
+      if (!res.ok) {
+        setMeldung(
+          daten.error === 'nicht-erlaubt'
+            ? 'Dafür fehlt das Recht, Aufträge zu bearbeiten.'
+            : daten.error === 'zu-viele'
+              ? 'Das sind zu viele Dateien für eine Nachricht.'
+              : 'Das hat nicht geklappt.',
+        )
+        return
+      }
+      setVersand({ links: daten.links, bis: daten.bis, verschickt: Boolean(daten.verschickt) })
+      setAuswahl([])
+      setNotiz('')
+      setAnAdresse('')
+    } catch {
+      setMeldung('Das hat nicht geklappt — dafür braucht es Netz.')
+    } finally {
+      setLaeuft(null)
+    }
+  }
+
   const Zeile = ({ d, geerbt }: { d: Werkstattdatei; geerbt?: boolean }) => (
     <div className="buero-zeile">
+      {auswaehlbar(d) && (
+        <input
+          type="checkbox"
+          aria-label={`${d.label || d.filename || 'Datei'} weitergeben`}
+          checked={auswahl.includes(String(d.id))}
+          onChange={(e) =>
+            setAuswahl((bisher) =>
+              e.target.checked
+                ? [...bisher, String(d.id)]
+                : bisher.filter((k) => k !== String(d.id)),
+            )
+          }
+          style={{ marginRight: '.6rem' }}
+        />
+      )}
       <div className="buero-zeile-haupt">
         <div className="buero-zeile-titel">{d.label || d.filename || 'Datei'}</div>
         <div className="buero-zeile-neben">
@@ -355,6 +431,91 @@ export function Werkstattdateien({
 
       {ordner.length === 0 && ohneOrdner.length === 0 && vonDerGrundlage.length === 0 && (
         <div className="buero-leer">Noch keine Ordner. Fang mit einem der Vorschläge an.</div>
+      )}
+
+      {/* ── An einen Zulieferer schicken ──────────────────────────────────
+          Steht unter den Dateien und nicht in einem eigenen Fenster: Man
+          kreuzt an, was man ohnehin gerade ansieht. */}
+      {versand && (
+        <div className="buero-karte" style={{ marginTop: '.6rem' }}>
+          <p style={{ margin: '0 0 .4rem' }}>
+            <strong>
+              {versand.verschickt
+                ? 'Verschickt.'
+                : 'Links erzeugt — die Mail ging nicht hinaus.'}
+            </strong>{' '}
+            Gültig bis {new Date(versand.bis).toLocaleDateString('de-DE')}.
+          </p>
+          {/* Auch bei verschickter Mail: Wer sie selbst weiterreichen will,
+              braucht die Adresse hier und nicht im Postausgang */}
+          <div className="buero-liste">
+            {versand.links.map((l) => (
+              <div key={l.id} className="buero-zeile">
+                <div className="buero-zeile-haupt">
+                  <div className="buero-zeile-titel">{l.name}</div>
+                  <div className="buero-zeile-neben" style={{ wordBreak: 'break-all' }}>
+                    {l.url}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="buero-knopf stumm schmal"
+            style={{ marginTop: '.6rem' }}
+            onClick={() => setVersand(null)}
+          >
+            Schließen
+          </button>
+        </div>
+      )}
+
+      {auswahl.length > 0 && (
+        <div className="buero-karte" style={{ marginTop: '.6rem' }}>
+          <p className="buero-unterzeile" style={{ marginTop: 0 }}>
+            {auswahl.length} {auswahl.length === 1 ? 'Datei' : 'Dateien'} ausgewählt. Der Empfänger
+            bekommt je Datei einen Abhol-Link, vierzehn Tage gültig und ohne Passwort — und beim
+            Öffnen immer den Stand von jetzt.
+          </p>
+          <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <label className="buero-feld" style={{ margin: 0, flex: '1 1 12rem' }}>
+              <span>Schicken an</span>
+              <input
+                type="email"
+                value={anAdresse}
+                placeholder="zuschnitt@laserbetrieb.fr"
+                onChange={(e) => setAnAdresse(e.target.value)}
+              />
+            </label>
+            <label className="buero-feld" style={{ margin: 0, flex: '1 1 12rem' }}>
+              <span>Notiz in der Mail</span>
+              <input
+                value={notiz}
+                placeholder="z.B. 3 mm Edelstahl, 12 Stück"
+                onChange={(e) => setNotiz(e.target.value)}
+              />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap', marginTop: '.7rem' }}>
+            <button
+              type="button"
+              className="buero-knopf leise"
+              disabled={laeuft !== null}
+              onClick={() => void weitergeben()}
+            >
+              {anAdresse.trim() ? 'Schicken' : 'Nur Links erzeugen'}
+            </button>
+            <button
+              type="button"
+              className="buero-knopf stumm"
+              disabled={laeuft !== null}
+              onClick={() => setAuswahl([])}
+            >
+              Auswahl aufheben
+            </button>
+          </div>
+        </div>
       )}
 
       {darfAendern && (
