@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Versand und Zahlung nennen jetzt beide Zahlungswege.** In der Vorlage für den Rechtstext stand, bezahlt werde über PayPal — mehr nicht. An der Kasse steht der **Kauf auf Rechnung** aber bei jedem Artikel zur Wahl, und bei Einzelanfertigungen verteilt sich der Betrag auf **Anzahlung** mit der Auftragsbestätigung, **Zwischenrechnung** beim erreichten Fertigungsabschnitt und **Schlussrechnung** vor der Auslieferung. Ein Zahlungsweg, der auf der Rechtsseite fehlt, ist im Streitfall keiner. Alle drei Sprachen beschreiben jetzt dasselbe. Die bereits veröffentlichten Texte werden gesondert nachgezogen.
+
 - **Die Übersetzungsprüfung findet jetzt, was sie bisher übersah.** Sie meldete „alles übersetzt", während vier Artikel eine französische Beschreibung von 250 Zeichen trugen, wo im Deutschen 2.300 standen — und zwei davon sogar denselben Text: Eine Fahrrad-Wandhalterung wurde auf Französisch und Englisch als beleuchtetes Herz beschrieben, monatelang. Geprüft werden jetzt auch die Beschreibungen, und zwar auf dreierlei: ob sie **auffällig kürzer** sind als das Original, ob ihnen dessen **Zwischenüberschriften und Aufzählungen** fehlen, und ob **zwei Einträge wortgleich** sind. „Auffällig" heißt dabei hinsehen, nicht wegwerfen.
 
 - **Der KI-Assistent bekommt die Übersetzungsregeln vorab.** In den Hausregeln steht jetzt ein eigener Abschnitt: die Gliederung des Originals übernehmen, gefüllt ist nicht übersetzt, vor dem Schreiben das Original lesen, welche Begriffe stehen bleiben (NEXT CONCEPT, Cimatron, Corten, RAL) — und dass ein Artikel mit Varianten Titel und Bezeichnungen in einem Zug braucht.
