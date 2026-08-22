@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 22.08.2026 — Abnahme mit Unterschrift, Monatspaket für die Kanzlei, Wischgesten — und Dateien an den Zulieferer
+
 - **Zeichnungen an den Zulieferer schicken — angekreuzt statt hochgeladen.** Am Artikel steht neben jeder Werkstattdatei ein Kästchen: ankreuzen, Adresse eintippen, abschicken. Der Laserschneider bekommt eine Mail mit je einem Abhol-Link, vierzehn Tage gültig, ohne Passwort und ohne Konto. Eine Notiz für die Mail lässt sich dazuschreiben — Werkstoff, Stückzahl, was eben dazugehört. Wer die Mail lieber selbst formuliert, lässt das Adressfeld leer und bekommt nur die Links zum Weitergeben. Der Empfänger holt dabei immer den Stand von jetzt: Wird die Zeichnung im Haus überarbeitet, führt derselbe Link zur neuen Fassung — anders als beim Anhang, der ab dem Absenden veraltet. Und die Datei bleibt, wo sie hingehört; es entsteht keine zweite Fassung im Haus. Zurückziehen lässt sich ein verschickter Link nicht, wohl aber die Datei löschen oder ersetzen — beides wirkt sofort. Die Kästchen sieht nur, wer Aufträge bearbeiten darf.
 
 - **Abnahme mit Unterschrift auf dem Telefon.** Beim Kunden vor Ort: Auftrag öffnen, „Abnahme mit Unterschrift" antippen, der Kunde unterschreibt mit dem Finger. Daraus entsteht das Abnahmeprotokoll — der Lieferschein mit der Unterschrift, Name, Ort und Uhrzeit — als PDF bei den Dateien des Auftrags. Ab da läuft die Gewährleistung, und bei Streit liegt das eine Blatt vor, das zählt. Eine Abnahme lässt sich nicht überschreiben; das braucht Netz, weil das Protokoll am Server entsteht.
