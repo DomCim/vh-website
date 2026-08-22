@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Leere Kategorien lassen sich per KI-Assistent entfernen.** Bisher gab es dafür kein Werkzeug — anlegen und ändern ging, wegräumen nicht. Wie beim Löschen eines Artikels ist es zweistufig: Der erste Aufruf zeigt nur, was passieren würde. Liegen noch Artikel darin, wird nichts gelöscht, sondern gesagt, dass sie zuerst umgehängt gehören; Unterkategorien rücken eine Ebene nach oben, und auch das steht vorher da.
+
 - **Ein Artikel mit Varianten lässt sich per KI-Assistent übersetzen.** Bisher ging das nicht: Titel und Variantenbezeichnung sind beide Pflicht und beide übersetzbar, und bei einem Artikel ohne französische Fassung fehlten beide. Damit lief jeder Weg ins Leere — das eine Werkzeug scheiterte am Titel, das andere an den Bezeichnungen. Jetzt lassen sich beide in einem Zug setzen. Aufgefallen beim Übersetzen des Brasero mit seinen sechs Größen.
 
 - **Rechtstexte stehen jetzt im Büro.** Unter Sonstiges → Rechtstexte lassen sich Impressum, Datenschutzerklärung, AGB, Widerrufsbelehrung, Muster-Widerrufsformular sowie Versand & Zahlung bearbeiten — **in allen drei Sprachen**, mit der Sprachwahl über den Feldern. Bisher ging das nur in der Website-Verwaltung, in einer anderen Oberfläche und für jede Sprache einzeln. Zu jedem Text steht ein Verweis auf die Seite, auf der er draußen erscheint.

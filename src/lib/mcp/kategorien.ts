@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
 import {
+  bestaetigen,
+  bestaetigungNoetig,
   db,
   fehler,
   findeNachSlug,
@@ -127,6 +129,74 @@ export function registerKategorien(server: McpServer) {
         },
       })
       return ok({ ok: true, slug, sprache: locale })
+    },
+  )
+
+  server.registerTool(
+    'kategorie_loeschen',
+    {
+      description:
+        'Löscht eine Kategorie endgültig. Ohne bestaetigen=true wird nur angezeigt, was passieren würde. Eine Kategorie mit Artikeln wird nicht gelöscht — die Artikel zuerst umhängen.',
+      inputSchema: { slug: z.string(), bestaetigen },
+    },
+    async ({ slug, bestaetigen: jetzt }) => {
+      const payload = await db()
+      const kat = await findeNachSlug<{ id: number; name?: string | null }>(
+        payload,
+        'categories',
+        slug,
+        { depth: 0 },
+      )
+      if (!kat) return fehler(`Kategorie "${slug}" nicht gefunden`)
+
+      const artikel = await payload.find({
+        collection: 'products',
+        where: { category: { equals: kat.id } },
+        limit: 5,
+        depth: 0,
+        overrideAccess: true,
+      })
+      const unter = await payload.find({
+        collection: 'categories',
+        where: { parent: { equals: kat.id } },
+        limit: 10,
+        depth: 0,
+        overrideAccess: true,
+      })
+
+      /*
+       * Die Vorschau nennt beides, weil es sich verschieden verhält: Artikel
+       * verhindern das Löschen (siehe collections/Categories.ts), eine
+       * Unterkategorie nicht — sie rückt eine Ebene nach oben und steht dann
+       * plötzlich in der Hauptnavigation. Das ist selten gewollt und darum
+       * einen Satz wert, bevor jemand bestätigt.
+       */
+      const uebersicht = {
+        id: kat.id,
+        name: kat.name ?? slug,
+        slug,
+        artikelDarin: artikel.totalDocs,
+        beispiele: artikel.docs.map((a) => (a as { title?: string }).title).filter(Boolean),
+        unterkategorien: unter.docs.map((u) => (u as { name?: string }).name).filter(Boolean),
+        hinweis:
+          artikel.totalDocs > 0
+            ? 'Diese Kategorie wird nicht gelöscht, solange Artikel darin liegen. Die Artikel zuerst über produkt_aendern mit kategorieSlug umhängen.'
+            : unter.docs.length
+              ? 'Die Unterkategorien bleiben bestehen und rücken in die oberste Ebene.'
+              : 'Die Kategorie ist leer. Ihre Adresse antwortet danach mit 404 — bei einer Seite, die Google kennt, ist das gewollt und erledigt sich von selbst.',
+      }
+
+      if (!jetzt) return bestaetigungNoetig(uebersicht)
+
+      if (artikel.totalDocs > 0) {
+        return fehler(
+          `In „${uebersicht.name}" liegen noch ${artikel.totalDocs} Artikel. ` +
+            'Erst umhängen, dann löschen — ein Artikel ohne Kategorie taucht in keiner Übersicht mehr auf.',
+        )
+      }
+
+      await payload.delete({ collection: 'categories', id: kat.id })
+      return ok({ ok: true, geloescht: uebersicht.name, slug })
     },
   )
 }
