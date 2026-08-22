@@ -215,6 +215,14 @@ Zwei Fallen dabei, beide schon erlebt:
 - **Immer dieselbe Meldung** heißt: Die Prüfung erreicht die Adresse gar nicht.
   Ein Ausrollen, das wirklich hakt, meldet die **alte** Nummer, nicht
   „nichts". Wer „nichts" bekommt, sucht am falschen Ende.
+
+  Der erste Blick gilt dabei der Adresse in der Automatisierung selbst: Beim
+  Wechsel auf `vincent-hellmann.com` blieb dort die alte (`vh.dominikdill.com`)
+  stehen, und die Prüfung lief seither ins Leere — gemeldet wurde „Ausrollen
+  hakt", während von außen beide Hälften brav den richtigen Stand nannten.
+  Eine Adresse wechselt man an mehr Stellen, als man beim Wechseln denkt (siehe
+  „Was ein Adresswechsel mitnimmt" weiter oben) — die Ausroll-Prüfung gehört
+  dazu.
 - **Genug Geduld.** Seit Website und Büro getrennt laufen, zieht Portainer bei
   einer Veröffentlichung zwei Abbilder und startet zwei Container. Bis beide
   antworten, vergehen Minuten; wer nach fünf aufgibt, meldet einen Fehler, den
