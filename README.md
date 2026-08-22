@@ -194,6 +194,33 @@ tragen die Adresse aus dem Stack.
 
 Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
 
+**Von welcher Adresse aus gefragt wird, entscheidet, ob die Prüfung taugt.**
+Home Assistant steht im selben Heimnetz wie die Container. Fragt es über die
+öffentliche Adresse (`https://vincent-hellmann.com/api/healthz`), muss der
+Router den Weg nach außen und wieder herein können — viele tun das nicht
+(Stichwort Hairpin-NAT), und dann kommt **nie** eine Antwort. Die
+Automatisierung meldet daraufhin „Ausrollen hakt", obwohl alles längst läuft;
+von außen gemessen ist zur selben Zeit alles in Ordnung.
+
+Deshalb im Heimnetz die **innere** Adresse abfragen, also den Container direkt
+über Traefik oder seine IP:
+
+```
+http://<traefik-oder-container>/api/healthz          → {"status":"ok","db":true,"version":"…"}
+http://<traefik-oder-container>/api/office/healthz   → {"status":"ok","version":"…","rolle":"buero"}
+```
+
+Zwei Fallen dabei, beide schon erlebt:
+
+- **Immer dieselbe Meldung** heißt: Die Prüfung erreicht die Adresse gar nicht.
+  Ein Ausrollen, das wirklich hakt, meldet die **alte** Nummer, nicht
+  „nichts". Wer „nichts" bekommt, sucht am falschen Ende.
+- **Genug Geduld.** Seit Website und Büro getrennt laufen, zieht Portainer bei
+  einer Veröffentlichung zwei Abbilder und startet zwei Container. Bis beide
+  antworten, vergehen Minuten; wer nach fünf aufgibt, meldet einen Fehler, den
+  es nicht gibt. Alle fünfzehn Sekunden fragen und erst nach einer
+  Viertelstunde Alarm schlagen ist die ehrlichere Einstellung.
+
 ### Zwei Container: Website und Büro
 
 Beide entstehen aus **demselben Quelltext**, aber als **zwei Abbilder**:
