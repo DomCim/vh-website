@@ -26,6 +26,31 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 59,
+    datum: null,
+    titel: 'Versandzonen: Was die Fracht wirklich kostet, steht jetzt auch in der Kasse',
+    punkte: [
+      {
+        text: '**Der Versand war überall derselbe Betrag** — je Stück, ohne Blick auf die Anschrift. Wer in München bestellte, zahlte so viel wie jemand in Straßburg, und wer in Zürich bestellte, ebenfalls. Bei einer Speditionssendung ist das ein Unterschied von mehreren hundert Euro, und der ging zulasten des Hauses.',
+      },
+      {
+        text: '**Jetzt gibt es Zonen** (Verwaltung → Versandzonen): eine Bezeichnung, die Länder, und ein Aufschlag je Stück auf den Versandbetrag des Artikels. Bewusst ein fester Aufschlag und kein Faktor — beim Speditionsgut steigt der Preis mit Entfernung und Zollpapier, nicht mit dem Warenwert, und der Aufschlag lässt sich am Angebot des Spediteurs ablesen.',
+      },
+      {
+        text: '**Wohin nicht geliefert wird, lässt sich auch nicht mehr bestellen.** Das Länderfeld in der Kasse war freier Text — dort kam „Schweiz", „CH" und „Suisse" gleichermaßen an, und keines davon ließ sich verrechnen. Jetzt ist es eine Auswahl aus den Zonen, und der Aufschlag steht schon beim Umstellen in der Summe. Ein Hinweis je Zone lässt sich dazuschreiben, etwa „zzgl. Zoll und Einfuhrumsatzsteuer".',
+      },
+      {
+        text: '**Drei Stellen sagten bisher Verschiedenes.** Die Artikelseite versprach Google Lieferung nach Frankreich, Deutschland, Österreich und in die Schweiz; der Produktfeed nannte drei Länder; die Kasse wusste von keiner der beiden Listen. Jetzt lesen alle drei dieselben Zonen — was unter einem Suchergebnis steht, ist damit dasselbe, was an der Kasse verlangt wird. Die Schweiz bleibt vorerst aus dem Produktfeed heraus: Der rechnet in Euro, das Merchant Center bräuchte dort Franken.',
+      },
+      {
+        text: '**Solange keine Zone gepflegt ist, bleibt alles wie bisher** — Frankreich, Deutschland und Österreich zum Versandbetrag des Artikels. Eine leere Einstellung hält den Shop nicht an und macht ihn auch nicht heimlich teurer.',
+      },
+      {
+        text: '**Im Warenkorb steht weiterhin der Grundbetrag**, denn dort gibt es noch keine Anschrift. Der Aufschlag kommt in der Kasse dazu, sobald das Land gewählt ist — vor dem Bezahlen und nicht danach auf der Rechnung.',
+      },
+    ],
+  },
+  {
     nummer: 58,
     datum: null,
     titel: 'Dateien lassen sich jetzt überall einfügen und hineinziehen',

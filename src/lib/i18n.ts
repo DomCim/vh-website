@@ -125,6 +125,8 @@ const de = {
     reviewIntro: 'Bitte kurz prüfen — mit den Schritten oben kommen Sie überall zurück.',
     errorNoPayment:
       'Die Bezahlung ist derzeit nicht möglich. Bitte nehmen Sie kurz Kontakt mit uns auf — wir schließen Ihre Bestellung dann persönlich ab.',
+    errorCountry:
+      'In dieses Land liefern wir derzeit nicht. Bitte wählen Sie ein anderes — oder schreiben Sie uns kurz, wir finden einen Weg.',
   },
   thanks: {
     title: 'Vielen Dank für Ihre Bestellung!',
@@ -531,6 +533,8 @@ const fr: Dictionary = {
     reviewIntro: 'Merci de vérifier — les étapes ci-dessus permettent de revenir partout.',
     errorNoPayment:
       "Le paiement n'est pas possible pour le moment. Contactez-nous brièvement — nous finaliserons votre commande personnellement.",
+    errorCountry:
+      "Nous ne livrons pas dans ce pays actuellement. Choisissez-en un autre — ou écrivez-nous, nous trouverons une solution.",
   },
   thanks: {
     title: 'Merci pour votre commande !',
@@ -931,6 +935,8 @@ const en: Dictionary = {
     reviewIntro: 'Please check briefly — the steps above take you back anywhere.',
     errorNoPayment:
       'Payment is currently unavailable. Please get in touch — we will complete your order personally.',
+    errorCountry:
+      'We do not currently deliver to this country. Please choose another — or drop us a line and we will find a way.',
   },
   thanks: {
     title: 'Thank you for your order!',

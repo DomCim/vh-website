@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { bildQuellen, type BildQuelle } from '../../../../components/Bild'
 import { aktionFuerArtikel, mitRabatt, type Preisaktion } from '../../../../lib/aktionspreis'
 import { payloadClient } from '../../../../lib/data'
+import { EURO_LAENDER, versandJeStueck, versandzonen } from '../../../../lib/versand'
 import { type Locale, locales } from '../../../../lib/i18n'
 import { laufendeAktionen } from '../../../../lib/promotions'
 import { absoluteUrl, BASE_URL } from '../../../../lib/seo'
@@ -30,8 +31,8 @@ export const dynamic = 'force-dynamic'
  * bei Einzelanfertigung nicht; `identifier_exists: no` sagt das ausdrücklich,
  * sonst weist Google die Ware zurück.
  *
- * **Der Versand steht mit drin** — für Frankreich, Deutschland und Österreich,
- * mit derselben Zahl, die auch die Kasse berechnet. Ohne Versandangabe weist
+ * **Der Versand steht mit drin** — für jedes Land der Versandzonen, mit
+ * derselben Zahl, die auch die Kasse dort berechnet. Ohne Versandangabe weist
  * Google für ein Zielland alle Artikel ab.
  *
  * **Was draußen bleibt:** Stücke auf Anfrage und alles ohne Bild. Ein Eintrag
@@ -73,22 +74,23 @@ const zeitraum = (aktion: Preisaktion) =>
  * eine Regel im Konto wäre eine zweite Quelle für dieselbe Wahrheit, und die
  * beiden laufen früher oder später auseinander.
  *
- * **Warum dieselbe Zahl für alle drei Länder.** Weil der Shop es so hält: In
- * `lib/checkout.ts` ist der Versand ein fester Betrag je Stück, ohne Blick
- * auf die Anschrift. Wer in München bestellt, zahlt denselben Versand wie
- * jemand in Straßburg. Google verlangt, dass die Angabe im Feed dem
- * entspricht, was an der Kasse wirklich verlangt wird — und genau das tut
- * sie damit.
+ * **Die Länder und die Beträge kommen aus den Versandzonen** (`lib/versand.ts`)
+ * — derselben Quelle, aus der die Kasse rechnet. Bis 08/2026 stand hier eine
+ * eigene Liste, in `lib/seo.ts` eine zweite und in der Kasse gar keine; die
+ * drei waren auseinandergelaufen. Google verlangt, dass die Angabe im Feed
+ * dem entspricht, was an der Kasse wirklich verlangt wird — mit einer
+ * gemeinsamen Quelle kann sie das gar nicht mehr verfehlen. Kostet eine Zone
+ * einen Aufschlag, steht er beim jeweiligen Land.
  *
  * Daran hängt auch, warum eine Frachtberechnung über DHL hier **nicht**
  * hilft: Sie käme auf einen anderen Betrag als die Kasse, und die Abweichung
  * ist genau das, was Google beanstandet.
  *
- * Wer die Liste erweitert, prüft zweierlei: Wird dorthin wirklich geliefert,
- * und stimmt die Währung? Der Feed rechnet ausschließlich in Euro — für
- * Polen, Schweden oder die Schweiz wäre er falsch.
+ * **Nicht jedes belieferte Land kommt in den Feed.** Er rechnet ausschließlich
+ * in Euro; für die Schweiz bräuchte das Merchant Center Franken. Solche
+ * Länder werden hier übersprungen — geliefert wird trotzdem dorthin, es steht
+ * nur nicht in diesem Feed (`EURO_LAENDER` in `lib/versand.ts`).
  */
-const VERSANDLAENDER = ['FR', 'DE', 'AT'] as const
 
 export async function GET(req: Request) {
   const gewuenscht = new URL(req.url).searchParams.get('sprache')
@@ -116,6 +118,29 @@ export async function GET(req: Request) {
    * Grund für eine Aktion.
    */
   const aktionen = await laufendeAktionen(payload, locale)
+
+  /*
+   * Je Land eine Zeile mit dem Betrag, den die Kasse dort wirklich verlangt.
+   *
+   * Der Aufschlag hängt an der Zone, also kann derselbe Artikel je nach Land
+   * verschieden viel Fracht kosten — und genau so muss es im Feed stehen.
+   * Auch eine Null steht ausdrücklich da: Ist am Stück kein Versand
+   * hinterlegt, schlägt die Kasse nichts auf, es ist also versandkostenfrei
+   * und keine fehlende Angabe. Ließe man den Block weg, sucht Google die Zahl
+   * in den Kontoeinstellungen und findet dort nichts.
+   */
+  const zonen = await versandzonen(payload)
+  const versandzeilen = (artikelVersand: unknown) =>
+    zonen.flatMap((zone) =>
+      zone.laender
+        .filter((land) => EURO_LAENDER.has(land))
+        .map(
+          (land) =>
+            `<g:shipping><g:country>${land}</g:country><g:price>${preis(
+              versandJeStueck(typeof artikelVersand === 'number' ? artikelVersand : 0, zone),
+            )}</g:price></g:shipping>`,
+        ),
+    )
 
   const eintraege: string[] = []
 
@@ -204,18 +229,7 @@ export async function GET(req: Request) {
           '<g:condition>new</g:condition>',
           '<g:identifier_exists>no</g:identifier_exists>',
           '<g:brand>Vincent Hellmann</g:brand>',
-          /*
-           * Auch die Null steht ausdrücklich da.
-           *
-           * Ist am Stück kein Versand hinterlegt, schlägt die Kasse nichts
-           * auf — es ist also versandkostenfrei und keine fehlende Angabe.
-           * Ließe man den Block weg, sucht Google die Zahl in den
-           * Kontoeinstellungen und findet dort nichts.
-           */
-          ...VERSANDLAENDER.map(
-            (land) =>
-              `<g:shipping><g:country>${land}</g:country><g:price>${preis(typeof p.shippingCost === 'number' ? p.shippingCost : 0)}</g:price></g:shipping>`,
-          ),
+          ...versandzeilen(p.shippingCost),
           '</item>',
         ].join(''),
       )

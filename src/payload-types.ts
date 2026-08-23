@@ -157,6 +157,7 @@ export interface Config {
     'site-settings': SiteSetting;
     legal: Legal;
     integrations: Integration;
+    versand: Versand;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
@@ -164,6 +165,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     legal: LegalSelect<false> | LegalSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
+    versand: VersandSelect<false> | VersandSelect<true>;
   };
   locale: 'de' | 'fr' | 'en';
   widgets: {
@@ -768,6 +770,10 @@ export interface Order {
     postalCode?: string | null;
     city?: string | null;
     country?: string | null;
+    /**
+     * ISO-Kürzel, z. B. FR. Bestimmt die Versandzone. Bei Bestellungen von vor der Einführung der Zonen leer.
+     */
+    countryCode?: string | null;
   };
   paymentProvider?: ('paypal' | 'rechnung' | 'stripe') | null;
   stripeSessionId?: string | null;
@@ -2226,6 +2232,7 @@ export interface OrdersSelect<T extends boolean = true> {
         postalCode?: T;
         city?: T;
         country?: T;
+        countryCode?: T;
       };
   paymentProvider?: T;
   stripeSessionId?: T;
@@ -3713,6 +3720,38 @@ export interface Integration {
   createdAt?: string | null;
 }
 /**
+ * Wohin geliefert wird. Ein Land, das in keiner Zone steht, wird in der Kasse nicht angeboten. Ohne Zone gilt: Frankreich, Deutschland, Österreich zum Versandbetrag des Artikels.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "versand".
+ */
+export interface Versand {
+  id: number;
+  /**
+   * Reihenfolge zählt: Steht ein Land in zwei Zonen, gilt die obere. In der Kasse erscheinen die Länder in dieser Reihenfolge.
+   */
+  zonen?:
+    | {
+        /**
+         * Nur zur Orientierung, z. B. „Frankreich und Nachbarn".
+         */
+        name: string;
+        laender: ('FR' | 'DE' | 'AT' | 'BE' | 'LU' | 'NL' | 'IT' | 'ES' | 'CH')[];
+        /**
+         * Kommt zum Versandbetrag des Artikels dazu. 0 = derselbe Betrag wie im Inland. Bewusst ein fester Aufschlag und kein Faktor: Beim Speditionsgut steigt der Preis mit Entfernung und Zollpapier, nicht mit dem Warenwert.
+         */
+        aufschlag?: number | null;
+        /**
+         * Steht unter der Länderauswahl, sobald ein Land dieser Zone gewählt ist — z. B. „zzgl. Zoll und Einfuhrumsatzsteuer".
+         */
+        hinweis?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage_select".
  */
@@ -4017,6 +4056,24 @@ export interface IntegrationsSelect<T extends boolean = true> {
         pageId?: T;
         accessToken?: T;
         instagramAccountId?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "versand_select".
+ */
+export interface VersandSelect<T extends boolean = true> {
+  zonen?:
+    | T
+    | {
+        name?: T;
+        laender?: T;
+        aufschlag?: T;
+        hinweis?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

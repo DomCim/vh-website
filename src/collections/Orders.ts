@@ -263,11 +263,33 @@ export const Orders: CollectionConfig = {
             },
           ],
         },
+        /*
+         * Zwei Felder für ein Land, und beide werden gebraucht.
+         *
+         * `country` ist der lesbare Name — er steht auf Rechnung,
+         * Lieferschein und in der Bestätigungsmail, und zwar in der Sprache
+         * des Kunden. `countryCode` ist die Kennung, mit der gerechnet wird:
+         * Versandzone, PayPal, Steuerfragen.
+         *
+         * Getrennt, weil Bestellungen aus der Zeit davor nur den Namen
+         * tragen — als freien Text, in drei Sprachen und ohne feste
+         * Schreibweise. Die in eine Auswahl zu zwingen hieße, sie beim
+         * nächsten Speichern zu verlieren.
+         */
         {
           name: 'country',
           label: 'Land',
           type: 'text',
           defaultValue: 'Deutschland',
+        },
+        {
+          name: 'countryCode',
+          label: 'Länderkennung',
+          type: 'text',
+          admin: {
+            description:
+              'ISO-Kürzel, z. B. FR. Bestimmt die Versandzone. Bei Bestellungen von vor der Einführung der Zonen leer.',
+          },
         },
       ],
     },

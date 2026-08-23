@@ -57,6 +57,7 @@ import * as migration_20260823_154000_bestellung_digital_at from './20260823_154
 import * as migration_20260823_160000_neuerungen from './20260823_160000_neuerungen';
 import * as migration_20260823_170000_besuche from './20260823_170000_besuche';
 import * as migration_20260823_181614_papierkorb from './20260823_181614_papierkorb';
+import * as migration_20260823_231711_versandzonen from './20260823_231711_versandzonen';
 
 export const migrations = [
   {
@@ -352,6 +353,11 @@ export const migrations = [
   {
     up: migration_20260823_181614_papierkorb.up,
     down: migration_20260823_181614_papierkorb.down,
-    name: '20260823_181614_papierkorb'
+    name: '20260823_181614_papierkorb',
+  },
+  {
+    up: migration_20260823_231711_versandzonen.up,
+    down: migration_20260823_231711_versandzonen.down,
+    name: '20260823_231711_versandzonen'
   },
 ];

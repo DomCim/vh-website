@@ -543,6 +543,14 @@ das zurückkommt.
    - **Storno einer Shop-Bestellung ist folgenlos** — keine Rückerstattung
      (PayPal), keine Rückbuchung der Verfügbarkeit, verknüpfter Auftrag
      läuft weiter. Heute alles Handarbeit.
+   - ~~**Versand ist ein fester Betrag je Stück, ohne Blick auf die
+     Anschrift.**~~ — **erledigt (08/2026).** Versandzonen als Global
+     (`globals/Versand.ts`, Logik in `lib/versand.ts`): Länder je Zone plus
+     ein Aufschlag je Stück. Kasse, Produktfeed und strukturierte Daten lesen
+     dieselbe Quelle — vorher hatten alle drei eine eigene Vorstellung davon,
+     wohin geliefert wird. Ohne gepflegte Zone gilt der Stand von vorher
+     (FR/DE/AT, kein Aufschlag). Offen bleibt die Schweiz im Produktfeed: Der
+     rechnet in Euro, das Merchant Center bräuchte dort Franken.
    - **Zahlungsabgleich für Ausgaben.** Der Kontoauszug-Abgleich schlägt nur
      eigene Rechnungen vor; Belege (`expenses.paid`) müssen weiter von Hand
      abgehakt werden.
