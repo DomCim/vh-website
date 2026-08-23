@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Nach dem Ausrollen war die Bestellseite nicht erreichbar und der Abgleich im Büro hakte.** Ursache war eine vergessene Spalte: Zur digitalen Ware kamen drei Felder ins Datenmodell, die Migration legte nur zwei an. Weil die Datenbankabfragen jede Spalte aufzählen, schlug daraufhin **jede** Abfrage auf die Bestellungen fehl — nicht nur die, die das neue Feld braucht. Behoben; eine neue Bestellung war in dieser Zeit nicht möglich.
+
 - **Der Besucherverlauf lässt sich endlich am Handy lesen.** Die Werte hingen an einem Anhang, den nur ein Mauszeiger hervorholt — am Handy erschien schlicht nichts. Dreißig Balken, und auf dem Gerät, an dem man sie ansieht, war kein einziger Wert lesbar. Jetzt zeigt Antippen den Tag und die Zahl in der Zeile darunter, an einer festen Stelle statt in einem Kästchen, das den Nachbarbalken verdeckt. Darunter stehen die Zahlen zusätzlich als aufklappbare Tabelle — kopierbar und für Vorleser lesbar.
 
 - **In der Auslastung steht jetzt, um wie viel eine Woche überbucht ist.** Bisher hieß es bei jeder vollen Woche „voll", ob sie punktgenau ausgelastet war oder fünf Stunden zu viel trug — der Balken ist bei 100 % abgeschnitten und sah in beiden Fällen gleich aus. Das ist aber genau der Unterschied zwischen „geht gerade noch" und „da muss etwas weichen".
