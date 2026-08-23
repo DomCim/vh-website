@@ -96,9 +96,16 @@ export function LieferantFeld({
   if (anlegen) {
     return (
       <div className="buero-feld">
-        <span>{beschriftung}</span>
+        {/*
+          `aria-label` und nicht bloß der Text darüber: Die Hülle ist hier ein
+          `div`, also verbindet nichts das Wort mit dem Feld — ein Vorleser
+          sagte „Eingabefeld" und sonst nichts. Der Platzhaltertext zählt
+          dafür nicht, er verschwindet beim ersten Buchstaben.
+        */}
+        <span aria-hidden="true">{beschriftung}</span>
         <input
           autoFocus
+          aria-label={beschriftung}
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
