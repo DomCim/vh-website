@@ -58,3 +58,42 @@ for (const pfad of ['/de/warenkorb', '/de/kasse', '/de/newsletter']) {
     expect(await seite.text()).toContain('content="noindex')
   })
 }
+
+/**
+ * Ein Artikel gehört zu einer Kategorie — und ist nur dort erreichbar.
+ *
+ * Bis 08/2026 prüfte die Artikelseite zwei Dinge: Gibt es die Kategorie? Gibt
+ * es den Artikel? Nie aber, ob beide zusammengehören. Damit war jeder Artikel
+ * unter jedem Kategoriepfad erreichbar — der Gartensessel also auch unter
+ * `/de/maschinenbau/…`, mit „Maschinenbau" im Brotkrumen-Pfad. Bei vierzehn
+ * Kategorien ist das die vierzehnfache Zahl an Adressen für dieselbe Seite.
+ *
+ * Aufgefallen ist es nie, weil `rel=canonical` seit jeher auf die richtige
+ * Adresse zeigte: Google räumte still hinter uns auf, und die Meldung
+ * „Duplikat" war der einzige Hinweis. Jetzt wird dauerhaft umgeleitet — alte
+ * Verweise bleiben gültig, aber es gibt nur noch eine Adresse.
+ */
+test('ein Artikel unter fremder Kategorie leitet auf seine eigene um', async ({ request }) => {
+  const karte = await request.get(`${BASIS}/sitemap.xml`)
+  const adressen = [...(await karte.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1])
+  const nachLocale = (u: string) => u.replace(`${BASIS}/de`, '')
+
+  const artikel = adressen.find((u) => u.startsWith(`${BASIS}/de/`) && nachLocale(u).split('/').length === 3)
+  const kategorien = adressen.filter(
+    (u) => u.startsWith(`${BASIS}/de/`) && nachLocale(u).split('/').length === 2,
+  )
+  test.skip(!artikel || kategorien.length < 2, 'Ohne Artikel in zwei Kategorien nicht prüfbar')
+
+  const [, eigene, artikelSlug] = nachLocale(artikel!).split('/')
+  const fremde = kategorien
+    .map((u) => nachLocale(u).slice(1))
+    .find((k) => k !== eigene && !k.includes('/'))
+  test.skip(!fremde, 'Es gibt nur eine Kategorie')
+
+  const antwort = await request.get(`${BASIS}/de/${fremde}/${artikelSlug}`, {
+    maxRedirects: 0,
+  })
+  // Dauerhaft, nicht vorübergehend: Google soll die Falschadresse aufgeben.
+  expect([301, 308]).toContain(antwort.status())
+  expect(antwort.headers()['location']).toContain(`/de/${eigene}/${artikelSlug}`)
+})

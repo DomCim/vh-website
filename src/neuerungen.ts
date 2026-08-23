@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 54,
+    datum: null,
+    titel: 'Jeder Artikel war unter jeder Kategorie erreichbar',
+    punkte: [
+      {
+        text: '**Aufgefallen beim Nachsehen zu Googles „Duplikat"-Meldung.** Der Gartensessel steht in `Möbel` — erreichbar war er aber unter jeder Kategorie, die es gibt: unter `Outdoor`, unter `Pflanzen`, sogar unter `Maschinenbau`. Bei vierzehn Kategorien sind das vierzehn Adressen für dieselbe Seite, und das mal jeden Artikel mal drei Sprachen.',
+      },
+      {
+        text: '**Woran es lag.** Die Artikelseite prüfte zwei Dinge: Gibt es die Kategorie? Gibt es den Artikel? Nie aber, ob die beiden zusammengehören. Eine erfundene Kategorie fiel durch, eine echte nicht — obwohl ein Artikel zu genau einer gehört.',
+      },
+      {
+        text: '**Warum es niemand gemerkt hat.** Der Hinweis für Suchmaschinen, welche Adresse die maßgebliche ist, zeigte seit jeher auf die richtige. Google hat still hinter uns aufgeräumt und den Rest verworfen — die Meldung „Duplikat" war der einzige Hinweis darauf, dass etwas nicht stimmt. Wer dagegen über so einen Link kam, sah einen Gartensessel mit „Maschinenbau" im Weg darüber.',
+      },
+      {
+        text: '**Jetzt wird umgeleitet, nicht abgewiesen.** Steht die falsche Kategorie in der Adresse, landet man dauerhaft bei der richtigen. Abzuweisen wäre der schlechtere Weg: Solche Adressen stehen in Suchergebnissen und in fremden Verweisen, und die sollen weiter ankommen — nur eben an der einen Adresse, die gilt.',
+      },
+    ],
+  },
+  {
     nummer: 53,
     datum: null,
     titel: 'Gelöschte Mails landen jetzt wirklich im Papierkorb',
