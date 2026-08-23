@@ -239,3 +239,40 @@ body {
     transparent
   );
 }
+
+/*
+ * Der Fokusrahmen für die Tastatur.
+ *
+ * **Was vorher war.** Jedes Eingabefeld der Website trägt `outline-none` und
+ * ersetzt den Rahmen des Browsers durch einen Farbwechsel am Feldrand. Das
+ * erfüllt die Regel — sichtbar ist es —, aber es ist ein Strich von einem
+ * Pixel. Wer mit der Tabulatortaste durch die Kasse geht, verliert dabei die
+ * Spur; bei Knöpfen und Links gab es überhaupt keine eigene Gestaltung.
+ *
+ * **Warum `:focus-visible` und nicht `:focus`.** Genau darum geht es hier:
+ * `:focus` greift auch beim Klicken mit der Maus, und dann steht nach jedem
+ * Klick ein Ring um den Knopf, den niemand bestellt hat. `:focus-visible`
+ * überlässt die Entscheidung dem Browser, und der trifft sie richtig —
+ * Tastatur ja, Maus nein.
+ *
+ * **Warum das hier steht und nicht an den Feldern.** Dieselbe Überlegung wie
+ * beim Ansage-Bauteil im Büro: An den Feldern wären es neun Stellen mit
+ * derselben Zeichenkette, und das nächste Feld, das jemand baut, hätte sie
+ * nicht. Hier gilt es für alles, was Fokus bekommen kann — auch für das, was
+ * es noch nicht gibt.
+ *
+ * **Ohne Ebene notiert, und das ist Absicht.** Tailwind legt seine
+ * Hilfsklassen in eine Ebene, und was außerhalb steht, gewinnt gegen jede von
+ * ihnen. Sonst bliebe `outline-none` am Feld stärker als diese Regel.
+ *
+ * **Und warum es keine Sonderfälle für dunkle Abschnitte braucht.** Bronze
+ * ist keine feste Farbe, sondern eine Rolle: Über einem hellen Hero setzt die
+ * Kopfleiste `--color-bronze` auf Anthrazit, über einem dunklen auf Weiß
+ * (siehe weiter oben). Der Ring zieht damit von selbst mit. Im dunklen
+ * Fußbereich bleibt es beim Bronze des Themas — nachgemessen 3,67:1 im hellen
+ * und 6,06:1 im dunklen Thema, und verlangt sind 3:1.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 2px;
+}
