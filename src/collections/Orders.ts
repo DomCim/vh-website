@@ -7,6 +7,8 @@ import { liveHooks } from '../lib/liveHooks'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Bestellung',
     plural: 'Bestellungen',

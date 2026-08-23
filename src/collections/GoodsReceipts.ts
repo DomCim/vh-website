@@ -25,6 +25,8 @@ import { wareneingangBuchen } from '../lib/wareneingang'
  */
 export const GoodsReceipts: CollectionConfig = {
   slug: 'goods-receipts',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Wareneingang',
     plural: 'Wareneingänge',

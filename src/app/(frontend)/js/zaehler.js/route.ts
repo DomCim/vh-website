@@ -1,5 +1,5 @@
 import { payloadClient } from '../../../../lib/data'
-import { zaehladresse } from '../../../../lib/statistik'
+import { zaehladresse, zaehlskriptMitWache } from '../../../../lib/statistik'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +42,13 @@ export async function GET(): Promise<Response> {
   try {
     const antwort = await fetch(`${adresse}/js/script.js`, { cache: 'no-store' })
     if (!antwort.ok) throw new Error(`Zählskript antwortet mit ${antwort.status}`)
-    const text = await antwort.text()
+    /*
+     * Die Wache kommt beim Ausliefern dazu und nicht beim Ausführen: So steht
+     * sie genau einmal im Zwischenspeicher und gilt für jede Auslieferung —
+     * entschieden wird trotzdem erst im Browser, denn nur der weiß, ob er
+     * ferngesteuert ist.
+     */
+    const text = zaehlskriptMitWache(await antwort.text())
     gemerkt = { zeit: Date.now(), text }
     return auslieferung(text)
   } catch (err) {

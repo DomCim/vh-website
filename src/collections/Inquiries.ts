@@ -13,6 +13,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const Inquiries: CollectionConfig = {
   slug: 'inquiries',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Anfrage',
     plural: 'Anfragen',

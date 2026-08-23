@@ -50,10 +50,13 @@ import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_
 import * as migration_20260821_065058_meldungen from './20260821_065058_meldungen';
 import * as migration_20260821_213813_abnahme_bausteine_belege from './20260821_213813_abnahme_bausteine_belege';
 import * as migration_20260822_135017_reichweite_sterne_faq from './20260822_135017_reichweite_sterne_faq';
-import * as migration_20260823_073210_google_rezensionen from './20260823_073210_google_rezensionen'
-import * as migration_20260823_110500_meldungen_github from './20260823_110500_meldungen_github'
+import * as migration_20260823_073210_google_rezensionen from './20260823_073210_google_rezensionen';
+import * as migration_20260823_110500_meldungen_github from './20260823_110500_meldungen_github';
 import * as migration_20260823_115500_digitale_ware from './20260823_115500_digitale_ware';
-import * as migration_20260823_154000_bestellung_digital_at from './20260823_154000_bestellung_digital_at'
+import * as migration_20260823_154000_bestellung_digital_at from './20260823_154000_bestellung_digital_at';
+import * as migration_20260823_160000_neuerungen from './20260823_160000_neuerungen';
+import * as migration_20260823_170000_besuche from './20260823_170000_besuche';
+import * as migration_20260823_181614_papierkorb from './20260823_181614_papierkorb';
 
 export const migrations = [
   {
@@ -319,21 +322,36 @@ export const migrations = [
   {
     up: migration_20260823_073210_google_rezensionen.up,
     down: migration_20260823_073210_google_rezensionen.down,
-    name: '20260823_073210_google_rezensionen'
+    name: '20260823_073210_google_rezensionen',
   },
   {
     up: migration_20260823_110500_meldungen_github.up,
     down: migration_20260823_110500_meldungen_github.down,
-    name: '20260823_110500_meldungen_github'
+    name: '20260823_110500_meldungen_github',
   },
   {
     up: migration_20260823_115500_digitale_ware.up,
     down: migration_20260823_115500_digitale_ware.down,
-    name: '20260823_115500_digitale_ware'
+    name: '20260823_115500_digitale_ware',
   },
   {
     up: migration_20260823_154000_bestellung_digital_at.up,
     down: migration_20260823_154000_bestellung_digital_at.down,
-    name: '20260823_154000_bestellung_digital_at'
+    name: '20260823_154000_bestellung_digital_at',
+  },
+  {
+    up: migration_20260823_160000_neuerungen.up,
+    down: migration_20260823_160000_neuerungen.down,
+    name: '20260823_160000_neuerungen',
+  },
+  {
+    up: migration_20260823_170000_besuche.up,
+    down: migration_20260823_170000_besuche.down,
+    name: '20260823_170000_besuche',
+  },
+  {
+    up: migration_20260823_181614_papierkorb.up,
+    down: migration_20260823_181614_papierkorb.down,
+    name: '20260823_181614_papierkorb'
   },
 ];

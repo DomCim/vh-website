@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 import { Rueckmeldung } from './Rueckmeldung'
 
 /**
- * Einen Entwurf endgültig verwerfen — für Angebote und Rechnungen.
+ * Einen Entwurf verwerfen — für Angebote und Rechnungen.
  *
  * Der Storno-Weg sagte lange: „Ein Entwurf hat keine Nummer — der wird
  * verworfen, nicht storniert." Nur gab es das Verwerfen nirgends, und der
@@ -36,7 +36,11 @@ export function VerwerfenKnopf({
   const [meldung, setMeldung] = useState<string | null>(null)
 
   async function verwerfen() {
-    if (!window.confirm(`${was} verwerfen? Das lässt sich nicht rückgängig machen.`)) return
+    // Kein „lässt sich nicht rückgängig machen" mehr: Der Entwurf landet im
+    // Papierkorb und ist in der Website-Verwaltung wiederherstellbar (siehe
+    // lib/wegwerfen.ts). Die Nachfrage bleibt trotzdem — sie verhindert den
+    // Fehlgriff, und darum geht es hier.
+    if (!window.confirm(`${was} verwerfen?`)) return
     setLaeuft(true)
     setMeldung(null)
     try {

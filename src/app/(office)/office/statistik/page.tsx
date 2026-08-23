@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import React from 'react'
 
+import { Statistikreiter } from '../../../../components/office/Statistikreiter'
 import { Verlauf } from '../../../../components/office/Verlauf'
 import { payloadClient } from '../../../../lib/data'
 import { bueroBenutzer } from '../../../../lib/office'
@@ -11,7 +11,6 @@ import {
   statistikzugang,
   type Auswertung,
   type Reihe,
-  ZEITRAEUME,
   type Zeitraum,
 } from '../../../../lib/statistik'
 
@@ -69,17 +68,7 @@ export default async function StatistikSeite({
         Besuche auf vincent-hellmann.com — gezählt ohne Cookies, auf dem eigenen Server.
       </p>
 
-      <div className="buero-reiter">
-        {(Object.keys(ZEITRAEUME) as Zeitraum[]).map((z) => (
-          <Link
-            key={z}
-            href={`/office/statistik?zeitraum=${z}`}
-            aria-current={z === zeitraum ? 'page' : undefined}
-          >
-            {ZEITRAEUME[z].label}
-          </Link>
-        ))}
-      </div>
+      <Statistikreiter ansicht="zahlen" zeitraum={zeitraum} />
 
       {!zugang ? (
         <div className="buero-hinweis warn" style={{ marginTop: '1rem' }}>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
 
     if (b.aktion === 'loeschen') {
       if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
-      await payload.delete({ collection: 'follow-ups', id: b.id, overrideAccess: true })
+      await wegwerfen(payload, 'wiedervorlagen', b.id)
       return NextResponse.json({ ok: true, id: b.id })
     }
 

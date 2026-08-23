@@ -15,6 +15,7 @@ import {
   richTextZuText,
   sprache,
 } from './helpers'
+import { wegwerfenIn } from '../wegwerfen'
 
 const bereich = z.enum(['kommunal', 'gewerbe', 'privat'])
 
@@ -227,7 +228,7 @@ export function registerReferenzen(server: McpServer) {
     'referenz_loeschen',
     {
       description:
-        'Löscht eine Referenz endgültig. Ohne bestaetigen=true wird nur angezeigt, was gelöscht würde. Die Bilder bleiben in der Mediathek.',
+        'Wirft eine Referenz in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true wird nur angezeigt, was verschwindet. Die Bilder bleiben in der Mediathek.',
       inputSchema: { slug: z.string(), bestaetigen },
     },
     async ({ slug, bestaetigen: jetzt }) => {
@@ -243,7 +244,7 @@ export function registerReferenzen(server: McpServer) {
           jahr: p.year ?? null,
         })
       }
-      await payload.delete({ collection: 'projects', id: p.id })
+      await wegwerfenIn(payload, 'projects', p.id)
       return ok({ ok: true, geloescht: p.title })
     },
   )

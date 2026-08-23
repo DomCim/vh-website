@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
-import { autoSlug } from '../lib/slug'
+import { autoSlug, slugFreigeben } from '../lib/slug'
 
 const indexNowProjekte = indexNowHooks((doc) =>
   doc.slug ? `/projekte/${doc.slug}` : null,
@@ -10,6 +10,8 @@ const indexNowProjekte = indexNowHooks((doc) =>
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Referenz-Projekt',
     plural: 'Referenzen',
@@ -27,6 +29,8 @@ export const Projects: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
+    // Der Slug wird beim Wegwerfen frei (siehe lib/slug.ts)
+    beforeChange: [slugFreigeben],
     // Neue Referenzen den Suchdiensten melden (siehe lib/indexnow.ts)
     afterChange: indexNowProjekte.afterChange,
     afterDelete: indexNowProjekte.afterDelete,

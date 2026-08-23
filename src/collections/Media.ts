@@ -5,6 +5,8 @@ import { liveHooks } from '../lib/liveHooks'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Medien',
     plural: 'Medien',

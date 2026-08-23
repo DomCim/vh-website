@@ -127,6 +127,17 @@ export async function sicherungErstellen(payload: Payload): Promise<Sicherung> {
       maxBuffer: 10 * 1024 * 1024,
     })
 
+    /*
+     * Der Ordner heißt so, wie er im Archiv wirklich heißt.
+     *
+     * Hier stand „medien/" — `tar` legt ihn aber unter dem Namen des
+     * Medien-Verzeichnisses ab, und das ist `media`. Wer im Ernstfall nach
+     * dem Ordner aus der Anleitung sucht, findet ihn nicht. Genau dieses
+     * Blatt ist das eine, das gelesen wird, wenn alles andere weg ist —
+     * deshalb steht der Name jetzt nicht mehr daneben, sondern kommt aus
+     * derselben Quelle wie das Archiv.
+     */
+    const medienOrdner = path.basename(MEDIEN)
     await fs.writeFile(
       path.join(arbeit, 'LIESMICH.txt'),
       [
@@ -135,17 +146,17 @@ export async function sicherungErstellen(payload: Payload): Promise<Sicherung> {
         '',
         'Inhalt:',
         '  datenbank.dump   Die vollständige Datenbank (Format: pg_dump -Fc)',
-        '  medien/          Alle Bilder und Videos aus der Mediathek',
+        `  ${medienOrdner}/${' '.repeat(Math.max(1, 16 - medienOrdner.length))}Alle Bilder und Videos aus der Mediathek`,
         '',
         'Zurückspielen:',
         '  1. Archiv entpacken:  tar -xzf ' + name,
         '  2. Datenbank leeren und zurückspielen:',
         '     pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump',
-        '  3. Den Inhalt von medien/ in das Volume "media" des Web-Containers kopieren',
+        `  3. Den Inhalt von ${medienOrdner}/ in das Volume "media" des Web-Containers kopieren`,
         '     (Ziel im Container: /app/media)',
         '  4. Container neu starten — die Migrationen laufen beim Start von selbst.',
         '',
-        'Die Datenbank allein reicht nicht: Sie verweist auf die Dateien in medien/.',
+        `Die Datenbank allein reicht nicht: Sie verweist auf die Dateien in ${medienOrdner}/.`,
       ].join('\n'),
       'utf8',
     )

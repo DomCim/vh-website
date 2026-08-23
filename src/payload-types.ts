@@ -97,6 +97,7 @@ export interface Config {
     'system-state': SystemState;
     'mail-log': MailLog;
     notifications: Notification;
+    changelog: Changelog;
     'push-subscriptions': PushSubscription;
     media: Media;
     users: User;
@@ -137,6 +138,7 @@ export interface Config {
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    changelog: ChangelogSelect<false> | ChangelogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -370,6 +372,7 @@ export interface Product {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -381,7 +384,7 @@ export interface Category {
   /**
    * z.B. "outdoor-moebel" — wird in der URL verwendet
    */
-  slug: string;
+  slug?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
   /**
@@ -394,6 +397,7 @@ export interface Category {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -404,6 +408,7 @@ export interface Media {
   alt?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
   url?: string | null;
   thumbnailURL?: string | null;
   filename?: string | null;
@@ -517,6 +522,7 @@ export interface InventoryItem {
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -545,6 +551,7 @@ export interface Contact {
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -599,6 +606,7 @@ export interface News {
   instagramPostError?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
 }
 /**
@@ -640,6 +648,7 @@ export interface Project {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Nur echte Stimmen mit Einverständnis der Kunden eintragen — erfundene Bewertungen sind wettbewerbswidrig.
@@ -675,6 +684,7 @@ export interface Testimonial {
   featured?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -699,6 +709,7 @@ export interface Promotion {
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -776,6 +787,7 @@ export interface Order {
   customerNote?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Eingegangene Anfragen über Kontaktformular, Produktseite und Maßanfertigung.
@@ -813,6 +825,7 @@ export interface Inquiry {
   internalNote?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -848,6 +861,7 @@ export interface NewsletterSubscriber {
   lastMailAt?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
@@ -911,6 +925,7 @@ export interface Expense {
   };
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -981,6 +996,7 @@ export interface Quote {
   inquiry?: (number | null) | Inquiry;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1147,6 +1163,7 @@ export interface Job {
   project?: (number | null) | Project;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Rechnungen an Kommunen, Gewerbe und Privat außerhalb des Shops.
@@ -1265,6 +1282,7 @@ export interface OutgoingInvoice {
   quote?: (number | null) | Quote;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Eingelesene Kontoauszüge und ihre Zuordnung zu Rechnungen.
@@ -1297,6 +1315,7 @@ export interface BankTransaction {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1332,6 +1351,7 @@ export interface GoodsReceipt {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1363,6 +1383,7 @@ export interface ProductFile {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
   url?: string | null;
   thumbnailURL?: string | null;
   filename?: string | null;
@@ -1425,6 +1446,7 @@ export interface CustomerUpload {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1452,6 +1474,7 @@ export interface Stocktake {
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1475,6 +1498,7 @@ export interface FollowUp {
   createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1495,6 +1519,10 @@ export interface User {
    * Wird über die Einrichtung unten aktiviert.
    */
   mfaEnabled?: boolean | null;
+  /**
+   * Nummer der zuletzt gelesenen Neuerung. Setzt das Büro selbst.
+   */
+  neuerungGesehen?: number | null;
   passkeys?:
     | {
         credentialId: string;
@@ -1722,6 +1750,30 @@ export interface Notification {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "changelog".
+ */
+export interface Changelog {
+  id: number;
+  nummer: number;
+  titel: string;
+  datum?: string | null;
+  punkte?:
+    | {
+        text: string;
+        unter?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "push-subscriptions".
  */
 export interface PushSubscription {
@@ -1879,6 +1931,10 @@ export interface PayloadLockedDocument {
         value: number | Notification;
       } | null)
     | ({
+        relationTo: 'changelog';
+        value: number | Changelog;
+      } | null)
+    | ({
         relationTo: 'push-subscriptions';
         value: number | PushSubscription;
       } | null)
@@ -2027,6 +2083,7 @@ export interface ProductsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2041,6 +2098,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2062,6 +2120,7 @@ export interface NewsSelect<T extends boolean = true> {
   instagramPostError?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
   _status?: T;
 }
 /**
@@ -2082,6 +2141,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2099,6 +2159,7 @@ export interface TestimonialsSelect<T extends boolean = true> {
   featured?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2119,6 +2180,7 @@ export interface PromotionsSelect<T extends boolean = true> {
   active?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2182,6 +2244,7 @@ export interface OrdersSelect<T extends boolean = true> {
   customerNote?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2212,6 +2275,7 @@ export interface InquiriesSelect<T extends boolean = true> {
   internalNote?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2240,6 +2304,7 @@ export interface NewsletterSubscribersSelect<T extends boolean = true> {
   lastMailAt?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2261,6 +2326,7 @@ export interface ContactsSelect<T extends boolean = true> {
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2294,6 +2360,7 @@ export interface ExpensesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2339,6 +2406,7 @@ export interface QuotesSelect<T extends boolean = true> {
   inquiry?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2440,6 +2508,7 @@ export interface JobsSelect<T extends boolean = true> {
   project?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2498,6 +2567,7 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
   quote?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2518,6 +2588,7 @@ export interface BankTransactionsSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2552,6 +2623,7 @@ export interface InventoryItemsSelect<T extends boolean = true> {
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2577,6 +2649,7 @@ export interface GoodsReceiptsSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2598,6 +2671,7 @@ export interface ProductFilesSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -2641,6 +2715,7 @@ export interface CustomerUploadsSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2664,6 +2739,7 @@ export interface StocktakesSelect<T extends boolean = true> {
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2683,6 +2759,7 @@ export interface FollowUpsSelect<T extends boolean = true> {
   createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2787,6 +2864,29 @@ export interface NotificationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "changelog_select".
+ */
+export interface ChangelogSelect<T extends boolean = true> {
+  nummer?: T;
+  titel?: T;
+  datum?: T;
+  punkte?:
+    | T
+    | {
+        text?: T;
+        unter?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "push-subscriptions_select".
  */
 export interface PushSubscriptionsSelect<T extends boolean = true> {
@@ -2806,6 +2906,7 @@ export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -2879,6 +2980,7 @@ export interface UsersSelect<T extends boolean = true> {
   rolle?: T;
   role?: T;
   mfaEnabled?: T;
+  neuerungGesehen?: T;
   passkeys?:
     | T
     | {
@@ -3431,6 +3533,22 @@ export interface Integration {
      * In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.
      */
     apiKey?: string | null;
+    /**
+     * z.B. http://plausible_events_db:8123 — nur nötig für die einzelnen Besuchswege. Der Container muss dafür im selben Netz stehen (siehe README, „Einzelne Besuche").
+     */
+    chUrl?: string | null;
+    /**
+     * Vorgabe: plausible_events_db
+     */
+    chDatenbank?: string | null;
+    /**
+     * Vorgabe: default — so kommt ClickHouse aus dem Stack
+     */
+    chBenutzer?: string | null;
+    /**
+     * Bleibt leer, solange ClickHouse wie im Stack ohne Benutzerverwaltung läuft.
+     */
+    chPasswort?: string | null;
   };
   paypal?: {
     /**
@@ -3815,6 +3933,10 @@ export interface IntegrationsSelect<T extends boolean = true> {
         url?: T;
         seite?: T;
         apiKey?: T;
+        chUrl?: T;
+        chDatenbank?: T;
+        chBenutzer?: T;
+        chPasswort?: T;
       };
   paypal?:
     | T

@@ -8,6 +8,21 @@ import { newsletterAbmelden, newsletterBestaetigen } from '../../../../lib/newsl
 
 export const dynamic = 'force-dynamic'
 
+/*
+ * Gehört nicht in den Index — und braucht deshalb eine eigene Angabe.
+ *
+ * Die Seite bedient vor allem die Links aus den Mails — Bestätigen und
+ * Abmelden, jeweils mit einem Schlüssel im Adressfeld. Als Suchtreffer
+ * hätte sie keinen Wert, und ein Abmeldelink im Index erst recht nicht.
+ *
+ * `follow: true`, damit den Verweisen von hier trotzdem gefolgt wird: Der
+ * Warenkorb verlinkt zurück in den Laden, und diese Wege sollen nicht
+ * abreißen. Ohne eigene Angabe erbte die Seite die des Layouts und erklärte
+ * sich zur Startseite (`rel=canonical` auf `/de`) — drei Sprachen, dieselbe
+ * dünne Seite, und Google entscheidet selbst, was davon zählt.
+ */
+export const metadata = { robots: { index: false, follow: true } }
+
 /**
  * Newsletter-Seite: Anmeldung, Bestätigung und Abmeldung an einer Stelle.
  *

@@ -313,6 +313,7 @@ const de = {
   },
   news: {
     title: 'News',
+    intro: 'Neues aus der Werkstatt: fertige Arbeiten, Werkstoffe und Ratgeber rund um Stahl, Holz und Licht.',
     readMore: 'Weiterlesen',
     empty: 'Derzeit keine Beiträge.',
     tabAll: 'Alle',
@@ -337,6 +338,7 @@ const de = {
   },
   promotions: {
     title: 'Aktuelle Aktionen',
+    intro: 'Laufende Angebote aus der Werkstatt — mit allem, was dazugehört.',
     validUntil: 'Gültig bis',
     empty: 'Derzeit keine laufenden Aktionen.',
     code: 'Code',
@@ -714,6 +716,7 @@ const fr: Dictionary = {
   },
   news: {
     title: 'Actualités',
+    intro: "Des nouvelles de l'atelier : travaux réalisés, matériaux et conseils autour de l'acier, du bois et de la lumière.",
     readMore: 'Lire la suite',
     empty: 'Aucun article pour le moment.',
     tabAll: 'Tous',
@@ -738,6 +741,7 @@ const fr: Dictionary = {
   },
   promotions: {
     title: 'Offres en cours',
+    intro: "Les offres en cours de l'atelier — avec tout ce qui en fait partie.",
     validUntil: "Valable jusqu'au",
     empty: 'Aucune offre en cours actuellement.',
     code: 'Code',
@@ -1111,6 +1115,7 @@ const en: Dictionary = {
   },
   news: {
     title: 'News',
+    intro: 'News from the workshop: finished work, materials and guides on steel, wood and light.',
     readMore: 'Read more',
     empty: 'No articles yet.',
     tabAll: 'All',
@@ -1135,6 +1140,7 @@ const en: Dictionary = {
   },
   promotions: {
     title: 'Current offers',
+    intro: 'Current offers from the workshop — including everything that belongs to them.',
     validUntil: 'Valid until',
     empty: 'No offers running at the moment.',
     code: 'Code',

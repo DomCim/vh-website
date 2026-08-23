@@ -20,7 +20,16 @@ export async function getMainCategories(locale: Locale) {
     limit: 20,
     depth: 1,
   })
-  return docs
+  /*
+   * Ohne URL-Pfad kein Menüpunkt.
+   *
+   * Der Slug ist seit dem Papierkorb kein Pflichtfeld mehr — er wird beim
+   * Wegwerfen freigegeben, damit derselbe Name wieder vergeben werden kann
+   * (siehe lib/slug.ts). Weggeworfenes kommt hier ohnehin nicht an, aber die
+   * Abfrage kann es nicht mehr versprechen; also wird es hier geprüft, statt
+   * das Menü auf einen Link ohne Ziel laufen zu lassen.
+   */
+  return docs.filter((d): d is typeof d & { slug: string } => Boolean(d.slug))
 }
 
 export async function getCategoryBySlug(slug: string, locale: Locale) {

@@ -4,6 +4,7 @@ import { isIP } from 'node:net'
 import { z } from 'zod'
 
 import { bestaetigen, bestaetigungNoetig, db, fehler, type McpServer, ok, sprache } from './helpers'
+import { wegwerfen } from '../wegwerfen'
 
 /**
  * Über eine URL holt der Server die Datei selbst — daher großzügig.
@@ -286,7 +287,7 @@ export function registerMedien(server: McpServer) {
     'bild_loeschen',
     {
       description:
-        'Löscht ein Bild aus der Mediathek — nur, wenn es nirgends mehr verwendet wird. Ohne bestaetigen=true nur Vorschau.',
+        'Nimmt ein Bild aus der Mediathek — nur, wenn es nirgends mehr verwendet wird. Es landet im Papierkorb und ist in der Verwaltung wiederherstellbar. Ohne bestaetigen=true nur Vorschau.',
       inputSchema: { id: z.number(), bestaetigen },
     },
     async ({ id, bestaetigen: jetzt }) => {
@@ -301,7 +302,7 @@ export function registerMedien(server: McpServer) {
         })
       }
       if (!jetzt) return bestaetigungNoetig({ id, datei: m.filename, verwendetIn: [] })
-      await payload.delete({ collection: 'media', id })
+      await wegwerfen(payload, 'medien', id)
       return ok({ ok: true, geloescht: m.filename })
     },
   )

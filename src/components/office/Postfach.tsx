@@ -221,7 +221,18 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
       body: JSON.stringify({ aktion: was, uid, ordner, fach }),
     })
     if (!res.ok) {
-      setMeldung('Das hat nicht geklappt.')
+      /*
+       * Der Grund vom Server, wenn er einen nennt.
+       *
+       * Solange hier nur „hat nicht geklappt" stand, war der häufigste Fall
+       * unerklärlich: Fehlt der Ordner „Papierkorb", blieb die Mail liegen,
+       * und niemand kam darauf, in den Postfach-Einstellungen nachzusehen.
+       */
+      const grund = await res
+        .json()
+        .then((j) => (typeof j?.grund === 'string' ? j.grund : null))
+        .catch(() => null)
+      setMeldung(grund ?? 'Das hat nicht geklappt.')
       return
     }
     if (was === 'loeschen') {

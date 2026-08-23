@@ -12,6 +12,7 @@ import {
   ok,
   sprache,
 } from './helpers'
+import { wegwerfenIn } from '../wegwerfen'
 
 export function registerKategorien(server: McpServer) {
   // ── Kategorien ────────────────────────────────────────────────────────────
@@ -188,7 +189,7 @@ export function registerKategorien(server: McpServer) {
     'kategorie_loeschen',
     {
       description:
-        'Löscht eine Kategorie endgültig. Ohne bestaetigen=true wird nur angezeigt, was passieren würde. Eine Kategorie mit Artikeln wird nicht gelöscht — die Artikel zuerst umhängen.',
+        'Wirft eine Kategorie in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true wird nur angezeigt, was passieren würde. Eine Kategorie mit Artikeln bleibt stehen — die Artikel zuerst umhängen.',
       inputSchema: { slug: z.string(), bestaetigen },
     },
     async ({ slug, bestaetigen: jetzt }) => {
@@ -247,7 +248,7 @@ export function registerKategorien(server: McpServer) {
         )
       }
 
-      await payload.delete({ collection: 'categories', id: kat.id })
+      await wegwerfenIn(payload, 'categories', kat.id)
       return ok({ ok: true, geloescht: uebersicht.name, slug })
     },
   )

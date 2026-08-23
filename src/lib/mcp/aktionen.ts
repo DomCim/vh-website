@@ -10,6 +10,7 @@ import {
   resolveIdsStrikt,
   sprache,
 } from './helpers'
+import { wegwerfenIn } from '../wegwerfen'
 
 const giltFuerEnum = z.enum(['all', 'categories', 'products'])
 
@@ -284,7 +285,7 @@ export function registerAktionen(server: McpServer) {
     'aktion_loeschen',
     {
       description:
-        'Löscht eine Aktion endgültig. Ohne bestaetigen=true nur Vorschau. Meist reicht aktion_beenden.',
+        'Wirft eine Aktion in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true nur Vorschau. Meist reicht aktion_beenden.',
       inputSchema: { id: z.number(), bestaetigen },
     },
     async ({ id, bestaetigen: jetzt }) => {
@@ -296,7 +297,7 @@ export function registerAktionen(server: McpServer) {
       if (!jetzt) {
         return bestaetigungNoetig({ id, titel: doc.title, bis: doc.endDate, code: doc.code ?? null })
       }
-      await payload.delete({ collection: 'promotions', id })
+      await wegwerfenIn(payload, 'promotions', id)
       return ok({ ok: true, geloescht: doc.title })
     },
   )

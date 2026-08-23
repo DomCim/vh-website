@@ -5,6 +5,8 @@ import { liveHooks } from '../lib/liveHooks'
 
 export const Testimonials: CollectionConfig = {
   slug: 'testimonials',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Kundenstimme',
     plural: 'Kundenstimmen',

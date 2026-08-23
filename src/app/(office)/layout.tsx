@@ -11,6 +11,7 @@ import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { Haptik } from '../../components/office/Haptik'
 import { Kopftitel } from '../../components/office/Kopftitel'
 import { Meldungsglocke } from '../../components/office/Meldungsglocke'
+import { NeuerungenBanner } from '../../components/office/NeuerungenBanner'
 import { Scrollstart } from '../../components/office/Scrollstart'
 import { SitzungVerlaengern } from '../../components/office/SitzungVerlaengern'
 import { Tastaturwache } from '../../components/office/Tastaturwache'
@@ -89,6 +90,8 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
         <BueroNavigation />
+        {/* Steht zwischen Navigation und Inhalt: gesehen wird er, im Weg ist er nicht */}
+        <NeuerungenBanner />
         <main className="buero-inhalt">{children}</main>
       </body>
     </html>

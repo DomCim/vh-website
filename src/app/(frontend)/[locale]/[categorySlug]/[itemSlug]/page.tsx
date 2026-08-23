@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import React from "react";
 
 import {
@@ -30,6 +30,7 @@ import {
   BASE_URL,
   breadcrumbJsonLd,
   jsonLd,
+  versandUndRueckgabe,
 } from "../../../../../lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -53,15 +54,12 @@ export async function generateMetadata({
   /*
    * Die maßgebliche Adresse kommt vom Artikel, nicht aus dem Aufruf.
    *
-   * Ein Artikel ist unter jedem Kategoriepfad erreichbar, der auf ihn führt —
-   * das Sofa also unter `/de/moebel/…` wie unter `/de/outdoor/…`. Stand hier
-   * der Pfad aus dem Aufruf, erklärte sich jede dieser Adressen selbst für die
-   * maßgebliche, und Google hatte zwei Seiten mit demselben Inhalt vor sich.
-   * Beide bekommen dann halb so viel Gewicht wie eine.
-   *
-   * Jetzt zeigen alle auf die eine Adresse, unter der der Artikel wirklich
-   * einsortiert ist. Ein alter Link bleibt gültig und führt zum Ziel; er zählt
-   * nur nicht mehr als eigene Seite.
+   * Ein Artikel gehört zu **einer** Kategorie; jede andere im Pfad ist ein
+   * Irrtum. Die Seite leitet solche Aufrufe inzwischen dorthin um, wo der
+   * Artikel wirklich steht (siehe unten) — aber die Angabe hier bleibt: Sie
+   * wird berechnet, bevor die Umleitung greift, und ein `canonical` aus dem
+   * Aufruf erklärte jede Falschadresse zur maßgeblichen. Zwei Seiten mit
+   * demselben Inhalt bekommen dann halb so viel Gewicht wie eine.
    */
   const eigeneKategorie =
     typeof product.category === "object" && product.category
@@ -101,6 +99,29 @@ export default async function ProductPage({ params }: { params: PageParams }) {
       ? ((product.category as { slug?: string }).slug ?? categorySlug)
       : categorySlug;
   const artikelPfad = `/${kanonischeKategorie}/${itemSlug}`;
+
+  /*
+   * Falsche Kategorie in der Adresse? Dann dorthin, wo der Artikel wirklich
+   * steht.
+   *
+   * Bis hierher wurde nur geprüft, ob es die Kategorie *gibt* und ob es den
+   * Artikel *gibt* — nie, ob beide zusammengehören. Damit war jeder Artikel
+   * unter jeder Kategorie erreichbar: `/de/maschinenbau/outdoor-sessel-os`
+   * lieferte den Gartensessel, mit „Maschinenbau" im Brotkrumen-Pfad. Bei
+   * vierzehn Kategorien ist das die vierzehnfache Zahl an Adressen für
+   * dieselbe Seite — und Google meldete nicht ohne Grund „Duplikat".
+   *
+   * Aufgefallen ist es nie, weil `rel=canonical` seit jeher auf die richtige
+   * Adresse zeigt: Google räumte still hinter uns auf. Ein Mensch, der über so
+   * einen Link kommt, sieht dagegen die falsche Einordnung.
+   *
+   * Umgeleitet statt abgewiesen: Solche Adressen stehen in Suchmaschinen und
+   * in fremden Verweisen. Ein 404 verlöre sie; die dauerhafte Umleitung führt
+   * den Besucher ans Ziel und sagt Google zugleich, welche Adresse gilt.
+   */
+  if (kanonischeKategorie !== categorySlug) {
+    permanentRedirect(`/${locale}${artikelPfad}`);
+  }
 
   /*
    * Läuft für diesen Artikel eine Aktion? Dann steht der Rabatt am Preis —
@@ -204,6 +225,14 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
           url: `${BASE_URL}/${locale}${artikelPfad}`,
+          /*
+           * Versandkosten und Rückgabefrist gehören ans Angebot, nicht auf
+           * eine Unterseite: Google zeigt beides unter dem Treffer an, und
+           * ohne die Angaben bleibt dort die Zeile leer, in der bei der
+           * Konkurrenz „Kostenloser Versand" steht. Begründung und Herkunft
+           * der Werte in lib/seo.ts.
+           */
+          ...versandUndRueckgabe(product),
         },
       }),
   });
