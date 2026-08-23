@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Einen Entwurf endgültig verwerfen — für Angebote und Rechnungen.
@@ -72,7 +73,7 @@ export function VerwerfenKnopf({
       >
         Entwurf verwerfen
       </button>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
     </>
   )
 }

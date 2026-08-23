@@ -6,6 +6,30 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Besucherverlauf lässt sich endlich am Handy lesen.** Die Werte hingen an einem Anhang, den nur ein Mauszeiger hervorholt — am Handy erschien schlicht nichts. Dreißig Balken, und auf dem Gerät, an dem man sie ansieht, war kein einziger Wert lesbar. Jetzt zeigt Antippen den Tag und die Zahl in der Zeile darunter, an einer festen Stelle statt in einem Kästchen, das den Nachbarbalken verdeckt. Darunter stehen die Zahlen zusätzlich als aufklappbare Tabelle — kopierbar und für Vorleser lesbar.
+
+- **In der Auslastung steht jetzt, um wie viel eine Woche überbucht ist.** Bisher hieß es bei jeder vollen Woche „voll", ob sie punktgenau ausgelastet war oder fünf Stunden zu viel trug — der Balken ist bei 100 % abgeschnitten und sah in beiden Fällen gleich aus. Das ist aber genau der Unterschied zwischen „geht gerade noch" und „da muss etwas weichen".
+
+- **Wer die Website mit der Tastatur bedient, sieht jetzt, wo er ist.** Bisher ersetzten die Formulare den Fokusrahmen des Browsers durch einen Farbwechsel am Feldrand — ein Strich von einem Pixel, bei dem man beim Durchtabben die Spur verliert; Knöpfe und Links hatten gar keine eigene Gestaltung. Jetzt liegt ein bronzefarbener Ring um das, was gerade dran ist. **Nur bei Tastaturbedienung**: Wer mit der Maus klickt, bekommt ihn nicht zu sehen.
+
+- **Wer sich das Büro vorlesen lässt, hört jetzt auch die Rückmeldungen.** „Gespeichert", „Gemerkt — geht raus, sobald wieder Netz da ist", „Das hat nicht geklappt": Diese Zeilen standen zwar sichtbar da, wurden aber nicht angesagt. In einundvierzig Formularen war das so — beim Anmelden, im Postfach, an jeder Rechnung, an jedem Auftrag. Am meisten fehlte es beim Erfassen in Reihe, wo diese eine Zeile die einzige Auskunft ist, dass etwas angelegt wurde.
+
+- **Der Shop kann jetzt Dateien verkaufen.** Ein Artikel lässt sich als **digitale Ware** kennzeichnen; die dazugehörigen Dateien kreuzt man unter Werkstattdateien an. Der Anlass war handfest: Auf Etsy steht ein Bauplan als Download und hatte drei Leute im Warenkorb — hier ging das bis jetzt nicht.
+
+- **Für den Kunden fällt weg, was keinen Sinn hat.** Kein Versand, und bei einem Korb voller Dateien auch keine Anschrift. Dafür kommt ein Haken dazu: Digitale Inhalte werden sofort bereitgestellt, und damit erlischt das Widerrufsrecht — das muss ausdrücklich verlangt werden, sonst entsteht gar keine Bestellung. Festgehalten wird es mit Zeitpunkt an der Bestellung, getrennt vom Verzicht bei Einzelanfertigung, weil es ein anderer Grund ist.
+
+- **Geliefert wird ab „bezahlt", und keinen Schritt früher.** Die Links stehen in der Bestellbestätigung und auf der Bestellseite. Vorher steht dort der Grund und kein leerer Fleck. Sie gelten ein Jahr und werden bei jedem Aufruf der Bestellseite neu erzeugt; eine stornierte Bestellung liefert nichts mehr.
+
+- **Dateien gibt es nur gegen PayPal, nicht auf Rechnung.** Liegt eine Datei im Korb, steht der Kauf auf Rechnung gar nicht erst zur Wahl. Der Grund ist handfest: Eine Datei lässt sich nicht zurückholen, und der Status **„In Fertigung"** gibt sie frei — bei einem Stück Stahl ist das richtig, bei einem Bauplan bedeutet er nichts. Ein unbedachter Klick im Büro hätte die Datei ohne Geldeingang ausgeliefert. Nebenbei entfällt damit die Kette aus Anzahlung, Zwischen- und Schlussrechnung, die an einem Bauplan ohnehin Papier ohne Gegenstand wäre.
+
+- **Die gekauften Dateien stehen jetzt direkt im Kundenkonto**, mit Name und Bestellnummer. Vorher führte der Weg über die Bestellseite — ein Klick, der nichts beantwortet für jemanden, der genau deswegen ins Konto geht.
+
+- **Die Widerrufsbelehrung hat einen Absatz dazu bekommen**, in allen drei Sprachen. Er muss noch in den veröffentlichten Text übernommen werden — die Entwürfe im Code sind nicht das, was auf der Website steht.
+
+- **Eine Frage für die Kanzlei, nicht für den Code:** Digitale Leistungen an Verbraucher im EU-Ausland werden im Land des Kunden besteuert, nicht am Betriebssitz. Bis 10.000 € Jahresumsatz aus solchen Verkäufen bleibt der französische Satz; darüber führt der Weg über die OSS-Meldung. Bei einzelnen Bauplänen ist das unkritisch, aber es sollte jemand wissen, bevor es mehr wird.
+
+- **Beim Melden stand im Feld „Wo war das?" immer „/office".** Egal, von welcher Seite man kam. Der Grund: Das Büro wechselt die Seite im Browser, ohne die Seite neu zu laden — die Herkunftsangabe des Browsers bleibt dabei auf dem stehen, womit alles einmal geladen wurde. Jetzt bringt der Punkt „Fehler melden" selbst mit, wo man gerade war.
+
 - **Im Büro lässt sich jetzt ein Fehler melden — mit Foto.** Unter **Sonstiges → Fehler melden** stehen drei Felder: worum es geht, was passiert ist, und wo. Dazu bis zu fünf Fotos vom Handy. Daraus wird ein Eintrag im Repository, den sich jemand ansieht. Die Antwort ist die Nummer des Eintrags samt Link.
 
 - **Was niemand aus dem Kopf weiß, trägt die Seite selbst bei:** die Seite, auf der es passiert ist, das Gerät, die laufende Fassung, der Name und der Zeitpunkt. Genau diese Angaben fehlen sonst, wenn jemand Wochen später nachsehen will. Die Seite steht sichtbar im Formular und lässt sich ändern — wer von der Inventarliste kommt, aber die Bestellung meint, schreibt es hin.

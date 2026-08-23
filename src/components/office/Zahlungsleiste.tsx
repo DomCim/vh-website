@@ -16,6 +16,7 @@ import {
   zahlungsstand,
   type StufenRechnung,
 } from '../../lib/zahlungsstand'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Was das Geld für diesen Auftrag bedeutet.
@@ -202,7 +203,7 @@ export function Zahlungsleiste({
         </button>
       )}
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
     </div>
   )
 }

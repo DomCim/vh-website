@@ -738,6 +738,86 @@ Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **
   node_modules/.bin/payload run scripts/benutzer.ts
   ```
 
+## Digitale Ware (Baupläne zum Herunterladen)
+
+Ein Artikel kann statt Stahl eine Datei sein. Der Anlass war handfest: Auf
+Etsy steht ein Bauplan als Download und hatte beim Nachsehen drei Leute im
+Warenkorb — der eigene Shop konnte das bis dahin nicht.
+
+### Einrichten
+
+1. Am Artikel in der Seitenleiste **„Digitale Ware — wird als Download
+   geliefert"** ankreuzen.
+2. Die Dateien im Büro unter *Artikel → Werkstattdateien* hochladen und dort
+   je Datei **„Gehört zum Download dieses Artikels"** ankreuzen.
+
+Das zweite Häkchen ist bewusst nicht dasselbe wie „Für den Auftraggeber
+sichtbar": An einem Bauplan hängen Fertigungsdaten, die im Haus bleiben, und
+sie liegen in derselben Ablage.
+
+### Was sich dadurch ändert
+
+- **Kein Versand.** Die Kasse rechnet für digitale Zeilen mit 0, unabhängig
+  davon, was am Artikel steht.
+- **Keine Anschrift.** Liegen ausschließlich Dateien im Korb, entfällt das
+  Adressfeld ganz.
+- **Eine zweite Einwilligung.** Digitale Inhalte werden sofort bereitgestellt,
+  und damit erlischt das Widerrufsrecht. Der Kunde muss das ausdrücklich
+  verlangen; ohne diesen Haken weist die Kasse die Bestellung ab
+  (`missing-digital-consent`). Festgehalten wird er mit Zeitpunkt an der
+  Bestellung unter `consent.digitalAt` — getrennt vom Verzicht bei
+  Einzelanfertigung, weil es ein anderer Grund ist.
+
+### Bezahlt wird per PayPal, nicht auf Rechnung
+
+Enthält ein Warenkorb eine Datei, steht der Kauf auf Rechnung nicht zur Wahl
+— die Kasse weist eine solche Bestellung auch server-seitig ab
+(`digital-nur-paypal`).
+
+Zwei Gründe. Der Kauf auf Rechnung ist für Projektgeschäft gebaut: Es
+entsteht ein Fertigungsauftrag mit Anzahlung, Zwischen- und Schlussrechnung.
+An einem Bauplan ist nichts zu fertigen, und die Kette aus Teilrechnungen
+wäre Papier ohne Gegenstand.
+
+Der handfestere Grund: Eine Datei lässt sich nicht zurückholen. Der Status
+„In Fertigung" gibt sie frei — bei einem Stück Stahl ist das richtig, bei
+einer Datei bedeutet er nichts, und ein unbedachter Klick im Büro hätte sie
+ohne Geldeingang ausgeliefert. Die Schranke schließt diese Möglichkeit,
+statt sich auf Umsicht zu verlassen.
+
+Ist PayPal nicht eingerichtet, lässt sich digitale Ware folglich nicht
+verkaufen. Die Kasse sagt das, bevor jemand ausfüllt.
+
+### Ausgeliefert wird ab „bezahlt"
+
+Die Links stehen in der Bestellbestätigung, auf der Bestellseite und im
+Kundenkonto — dort mit Namen und Bestellnummer, ohne Umweg über die
+Bestellseite. Vorher steht dort der Grund und kein leerer Fleck.
+
+Sie tragen ihre Berechtigung selbst — eine Prüfsumme über Bestellung, Datei
+und Ablaufzeit, geschlüsselt mit `PAYLOAD_SECRET`. Eine Anmeldung wäre hier
+die sicherste Art, den Kauf im Postfach liegen zu lassen: Wer die Mail
+öffnet, ist selten angemeldet.
+
+**Ein Jahr**, und der Link entsteht bei jedem Aufruf der Bestellseite neu —
+wer ihn braucht, holt ihn sich dort. Eine stornierte Bestellung liefert
+nichts mehr.
+
+**Welche Datei ausgeliefert wird, entscheidet der Stand von heute.** Wer
+einen Bauplan verbessert, liefert die neue Fassung aus, ohne alte
+Bestellungen anzufassen. Bei einem Bauplan ist das ein Geschenk und kein
+Problem.
+
+### Was noch offen ist: die Umsatzsteuer
+
+Digitale Leistungen an Verbraucher im EU-Ausland werden **im Land des
+Kunden** besteuert, nicht am Sitz des Betriebs — anders als der Versand von
+Möbeln. Unterhalb von 10.000 € Jahresumsatz aus EU-Fernverkäufen und
+digitalen Leistungen darf weiterhin der französische Satz berechnet werden;
+darüber führt der Weg über die **OSS-Meldung**. Der Shop rechnet derzeit mit
+einem Satz. Solange es um einzelne Baupläne geht, ist das unkritisch — wer
+das ändern will, sollte vorher mit der Kanzlei sprechen, nicht mit dem Code.
+
 ## Fehler melden (Eintrag im Repository)
 
 Im Büro steht unter **Sonstiges → Fehler melden** ein kurzes Formular:

@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { textAlsAbsaetze } from '../../lib/signaturHtml'
 import { Fussleiste } from './Fussleiste'
 import { Schreibfeld } from './Schreibfeld'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type NewsVorschlag = {
   id: number | string
@@ -131,7 +132,7 @@ export function NewsletterVersand({
         </label>
       </div>
 
-      {meldung && <div className="buero-hinweis">{meldung}</div>}
+      <Rueckmeldung text={meldung} />
 
       <Fussleiste>
         <button

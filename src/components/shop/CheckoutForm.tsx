@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { formatPrice, type Locale } from '../../lib/i18n'
 import { Schrittformular, type Schritt } from '../Schrittformular'
@@ -108,6 +108,7 @@ export function CheckoutForm({
   locale,
   dict,
   cartDict,
+  downloadDict,
   initialCode,
   paypalAvailable = false,
   vatRate = 20,
@@ -115,6 +116,8 @@ export function CheckoutForm({
   locale: Locale
   dict: CheckoutDict
   cartDict: CartDict
+  /** Die Sätze rund um digitale Ware */
+  downloadDict: { hinweisKasse: string; nurPaypal: string; keineZahlung: string }
   initialCode?: string
   paypalAvailable?: boolean
   vatRate?: number
@@ -123,7 +126,9 @@ export function CheckoutForm({
   const formular = useRef<HTMLFormElement>(null)
   const [submitting, setSubmitting] = useState(false)
   // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an"
-  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung'>(null)
+  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung' | 'digital-ohne-paypal'>(
+    null,
+  )
   /*
    * Zwei Zahlarten: PayPal (nur wenn eingerichtet) und Rechnung (immer).
    * Ohne PayPal-Zugangsdaten ist Rechnung vorgewählt — die Kasse funktioniert
@@ -132,6 +137,7 @@ export function CheckoutForm({
   const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'rechnung'>(
     paypalAvailable ? 'paypal' : 'rechnung',
   )
+
   /*
    * Die E-Mail-Bestätigung ist das Tor zum zweiten Schritt.
    *
@@ -157,17 +163,42 @@ export function CheckoutForm({
   const [differentAddress, setDifferentAddress] = useState(false)
   const [zustimmung, setZustimmung] = useState(false)
   const [verzicht, setVerzicht] = useState(false)
+  const [sofort, setSofort] = useState(false)
   const [fehlendeZustimmung, setFehlendeZustimmung] = useState(false)
 
   // Bei PayPal kommt die Lieferadresse aus dem PayPal-Konto, außer der Kunde
   // will ausdrücklich eine abweichende angeben. Bei Rechnung gibt es diese
   // Quelle nicht — dort ist die Adresse bei Lieferung Pflicht.
+  /*
+   * Digitale Ware ändert zwei Dinge an dieser Kasse.
+   *
+   * Ist überhaupt etwas dabei, muss die sofortige Bereitstellung ausdrücklich
+   * verlangt werden — sonst bliebe der Kauf widerrufbar, obwohl die Datei
+   * längst heruntergeladen ist. Liegt **nur** Digitales im Korb, entfällt die
+   * Anschrift: Es wird nichts verschickt, und ein Pflichtfeld für eine
+   * Lieferung, die es nicht gibt, ist eine Hürde ohne Zweck.
+   */
+  const hatDigitales = items.some((i) => i.digital === true)
+  const nurDigital = items.length > 0 && items.every((i) => i.digital === true)
+
+  /*
+   * Dateien gibt es nur gegen sofortige Zahlung. Steht die Auswahl trotzdem
+   * auf Rechnung — weil PayPal fehlt oder weil jemand erst danach eine Datei
+   * in den Korb gelegt hat —, wird sie hier zurückgeholt: Die Kasse weist
+   * eine solche Bestellung ohnehin ab, und das erst beim Absenden zu sagen
+   * wäre die unfreundlichste Art, es zu sagen.
+   */
+  useEffect(() => {
+    if (hatDigitales && paymentMethod !== 'paypal' && paypalAvailable) setPaymentMethod('paypal')
+  }, [hatDigitales, paymentMethod, paypalAvailable])
+
   const showAddressForm =
-    deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
+    !nurDigital && deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
 
   // Nur wenn wir sicher wissen, dass ein Stück nach Vorgabe entsteht, wird der
   // Verzicht abgefragt — sonst spräche die Kasse jemandem ein Recht ab, das er hat.
   const einzelanfertigung = items.some((i) => i.madeToOrder === true)
+
 
   const shipping =
     deliveryMethod === 'pickup'
@@ -315,7 +346,16 @@ export function CheckoutForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!zustimmung || (einzelanfertigung && !verzicht)) {
+    /*
+     * Ohne PayPal gibt es für eine Datei keinen Weg: Der Kauf auf Rechnung
+     * ist ausgeschlossen, und die Kasse wiese die Bestellung ohnehin ab. Das
+     * hier zu sagen ist freundlicher, als es den Server sagen zu lassen.
+     */
+    if (hatDigitales && !paypalAvailable) {
+      setError('digital-ohne-paypal')
+      return
+    }
+    if (!zustimmung || (einzelanfertigung && !verzicht) || (hatDigitales && !sofort)) {
       setFehlendeZustimmung(true)
       return
     }
@@ -356,7 +396,11 @@ export function CheckoutForm({
           emailCode: emailCode || undefined,
           // Was bestätigt wurde, gehört in die Bestellung — im Streitfall zählt
           // nicht, was auf der Seite stand, sondern was belegbar ist.
-          consent: { terms: true, waiver: einzelanfertigung ? verzicht : undefined },
+          consent: {
+            terms: true,
+            waiver: einzelanfertigung ? verzicht : undefined,
+            sofortigeLieferung: hatDigitales ? sofort : undefined,
+          },
         }),
       })
       const result = (await res.json()) as { url?: string; error?: string }
@@ -549,24 +593,31 @@ export function CheckoutForm({
                             )}
                           </label>
                         )}
-                        <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
-                          <span className="flex items-center gap-3">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="rechnung"
-                              checked={paymentMethod === 'rechnung'}
-                              onChange={() => setPaymentMethod('rechnung')}
-                              className="accent-ink"
-                            />
-                            {dict.optionInvoice}
-                          </span>
-                          {paymentMethod === 'rechnung' && (
-                            <span className="text-ink-soft mt-1 block pl-7 text-xs">
-                              {dict.invoiceNote}
+                        {!hatDigitales && (
+                          <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
+                            <span className="flex items-center gap-3">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="rechnung"
+                                checked={paymentMethod === 'rechnung'}
+                                onChange={() => setPaymentMethod('rechnung')}
+                                className="accent-ink"
+                              />
+                              {dict.optionInvoice}
                             </span>
-                          )}
-                        </label>
+                            {paymentMethod === 'rechnung' && (
+                              <span className="text-ink-soft mt-1 block pl-7 text-xs">
+                                {dict.invoiceNote}
+                              </span>
+                            )}
+                          </label>
+                        )}
+                        {hatDigitales && (
+                          <p className="text-ink-soft text-xs">
+                            {paypalAvailable ? downloadDict.nurPaypal : downloadDict.keineZahlung}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -649,7 +700,11 @@ export function CheckoutForm({
 
                     {error && (
                       <p className="text-accent text-sm">
-                        {error === 'keine-zahlung' ? dict.errorNoPayment : dict.error}
+                        {error === 'keine-zahlung'
+                          ? dict.errorNoPayment
+                          : error === 'digital-ohne-paypal'
+                            ? downloadDict.keineZahlung
+                            : dict.error}
                       </p>
                     )}
 
@@ -675,6 +730,19 @@ export function CheckoutForm({
                             className="accent-ink mt-0.5"
                           />
                           <span>{dict.consentWaiver}</span>
+                        </label>
+                      )}
+
+                      {hatDigitales && (
+                        <label className="text-ink-soft flex cursor-pointer items-start gap-3 text-sm">
+                          <input
+                            type="checkbox"
+                            required
+                            checked={sofort}
+                            onChange={(e) => setSofort(e.target.checked)}
+                            className="accent-ink mt-0.5"
+                          />
+                          <span>{downloadDict.hinweisKasse}</span>
                         </label>
                       )}
 

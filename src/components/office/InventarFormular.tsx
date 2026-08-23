@@ -9,6 +9,7 @@ import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { LieferantFeld } from './LieferantFeld'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type InventarWerte = {
   id?: number | string
@@ -113,7 +114,7 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
         }}
         aufVerwerfen={entwurf.verwerfen}
       />
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Bezeichnung</span>

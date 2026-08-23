@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import {
   priceCart,
   nextOrderNumber,
+  wareImKorb,
   type CheckoutItemInput,
   type DeliveryMethod,
 } from '../../../../lib/checkout'
@@ -43,7 +44,7 @@ type CheckoutBody = {
     country?: string
   }
   note?: string
-  consent?: { terms?: boolean; waiver?: boolean }
+  consent?: { terms?: boolean; waiver?: boolean; sofortigeLieferung?: boolean }
   /** Sechsstelliger Code aus der Bestätigungs-Mail */
   emailCode?: string
 }
@@ -87,13 +88,56 @@ export async function POST(req: Request) {
     const hasProvidedAddress = Boolean(
       body.shippingAddress?.line1 && body.shippingAddress?.postalCode && body.shippingAddress?.city,
     )
+    const payload = await payloadClient()
+
+    /*
+     * Was für Ware im Korb liegt, entscheidet über die nächsten zwei Fragen —
+     * deshalb steht es vor ihnen und nicht erst beim Rechnen.
+     */
+    const { hatDigitales, nurDigital } = await wareImKorb(payload, body.items)
+
     // Bei PayPal kommt die Lieferadresse notfalls aus dem PayPal-Konto —
     // bei Rechnung gibt es diese Quelle nicht, da muss sie hier stehen.
-    if (paymentMethod === 'rechnung' && deliveryMethod === 'shipping' && !hasProvidedAddress) {
+    // Bei einem Korb voller Dateien wird nichts verschickt, also entfällt sie.
+    if (
+      paymentMethod === 'rechnung' &&
+      deliveryMethod === 'shipping' &&
+      !nurDigital &&
+      !hasProvidedAddress
+    ) {
       return NextResponse.json({ error: 'missing-address' }, { status: 400 })
     }
 
-    const payload = await payloadClient()
+    /*
+     * Digitale Inhalte werden sofort bereitgestellt, und damit erlischt das
+     * Widerrufsrecht. Das darf nicht im Kleingedruckten stehen: Der Kunde
+     * muss es ausdrücklich verlangen, sonst entsteht hier gar keine
+     * Bestellung. Ohne diesen Nachweis wäre der Verkauf im Streitfall
+     * rückabzuwickeln — bei einer Datei, die längst heruntergeladen ist.
+     */
+    if (hatDigitales && !body.consent?.sofortigeLieferung) {
+      return NextResponse.json({ error: 'missing-digital-consent' }, { status: 400 })
+    }
+
+    /*
+     * Dateien gibt es nur gegen Geld — also nicht auf Rechnung.
+     *
+     * Der Kauf auf Rechnung ist für das gebaut, was er ist: Projektgeschäft.
+     * Es entsteht ein Fertigungsauftrag mit Anzahlung, Zwischen- und
+     * Schlussrechnung, und geliefert wird nach Zahlungseingang. An einem
+     * Bauplan ist nichts zu fertigen, und die Kette aus Teilrechnungen wäre
+     * Papier ohne Gegenstand.
+     *
+     * Der handfeste Grund steht daneben: Eine Datei lässt sich nicht
+     * zurückholen. „In Fertigung" gibt sie frei — bei einem Stück Stahl ist
+     * das richtig, bei einer Datei bedeutet der Status nichts, und ein
+     * unbedachter Klick im Büro hätte sie ohne Geld ausgeliefert. Diese
+     * Schranke schließt die Möglichkeit, statt sich auf Umsicht zu verlassen.
+     */
+    if (hatDigitales && paymentMethod !== 'paypal') {
+      return NextResponse.json({ error: 'digital-nur-paypal' }, { status: 400 })
+    }
+
 
     /*
      * Erst die Adresse, dann die Bestellung.
@@ -167,7 +211,7 @@ export async function POST(req: Request) {
           phone: body.customer.phone,
         },
         shippingAddress:
-          deliveryMethod === 'shipping' && hasProvidedAddress
+          deliveryMethod === 'shipping' && !nurDigital && hasProvidedAddress
             ? {
                 line1: body.shippingAddress?.line1,
                 line2: body.shippingAddress?.line2,
@@ -182,6 +226,7 @@ export async function POST(req: Request) {
         consent: {
           termsAt: body.consent?.terms ? new Date().toISOString() : undefined,
           waiver: Boolean(body.consent?.waiver),
+          digitalAt: hatDigitales ? new Date().toISOString() : undefined,
         },
       },
     })

@@ -36,6 +36,7 @@ export default async function CheckoutPage({
         locale={locale}
         dict={dict.checkout}
         cartDict={dict.cart}
+        downloadDict={dict.downloads}
         initialCode={code}
         paypalAvailable={paypalAvailable}
         vatRate={vatRate}

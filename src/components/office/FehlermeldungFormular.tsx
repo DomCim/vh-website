@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { MAX_FOTOS } from '../../lib/fehlermeldung'
 import { Fussleiste } from './Fussleiste'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * „Das stimmt hier nicht" — der Weg vom Auffallen zum Eintrag.
@@ -45,12 +46,26 @@ export function FehlermeldungFormular() {
   const dateiwahl = useRef<HTMLInputElement>(null)
 
   /*
-   * Woher die Meldung kommt: die Seite davor. Der Weg hierher führt über die
-   * Navigation, also ist die eigene Adresse immer dieselbe und nutzlos —
-   * gemeint ist die Seite, auf der es aufgefallen ist.
+   * Woher die Meldung kommt: die Seite davor.
+   *
+   * **Warum das der Navigationspunkt mitbringt und nicht `document.referrer`.**
+   * Genau so stand es hier zuerst, und es war falsch: Das Büro wechselt die
+   * Seite im Browser, ohne das Dokument neu zu laden. Der Verweis bleibt
+   * dabei auf dem stehen, womit das Dokument einmal geladen wurde — im Feld
+   * stand deshalb immer „/office", ganz gleich, wo man herkam.
+   *
+   * Der Verweis bleibt als zweite Wahl stehen: Wer die Adresse aus einem
+   * Lesezeichen oder aus einer Nachricht öffnet, hat kein Anhängsel, und
+   * dann ist ein frisch geladenes Dokument genau der Fall, in dem
+   * `document.referrer` etwas taugt.
    */
   useEffect(() => {
     try {
+      const von = new URLSearchParams(window.location.search).get('von')
+      if (von) {
+        setSeite(von)
+        return
+      }
       const her = document.referrer
       if (her && new URL(her).origin === window.location.origin) setSeite(new URL(her).pathname)
     } catch {
@@ -140,7 +155,7 @@ export function FehlermeldungFormular() {
 
   return (
     <div className="buero-karte">
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Worum geht es?</span>
@@ -168,7 +183,7 @@ export function FehlermeldungFormular() {
         <span>Wo war das?</span>
         <input value={seite} onChange={(e) => setSeite(e.target.value)} placeholder="z.B. /office/inventar/neu" />
         <span style={{ marginTop: '.4rem' }}>
-          Kommt von der Seite davor. Wenn es woanders war, hier ändern.
+          Kommt von der Seite, auf der du warst. Wenn es woanders war, hier ändern.
         </span>
       </label>
 

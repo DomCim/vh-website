@@ -15,6 +15,7 @@ import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 import { Meldestand } from './Meldestand'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type AuftragPosition = {
   description: string
@@ -155,7 +156,7 @@ export function AuftragFormular({
         }}
         aufVerwerfen={entwurf.verwerfen}
       />
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
       {knapp.length > 0 && (
         <p className="buero-hinweis">
           Nicht alles im Haus:{' '}

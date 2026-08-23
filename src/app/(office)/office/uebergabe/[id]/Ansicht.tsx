@@ -7,6 +7,7 @@ import { Fussleiste } from '../../../../../components/office/Fussleiste'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum } from '../../../../../lib/format'
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../../../../lib/hochladen'
+import { Rueckmeldung } from '../../../../../components/office/Rueckmeldung'
 
 /**
  * Eine Übergabemappe im Ganzen.
@@ -165,7 +166,7 @@ export function MappeAnsicht() {
         {mappe.geschlossen ? ' · geschlossen' : ''}
       </p>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {/* ── Zugang ───────────────────────────────────────────────────────── */}
       <h2>Zugang</h2>

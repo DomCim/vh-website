@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 type Stand = 'unbekannt' | 'nicht-moeglich' | 'aus' | 'an' | 'abgelehnt'
 
@@ -159,7 +160,7 @@ export function Benachrichtigungen() {
   return (
     <div className="buero-karte">
       <h2 style={{ marginTop: 0 }}>Benachrichtigungen</h2>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {stand === 'nicht-moeglich' && (
         <p className="buero-unterzeile">

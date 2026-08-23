@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type PostenAuswahl = { id: number; name: string; unit: string }
 export type LieferantAuswahl = { id: number; name: string }
@@ -236,7 +237,7 @@ export function WareneingangFormular({
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
       </label>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <Fussleiste hinweis={gefuellteZeilen > 0 ? `${gefuellteZeilen} Posten` : undefined}>
         <button

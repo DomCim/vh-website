@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum } from '../../lib/format'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type Bewegung = {
   day?: string | null
@@ -122,7 +123,7 @@ export function Bestandskorrektur({
           Dazubekommen
         </button>
       </div>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {bestand < 0 && (
         <p className="buero-hinweis warn">

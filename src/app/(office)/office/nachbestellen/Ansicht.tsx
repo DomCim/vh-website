@@ -12,6 +12,7 @@ import {
   type Bestellzeile,
   type Lagerposten,
 } from '../../../../lib/nachbestellung'
+import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
 /**
  * Nachbestellen: was knapp ist, nach Lieferant sortiert.
@@ -209,7 +210,7 @@ export function NachbestellenAnsicht() {
                 Anderswo bestellt — nur vermerken
               </button>
             </div>
-            {meldung[schluessel] && <p className="buero-hinweis">{meldung[schluessel]}</p>}
+            <Rueckmeldung text={meldung[schluessel]} />
           </div>
         )
       })}
