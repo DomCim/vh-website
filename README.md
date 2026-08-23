@@ -714,7 +714,7 @@ Darunter stehen die Uhrzeit des nächtlichen Laufs und wie viele Kopien auf dem 
 ```sh
 tar -xzf vh-20260818-0330.tar.gz
 pg_restore --clean --if-exists --no-owner -d "$DATABASE_URI" datenbank.dump
-# Inhalt von medien/ nach /app/media im Web-Container kopieren, dann Container neu starten
+# Inhalt von media/ nach /app/media im Web-Container kopieren, dann Container neu starten
 ```
 
 Einmal im Jahr ausprobieren — ein Backup, das nie zurückgespielt wurde, ist eine Vermutung.
