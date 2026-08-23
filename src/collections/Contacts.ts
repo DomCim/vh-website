@@ -9,6 +9,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const Contacts: CollectionConfig = {
   slug: 'contacts',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Geschäftspartner',
     plural: 'Geschäftspartner',

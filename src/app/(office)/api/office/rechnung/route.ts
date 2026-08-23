@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
       if (original.invoiceNumber || original.status !== 'entwurf') {
         return NextResponse.json({ error: 'schon-gestellt' }, { status: 409 })
       }
-      await payload.delete({ collection: 'outgoing-invoices', id: b.id, overrideAccess: true })
+      await wegwerfen(payload, 'rechnungen', b.id)
       return NextResponse.json({ ok: true })
     }
 

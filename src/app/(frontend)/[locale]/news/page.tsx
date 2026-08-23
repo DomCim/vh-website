@@ -8,8 +8,35 @@ import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion
 import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
 import { payloadClient } from '../../../../lib/data'
 import { formatDate, isLocale, t } from '../../../../lib/i18n'
+import type { Metadata } from 'next'
+import { alternatesFor } from '../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+/*
+ * Eigene Kennzeichnung — sonst erbt die Seite die des Layouts.
+ *
+ * Next reicht Metadaten von oben nach unten durch. Im Layout steht
+ * `alternates: alternatesFor(locale, '')`, also die Startseite. Jede
+ * Unterseite ohne eigene Angabe erklärte sich damit selbst zur Startseite:
+ * dieselbe Überschrift, dieselbe Beschreibung und ein `rel=canonical`, das
+ * auf `/de` zeigt. Google folgt dem Verweis und nimmt die Seite gar nicht
+ * erst auf — genau das meldete die Search Console als „Duplikat".
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  if (!isLocale(locale)) return {}
+  const dict = t(locale)
+  return {
+    title: dict.news.title,
+    description: dict.news.intro,
+    alternates: alternatesFor(locale, '/news'),
+  }
+}
 
 export default async function NewsPage({
   params,

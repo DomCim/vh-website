@@ -26,6 +26,161 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 54,
+    datum: null,
+    titel: 'Jeder Artikel war unter jeder Kategorie erreichbar',
+    punkte: [
+      {
+        text: '**Aufgefallen beim Nachsehen zu Googles „Duplikat"-Meldung.** Der Gartensessel steht in `Möbel` — erreichbar war er aber unter jeder Kategorie, die es gibt: unter `Outdoor`, unter `Pflanzen`, sogar unter `Maschinenbau`. Bei vierzehn Kategorien sind das vierzehn Adressen für dieselbe Seite, und das mal jeden Artikel mal drei Sprachen.',
+      },
+      {
+        text: '**Woran es lag.** Die Artikelseite prüfte zwei Dinge: Gibt es die Kategorie? Gibt es den Artikel? Nie aber, ob die beiden zusammengehören. Eine erfundene Kategorie fiel durch, eine echte nicht — obwohl ein Artikel zu genau einer gehört.',
+      },
+      {
+        text: '**Warum es niemand gemerkt hat.** Der Hinweis für Suchmaschinen, welche Adresse die maßgebliche ist, zeigte seit jeher auf die richtige. Google hat still hinter uns aufgeräumt und den Rest verworfen — die Meldung „Duplikat" war der einzige Hinweis darauf, dass etwas nicht stimmt. Wer dagegen über so einen Link kam, sah einen Gartensessel mit „Maschinenbau" im Weg darüber.',
+      },
+      {
+        text: '**Jetzt wird umgeleitet, nicht abgewiesen.** Steht die falsche Kategorie in der Adresse, landet man dauerhaft bei der richtigen. Abzuweisen wäre der schlechtere Weg: Solche Adressen stehen in Suchergebnissen und in fremden Verweisen, und die sollen weiter ankommen — nur eben an der einen Adresse, die gilt.',
+      },
+    ],
+  },
+  {
+    nummer: 53,
+    datum: null,
+    titel: 'Gelöschte Mails landen jetzt wirklich im Papierkorb',
+    punkte: [
+      {
+        text: '**Der Fehler, wie Dominik ihn gemeldet hat:** Eine Mail im Postfach löschen — sie verschwindet aus dem Eingang. Seite neu laden — sie ist wieder da. Und im Papierkorb lag sie nie.',
+      },
+      {
+        text: '**Woran es lag.** Beim Löschen wurde der Ordner mit dem eingestellten Namen gesucht, in der Voreinstellung „Trash". Heißt er beim Anbieter anders — `INBOX.Trash`, `Papierkorb`, `Gelöschte Objekte` —, dann gab es diesen Ordner gar nicht, und das Verschieben scheiterte. Der Fehlschlag wurde stillschweigend aufgefangen: Die Mail bekam nur eine Markierung, und eine Markierung entfernt nichts. Nach außen meldete das Büro trotzdem „hat geklappt", deshalb nahm die Liste die Zeile heraus.',
+      },
+      {
+        text: '**Jetzt wird gefragt statt geraten.** Der Mailserver weiß selbst, welcher seiner Ordner der Papierkorb ist, und sagt es auf Nachfrage — unabhängig davon, wie er heißt. Nur wenn er das nicht tut, gilt der eingestellte Name, und auch der erst, wenn es den Ordner wirklich gibt. Fehlt er ganz, wird er angelegt.',
+      },
+      {
+        text: '**Und wenn doch etwas schiefgeht, steht es da.** Bisher hieß es „Das hat nicht geklappt" — die nutzloseste aller Antworten, denn woran es lag, wusste nur der Mailserver. Jetzt steht der Grund in der Meldung, etwa dass kein Ordner „Papierkorb" gefunden wurde. Dann weiß man sofort, wo man nachsieht.',
+      },
+      {
+        text: '**Dieselbe Falle gab es beim Ordner „Gesendet" schon einmal**, dort wurde sie längst beseitigt — nur eben an einer Stelle und nicht an beiden. Beide Ordner werden jetzt über denselben Weg bestimmt, damit das nicht ein drittes Mal auseinanderläuft.',
+      },
+    ],
+  },
+  {
+    nummer: 52,
+    datum: null,
+    titel: 'Versandkosten und Rückgabefrist stehen jetzt im Suchergebnis',
+    punkte: [
+      {
+        text: '**Googles Prüfwerkzeug bemängelte drei Angaben am Artikel** — Versandkosten, Rückgabebedingungen und den Beginn der Preisgültigkeit. Alle drei waren als „optional" gekennzeichnet, und genau das führt in die Irre: Optional sind sie für die Prüfung, nicht für die Anzeige. Ohne sie bleibt unter dem Treffer die Zeile leer, in der bei anderen „Kostenloser Versand" oder „14 Tage Rückgabe" steht, und im Merchant Center gilt eine fehlende Rückgabebedingung als Mangel am ganzen Konto.',
+      },
+      {
+        text: '**Jetzt stehen sie da, und zwar mit den echten Zahlen.** Die Versandkosten sind die des Artikels — dieselbe Zahl, die auch die Kasse berechnet. Wer hier großzügig aufrundete, produzierte eine Abweichung zwischen Auszeichnung und Seite, und die kostet im Zweifel das ganze Suchergebnis samt Preis.',
+      },
+      {
+        text: '**Geliefert wird nach Frankreich, Deutschland, Österreich und in die Schweiz.** Das stand bisher nirgends im System: Das Länderfeld in der Kasse ist freier Text mit einem Vorschlag je nach Sprache. Für eine Suchmaschine muss es konkret sein.',
+      },
+      {
+        text: '**Rückgabe innerhalb von 14 Tagen, die Rücksendung zahlt der Kunde** — genau so, wie es in der Widerrufsbelehrung steht. Beides muss zusammenpassen: Was dort nicht ausdrücklich dasteht, gilt nicht, gleich was ausgezeichnet ist.',
+      },
+      {
+        text: '**Digitale Ware bekommt keine Rückgabefrist versprochen.** Dort erlischt das Widerrufsrecht mit der Lieferung, eine 14-Tage-Zusage wäre schlicht falsch. Das entscheidet dasselbe Häkchen, an dem auch die Kasse hängt.',
+      },
+      {
+        text: '**Sternebewertungen fehlen weiterhin — das ist richtig so.** Google vermisst „review" und „aggregateRating". Beides ist längst eingebaut und erscheint von selbst, sobald zu einem Artikel eine freigegebene Kundenstimme mit Sternen vorliegt. Erfundene Bewertungen gibt es nicht, auch nicht für ein hübscheres Suchergebnis.',
+      },
+    ],
+  },
+  {
+    nummer: 51,
+    datum: null,
+    titel: 'Drei Seiten haben Google erzählt, sie seien die Startseite',
+    punkte: [
+      {
+        text: '**Google meldete „Duplikat".** Die Search Console schrieb, einige Seiten würden nicht aufgenommen — unter anderem, weil Google eine andere Seite für maßgeblich hält als wir. Nachgemessen: `/news`, `/aktionen` und `/kontakt` trugen in ihrem Quelltext die Angabe, die eigentliche Adresse sei die Startseite. In allen drei Sprachen, also neun Adressen.',
+      },
+      {
+        text: '**Sie standen gleichzeitig in der Sitemap.** Wir haben Google also gesagt „nimm diese Seiten auf", und die Seiten selbst haben widersprochen. Das Ergebnis ist, dass sie gar nicht aufgenommen wurden — wer bei Google „Vincent Hellmann Kontakt" sucht, hat die Seite nie gefunden.',
+      },
+      {
+        text: '**Auffallen konnte das niemandem.** Die Seiten sehen richtig aus, laden normal und sind im Browser von einer gesunden Seite nicht zu unterscheiden. Die Angabe steht unsichtbar im Quelltext, und sie war nirgends falsch eingetragen — sie fehlte, und dann gilt die der Startseite.',
+      },
+      {
+        text: '**Jetzt haben die drei eine eigene Überschrift, eine eigene Beschreibung und den Verweis auf sich selbst** — samt Hinweis auf die französische und englische Fassung. Warenkorb, Kasse und Newsletter-Seite hatten dasselbe Problem; die gehören ohnehin nicht in eine Suchmaschine und sind jetzt ausdrücklich ausgenommen.',
+      },
+      {
+        text: 'Eine Prüfung holt künftig die Sitemap und vergleicht jede Adresse mit dem, was die Seite über sich selbst behauptet. Beim nächsten Mal fällt so etwas beim Entwickeln auf und nicht Monate später in einer Mail von Google.',
+      },
+    ],
+  },
+  {
+    nummer: 50,
+    datum: null,
+    titel: 'Gelöscht ist nicht mehr weg — es gibt einen Papierkorb',
+    punkte: [
+      {
+        text: '**Für den Betrieb ändert sich nichts.** Der Knopf heißt weiter „Löschen", der Datensatz verschwindet sofort aus jeder Liste, aus der Suche und vom Handy. Es gibt keine zweite Frage und keine Wahl zwischen „archivieren" und „löschen" — sobald man die hätte, zögerte man an jedem Knopf.',
+      },
+      {
+        text: '**Dahinter wird nichts mehr weggeworfen.** Was gelöscht wird, wandert in den Papierkorb und lässt sich in der Website-Verwaltung wiederherstellen — bei jeder Sammlung im Reiter „Papierkorb". Das gilt für Artikel, Kategorien, News, Referenzen, Kundenstimmen, Aktionen, Bilder, Anfragen, Angebote, Aufträge, Bestellungen, Belege, Kontobewegungen, Inventar, Inventuren, Wareneingänge, Partner, Kundenmappen, Werkstattdateien, Wiedervorlagen und Newsletter-Anmeldungen.',
+      },
+      {
+        text: '**Warum das die bessere Sicherung ist.** Für „einer hat sich verklickt" war bisher nur die nächtliche Sicherung da, und die ist das falsche Werkzeug: Sie dreht die Zeit für alle zurück, um einen Datensatz zu retten — der Artikel käme wieder, aber jede Bestellung seit der Nacht wäre weg. Ein Papierkorb holt genau das eine zurück und lässt alles andere in Ruhe.',
+      },
+      {
+        text: '**Der URL-Pfad wird beim Löschen wieder frei.** Ein weggeworfener Artikel „gartentisch" blockiert seinen Namen nicht: Legt jemand ihn neu an, bekommt er wieder `gartentisch` und nicht wortlos `gartentisch-2`. Wird der alte später zurückgeholt und der Name ist inzwischen vergeben, bekommt der zurückgeholte den nächsten freien — was steht, geht vor.',
+      },
+      {
+        text: '**Geleert wird von Hand.** Eine Automatik, die den Papierkorb nach ein paar Wochen ausräumt, führte genau den Verlust wieder ein, den er abschaffen soll. Und wenn jemand nach Datenschutzrecht die Löschung seiner Daten verlangt, muss das ohnehin ein Mensch entscheiden — in der Verwaltung gibt es dafür „endgültig löschen".',
+      },
+      {
+        text: '**Eine Kategorie mit Artikeln bleibt stehen.** Das war beim endgültigen Löschen schon so und gilt jetzt auch fürs Wegwerfen — sonst zeigten die Artikel darin auf etwas, das niemand mehr sieht.',
+      },
+    ],
+  },
+  {
+    nummer: 49,
+    datum: null,
+    titel: 'Die Datenschutzerklärung sagt, was die Statistik wirklich tut',
+    punkte: [
+      {
+        text: '**Ein Satz stimmte seit der neuen Besuchsansicht nicht mehr.** In der Datenschutzerklärung stand, die Zahlen würden „ausschließlich zusammengefasst" ausgewertet. Seit die Statistik einzelne Besuchswege zeigt, ist das nicht mehr die ganze Wahrheit — erhoben wird zwar nichts Neues, aber der Satz beschreibt die Auswertung, und die hat sich geändert.',
+      },
+      {
+        text: '**Jetzt steht dort, was passiert:** zusammengefasst ausgewertet, und zusätzlich sichtbar, welche Seiten innerhalb eines Besuchs nacheinander aufgerufen wurden. Dazu der Grund, warum trotzdem niemand erkennbar ist — die Prüfsumme trägt keinen Namen und wechselt täglich. In allen drei Sprachen.',
+      },
+    ],
+  },
+  {
+    nummer: 48,
+    datum: null,
+    titel: 'In der Statistik stehen jetzt nur noch echte Besucher',
+    punkte: [
+      {
+        text: '**Zwei Drittel der Besucher waren wir selbst.** Von 75 Besuchern der letzten dreißig Tage kamen 48 aus den Vereinigten Staaten, fast alle mit nur einer Seite und ohne Herkunft. Das sah nach Bots aus, war aber die eigene Qualitätsprüfung: Vor jedem Ausrollen wird die laufende Website mit einem ferngesteuerten Browser durchgeklickt, und der zählt mit wie jeder andere Besucher.',
+      },
+      {
+        text: '**Das ist schlimmer als gar keine Zahl**, denn man liest sie ja und schließt etwas daraus. „Nur eine Seite: 62 %" hieß in Wahrheit „unsere Prüfläufe rufen eine Seite auf", und „die meisten kommen aus den USA" hieß gar nichts. Ab jetzt zählt ein ferngesteuerter Browser nicht mehr mit — gefiltert wird beim Zählen und nicht beim Auswerten, damit später niemand etwas herausrechnen muss.',
+      },
+      {
+        text: '**Die alten Zahlen bleiben, wie sie sind.** Was einmal gezählt wurde, lässt sich nicht rückwirkend aussortieren; die Werte werden also erst mit den Tagen sauber. In den einzelnen Besuchen sieht man den Unterschied sofort — ein Prüflauf geht auf eine Seite und ist weg, ein Mensch geht weiter.',
+      },
+    ],
+  },
+  {
+    nummer: 47,
+    datum: null,
+    titel: 'Statistik: umschalten statt scrollen',
+    punkte: [
+      {
+        text: '**Die einzelnen Besuche lagen hinter einem Knopf ganz unten.** Man musste also bis ans Ende der Zahlen scrollen, um zu erfahren, dass es die andere Ansicht überhaupt gibt — und wer es nicht wusste, fand sie nie. Jetzt stehen **Zusammenfassung** und **Einzelne Besuche** oben nebeneinander, gleich über der Zeitraum-Wahl.',
+      },
+      {
+        text: '**Der Zeitraum wandert beim Umschalten mit.** Wer sich dreißig Tage angesehen hat und dann wissen will, wer da einzeln kam, meint dieselben dreißig Tage. Ihn dabei stillschweigend auf sieben zurückzusetzen, wäre die Art Kleinigkeit, aus der falsche Schlüsse entstehen.',
+      },
+    ],
+  },
+  {
     nummer: 46,
     datum: null,
     titel: 'Die Statistik zeigt jetzt einzelne Besuche',

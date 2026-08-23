@@ -11,6 +11,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const InventoryItems: CollectionConfig = {
   slug: 'inventory-items',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Inventar-Posten',
     plural: 'Inventar',

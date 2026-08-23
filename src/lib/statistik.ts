@@ -324,6 +324,45 @@ function verlaufAus(antwort: Antwort): { tag: string; besucher: number }[] {
   return antwort.results.map((z) => ({ tag: z.dimensions[0], besucher: zahl(z.metrics[0]) }))
 }
 
+/**
+ * Das Zählskript, aber nicht für Maschinen.
+ *
+ * **Der Anlass war ein Blick in die eigene Statistik.** Von 75 Besuchern
+ * kamen 48 aus den Vereinigten Staaten, fast alle mit nur einer Seite und
+ * ohne Herkunft. Das sah nach Bots aus — es waren aber unsere eigenen
+ * Prüfläufe: Jede Fassung wird vor dem Ausrollen mit einem ferngesteuerten
+ * Browser gegen die laufende Website gefahren, und der führt Skripte aus wie
+ * jeder andere. Plausible filtert, was sich als Bot zu erkennen gibt; ein
+ * echter Chrome unter Fernsteuerung tut das nicht.
+ *
+ * Zwei Drittel der Zahlen waren damit wir selbst — und das ist schlimmer als
+ * keine Statistik: Man liest sie ja und schließt daraus etwas. „Nur eine
+ * Seite: 62 %" hieß in Wahrheit „unsere Prüfläufe rufen eine Seite auf".
+ *
+ * Gefiltert wird deshalb dort, wo es hingehört: beim Zählen, nicht beim
+ * Auswerten. Was nie gezählt wurde, muss später niemand herausrechnen und
+ * niemand erklären.
+ *
+ * Erkannt wird eine Fernsteuerung an `navigator.webdriver` — dieselbe Wache,
+ * die im Büro schon jede Animation und jedes Feiermoment abschaltet — und
+ * zusätzlich am Kopflos-Chrome in der Browserkennung. Beides setzt kein
+ * Mensch von Hand.
+ *
+ * `window.plausible` wird trotzdem angelegt, als Attrappe: Ruft irgendwann
+ * Code auf der Seite ein eigenes Ereignis, soll er unter Fernsteuerung nicht
+ * über eine fehlende Funktion stolpern — sonst hinge ausgerechnet am
+ * Nichtzählen ein Fehler in genau dem Lauf, der die Seite prüfen soll.
+ */
+export function zaehlskriptMitWache(skript: string): string {
+  return `/* Unter Fernsteuerung wird nicht gezählt — siehe lib/statistik.ts */
+if (navigator.webdriver || /HeadlessChrome/.test(navigator.userAgent)) {
+  window.plausible = window.plausible || function () {}
+} else {
+${skript}
+}
+`
+}
+
 /** Aus 754 Sekunden wird „12:34 Min." — Sekunden allein liest niemand */
 export function dauerText(sekunden: number): string {
   const ganz = Math.round(sekunden)

@@ -35,6 +35,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const CustomerUploads: CollectionConfig = {
   slug: 'customer-uploads',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Übergabemappe',
     plural: 'Übergabemappen',

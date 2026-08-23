@@ -13,6 +13,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const Stocktakes: CollectionConfig = {
   slug: 'stocktakes',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Inventur',
     plural: 'Inventuren',
@@ -37,8 +39,13 @@ export const Stocktakes: CollectionConfig = {
     beforeChange: [
       ({ data, originalDoc }) => {
         if (originalDoc?.status === 'abgeschlossen' && data.status === 'abgeschlossen') {
-          // Abgeschlossene Läufe bleiben, wie sie sind
-          return originalDoc
+          /*
+           * Abgeschlossene Läufe bleiben, wie sie sind — bis auf den
+           * Papierkorb. Wegwerfen ist für Payload eine gewöhnliche Änderung;
+           * gäbe diese Zeile stur den alten Stand zurück, schluckte sie das
+           * `deletedAt` mit, und der Knopf täte wortlos nichts.
+           */
+          return { ...originalDoc, deletedAt: data.deletedAt ?? null }
         }
         const zeilen = (data.lines ?? []) as { counted?: number; unitValue?: number }[]
         data.totalValue =

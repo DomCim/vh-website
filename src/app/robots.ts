@@ -43,6 +43,18 @@ const basis = () => process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000
  * Gruppe mit dem Stern; die Prüfung des Merchant Centers verlangt die beiden
  * aber namentlich. Es kostet vier Zeilen, und eine Beanstandung, die man mit
  * vier Zeilen ausräumen kann, diskutiert man nicht.
+ *
+ * **Der KI-Zugang braucht keine eigene Zeile.** Er liegt unter `/api/mcp` und
+ * ist damit von `/api/` schon erfasst — nachgesehen, weil er nach einer
+ * Adresse in der Wurzel aussieht. Wer hier je eine breitere Erlaubnis für
+ * `/api/` einträgt, öffnet ihn mit; die Prüfung nebenan hält das fest.
+ *
+ * **Warum das Büro NICHT hier steht.** `/office` trägt in seinen Seiten
+ * `noindex` (siehe app/(office)/layout.tsx), und das ist die schärfere
+ * Ansage: Es hält eine Adresse aus dem Bestand, auch wenn jemand von außen
+ * darauf verlinkt. Eine Sperre in dieser Datei bewirkte das Gegenteil — wer
+ * nicht crawlen darf, liest das `noindex` nie und nimmt die Adresse
+ * womöglich trotzdem auf, dann eben ohne Inhalt.
  */
 const REGELN = {
   allow: ['/', '/api/media/'],

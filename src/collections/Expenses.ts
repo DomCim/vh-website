@@ -15,6 +15,8 @@ export { AUSGABEN_KATEGORIEN }
  */
 export const Expenses: CollectionConfig = {
   slug: 'expenses',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Beleg',
     plural: 'Belege & Ausgaben',

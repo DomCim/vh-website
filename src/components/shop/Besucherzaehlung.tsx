@@ -37,7 +37,7 @@ const TEXTE: Record<Locale, Absatz> = {
       'Die Zählung kommt ohne Cookies aus. Es wird nichts auf Ihrem Gerät gespeichert und nichts von dort ausgelesen. Sie werden nicht über mehrere Websites hinweg verfolgt und nicht wiedererkannt, wenn Sie später erneut vorbeischauen.',
       'Erfasst werden: die aufgerufene Seite, die Seite, von der Sie gekommen sind, Land, Gerätetyp, Browser und Betriebssystem sowie Datum und Uhrzeit. Ihre IP-Adresse wird nicht gespeichert. Sie geht zusammen mit der Browserkennung und einem täglich wechselnden Zufallswert in eine nicht umkehrbare Prüfsumme ein, an der zwei Aufrufe desselben Tages als ein Besuch erkannt werden. Am nächsten Tag ist dieser Zusammenhang aufgelöst.',
       'Rechtsgrundlage ist unser berechtigtes Interesse an einer verständlichen Auswertung unserer Website (Art. 6 Abs. 1 lit. f DSGVO). Da keine Informationen auf Ihrem Endgerät gespeichert oder abgerufen werden, ist dafür keine Einwilligung erforderlich — deshalb fragen wir Sie auch nicht mit einem Hinweisfenster danach.',
-      'Die Zahlen werden ausschließlich zusammengefasst ausgewertet; ein Rückschluss auf einzelne Personen ist nicht möglich. Sie können der Verarbeitung jederzeit widersprechen — die Kontaktdaten dafür stehen im Impressum.',
+      'Ausgewertet wird zusammengefasst — und zusätzlich sehen wir, welche Seiten innerhalb eines Besuchs nacheinander aufgerufen wurden; daran erkennen wir, ob unsere Seiten weiterhelfen. Ein Rückschluss auf einzelne Personen ist dabei nicht möglich: Die Prüfsumme trägt keinen Namen und wechselt täglich. Sie können der Verarbeitung jederzeit widersprechen — die Kontaktdaten dafür stehen im Impressum.',
     ],
   },
   fr: {
@@ -47,7 +47,7 @@ const TEXTE: Record<Locale, Absatz> = {
       "La mesure fonctionne sans cookies. Rien n'est enregistré sur votre appareil et rien n'y est lu. Vous n'êtes pas suivi d'un site à l'autre et vous n'êtes pas reconnu lors d'une visite ultérieure.",
       "Sont enregistrés : la page consultée, la page d'où vous venez, le pays, le type d'appareil, le navigateur et le système d'exploitation ainsi que la date et l'heure. Votre adresse IP n'est pas conservée. Elle sert, avec l'identifiant du navigateur et une valeur aléatoire renouvelée chaque jour, à calculer une empreinte irréversible qui permet de reconnaître deux consultations du même jour comme une seule visite. Le lendemain, ce lien a disparu.",
       "La base légale est notre intérêt légitime à disposer d'une analyse compréhensible de notre site (art. 6, § 1, point f, du RGPD). Aucune information n'étant enregistrée sur votre terminal ni lue depuis celui-ci, aucun consentement n'est requis — c'est pourquoi aucune fenêtre ne vous le demande.",
-      "Les chiffres ne sont exploités que de manière agrégée ; aucune conclusion sur une personne déterminée n'est possible. Vous pouvez vous opposer à tout moment à ce traitement : les coordonnées figurent dans les mentions légales.",
+      "Les chiffres sont exploités de manière agrégée et, en complément, nous voyons quelles pages ont été consultées successivement au cours d'une même visite ; cela nous indique si nos pages sont utiles. Aucune conclusion sur une personne déterminée n'est possible : l'empreinte ne porte aucun nom et change chaque jour. Vous pouvez vous opposer à tout moment à ce traitement : les coordonnées figurent dans les mentions légales.",
     ],
   },
   en: {
@@ -57,7 +57,7 @@ const TEXTE: Record<Locale, Absatz> = {
       'The count works without cookies. Nothing is stored on your device and nothing is read from it. You are not tracked across websites and you are not recognised if you come back later.',
       'What is recorded: the page viewed, the page you came from, country, device type, browser and operating system, plus date and time. Your IP address is not stored. Together with the browser identifier and a random value that changes daily, it goes into an irreversible checksum by which two views on the same day are recognised as one visit. The next day, that connection is gone.',
       'The legal basis is our legitimate interest in a comprehensible analysis of our website (Art. 6(1)(f) GDPR). Since no information is stored on or read from your device, no consent is required — which is why we do not ask you for one in a pop-up.',
-      'The figures are only ever evaluated in aggregate; no conclusions about individual people are possible. You may object to this processing at any time — the contact details are in the legal notice.',
+      'The figures are evaluated in aggregate, and in addition we can see which pages were viewed one after another within a single visit — that tells us whether our pages are helping. No conclusions about individual people are possible: the checksum carries no name and changes daily. You may object to this processing at any time — the contact details are in the legal notice.',
     ],
   },
 }

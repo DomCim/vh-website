@@ -21,6 +21,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const FollowUps: CollectionConfig = {
   slug: 'follow-ups',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Wiedervorlage',
     plural: 'Wiedervorlagen',

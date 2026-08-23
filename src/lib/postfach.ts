@@ -14,6 +14,7 @@ import {
 } from './mail'
 import type { MailboxKonfiguration } from './settings'
 import { firmenAngaben, getIntegrations } from './settings'
+import { gesendetOrdner, papierkorbOrdner } from './postfachOrdner'
 
 /**
  * Postfach im Büro.
@@ -100,35 +101,6 @@ async function mitVerbindung<T>(
   } finally {
     await client.logout().catch(() => client.close())
   }
-}
-
-/**
- * Wo die Kopie einer verschickten Mail hingehört.
- *
- * Bisher stand dort stur der eingestellte Name („Sent"). Heißt der Ordner beim
- * Anbieter anders — „INBOX.Sent", „Gesendete Objekte", „Gesendet" —, dann
- * scheitert das Ablegen, und zwar lautlos: Die Mail ist beim Empfänger, im
- * eigenen Postfach fehlt sie. Wer am Rechner nachsieht, hält sie für nie
- * verschickt und schreibt sie ein zweites Mal.
- *
- * Deshalb wird gefragt statt geraten: IMAP kennzeichnet den Ordner selbst mit
- * `\Sent`. Nur wenn der Anbieter das nicht tut, gilt der eingestellte Name —
- * und auch der erst, wenn es ihn wirklich gibt.
- */
-async function gesendetOrdner(
-  client: ImapFlow,
-  fach: MailboxKonfiguration,
-): Promise<string | null> {
-  const liste = await client.list()
-  const gekennzeichnet = liste.find((o) => o.specialUse === '\\Sent')
-  if (gekennzeichnet) return gekennzeichnet.path
-
-  const gewuenscht = fach.sentMailbox?.trim().toLowerCase()
-  if (!gewuenscht) return null
-  const passend = liste.find(
-    (o) => o.path.toLowerCase() === gewuenscht || o.name.toLowerCase() === gewuenscht,
-  )
-  return passend?.path ?? null
 }
 
 const adresse = (a: { name?: string; address?: string }[] | undefined) =>
@@ -343,16 +315,39 @@ export async function nachrichtAendern(
   aktion: 'gelesen' | 'ungelesen' | 'markiert' | 'unmarkiert' | 'loeschen',
 ): Promise<void> {
   await mitVerbindung(fach, async (client) => {
+    /*
+     * Der Papierkorb wird **vor** dem Sperren des Ordners gesucht: `list()`
+     * fragt den Server nach allen Ordnern, und das gehört nicht in ein Fenster,
+     * in dem der Posteingang für andere gesperrt ist.
+     */
+    let papierkorb: string | null = null
+    if (aktion === 'loeschen') {
+      papierkorb = await papierkorbOrdner(client, fach)
+      if (!papierkorb) {
+        /*
+         * Kein Papierkorb da? Dann einen anlegen, statt die Mail endgültig zu
+         * löschen. Ein Fehlgriff am Handy soll nicht das Einzige sein, was von
+         * einer Mail übrig bleibt.
+         */
+        const name = fach.trashMailbox?.trim() || 'Trash'
+        try {
+          await client.mailboxCreate(name)
+          papierkorb = name
+        } catch {
+          // Bleibt beim Fehler unten — verschweigen wäre das Schlimmere
+        }
+      }
+      if (!papierkorb) {
+        throw new Error(
+          `Kein Ordner „Papierkorb" gefunden und keiner anzulegen (eingestellt: ${fach.trashMailbox || 'nichts'}).`,
+        )
+      }
+    }
+
     const schloss = await client.getMailboxLock(ordner)
     try {
       if (aktion === 'loeschen') {
-        // In den Papierkorb verschieben statt endgültig löschen — ein Fehlgriff
-        // am Handy soll nicht das Einzige sein, was von einer Mail übrig bleibt
-        try {
-          await client.messageMove(String(uid), fach.trashMailbox, { uid: true })
-        } catch {
-          await client.messageFlagsAdd(String(uid), ['\\Deleted'], { uid: true })
-        }
+        await client.messageMove(String(uid), papierkorb!, { uid: true })
         return
       }
       const fahne = aktion === 'gelesen' || aktion === 'ungelesen' ? '\\Seen' : '\\Flagged'

@@ -577,6 +577,20 @@
   display: none;
 }
 
+/* Zwei Leisten übereinander — welche Ansicht, dann welcher Zeitraum.
+   Sie rücken zusammen und tragen den Abstand nach unten nur einmal, sonst
+   stünden zwei gleich schwere Kästen mit einer Lücke dazwischen. */
+.buero-reiter-paar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.buero-reiter-paar .buero-reiter {
+  margin-bottom: 0;
+}
+
 /* Reiter sind mal Links (Jahreswahl) und mal Knöpfe (Variantenwahl) — beide
    sehen gleich aus, sonst wirkt dieselbe Leiste an zwei Stellen verschieden. */
 .buero-reiter a,

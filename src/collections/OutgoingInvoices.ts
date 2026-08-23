@@ -1,6 +1,7 @@
-import type { CollectionConfig, Payload, PayloadRequest } from 'payload'
+import type { CollectionConfig, Payload, PayloadRequest, Where } from 'payload'
 
 import { office } from '../access'
+import { hatRecht } from '../lib/rechte'
 import { geplanteStufen } from '../lib/anzahlung'
 import { RECHNUNG_STATUS, RECHNUNG_STUFEN } from '../lib/listen'
 import { betraege } from '../lib/betraege'
@@ -96,8 +97,22 @@ async function faelligAm(
  * Rechnung Entwurf ist, hat sie keine — sonst entstünden Lücken in der Reihe,
  * sobald ein Entwurf verworfen wird.
  */
+/**
+ * Was gelöscht werden darf: nur, was nie hinausgegangen ist.
+ *
+ * Dieselbe Bedingung prüft die Büro-Schnittstelle schon vor dem Löschen; hier
+ * steht sie noch einmal als Einschränkung an der Sammlung, damit auch die
+ * Website-Verwaltung sie nicht umgehen kann.
+ */
+const NUR_ENTWUERFE: Where = {
+  and: [{ invoiceNumber: { exists: false } }, { status: { equals: 'entwurf' } }],
+}
+
 export const OutgoingInvoices: CollectionConfig = {
   slug: 'outgoing-invoices',
+  // Auch ein verworfener Entwurf bleibt liegen — die Zugriffsregel unten gilt
+  // ebenso fürs Wegwerfen, eine gestellte Rechnung verschwindet also nicht.
+  trash: true,
   labels: {
     singular: 'Ausgangsrechnung',
     plural: 'Ausgangsrechnungen',
@@ -115,7 +130,27 @@ export const OutgoingInvoices: CollectionConfig = {
     read: office,
     create: office,
     update: office,
-    delete: office,
+    /*
+     * Eine gestellte Rechnung wird storniert, nicht gelöscht — und das ist
+     * hier keine Hausregel, sondern eine Bedingung, an der die Abfrage
+     * scheitert.
+     *
+     * Der Weg über das Büro war längst dicht: Die Schnittstelle lässt das
+     * Löschen nur zu, solange kein `invoiceNumber` vergeben und der Status
+     * „entwurf" ist. Die Sammlung selbst stand aber offen, und über die
+     * Website-Verwaltung wäre damit jede Rechnung löschbar gewesen. Ein
+     * Fehlklick reißt dort ein Loch in den Nummernkreis, und lückenlose
+     * Nummern sind das Erste, was eine Prüfung ansieht.
+     *
+     * Zurückgegeben wird deshalb keine Erlaubnis, sondern eine Einschränkung:
+     * Gelöscht werden darf, was nie hinausgegangen ist. Das ist dieselbe
+     * Bedingung wie im Büro — nur eine Ebene tiefer, wo sie niemand vergessen
+     * kann.
+     *
+     * Der automatisch entstandene Entwurf, den niemand braucht, bleibt damit
+     * wegwerfbar: Genau dafür gibt es ihn.
+     */
+    delete: ({ req: { user } }) => (hatRecht(user, 'buero.oeffnen') ? NUR_ENTWUERFE : false),
   },
   hooks: {
     afterDelete: liveHooks('rechnungen').afterDelete,
