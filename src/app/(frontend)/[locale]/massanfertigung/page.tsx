@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { Fragen, gueltigeFragen } from '../../../../components/Fragen'
 import { MassanfertigungForm } from '../../../../components/MassanfertigungForm'
 import { Reveal } from '../../../../components/motion/Reveal'
 import { getSiteSettings } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
-import { alternatesFor, jsonLd } from '../../../../lib/seo'
+import { alternatesFor } from '../../../../lib/seo'
 
 export async function generateMetadata({
   params,
@@ -34,30 +36,18 @@ export default async function MassanfertigungSeite({
   const settings = await getSiteSettings(locale)
 
   /*
-   * Häufige Fragen — auf der Seite und im Suchergebnis.
+   * Die häufigen Fragen stehen hier weiterhin — wer gerade das Formular
+   * ausfüllt, fragt sich genau jetzt, wie lange die Fertigung dauert.
    *
-   * Beides aus derselben Quelle: Google zeigt die Fragen unter dem Treffer
-   * aufklappbar an, verlangt dafür aber, dass sie auf der Seite auch wirklich
-   * stehen. Eine Auszeichnung ohne sichtbaren Inhalt ist keine Abkürzung,
-   * sondern ein Grund, die Seite dauerhaft davon auszuschließen.
+   * Die **Auszeichnung** für Suchmaschinen sitzt allerdings nicht mehr hier,
+   * sondern auf der eigenen Seite `/faq`. Dieselben Fragen zweimal
+   * ausgezeichnet wären zwei Seiten, die um denselben Treffer streiten —
+   * und die Fragen handeln zum größten Teil gar nicht von Maßanfertigung.
    */
-  const fragen = (settings?.faq ?? []).filter((f) => f.frage && f.antwort)
-  const faqJsonLd = fragen.length
-    ? jsonLd({
-        '@type': 'FAQPage',
-        mainEntity: fragen.map((f) => ({
-          '@type': 'Question',
-          name: f.frage,
-          acceptedAnswer: { '@type': 'Answer', text: f.antwort },
-        })),
-      })
-    : null
+  const fragen = gueltigeFragen(settings?.faq)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
-      {faqJsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd }} />
-      )}
       <Reveal>
         <h1 className="tracking-nav text-ink heading-rule text-2xl font-semibold uppercase">
           {dict.custom.title}
@@ -96,21 +86,15 @@ export default async function MassanfertigungSeite({
             <h2 className="tracking-nav text-ink heading-rule text-lg font-semibold uppercase">
               {dict.custom.faqTitle}
             </h2>
-            <div className="mt-6 space-y-2">
-              {fragen.map((f, i) => (
-                /* Aufklappbar statt untereinander: Zehn Fragen am Stück liest
-                   niemand, und die eine, die man hat, findet man so schneller.
-                   `details` kann das ohne eine Zeile JavaScript. */
-                <details key={i} className="border-line border-b pb-2">
-                  <summary className="text-ink cursor-pointer py-2 text-sm font-semibold">
-                    {f.frage}
-                  </summary>
-                  <p className="text-ink-soft pb-2 text-sm leading-relaxed whitespace-pre-line">
-                    {f.antwort}
-                  </p>
-                </details>
-              ))}
+            <div className="mt-6">
+              <Fragen fragen={fragen} />
             </div>
+            <Link
+              href={`/${locale}/faq`}
+              className="tracking-nav text-bronze mt-6 inline-block text-xs font-semibold uppercase underline-offset-4 hover:underline"
+            >
+              {dict.faq.all} →
+            </Link>
           </section>
         </Reveal>
       )}

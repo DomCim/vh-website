@@ -130,6 +130,13 @@ const de = {
     title: 'Vielen Dank für Ihre Bestellung!',
     text: 'Wir haben Ihre Bestellung erhalten und melden uns in Kürze mit allen Details zur Lieferung.',
     backHome: 'Zur Startseite',
+    reviewTitle: 'Eine Bitte zum Schluss',
+    reviewText:
+      'Wenn Sie mögen, darf Google Sie einige Wochen nach der Lieferung kurz fragen, wie zufrieden Sie waren. Zwei Fragen, nicht mehr. Ihre E-Mail-Adresse geht dafür an Google — erst, wenn Sie hier zustimmen.',
+    reviewButton: 'Ja, gern fragen',
+    reviewLoading: 'Einen Moment, das Fenster von Google wird geladen …',
+    reviewError:
+      'Google ist gerade nicht erreichbar. Kein Problem — an Ihrer Bestellung ändert das nichts.',
   },
   account: {
     title: 'Meine Bestellungen',
@@ -261,6 +268,13 @@ const de = {
       kundenstimme: 'Kundenstimmen',
     },
   },
+  faq: {
+    title: 'Häufige Fragen',
+    intro:
+      'Was uns am häufigsten gefragt wird — zu Fertigungszeit, Farben, Lieferung und Rückgabe. Steht Ihre Frage nicht dabei, schreiben Sie uns einfach.',
+    all: 'Alle Fragen',
+    ask: 'Frage stellen',
+  },
   custom: {
     title: 'Maßanfertigung',
     faqTitle: 'Häufige Fragen',
@@ -314,6 +328,8 @@ const de = {
     validUntil: 'Gültig bis',
     empty: 'Derzeit keine laufenden Aktionen.',
     code: 'Code',
+    included: 'Das ist dabei',
+    viewAll: 'Alle ansehen',
   },
   contact: {
     title: 'Kontakt',
@@ -506,6 +522,13 @@ const fr: Dictionary = {
     title: 'Merci pour votre commande !',
     text: 'Nous avons bien reçu votre commande et vous contacterons prochainement avec tous les détails de livraison.',
     backHome: "Retour à l'accueil",
+    reviewTitle: 'Une dernière demande',
+    reviewText:
+      "Si vous le souhaitez, Google peut vous demander dans quelques semaines, après la livraison, si vous avez été satisfait. Deux questions, pas plus. Votre adresse électronique sera transmise à Google — seulement si vous acceptez ici.",
+    reviewButton: 'Oui, volontiers',
+    reviewLoading: 'Un instant, la fenêtre de Google se charge …',
+    reviewError:
+      "Google n'est pas joignable pour le moment. Aucune importance — cela ne change rien à votre commande.",
   },
   account: {
     title: 'Mes commandes',
@@ -633,6 +656,13 @@ const fr: Dictionary = {
       kundenstimme: 'Témoignages',
     },
   },
+  faq: {
+    title: 'Questions fréquentes',
+    intro:
+      "Ce qu'on nous demande le plus souvent — délais de fabrication, teintes, livraison et retour. Si votre question n'y figure pas, écrivez-nous.",
+    all: 'Toutes les questions',
+    ask: 'Poser une question',
+  },
   custom: {
     title: 'Sur mesure',
     faqTitle: 'Questions fréquentes',
@@ -686,6 +716,8 @@ const fr: Dictionary = {
     validUntil: "Valable jusqu'au",
     empty: 'Aucune offre en cours actuellement.',
     code: 'Code',
+    included: 'Les pièces concernées',
+    viewAll: 'Tout voir',
   },
   contact: {
     title: 'Contact',
@@ -875,6 +907,13 @@ const en: Dictionary = {
     title: 'Thank you for your order!',
     text: 'We have received your order and will contact you shortly with all delivery details.',
     backHome: 'Back to home',
+    reviewTitle: 'One last request',
+    reviewText:
+      'If you like, Google may ask you a few weeks after delivery how satisfied you were. Two questions, no more. Your email address will be passed to Google — only if you agree here.',
+    reviewButton: 'Yes, please ask',
+    reviewLoading: "One moment, Google's window is loading …",
+    reviewError:
+      'Google cannot be reached right now. No matter — it changes nothing about your order.',
   },
   account: {
     title: 'My orders',
@@ -1002,6 +1041,13 @@ const en: Dictionary = {
       kundenstimme: 'Testimonials',
     },
   },
+  faq: {
+    title: 'Frequently asked questions',
+    intro:
+      'What we are asked most often — lead times, colours, delivery and returns. If your question is not here, just write to us.',
+    all: 'All questions',
+    ask: 'Ask a question',
+  },
   custom: {
     title: 'Made to measure',
     faqTitle: 'Frequently asked questions',
@@ -1055,6 +1101,8 @@ const en: Dictionary = {
     validUntil: 'Valid until',
     empty: 'No offers running at the moment.',
     code: 'Code',
+    included: "What's included",
+    viewAll: 'View all',
   },
   contact: {
     title: 'Contact',

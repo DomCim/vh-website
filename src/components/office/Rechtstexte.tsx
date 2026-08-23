@@ -112,7 +112,6 @@ export function Rechtstexte() {
             type="button"
             role="tab"
             aria-selected={l === sprache}
-            className={`buero-knopf schmal ${l === sprache ? '' : 'leise'}`}
             onClick={() => setSprache(l)}
           >
             {SPRACHNAMEN[l]}

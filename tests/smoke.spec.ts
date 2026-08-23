@@ -27,6 +27,21 @@ test('Rechtsseiten sind erreichbar', async ({ page }) => {
   }
 })
 
+/**
+ * Die häufigen Fragen haben eine eigene Adresse.
+ *
+ * Sie standen früher nur unter „Maßanfertigung" — an dem einen Ort, an dem
+ * kaum jemand nach ihnen sucht. Die eigene Seite ist verlinkt (Fußbereich,
+ * Startseite, Maßanfertigung) und steht in der Sitemap; verschwindet sie
+ * unbemerkt, laufen drei Links ins Leere.
+ */
+test('Die Seite mit den häufigen Fragen ist in allen Sprachen erreichbar', async ({ page }) => {
+  for (const pfad of ['/de/faq', '/fr/faq', '/en/faq']) {
+    const antwort = await page.goto(pfad)
+    expect(antwort?.status(), pfad).toBe(200)
+  }
+})
+
 test('MCP-Endpunkt verlangt einen Schlüssel', async ({ request }) => {
   const antwort = await request.post('/api/mcp', {
     data: { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} },

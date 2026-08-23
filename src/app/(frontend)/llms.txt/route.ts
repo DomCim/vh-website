@@ -99,7 +99,10 @@ export async function GET(req: Request) {
   zeilen.push('## Seiten', '')
   zeilen.push(`- [Startseite](${url('')}): Werkstatt, Sortiment und aktuelle Stücke.`)
   zeilen.push(
-    `- [Maßanfertigung](${url('/massanfertigung')}): Wie ein Auftrag abläuft, von der Idee bis zur Lieferung — mit den häufigen Fragen.`,
+    `- [Maßanfertigung](${url('/massanfertigung')}): Wie ein Auftrag abläuft, von der Idee bis zur Lieferung.`,
+  )
+  zeilen.push(
+    `- [Häufige Fragen](${url('/faq')}): Fertigungszeit, Farben, Cortenstahl, Lieferung, Abholung und Rückgabe.`,
   )
   zeilen.push(`- [Über uns](${url('/ueber-uns')}): Werkstatt, Werdegang und Arbeitsweise.`)
   zeilen.push(`- [Referenzen](${url('/projekte')}): Ausgeführte Arbeiten mit Bildern.`)
@@ -135,7 +138,7 @@ export async function GET(req: Request) {
   }
 
   if (Array.isArray(s.faq) && s.faq.length) {
-    zeilen.push('## Häufige Fragen', '')
+    zeilen.push('## Häufige Fragen', '', `Alle Fragen auf einer Seite: ${url('/faq')}`, '')
     for (const f of s.faq as { frage: string; antwort: string }[]) {
       zeilen.push(`- **${einzeilig(f.frage, 200)}** ${einzeilig(f.antwort, 600)}`)
     }

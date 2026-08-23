@@ -6,6 +6,40 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 23.08.2026 — Die Aktion führt zur Ware, die Fragen bekommen eine Seite, die Sprache zieht ins Feld
+
+- **Die Sprachwahl in den Einstellungen sitzt jetzt am Feld statt über der Seite.** Bisher stand ein Schalter ganz oben und legte die ganze Ansicht um. Weil es Anschrift, Bankverbindung und Zugangsdaten nur einmal gibt, verschwand beim Umschalten die halbe Liste — und über dem Pinterest-Code stand eine Sprachwahl, die ihn nichts angeht. Jetzt zeigt die Übersicht **immer alles**, und die Sprachwahl erscheint erst, wenn man einen Eintrag öffnet, der wirklich etwas zu übersetzen hat.
+
+- **In der Übersicht steht, welche Sprachen gepflegt sind.** Bei allem Übersetzbaren stehen statt „eingerichtet" die drei Kürzel **DE FR EN** — die gepflegten grün, die fehlenden blass. Damit sieht man auf einen Blick, wo noch etwas fehlt, ohne dreimal umzuschalten.
+
+- **Was es nur einmal gibt, bleibt sichtbar und bearbeitbar.** Es trägt in einer fremden Sprache den Vermerk „gilt für alle Sprachen" und wird immer in die deutsche Fassung geschrieben. Früher war es schlicht weg.
+
+- **Gespeichert wird jetzt in einem Zug.** Wer am Slogan die französische und die englische Fassung ändert und einmal auf Speichern drückt, bekommt beide gespeichert — vorher ging pro Speichern nur eine Sprache.
+
+- **Die Sprachwahl im Büro zeigte die falsche Sprache als gewählt.** In den Einstellungen und bei den Rechtstexten war der **aktive** Knopf blass und die **inaktiven** hatten eine Fläche — genau verkehrt herum. Wer „Französisch" hervorgehoben sah, war in Wahrheit auf Deutsch und wunderte sich, warum Felder auftauchen, die es nur einmal gibt. Jetzt ist der gewählte Reiter bronze hinterlegt, wie überall sonst im Büro.
+
+- **Nach dem Bestellen wird gefragt, ob Google um eine Bewertung bitten darf.** Auf der Bestätigungsseite steht dafür ein Absatz in unseren eigenen Worten und ein Knopf. Sagt der Kunde ja, meldet sich Google einige Wochen nach der voraussichtlichen Lieferung mit zwei Fragen; die Antworten zählen als **Verkäuferbewertung im Merchant Center**. Die Frage steht auf beiden Wegen — nach PayPal wie nach dem Kauf auf Rechnung.
+
+- **Das Google-Skript wird erst nach der Zustimmung geladen.** Wer nicht drückt, bekommt von Google nichts zu sehen: kein Skript, kein Aufruf, nichts. Das war die Bedingung — diese Website setzt kein Cookie und braucht deshalb kein Einwilligungsbanner, und das sollte so bleiben. Die Ausnahme in der Sicherheitsrichtlinie gilt ausschließlich für die Bestätigungsseiten, nicht für die übrige Website.
+
+- **Eingeschaltet wird es mit einer Zahl.** In der Website-Verwaltung unter Integrationen → Google Kundenrezensionen gehört die **Händler-ID** aus dem Merchant Center hin, dazu die übliche Lieferzeit in Tagen (Vorgabe 28 — Google braucht ein Datum, um zu wissen, wann es fragen darf). Steht dort nichts, passiert nichts. Das ist zugleich der Ausschalter.
+
+- **Vor dem Einschalten gehört ein Absatz in die Datenschutzerklärung** — dass bei Zustimmung E-Mail-Adresse, Bestellnummer und voraussichtliches Lieferdatum an Google übermittelt werden. Der Text liegt bereit und wird nachgezogen.
+
+- **Die häufigen Fragen haben jetzt eine eigene Seite.** Sie standen bisher nur ganz unten unter „Maßanfertigung" — dort waren sie entstanden, dort blieben sie. Nur handelt kaum eine davon von einer Maßanfertigung: Fertigungszeit, Farben, Cortenstahl, Versandkosten, Abholung, Rückgabe. Wer eine solche Frage hatte, musste sie ausgerechnet auf der Seite suchen, auf der er sie am wenigsten vermutet. Jetzt gibt es sie unter **/faq**, in allen drei Sprachen, verlinkt im Fußbereich jeder Seite.
+
+- **Auf der Startseite stehen die ersten vier Fragen offen da.** Wer wissen will, wie lange eine Fertigung dauert oder ob man abholen kann, bekommt die Antwort, ohne erst irgendwo hinzuklicken; darunter führt ein Verweis zu allen Fragen. Unter „Maßanfertigung" bleiben sie ebenfalls stehen — wer gerade das Formular ausfüllt, fragt sich genau dort, wie lange es dauert.
+
+- **Gepflegt wird weiterhin an einer Stelle.** Im Büro unter Einstellungen → Häufige Fragen. Was dort steht, erscheint auf allen drei Seiten gleichzeitig; die Auszeichnung für Suchmaschinen sitzt nur auf der neuen Seite, damit nicht zwei Seiten um denselben Treffer streiten. Die Seite steht in der Sitemap und ist auch in der Datei verlinkt, die KI-Diensten das Haus erklärt.
+
+- **Der Rabatt ist jetzt in der Sprache des Hauses ausgezeichnet.** Die erste Fassung schrieb ihn in rote Kästen und färbte auch den Preis rot — das sah aus wie ein Prospekt, und im dunklen Thema sprangen bei vier Kacheln acht rote Signale gleichzeitig. Jetzt steht über dem Preis der Name der Aktion in gesperrten Versalien mit dem auslaufenden **Corten-Strich** darunter, so wie unter jeder Überschrift der Seite. Am Bild sitzt in der Übersicht ein **Etikett** mit dem Prozentsatz: heller Grund, dünne Bronzelinie, abgerückt vom Rand. Der Preis selbst ist wieder schwarz — dass etwas günstiger ist, sagt der durchgestrichene Betrag daneben.
+
+- **Die Frist steht dort, wo sie hingehört.** Auf der Artikelseite steht neben Name und Prozentsatz auch, bis wann die Aktion läuft. In der Übersicht bleibt sie weg: Dieselbe Frist zwölfmal untereinander sagt niemandem etwas, und die Kachel soll den Artikel zeigen.
+
+- **Die Aktionsseite führt jetzt zur Ware.** „40 % Rabatt auf alle Outdoor-Möbel“ stand da — und wer daraufdrückte, bei dem passierte nichts. Jetzt stehen unter jeder Aktion die Stücke, die dazugehören, als Kacheln mit Streichpreis. Bezieht sich die Aktion auf **eine** Kategorie, führt außerdem das Plakat selbst dorthin; bei mehreren gibt es kein eindeutiges Ziel, dann sind die Kacheln der Weg.
+
+- **Gezeigt wird genau, was auch rabattiert wird.** Die Auswahl folgt derselben Regel wie der Warenkorb. Eine Aktion, die für bestimmte Kategorien gelten soll und keine nennt, zeigt deshalb **nichts** statt alles — sonst stünde das ganze Sortiment als reduziert da, während die Kasse nichts abzieht.
+
 ## 22.08.2026 — Sichtbare Rabatte, gestaltbare Rechtstexte und eine schärfere Übersetzungsprüfung
 
 - **Eine Aktion steht jetzt am Preis.** Der Sommer-Sale war richtig eingerichtet und die Kasse zog die 40 % auch ab — nur sah man davon nichts: Auf der Übersicht stand am Sofa unverändert **1.990 €**, und der Rabatt tauchte erst im Warenkorb auf. Wer nicht auf gut Glück etwas hineinlegte, erfuhr nie davon. Jetzt trägt die Kachel ein Band mit dem Prozentsatz, und am Preis steht der Aktionspreis mit dem durchgestrichenen alten daneben. Auf der Artikelseite kommen Name der Aktion und das Datum dazu, bis zu dem sie läuft.

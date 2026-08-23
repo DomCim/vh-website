@@ -598,10 +598,19 @@
   color: var(--buero-tinte);
 }
 
+/* Der aktive Reiter — und warum hier zwei Kennzeichen stehen.
+   Eine Leiste aus Links markiert ihr Ziel mit `aria-current='page'`, eine aus
+   Knöpfen mit `role="tab"` dagegen mit `aria-selected`. Stand hier nur das
+   erste, blieb die Sprachwahl ohne Hervorhebung: Der aktive Knopf wurde von
+   `.buero-reiter button` auf durchsichtig gesetzt, während die inaktiven über
+   `.leise` eine Fläche bekamen — also genau verkehrt herum. Wer Französisch
+   sah, war auf Deutsch. */
 .buero-reiter a[aria-current='page'],
-.buero-reiter button[aria-current='page'] {
+.buero-reiter button[aria-current='page'],
+.buero-reiter button[aria-selected='true'] {
   background: var(--buero-bronze);
   color: var(--buero-auf-bronze);
+  font-weight: 600;
 }
 
 /* ── Tableiste am unteren Rand (nur Handy) ────────────────────────────────
@@ -1090,6 +1099,41 @@ html.tastatur-offen .buero-inhalt {
   background: var(--buero-marker-grund);
   color: var(--buero-tinte-leise);
   white-space: nowrap;
+}
+
+/* ── Sprachstand ───────────────────────────────────────────────────────────
+   Drei Kürzel statt eines Wortes: Wo etwas übersetzt werden kann, steht in der
+   Übersicht nicht „eingerichtet", sondern DE FR EN — die gepflegten
+   hervorgehoben, die fehlenden blass.
+
+   Das ersetzt den Sprachschalter, der früher über der ganzen Seite stand. Der
+   zwang zum Umschalten und nahm dabei alles weg, was es nur einmal gibt; das
+   hier sagt in einem Blick, wo noch etwas fehlt — ohne einen einzigen Klick. */
+.buero-sprachstand {
+  display: inline-flex;
+  gap: 0.28rem;
+  white-space: nowrap;
+}
+
+.buero-sprachstand > span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--buero-linie);
+  background: var(--buero-marker-grund);
+  /* Nicht gepflegt: sichtbar, aber zurückgenommen — eine fehlende Übersetzung
+     ist kein Fehler, sondern eine offene Aufgabe. */
+  color: var(--buero-tinte-leise);
+  opacity: 0.55;
+}
+
+.buero-sprachstand > span.da {
+  opacity: 1;
+  color: var(--buero-gruen);
+  background: color-mix(in srgb, var(--buero-gruen) 14%, var(--buero-marker-grund));
+  border-color: color-mix(in srgb, var(--buero-gruen) 35%, transparent);
 }
 
 .buero-marker.gut {

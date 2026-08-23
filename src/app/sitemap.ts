@@ -49,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entries('/ueber-uns', undefined, 0.6),
     ...entries('/aktionen', undefined, 0.6),
     ...entries('/massanfertigung', undefined, 0.7),
+    ...entries('/faq', undefined, 0.6),
     ...entries('/kontakt', undefined, 0.5),
   ]
 

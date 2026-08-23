@@ -23,6 +23,7 @@ type Settings = {
 type Dict = {
   newsletter: NewsletterDict
   nav: { account: string }
+  faq: { title: string }
   footer: {
     impressum: string
     datenschutz: string
@@ -93,6 +94,12 @@ export function Footer({
             </p>
           )}
           <div className="mt-4 flex flex-col gap-1 text-sm">
+            {/* Die häufigen Fragen gehören zum Service und nicht zum
+                Kleingedruckten — deshalb stehen sie hier oben, vor den
+                Rechtstexten. Wer eine Frage hat, sucht sie am Seitenfuß. */}
+            <Link href={`/${locale}/faq`} className="hover:text-white">
+              {dict.faq.title}
+            </Link>
             <Link href={`/${locale}/kontakt/impressum`} className="hover:text-white">
               {dict.footer.impressum}
             </Link>

@@ -70,6 +70,26 @@ const buero = [
   "connect-src 'self' ws: wss:",
 ].join('; ')
 
+/**
+ * Die Bestätigungsseiten nach einer Bestellung — und nur die.
+ *
+ * Dort steht die Frage, ob Google später nach einer Bewertung fragen darf.
+ * Sagt der Kunde ja, wird `apis.google.com` nachgeladen und blendet Googles
+ * Einladung in einem Rahmen ein. Ohne diese Ausnahme blockt der Browser das
+ * stillschweigend: Der Knopf tut dann scheinbar nichts, und in der Konsole
+ * steht eine Zeile, die niemand liest.
+ *
+ * Bewusst nur auf `…/bestellung/…` und nicht auf der ganzen Website: Was
+ * überall erlaubt ist, wird irgendwann überall benutzt. Hier ist die Stelle,
+ * an der jemand ausdrücklich zugestimmt hat — sonst nirgends.
+ */
+const bestellabschluss = [
+  ...gemeinsam,
+  `script-src 'self' 'unsafe-inline' https://apis.google.com${entwicklungsSkript}${extraSkript ? ` ${extraSkript}` : ''}`,
+  `connect-src 'self' https://apis.google.com${extraSkript ? ` ${extraSkript}` : ''}`,
+  'frame-src https://apis.google.com https://www.google.com',
+].join('; ')
+
 const grundlegend = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -157,6 +177,11 @@ const nextConfig = {
       {
         source: '/:pfad*',
         headers: [...grundlegend, { key: 'Content-Security-Policy', value: website }],
+      },
+      {
+        // Nur die Bestätigungsseiten: /de/bestellung/danke und /de/bestellung/<schlüssel>
+        source: '/:sprache/bestellung/:pfad*',
+        headers: [...grundlegend, { key: 'Content-Security-Policy', value: bestellabschluss }],
       },
       {
         source: '/admin/:pfad*',
