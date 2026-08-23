@@ -2839,3 +2839,90 @@ html.tastatur-offen .buero-inhalt {
   white-space: nowrap;
   border: 0;
 }
+
+/*
+ * Die Tabellenfassung eines Diagramms.
+ *
+ * Ein Balken ist für einen Vorleser nichts, und eine Zusammenfassung in einem
+ * Satz beantwortet nicht die Frage „was war am Dienstag?". Deshalb hat jedes
+ * Diagramm im Büro seine Zahlen auch als Tabelle — eingeklappt, weil sie im
+ * Alltag niemand aufmacht, aber da. Sie ist außerdem die einzige Fassung, die
+ * sich in eine Mail kopieren lässt.
+ *
+ * `tabular-nums` hier ausdrücklich: In einer Spalte untereinander sollen die
+ * Ziffern fluchten. Bei einer großen Einzelzahl wäre es falsch — dort läuft
+ * es auseinander (siehe `.buero-kachel-wert`).
+ */
+.buero-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.buero-tabelle th,
+.buero-tabelle td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--buero-linie);
+  text-align: left;
+}
+
+.buero-tabelle th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-tabelle td:last-child,
+.buero-tabelle th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Die Säule ist der Trefferbereich, der Balken darin die Anzeige.
+ *
+ * Ein Balken von zwei Pixeln Höhe ließe sich nicht antippen — und antippen
+ * ist am Handy der einzige Weg zum Wert. Die Säule reicht deshalb über die
+ * volle Höhe und ist so breit wie ihr Anteil, auch wenn der Balken darin
+ * kurz ist.
+ */
+.buero-verlauf-saeule {
+  flex: 1 1 0;
+  min-width: 6px;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.buero-verlauf-saeule .buero-verlauf-balken {
+  width: 100%;
+}
+
+.buero-verlauf-saeule:hover .buero-verlauf-balken,
+.buero-verlauf-saeule.aktiv .buero-verlauf-balken {
+  background: var(--buero-tinte);
+}
+
+.buero-verlauf-saeule:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 1px;
+}
+
+/* Der ausgewählte Tag steht allein in der Zeile, mittig statt verteilt */
+.buero-verlauf-achse:has(.buero-verlauf-gewaehlt) {
+  justify-content: center;
+}
+
+.buero-verlauf-gewaehlt {
+  color: var(--buero-tinte);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

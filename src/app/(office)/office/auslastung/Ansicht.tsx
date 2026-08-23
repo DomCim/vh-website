@@ -132,9 +132,14 @@ export function AuslastungAnsicht() {
                         .map((a) => `${a.titel || a.nummer} (${stunden(a.stunden)})`)
                         .join(' · ')}
                 </div>
-                {/* Der Balken sagt in einem Blick, was die Zahlen daneben
-                    erklären — überbucht läuft er über die Breite hinaus und
-                    wird deshalb bei 100 % abgeschnitten und rot. */}
+                {/*
+                  Der Balken sagt in einem Blick, was die Zahlen daneben
+                  erklären. Überbucht läuft er über die Breite hinaus und wird
+                  bei 100 % abgeschnitten — deshalb steht daneben, um wie viel:
+                  Eine Woche mit fünf Stunden zu viel sah sonst genauso aus wie
+                  eine, die punktgenau voll ist, und das ist der Unterschied
+                  zwischen „geht gerade noch" und „da muss etwas weichen".
+                */}
                 <div
                   aria-hidden="true"
                   style={{
@@ -177,7 +182,19 @@ export function AuslastungAnsicht() {
                   />
                 </label>
                 <span className={`buero-marker ${voll ? 'warn' : knapp ? 'offen' : 'gut'}`}>
-                  {w.kapazitaet === 0 ? 'keine Zeit' : voll ? 'voll' : `${stunden(w.frei)} frei`}
+                  {/*
+                    `frei` ist bei null gekappt — daran hängt die Suche nach
+                    der ersten freien Woche, und eine negative freie Zeit wäre
+                    dort Unsinn. Wie viel zu viel liegt, steht deshalb hier aus
+                    den Stunden selbst.
+                  */}
+                  {w.kapazitaet === 0
+                    ? 'keine Zeit'
+                    : w.stunden > w.kapazitaet
+                      ? `${stunden(Math.round((w.stunden - w.kapazitaet) * 10) / 10)} zu viel`
+                      : voll
+                        ? 'voll'
+                        : `${stunden(w.frei)} frei`}
                 </span>
               </div>
             </div>

@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Besucherverlauf lässt sich endlich am Handy lesen.** Die Werte hingen an einem Anhang, den nur ein Mauszeiger hervorholt — am Handy erschien schlicht nichts. Dreißig Balken, und auf dem Gerät, an dem man sie ansieht, war kein einziger Wert lesbar. Jetzt zeigt Antippen den Tag und die Zahl in der Zeile darunter, an einer festen Stelle statt in einem Kästchen, das den Nachbarbalken verdeckt. Darunter stehen die Zahlen zusätzlich als aufklappbare Tabelle — kopierbar und für Vorleser lesbar.
+
+- **In der Auslastung steht jetzt, um wie viel eine Woche überbucht ist.** Bisher hieß es bei jeder vollen Woche „voll", ob sie punktgenau ausgelastet war oder fünf Stunden zu viel trug — der Balken ist bei 100 % abgeschnitten und sah in beiden Fällen gleich aus. Das ist aber genau der Unterschied zwischen „geht gerade noch" und „da muss etwas weichen".
+
 - **Wer die Website mit der Tastatur bedient, sieht jetzt, wo er ist.** Bisher ersetzten die Formulare den Fokusrahmen des Browsers durch einen Farbwechsel am Feldrand — ein Strich von einem Pixel, bei dem man beim Durchtabben die Spur verliert; Knöpfe und Links hatten gar keine eigene Gestaltung. Jetzt liegt ein bronzefarbener Ring um das, was gerade dran ist. **Nur bei Tastaturbedienung**: Wer mit der Maus klickt, bekommt ihn nicht zu sehen.
 
 - **Wer sich das Büro vorlesen lässt, hört jetzt auch die Rückmeldungen.** „Gespeichert", „Gemerkt — geht raus, sobald wieder Netz da ist", „Das hat nicht geklappt": Diese Zeilen standen zwar sichtbar da, wurden aber nicht angesagt. In einundvierzig Formularen war das so — beim Anmelden, im Postfach, an jeder Rechnung, an jedem Auftrag. Am meisten fehlte es beim Erfassen in Reihe, wo diese eine Zeile die einzige Auskunft ist, dass etwas angelegt wurde.

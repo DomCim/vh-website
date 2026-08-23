@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { Verlauf } from '../../../../components/office/Verlauf'
 import { payloadClient } from '../../../../lib/data'
 import { bueroBenutzer } from '../../../../lib/office'
 import {
@@ -142,57 +143,6 @@ function Zahlen({ daten }: { daten: Auswertung }) {
       </div>
     </>
   )
-}
-
-/**
- * Der Verlauf als Balken.
- *
- * Bewusst ohne Diagramm-Bibliothek: Ein paar `div` mit Höhe in Prozent tun
- * dasselbe, kosten kein zusätzliches Paket im Browser und funktionieren auch
- * dann, wenn das Büro gerade schmal ist.
- */
-function Verlauf({ tage }: { tage: { tag: string; besucher: number }[] }) {
-  if (!tage.length) return null
-  const hoechst = Math.max(...tage.map((t) => t.besucher), 1)
-
-  return (
-    <div className="buero-karte" style={{ marginTop: '1rem' }}>
-      <div className="buero-kachel-titel">Verlauf</div>
-      <div className="buero-verlauf" role="img" aria-label={verlaufBeschreibung(tage)}>
-        {tage.map((t) => (
-          <div
-            key={t.tag}
-            className="buero-verlauf-balken"
-            /*
-             * Ein Tag ohne Besuch bekommt keinen Balken. Wo einer war, bleibt
-             * mindestens ein Strich stehen — sonst verschwindet der einzelne
-             * Besucher neben einem Tag mit dreihundert, und der Verlauf sähe
-             * aus, als wäre gar nichts gewesen.
-             */
-            style={{
-              height: t.besucher ? `${Math.max((t.besucher / hoechst) * 100, 3)}%` : '0',
-            }}
-            title={`${t.tag}: ${zahlText(t.besucher)}`}
-          />
-        ))}
-      </div>
-      <div className="buero-verlauf-achse">
-        <span>{tage[0]?.tag}</span>
-        <span>Höchstwert {zahlText(hoechst)}</span>
-        <span>{tage[tage.length - 1]?.tag}</span>
-      </div>
-    </div>
-  )
-}
-
-/*
- * Balken sind für einen Screenreader nichts. Deshalb steht daneben in einem
- * Satz, was zu sehen ist — nicht Tag für Tag, das läse niemand vor.
- */
-function verlaufBeschreibung(tage: { tag: string; besucher: number }[]): string {
-  const summe = tage.reduce((s, t) => s + t.besucher, 0)
-  const beste = tage.reduce((a, b) => (b.besucher > a.besucher ? b : a), tage[0])
-  return `Verlauf über ${tage.length} Tage, insgesamt ${zahlText(summe)} Besucher. Stärkster Tag: ${beste.tag} mit ${zahlText(beste.besucher)}.`
 }
 
 function Liste({ titel, reihen }: { titel: string; reihen: Reihe[] }) {
