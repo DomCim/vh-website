@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Wer die Website mit der Tastatur bedient, sieht jetzt, wo er ist.** Bisher ersetzten die Formulare den Fokusrahmen des Browsers durch einen Farbwechsel am Feldrand — ein Strich von einem Pixel, bei dem man beim Durchtabben die Spur verliert; Knöpfe und Links hatten gar keine eigene Gestaltung. Jetzt liegt ein bronzefarbener Ring um das, was gerade dran ist. **Nur bei Tastaturbedienung**: Wer mit der Maus klickt, bekommt ihn nicht zu sehen.
+
 - **Wer sich das Büro vorlesen lässt, hört jetzt auch die Rückmeldungen.** „Gespeichert", „Gemerkt — geht raus, sobald wieder Netz da ist", „Das hat nicht geklappt": Diese Zeilen standen zwar sichtbar da, wurden aber nicht angesagt. In einundvierzig Formularen war das so — beim Anmelden, im Postfach, an jeder Rechnung, an jedem Auftrag. Am meisten fehlte es beim Erfassen in Reihe, wo diese eine Zeile die einzige Auskunft ist, dass etwas angelegt wurde.
 
 - **Der Shop kann jetzt Dateien verkaufen.** Ein Artikel lässt sich als **digitale Ware** kennzeichnen; die dazugehörigen Dateien kreuzt man unter Werkstattdateien an. Der Anlass war handfest: Auf Etsy steht ein Bauplan als Download und hatte drei Leute im Warenkorb — hier ging das bis jetzt nicht.
