@@ -55,6 +55,7 @@ import * as migration_20260823_110500_meldungen_github from './20260823_110500_m
 import * as migration_20260823_115500_digitale_ware from './20260823_115500_digitale_ware';
 import * as migration_20260823_154000_bestellung_digital_at from './20260823_154000_bestellung_digital_at';
 import * as migration_20260823_160000_neuerungen from './20260823_160000_neuerungen';
+import * as migration_20260823_170000_besuche from './20260823_170000_besuche';
 
 export const migrations = [
   {
@@ -335,11 +336,16 @@ export const migrations = [
   {
     up: migration_20260823_154000_bestellung_digital_at.up,
     down: migration_20260823_154000_bestellung_digital_at.down,
-    name: '20260823_154000_bestellung_digital_at'
+    name: '20260823_154000_bestellung_digital_at',
   },
   {
     up: migration_20260823_160000_neuerungen.up,
     down: migration_20260823_160000_neuerungen.down,
     name: '20260823_160000_neuerungen'
+  },
+  {
+    up: migration_20260823_170000_besuche.up,
+    down: migration_20260823_170000_besuche.down,
+    name: '20260823_170000_besuche'
   },
 ];

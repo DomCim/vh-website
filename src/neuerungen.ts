@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 46,
+    datum: null,
+    titel: 'Die Statistik zeigt jetzt einzelne Besuche',
+    punkte: [
+      {
+        text: '**Bisher standen dort nur Summen.** „Zwölf kamen von Google", „`/outdoor` wurde dreißigmal gesehen" — das sagt, wie viel los war, aber nicht, was einer getan hat. Die Frage, die man sich beim Zusehen wirklich stellt, ist eine andere: Der eine, der gestern Abend über Google kam — hat der die Gartenbank angesehen und dann aufgehört, oder ist er bis zur Anfrage gegangen?',
+      },
+      {
+        text: '**Unter Statistik steht jetzt „Einzelne Besuche".** Je Besuch eine Zeile: wann, woher (Google, Instagram, ein Newsletter oder direkt eingetippt), von welchem Gerät und aus welchem Land — und darunter der Weg über die Seite in der Reihenfolge, in der er gegangen wurde. Die Seite, auf der jemand ankam, ist hervorgehoben: Sie ist die interessantere Hälfte, denn sie sagt, was ihn hergeführt hat.',
+      },
+      {
+        text: '**Am Besucher ändert sich dadurch nichts.** Kein Cookie, keine Kennung auf seinem Gerät, kein Einwilligungsbanner — es wird nichts zusätzlich erhoben. Die Angaben liegen längst in der Besucherzählung auf dem eigenen Server; sie wurden bisher nur nicht so gelesen. Wer dort steht, bleibt namenlos: Die Kennung unterscheidet zwei Besuche voneinander und sonst nichts.',
+      },
+      {
+        text: '**Eingerichtet werden muss dafür einmal etwas.** Die Ereignisse liegen in einer eigenen Datenbank neben der Zählung, und der Server kommt dort erst hin, wenn beide im selben Netz stehen; die Adresse gehört dann in die Website-Verwaltung unter Integrationen. Solange das nicht geschehen ist, sagt die Seite das und die gewohnten Zahlen laufen unberührt weiter. Wie es geht, steht in der Anleitung unter „Einzelne Besuche".',
+      },
+    ],
+  },
+  {
     nummer: 45,
     datum: null,
     titel: 'Das Büro sagt selbst, wenn es etwas Neues gibt',

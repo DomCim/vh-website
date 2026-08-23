@@ -3489,6 +3489,22 @@ export interface Integration {
      * In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.
      */
     apiKey?: string | null;
+    /**
+     * z.B. http://plausible_events_db:8123 — nur nötig für die einzelnen Besuchswege. Der Container muss dafür im selben Netz stehen (siehe README, „Einzelne Besuche").
+     */
+    chUrl?: string | null;
+    /**
+     * Vorgabe: plausible_events_db
+     */
+    chDatenbank?: string | null;
+    /**
+     * Vorgabe: default — so kommt ClickHouse aus dem Stack
+     */
+    chBenutzer?: string | null;
+    /**
+     * Bleibt leer, solange ClickHouse wie im Stack ohne Benutzerverwaltung läuft.
+     */
+    chPasswort?: string | null;
   };
   paypal?: {
     /**
@@ -3873,6 +3889,10 @@ export interface IntegrationsSelect<T extends boolean = true> {
         url?: T;
         seite?: T;
         apiKey?: T;
+        chUrl?: T;
+        chDatenbank?: T;
+        chBenutzer?: T;
+        chPasswort?: T;
       };
   paypal?:
     | T

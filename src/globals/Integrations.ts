@@ -447,6 +447,53 @@ export const Integrations: GlobalConfig = {
             components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
           },
         },
+        /*
+         * Der Zugang zur Ereignis-Datenbank — für die einzelnen Besuchswege.
+         *
+         * Die Auswertung oben kennt nur Summen; wer sehen will, woher **ein**
+         * Besucher kam und was er sich der Reihe nach angesehen hat, muss
+         * dorthin, wo die Ereignisse liegen (siehe `lib/besuche.ts`).
+         *
+         * Ohne Adresse bleibt die Seite „Einzelne Besuche" schlicht aus. Das
+         * ist der vorgesehene Zustand, solange der Büro-Container nicht ins
+         * Netz der Statistik darf.
+         */
+        {
+          name: 'chUrl',
+          label: 'Ereignis-Datenbank (ClickHouse)',
+          type: 'text',
+          admin: {
+            description:
+              'z.B. http://plausible_events_db:8123 — nur nötig für die einzelnen Besuchswege. Der Container muss dafür im selben Netz stehen (siehe README, „Einzelne Besuche").',
+          },
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'chDatenbank',
+              label: 'Datenbank',
+              type: 'text',
+              admin: { description: 'Vorgabe: plausible_events_db' },
+            },
+            {
+              name: 'chBenutzer',
+              label: 'Benutzer',
+              type: 'text',
+              admin: { description: 'Vorgabe: default — so kommt ClickHouse aus dem Stack' },
+            },
+          ],
+        },
+        {
+          name: 'chPasswort',
+          label: 'Passwort der Ereignis-Datenbank',
+          type: 'text',
+          admin: {
+            description:
+              'Bleibt leer, solange ClickHouse wie im Stack ohne Benutzerverwaltung läuft.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
+        },
       ],
     },
     {

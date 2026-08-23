@@ -3173,3 +3173,95 @@ html.tastatur-offen .buero-inhalt {
     left: calc(-1rem - 5px);
   }
 }
+
+/* ── Einzelne Besuche ──────────────────────────────────────────────────────
+ *
+ * Je Besuch eine Karte: oben, wann und woher, darunter der Weg über die Seite
+ * als Kette. Bewusst keine Tabelle — die Wege sind unterschiedlich lang, und
+ * eine Spalte, die mal einen und mal zwölf Einträge trägt, ist keine Spalte.
+ */
+.buero-besuche {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  max-width: 60rem;
+}
+
+.buero-besuch {
+  padding: 0.85rem 1rem;
+}
+
+.buero-besuch-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.buero-besuch-zeit {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.buero-besuch-herkunft {
+  color: var(--buero-bronze);
+  font-weight: 600;
+}
+
+.buero-besuch-rest {
+  color: var(--buero-tinte-leise);
+}
+
+/* Der Weg: Kästchen mit einem Pfeil dazwischen. Der Pfeil steckt im
+   Zwischenraum und nicht im Text — so bricht die Kette am Handy sauber um. */
+.buero-besuch-weg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.15rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.buero-besuch-weg li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.buero-besuch-weg li + li::before {
+  content: '→';
+  margin: 0 0.35rem;
+  color: var(--buero-tinte-leise);
+  flex: none;
+}
+
+.buero-besuch-seite {
+  display: block;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--buero-tinte) 4%, transparent);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wo jemand ankam, ist die interessantere Hälfte — die erste Seite trägt
+   deshalb den Corten-Ton, nicht bloß einen weiteren grauen Rahmen. */
+.buero-besuch-weg li:first-child .buero-besuch-seite {
+  border-color: color-mix(in srgb, var(--buero-bronze) 45%, var(--buero-linie));
+  background: color-mix(in srgb, var(--buero-bronze) 8%, transparent);
+}
+
+@media (max-width: 640px) {
+  .buero-besuch-seite {
+    max-width: 14rem;
+  }
+}

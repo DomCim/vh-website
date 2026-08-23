@@ -63,6 +63,11 @@ export type ResolvedIntegrations = {
     url?: string
     seite?: string
     apiKey?: string
+    /* Zugang zur Ereignis-Datenbank für einzelne Besuchswege — siehe `besuche.ts` */
+    chUrl?: string
+    chDatenbank?: string
+    chBenutzer?: string
+    chPasswort?: string
   }
   anthropic: {
     apiKey?: string
@@ -151,6 +156,10 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       url: val(doc?.plausible?.url, process.env.PLAUSIBLE_URL),
       seite: val(doc?.plausible?.seite, process.env.PLAUSIBLE_SITE),
       apiKey: val(doc?.plausible?.apiKey, process.env.PLAUSIBLE_API_KEY),
+      chUrl: val(doc?.plausible?.chUrl, process.env.CLICKHOUSE_URL),
+      chDatenbank: val(doc?.plausible?.chDatenbank, process.env.CLICKHOUSE_DATABASE),
+      chBenutzer: val(doc?.plausible?.chBenutzer, process.env.CLICKHOUSE_USER),
+      chPasswort: val(doc?.plausible?.chPasswort, process.env.CLICKHOUSE_PASSWORD),
     },
     anthropic: {
       apiKey: val(doc?.anthropic?.apiKey, process.env.ANTHROPIC_API_KEY),
