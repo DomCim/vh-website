@@ -9,6 +9,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 import { ArtikelBezug } from './ArtikelBezug'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
@@ -243,10 +244,10 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
           <div className="buero-reihe">
             <label className="buero-feld">
               <span>Menge</span>
-              <input
-                inputMode="decimal"
-                value={p.quantity}
-                onChange={(e) => setzePosition(i, { quantity: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.quantity}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { quantity: v ?? 0 })}
               />
             </label>
             <label className="buero-feld">
@@ -255,18 +256,18 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
             </label>
             <label className="buero-feld">
               <span>Einzelpreis netto</span>
-              <input
-                inputMode="decimal"
-                value={p.unitPrice}
-                onChange={(e) => setzePosition(i, { unitPrice: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.unitPrice}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { unitPrice: v ?? 0 })}
               />
             </label>
             <label className="buero-feld">
               <span>Steuersatz (%)</span>
-              <input
-                inputMode="decimal"
-                value={p.vatRate}
-                onChange={(e) => setzePosition(i, { vatRate: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.vatRate}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { vatRate: v ?? 0 })}
               />
             </label>
           </div>
@@ -314,10 +315,9 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
           <>
             <label className="buero-feld">
               <span>{w.discountKind === 'prozent' ? 'Prozent' : 'Betrag (EUR)'}</span>
-              <input
-                inputMode="decimal"
-                value={w.discountValue ?? ''}
-                onChange={(e) => setzen({ discountValue: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={w.discountValue}
+                aendern={(v) => setzen({ discountValue: v })}
               />
             </label>
             <label className="buero-feld">

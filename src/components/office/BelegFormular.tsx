@@ -6,6 +6,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 
 export type Kategorie = { label: string; value: string }
 
@@ -63,7 +64,6 @@ export function BelegFormular({
   const [meldung, setMeldung] = useState<string | null>(null)
 
   const setzen = (teil: Partial<BelegWerte>) => setW((v) => ({ ...v, ...teil }))
-  const zahl = (s: string) => (s.trim() === '' ? null : Number(s.replace(',', '.')))
 
   async function hochladen(datei: File) {
     setLaeuft('upload')
@@ -292,34 +292,30 @@ export function BelegFormular({
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Netto (EUR)</span>
-          <input
-            inputMode="decimal"
-            value={w.netAmount ?? ''}
-            onChange={(e) => setzen({ netAmount: zahl(e.target.value) })}
+          <Zahleingabe
+            wert={w.netAmount}
+            aendern={(v) => setzen({ netAmount: v })}
           />
         </label>
         <label className="buero-feld">
           <span>Steuersatz (%)</span>
-          <input
-            inputMode="decimal"
-            value={w.vatRate ?? ''}
-            onChange={(e) => setzen({ vatRate: zahl(e.target.value) })}
+          <Zahleingabe
+            wert={w.vatRate}
+            aendern={(v) => setzen({ vatRate: v })}
           />
         </label>
         <label className="buero-feld">
           <span>Steuer (EUR)</span>
-          <input
-            inputMode="decimal"
-            value={w.vatAmount ?? ''}
-            onChange={(e) => setzen({ vatAmount: zahl(e.target.value) })}
+          <Zahleingabe
+            wert={w.vatAmount}
+            aendern={(v) => setzen({ vatAmount: v })}
           />
         </label>
         <label className="buero-feld">
           <span>Brutto (EUR)</span>
-          <input
-            inputMode="decimal"
-            value={w.grossAmount ?? ''}
-            onChange={(e) => setzen({ grossAmount: zahl(e.target.value) })}
+          <Zahleingabe
+            wert={w.grossAmount}
+            aendern={(v) => setzen({ grossAmount: v })}
           />
         </label>
       </div>

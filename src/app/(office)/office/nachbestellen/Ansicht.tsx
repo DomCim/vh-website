@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import React, { useMemo, useState } from 'react'
 
+import { Zahleingabe } from '../../../../components/office/Zahleingabe'
 import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
 import {
@@ -140,15 +141,10 @@ export function NachbestellenAnsicht() {
                   </div>
                   <label className="buero-feld" style={{ width: '8rem', margin: 0 }}>
                     <span style={{ fontSize: '.7rem' }}>bestellen ({z.einheit})</span>
-                    <input
-                      inputMode="decimal"
-                      value={menge(z)}
-                      onChange={(e) =>
-                        setMengen((m) => ({
-                          ...m,
-                          [String(z.id)]: Number(e.target.value.replace(',', '.')) || 0,
-                        }))
-                      }
+                    <Zahleingabe
+                      wert={menge(z)}
+                      beiLeer={0}
+                      aendern={(v) => setMengen((m) => ({ ...m, [String(z.id)]: v ?? 0 }))}
                     />
                   </label>
                 </div>

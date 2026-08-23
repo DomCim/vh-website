@@ -8,6 +8,7 @@ import { naechsterPosten } from '../../lib/inventarerfassung'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { LieferantFeld } from './LieferantFeld'
+import { Zahleingabe } from './Zahleingabe'
 
 export type InventarWerte = {
   id?: number | string
@@ -136,10 +137,10 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
         </label>
         <label className="buero-feld">
           <span>Bestand</span>
-          <input
-            inputMode="decimal"
-            value={w.quantity ?? 0}
-            onChange={(e) => setzen({ quantity: Number(e.target.value) || 0 })}
+          <Zahleingabe
+            wert={w.quantity}
+            beiLeer={0}
+            aendern={(v) => setzen({ quantity: v ?? 0 })}
           />
         </label>
         <label className="buero-feld">
@@ -148,14 +149,8 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
         </label>
         <label className="buero-feld">
           <span>Mindestbestand</span>
-          <input
-            inputMode="decimal"
-            value={w.minQuantity ?? ''}
-            onChange={(e) =>
-              // Geleert heißt „kein Mindestbestand" — nicht „Mindestbestand null"
-              setzen({ minQuantity: e.target.value === '' ? null : Number(e.target.value) || 0 })
-            }
-          />
+          {/* Geleert heißt „kein Mindestbestand" — nicht „Mindestbestand null" */}
+          <Zahleingabe wert={w.minQuantity} aendern={(v) => setzen({ minQuantity: v })} />
           <span style={{ marginTop: '.4rem' }}>
             Darunter meldet sich das Büro und der Posten steht unter „Nachbestellen“.
           </span>
@@ -165,12 +160,9 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Nachbestellmenge</span>
-          <input
-            inputMode="decimal"
-            value={w.orderQuantity ?? ''}
-            onChange={(e) =>
-              setzen({ orderQuantity: e.target.value === '' ? null : Number(e.target.value) || 0 })
-            }
+          <Zahleingabe
+            wert={w.orderQuantity}
+            aendern={(v) => setzen({ orderQuantity: v })}
             placeholder="z.B. 100"
           />
           <span style={{ marginTop: '.4rem' }}>
@@ -191,13 +183,7 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Wert je Einheit netto (EUR)</span>
-          <input
-            inputMode="decimal"
-            value={w.unitValue ?? ''}
-            onChange={(e) =>
-              setzen({ unitValue: e.target.value === '' ? null : Number(e.target.value) || 0 })
-            }
-          />
+          <Zahleingabe wert={w.unitValue} aendern={(v) => setzen({ unitValue: v })} />
         </label>
         <label className="buero-feld">
           <span>Lagerort</span>
@@ -217,13 +203,7 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
         </label>
         <label className="buero-feld">
           <span>Anschaffungswert netto (EUR)</span>
-          <input
-            inputMode="decimal"
-            value={w.purchaseValue ?? ''}
-            onChange={(e) =>
-              setzen({ purchaseValue: e.target.value === '' ? null : Number(e.target.value) || 0 })
-            }
-          />
+          <Zahleingabe wert={w.purchaseValue} aendern={(v) => setzen({ purchaseValue: v })} />
         </label>
       </div>
 

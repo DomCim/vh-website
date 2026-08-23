@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 
 import { absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 
 export type PostenAuswahl = { id: number; name: string; unit: string }
 export type LieferantAuswahl = { id: number; name: string }
@@ -191,16 +192,12 @@ export function WareneingangFormular({
           </label>
           <label className="buero-feld">
             <span>Menge</span>
-            <input
-              inputMode="decimal"
-              value={z.quantity}
-              onChange={(e) =>
-                setZeilen((v) =>
-                  v.map((x, idx) =>
-                    idx === i
-                      ? { ...x, quantity: Number(e.target.value.replace(',', '.')) || 0 }
-                      : x,
-                  ),
+            <Zahleingabe
+              wert={z.quantity}
+              beiLeer={0}
+              aendern={(v) =>
+                setZeilen((alle) =>
+                  alle.map((x, idx) => (idx === i ? { ...x, quantity: v ?? 0 } : x)),
                 )
               }
             />

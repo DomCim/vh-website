@@ -8,6 +8,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
@@ -317,10 +318,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <div className="buero-reihe">
             <label className="buero-feld">
               <span>Menge</span>
-              <input
-                inputMode="decimal"
-                value={p.quantity}
-                onChange={(e) => setzePosition(i, { quantity: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.quantity}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { quantity: v ?? 0 })}
               />
             </label>
             <label className="buero-feld">
@@ -329,18 +330,18 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
             </label>
             <label className="buero-feld">
               <span>Einzelpreis netto</span>
-              <input
-                inputMode="decimal"
-                value={p.unitPrice}
-                onChange={(e) => setzePosition(i, { unitPrice: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.unitPrice}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { unitPrice: v ?? 0 })}
               />
             </label>
             <label className="buero-feld">
               <span>Steuersatz (%)</span>
-              <input
-                inputMode="decimal"
-                value={p.vatRate}
-                onChange={(e) => setzePosition(i, { vatRate: Number(e.target.value) || 0 })}
+              <Zahleingabe
+                wert={p.vatRate}
+                beiLeer={0}
+                aendern={(v) => setzePosition(i, { vatRate: v ?? 0 })}
               />
             </label>
           </div>
