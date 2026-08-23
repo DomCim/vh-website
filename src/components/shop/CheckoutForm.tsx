@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { formatPrice, type Locale } from '../../lib/i18n'
 import { Schrittformular, type Schritt } from '../Schrittformular'
@@ -116,8 +116,8 @@ export function CheckoutForm({
   locale: Locale
   dict: CheckoutDict
   cartDict: CartDict
-  /** Nur der eine Satz für die sofortige Bereitstellung */
-  downloadDict: { hinweisKasse: string }
+  /** Die Sätze rund um digitale Ware */
+  downloadDict: { hinweisKasse: string; nurPaypal: string; keineZahlung: string }
   initialCode?: string
   paypalAvailable?: boolean
   vatRate?: number
@@ -126,7 +126,9 @@ export function CheckoutForm({
   const formular = useRef<HTMLFormElement>(null)
   const [submitting, setSubmitting] = useState(false)
   // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an"
-  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung'>(null)
+  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung' | 'digital-ohne-paypal'>(
+    null,
+  )
   /*
    * Zwei Zahlarten: PayPal (nur wenn eingerichtet) und Rechnung (immer).
    * Ohne PayPal-Zugangsdaten ist Rechnung vorgewählt — die Kasse funktioniert
@@ -135,6 +137,7 @@ export function CheckoutForm({
   const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'rechnung'>(
     paypalAvailable ? 'paypal' : 'rechnung',
   )
+
   /*
    * Die E-Mail-Bestätigung ist das Tor zum zweiten Schritt.
    *
@@ -177,6 +180,17 @@ export function CheckoutForm({
    */
   const hatDigitales = items.some((i) => i.digital === true)
   const nurDigital = items.length > 0 && items.every((i) => i.digital === true)
+
+  /*
+   * Dateien gibt es nur gegen sofortige Zahlung. Steht die Auswahl trotzdem
+   * auf Rechnung — weil PayPal fehlt oder weil jemand erst danach eine Datei
+   * in den Korb gelegt hat —, wird sie hier zurückgeholt: Die Kasse weist
+   * eine solche Bestellung ohnehin ab, und das erst beim Absenden zu sagen
+   * wäre die unfreundlichste Art, es zu sagen.
+   */
+  useEffect(() => {
+    if (hatDigitales && paymentMethod !== 'paypal' && paypalAvailable) setPaymentMethod('paypal')
+  }, [hatDigitales, paymentMethod, paypalAvailable])
 
   const showAddressForm =
     !nurDigital && deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
@@ -332,6 +346,15 @@ export function CheckoutForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    /*
+     * Ohne PayPal gibt es für eine Datei keinen Weg: Der Kauf auf Rechnung
+     * ist ausgeschlossen, und die Kasse wiese die Bestellung ohnehin ab. Das
+     * hier zu sagen ist freundlicher, als es den Server sagen zu lassen.
+     */
+    if (hatDigitales && !paypalAvailable) {
+      setError('digital-ohne-paypal')
+      return
+    }
     if (!zustimmung || (einzelanfertigung && !verzicht) || (hatDigitales && !sofort)) {
       setFehlendeZustimmung(true)
       return
@@ -570,24 +593,31 @@ export function CheckoutForm({
                             )}
                           </label>
                         )}
-                        <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
-                          <span className="flex items-center gap-3">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="rechnung"
-                              checked={paymentMethod === 'rechnung'}
-                              onChange={() => setPaymentMethod('rechnung')}
-                              className="accent-ink"
-                            />
-                            {dict.optionInvoice}
-                          </span>
-                          {paymentMethod === 'rechnung' && (
-                            <span className="text-ink-soft mt-1 block pl-7 text-xs">
-                              {dict.invoiceNote}
+                        {!hatDigitales && (
+                          <label className="border-line has-checked:border-ink block cursor-pointer border bg-paper px-4 py-3 text-sm">
+                            <span className="flex items-center gap-3">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="rechnung"
+                                checked={paymentMethod === 'rechnung'}
+                                onChange={() => setPaymentMethod('rechnung')}
+                                className="accent-ink"
+                              />
+                              {dict.optionInvoice}
                             </span>
-                          )}
-                        </label>
+                            {paymentMethod === 'rechnung' && (
+                              <span className="text-ink-soft mt-1 block pl-7 text-xs">
+                                {dict.invoiceNote}
+                              </span>
+                            )}
+                          </label>
+                        )}
+                        {hatDigitales && (
+                          <p className="text-ink-soft text-xs">
+                            {paypalAvailable ? downloadDict.nurPaypal : downloadDict.keineZahlung}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -670,7 +700,11 @@ export function CheckoutForm({
 
                     {error && (
                       <p className="text-accent text-sm">
-                        {error === 'keine-zahlung' ? dict.errorNoPayment : dict.error}
+                        {error === 'keine-zahlung'
+                          ? dict.errorNoPayment
+                          : error === 'digital-ohne-paypal'
+                            ? downloadDict.keineZahlung
+                            : dict.error}
                       </p>
                     )}
 

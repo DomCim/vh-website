@@ -12,6 +12,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 - **Geliefert wird ab „bezahlt", und keinen Schritt früher.** Die Links stehen in der Bestellbestätigung und auf der Bestellseite. Vorher steht dort der Grund und kein leerer Fleck. Sie gelten ein Jahr und werden bei jedem Aufruf der Bestellseite neu erzeugt; eine stornierte Bestellung liefert nichts mehr.
 
+- **Dateien gibt es nur gegen PayPal, nicht auf Rechnung.** Liegt eine Datei im Korb, steht der Kauf auf Rechnung gar nicht erst zur Wahl. Der Grund ist handfest: Eine Datei lässt sich nicht zurückholen, und der Status **„In Fertigung"** gibt sie frei — bei einem Stück Stahl ist das richtig, bei einem Bauplan bedeutet er nichts. Ein unbedachter Klick im Büro hätte die Datei ohne Geldeingang ausgeliefert. Nebenbei entfällt damit die Kette aus Anzahlung, Zwischen- und Schlussrechnung, die an einem Bauplan ohnehin Papier ohne Gegenstand wäre.
+
+- **Die gekauften Dateien stehen jetzt direkt im Kundenkonto**, mit Name und Bestellnummer. Vorher führte der Weg über die Bestellseite — ein Klick, der nichts beantwortet für jemanden, der genau deswegen ins Konto geht.
+
 - **Die Widerrufsbelehrung hat einen Absatz dazu bekommen**, in allen drei Sprachen. Er muss noch in den veröffentlichten Text übernommen werden — die Entwürfe im Code sind nicht das, was auf der Website steht.
 
 - **Eine Frage für die Kanzlei, nicht für den Code:** Digitale Leistungen an Verbraucher im EU-Ausland werden im Land des Kunden besteuert, nicht am Betriebssitz. Bis 10.000 € Jahresumsatz aus solchen Verkäufen bleibt der französische Satz; darüber führt der Weg über die OSS-Meldung. Bei einzelnen Bauplänen ist das unkritisch, aber es sollte jemand wissen, bevor es mehr wird.

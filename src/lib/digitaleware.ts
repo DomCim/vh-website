@@ -132,3 +132,69 @@ export async function dateienZurBestellung(
       groesse: (d.filesize as number) ?? null,
     }))
 }
+
+/**
+ * Dieselbe Frage für mehrere Bestellungen — in zwei Abfragen statt in 2n.
+ *
+ * Gebraucht im Kundenkonto: Dort steht die ganze Liste, und für jede Zeile
+ * einzeln nachzufragen hieße bei zehn Bestellungen zwanzig Abfragen für eine
+ * Seite, die meistens gar nichts Digitales enthält.
+ *
+ * Bestellungen, die noch nicht bezahlt sind, kommen hier gar nicht erst vor:
+ * Was nicht ausgeliefert werden darf, braucht auch keinen Link.
+ */
+export async function dateienZuBestellungen(
+  payload: Payload,
+  ids: (number | string)[],
+): Promise<Map<string, Downloaddatei[]>> {
+  const raus = new Map<string, Downloaddatei[]>()
+  if (ids.length === 0) return raus
+
+  const { docs: bestellungen } = await payload.find({
+    collection: 'orders',
+    where: { id: { in: ids } },
+    limit: ids.length,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const bezahlte = bestellungen.filter((b) => darfHerunterladen(b.status))
+  if (bezahlte.length === 0) return raus
+
+  const artikelJeBestellung = new Map<string, string[]>()
+  for (const b of bezahlte) {
+    const artikel = (b.items ?? [])
+      .map((p) => (typeof p.product === 'object' ? (p.product as { id?: unknown })?.id : p.product))
+      .filter((id): id is number | string => id !== null && id !== undefined)
+      .map(String)
+    if (artikel.length) artikelJeBestellung.set(String(b.id), [...new Set(artikel)])
+  }
+
+  const alleArtikel = [...new Set([...artikelJeBestellung.values()].flat())]
+  if (alleArtikel.length === 0) return raus
+
+  const { docs: dateien } = await payload.find({
+    collection: 'product-files',
+    where: { and: [{ product: { in: alleArtikel } }, { download: { equals: true } }] },
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+    sort: 'label',
+  })
+
+  for (const [bestellung, artikel] of artikelJeBestellung) {
+    const passend = dateien
+      .filter((d) => {
+        const id = typeof d.product === 'object' ? (d.product as { id?: unknown })?.id : d.product
+        return d.filename && artikel.includes(String(id))
+      })
+      .map((d) => ({
+        id: d.id,
+        name: (d.label || d.filename) as string,
+        groesse: (d.filesize as number) ?? null,
+      }))
+    if (passend.length) raus.set(bestellung, passend)
+  }
+
+  return raus
+}

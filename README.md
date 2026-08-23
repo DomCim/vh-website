@@ -768,11 +768,31 @@ sie liegen in derselben Ablage.
   Bestellung unter `consent.digitalAt` — getrennt vom Verzicht bei
   Einzelanfertigung, weil es ein anderer Grund ist.
 
+### Bezahlt wird per PayPal, nicht auf Rechnung
+
+Enthält ein Warenkorb eine Datei, steht der Kauf auf Rechnung nicht zur Wahl
+— die Kasse weist eine solche Bestellung auch server-seitig ab
+(`digital-nur-paypal`).
+
+Zwei Gründe. Der Kauf auf Rechnung ist für Projektgeschäft gebaut: Es
+entsteht ein Fertigungsauftrag mit Anzahlung, Zwischen- und Schlussrechnung.
+An einem Bauplan ist nichts zu fertigen, und die Kette aus Teilrechnungen
+wäre Papier ohne Gegenstand.
+
+Der handfestere Grund: Eine Datei lässt sich nicht zurückholen. Der Status
+„In Fertigung" gibt sie frei — bei einem Stück Stahl ist das richtig, bei
+einer Datei bedeutet er nichts, und ein unbedachter Klick im Büro hätte sie
+ohne Geldeingang ausgeliefert. Die Schranke schließt diese Möglichkeit,
+statt sich auf Umsicht zu verlassen.
+
+Ist PayPal nicht eingerichtet, lässt sich digitale Ware folglich nicht
+verkaufen. Die Kasse sagt das, bevor jemand ausfüllt.
+
 ### Ausgeliefert wird ab „bezahlt"
 
-Die Links stehen in der Bestellbestätigung und auf der Bestellseite; im
-Kundenkonto führt der Weg über dieselbe Seite. Vorher steht dort der Grund
-und kein leerer Fleck.
+Die Links stehen in der Bestellbestätigung, auf der Bestellseite und im
+Kundenkonto — dort mit Namen und Bestellnummer, ohne Umweg über die
+Bestellseite. Vorher steht dort der Grund und kein leerer Fleck.
 
 Sie tragen ihre Berechtigung selbst — eine Prüfsumme über Bestellung, Datei
 und Ablaufzeit, geschlüsselt mit `PAYLOAD_SECRET`. Eine Anmeldung wäre hier

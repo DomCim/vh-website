@@ -120,6 +120,26 @@ export async function POST(req: Request) {
     }
 
     /*
+     * Dateien gibt es nur gegen Geld — also nicht auf Rechnung.
+     *
+     * Der Kauf auf Rechnung ist für das gebaut, was er ist: Projektgeschäft.
+     * Es entsteht ein Fertigungsauftrag mit Anzahlung, Zwischen- und
+     * Schlussrechnung, und geliefert wird nach Zahlungseingang. An einem
+     * Bauplan ist nichts zu fertigen, und die Kette aus Teilrechnungen wäre
+     * Papier ohne Gegenstand.
+     *
+     * Der handfeste Grund steht daneben: Eine Datei lässt sich nicht
+     * zurückholen. „In Fertigung" gibt sie frei — bei einem Stück Stahl ist
+     * das richtig, bei einer Datei bedeutet der Status nichts, und ein
+     * unbedachter Klick im Büro hätte sie ohne Geld ausgeliefert. Diese
+     * Schranke schließt die Möglichkeit, statt sich auf Umsicht zu verlassen.
+     */
+    if (hatDigitales && paymentMethod !== 'paypal') {
+      return NextResponse.json({ error: 'digital-nur-paypal' }, { status: 400 })
+    }
+
+
+    /*
      * Erst die Adresse, dann die Bestellung.
      *
      * Die Bestätigungsmail, der Zugang zum Kundenportal, die Versandmeldung —

@@ -242,6 +242,10 @@ const de = {
     laden: 'Herunterladen',
     hinweisKasse:
       'Ich verlange die sofortige Bereitstellung der Dateien und weiß, dass mein Widerrufsrecht damit erlischt.',
+    nurPaypal:
+      'Dateien werden sofort nach der Zahlung bereitgestellt — dafür geht nur PayPal. Kauf auf Rechnung steht bei Artikeln zur Wahl, die gefertigt werden.',
+    keineZahlung:
+      'Für Dateien braucht es PayPal, und das ist gerade nicht eingerichtet. Bitte melden Sie sich kurz bei uns.',
   },
   orderStatus: {
     title: 'Ihre Bestellung',
@@ -639,6 +643,10 @@ const fr: Dictionary = {
     laden: 'Télécharger',
     hinweisKasse:
       "Je demande la mise à disposition immédiate des fichiers et je sais que je perds ainsi mon droit de rétractation.",
+    nurPaypal:
+      "Les fichiers sont mis à disposition dès le paiement — seul PayPal est possible. Le paiement sur facture reste proposé pour les pièces à fabriquer.",
+    keineZahlung:
+      "Les fichiers exigent PayPal, qui n'est pas configuré pour le moment. Merci de nous contacter brièvement.",
   },
   orderStatus: {
     title: 'Votre commande',
@@ -1032,6 +1040,10 @@ const en: Dictionary = {
     laden: 'Download',
     hinweisKasse:
       'I request immediate provision of the files and understand that I thereby lose my right of withdrawal.',
+    nurPaypal:
+      'Files are made available immediately after payment — PayPal only. Purchase on invoice remains available for pieces that are made to order.',
+    keineZahlung:
+      'Files require PayPal, which is not set up at the moment. Please get in touch with us.',
   },
   orderStatus: {
     title: 'Your order',

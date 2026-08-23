@@ -7,6 +7,11 @@ import { AngebotAnnehmen } from '../../../../components/shop/AngebotAnnehmen'
 import { KontoAnmeldung } from '../../../../components/shop/KontoAnmeldung'
 import { Vorgangsunterlagen } from '../../../../components/shop/Vorgangsunterlagen'
 import { payloadClient } from '../../../../lib/data'
+import {
+  dateienZuBestellungen,
+  downloadBis,
+  downloadLink,
+} from '../../../../lib/digitaleware'
 import { formatPrice, isLocale, t, type Locale } from '../../../../lib/i18n'
 import { SITZUNGS_COOKIE, sitzungLesen } from '../../../../lib/kundenportal'
 import {
@@ -87,6 +92,20 @@ async function Uebersicht({
   const alteAuftraege = auftraege.filter(
     (a) => a.status === 'geliefert' || a.status === 'abgebrochen',
   )
+  /*
+   * Die gekauften Dateien stehen hier selbst, nicht hinter einem Link.
+   *
+   * Wer eine Datei gekauft hat, kommt genau deswegen ins Kundenkonto — ihn
+   * erst noch auf die Bestellseite zu schicken wäre ein Klick, der nichts
+   * beantwortet. Die Frist beginnt dabei mit dem Ansehen: Ein Jahr ab jetzt,
+   * nicht ab dem Kauf.
+   */
+  const downloadDateien = await dateienZuBestellungen(
+    payload,
+    bestellungen.map((b) => b.id),
+  )
+  const downloadBisJetzt = downloadBis()
+
   const laufendeBestellungen = bestellungen.filter(
     (b) => b.status !== 'shipped' && b.status !== 'cancelled',
   )
@@ -167,6 +186,38 @@ async function Uebersicht({
             {rechnungen.map((r) => (
               <RechnungsZeile key={r.id} rechnung={r} locale={locale} dict={dict} />
             ))}
+          </ul>
+        </>
+      )}
+
+      {[...downloadDateien].length > 0 && (
+        <>
+          <h2 className={ueberschrift}>{dict.downloads.title}</h2>
+          <p className="text-ink-soft mb-4 text-sm">{dict.downloads.intro}</p>
+          <ul className="divide-line divide-y border-y">
+            {bestellungen
+              .filter((b) => downloadDateien.has(String(b.id)))
+              .map((b) =>
+                (downloadDateien.get(String(b.id)) ?? []).map((d) => (
+                  <li
+                    key={`${b.id}-${d.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3 py-4"
+                  >
+                    <div>
+                      <p className="text-sm">{d.name}</p>
+                      <p className="text-ink-soft text-xs">
+                        {k.orderNumber} {b.nummer} · {tag(b.datum)}
+                      </p>
+                    </div>
+                    <a
+                      href={downloadLink(b.id, d.id, downloadBisJetzt)}
+                      className="tracking-nav hover:text-bronze text-xs font-semibold uppercase underline transition-colors"
+                    >
+                      {dict.downloads.laden}
+                    </a>
+                  </li>
+                )),
+              )}
           </ul>
         </>
       )}
