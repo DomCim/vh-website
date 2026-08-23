@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 
 import type { Locale } from '../lib/i18n'
+import { zahlAusText } from '../lib/zahleingabe'
 
 type Labels = {
   name: string
@@ -46,10 +47,14 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
     setStatus('sending')
     const form = e.currentTarget
     const f = new FormData(form)
-    const zahl = (name: string) => {
-      const v = f.get(name)
-      return v ? Number(v) : undefined
-    }
+    /*
+     * Maße dürfen ein Komma haben: „120,5" ist eine plausible Breite. Vorher
+     * stand hier `Number(v)` an einem `type="number"`-Feld — je nach Browser
+     * kam das Komma gar nicht erst an oder wurde zu NaN, und die Anfrage
+     * erreichte die Werkstatt ohne Maß. Gemerkt hätte das niemand: Im
+     * Formular sah alles richtig aus.
+     */
+    const zahl = (name: string) => zahlAusText(String(f.get(name) ?? ''), null) ?? undefined
 
     try {
       const res = await fetch('/api/contact', {
@@ -102,9 +107,24 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <input name="width" type="number" min={1} placeholder={labels.width} className={inputClass} />
-        <input name="depth" type="number" min={1} placeholder={labels.depth} className={inputClass} />
-        <input name="height" type="number" min={1} placeholder={labels.height} className={inputClass} />
+        <input
+          name="width"
+          inputMode="decimal"
+          placeholder={labels.width}
+          className={inputClass}
+        />
+        <input
+          name="depth"
+          inputMode="decimal"
+          placeholder={labels.depth}
+          className={inputClass}
+        />
+        <input
+          name="height"
+          inputMode="decimal"
+          placeholder={labels.height}
+          className={inputClass}
+        />
       </div>
       <input name="color" placeholder={labels.color} className={inputClass} />
       <input name="purpose" placeholder={labels.purpose} className={inputClass} />
