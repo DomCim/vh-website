@@ -2926,3 +2926,250 @@ html.tastatur-offen .buero-inhalt {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Neuerungen ────────────────────────────────────────────────────────────
+ *
+ * Der Banner sagt einmal, dass es Neues gibt; die Seite zeigt es als
+ * Zeitleiste. Beides bewusst ruhig: Es ist eine Mitteilung, keine Meldung —
+ * nichts blinkt, nichts ist rot, und weg ist es nach dem Hinsehen.
+ */
+.buero-neu-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 1rem 0;
+  padding: 0.15rem 0.15rem 0.15rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--buero-bronze) 45%, var(--buero-linie));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--buero-bronze) 8%, var(--buero-flaeche));
+}
+
+.buero-neu-banner-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0;
+  color: var(--buero-tinte);
+  text-decoration: none;
+}
+
+.buero-neu-banner-text:hover .buero-neu-banner-titel {
+  text-decoration: underline;
+}
+
+/* Das Wort trägt die Nachricht, nicht die Farbe allein — wer die Farbe nicht
+   unterscheidet, liest trotzdem „Neu". */
+.buero-neu-banner-marke,
+.buero-neu-marke {
+  flex: none;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--buero-bronze);
+  color: var(--buero-auf-bronze);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.buero-neu-banner-titel {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buero-neu-banner-mehr {
+  color: var(--buero-tinte-leise);
+  font-size: 0.85rem;
+}
+
+/* 44 Pixel Fläche zum Antippen, das Kreuz darin ist klein */
+.buero-neu-banner-weg {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--buero-tinte-leise);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buero-neu-banner-weg svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.buero-neu-banner-weg:hover {
+  color: var(--buero-tinte);
+}
+
+/* Die Zeitleiste: eine Linie, an der die Fassungen hängen */
+.buero-neu-leiste {
+  position: relative;
+  /* Die Zeile darf nicht über den ganzen Bildschirm laufen: Ab etwa neunzig
+     Zeichen findet das Auge den Anfang der nächsten nicht mehr, und hier
+     stehen ganze Absätze. */
+  max-width: 52rem;
+  margin-top: 1.25rem;
+  padding-left: 1.4rem;
+  border-left: 1px solid var(--buero-rahmen);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.buero-neu-monat {
+  margin: 1.4rem 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-neu-monat:first-child {
+  margin-top: 0;
+}
+
+.buero-neu-eintrag {
+  position: relative;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 14px;
+  background: var(--buero-flaeche);
+  box-shadow: var(--buero-schatten);
+}
+
+/* Der Punkt auf der Linie — er sitzt auf der Höhe der Überschrift */
+.buero-neu-eintrag::before {
+  content: '';
+  position: absolute;
+  left: calc(-1.4rem - 5px);
+  top: 1.5rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--buero-rahmen);
+  border: 2px solid var(--buero-papier);
+}
+
+.buero-neu-eintrag.ist-neu {
+  border-color: color-mix(in srgb, var(--buero-bronze) 45%, var(--buero-linie));
+}
+
+.buero-neu-eintrag.ist-neu::before {
+  background: var(--buero-bronze);
+}
+
+.buero-neu-eintrag > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.buero-neu-eintrag > summary::-webkit-details-marker {
+  display: none;
+}
+
+.buero-neu-kopf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.buero-neu-datum {
+  font-size: 0.8rem;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-neu-titel {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* Der Corten-Strich unter der Überschrift, wie überall im Haus */
+.buero-neu-eintrag[open] > summary .buero-neu-titel::after {
+  content: '';
+  display: block;
+  width: 2.2rem;
+  height: 2px;
+  margin-top: 0.55rem;
+  background: var(--buero-bronze);
+}
+
+.buero-neu-punkte {
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.buero-neu-punkt-kopf {
+  margin: 0 0 0.15rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.buero-neu-punkt-text {
+  margin: 0;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--buero-tinte) 88%, var(--buero-papier));
+}
+
+/* Erläuterungen eine Ebene tiefer — abgesetzt statt eingerückt, damit die
+   Einrückung am Handy keine Spalte kostet */
+.buero-neu-unter {
+  margin: 0.6rem 0 0;
+  padding: 0 0 0 0.9rem;
+  border-left: 2px solid var(--buero-linie);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-neu-punkt code,
+.buero-neu-unter code {
+  padding: 0.05em 0.3em;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--buero-tinte) 8%, transparent);
+  font-size: 0.9em;
+}
+
+@media (max-width: 640px) {
+  .buero-neu-banner {
+    margin: 0.6rem 0.7rem 0;
+  }
+
+  .buero-neu-leiste {
+    padding-left: 1rem;
+  }
+
+  .buero-neu-eintrag {
+    padding: 0.9rem 1rem;
+  }
+
+  .buero-neu-eintrag::before {
+    left: calc(-1rem - 5px);
+  }
+}

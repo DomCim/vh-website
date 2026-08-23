@@ -21,6 +21,7 @@ export const BEREICHE = {
   kundenstimmen: 'testimonials',
   medien: 'media',
   meldungen: 'notifications',
+  neuerungen: 'changelog',
   newsletter: 'newsletter-subscribers',
   partner: 'contacts',
   rechnungen: 'outgoing-invoices',
@@ -71,8 +72,9 @@ export function istBereich(wert: string): wert is Bereich {
  *
  * Bereiche ohne Eintrag stehen jedem offen, der das Büro öffnen darf:
  * Artikel, Medien und Kundenstimmen sind ohnehin Website-Inhalt, Unterlagen
- * braucht, wer das Teil baut, und Meldungen, Wiedervorlagen und
- * Werkstattwochen sind Arbeitsorganisation ohne Zahlen.
+ * braucht, wer das Teil baut, Meldungen, Wiedervorlagen und Werkstattwochen
+ * sind Arbeitsorganisation ohne Zahlen — und die Neuerungen sagen nur, was
+ * sich am Haus geändert hat.
  */
 export const BEREICH_RECHTE: Partial<Record<Bereich, string[]>> = {
   anfragen: ['anfragen.bearbeiten', 'angebote.schreiben'],
