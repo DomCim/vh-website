@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 
 import { PasskeyAnmeldung } from './PasskeyAnmeldung'
 import { bestandFreigeben } from '../../lib/buero/bestand'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Anmeldung fürs Büro.
@@ -116,7 +117,7 @@ export function BueroAnmeldung({ ziel = '/office' }: { ziel?: string }) {
         </label>
       )}
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <button type="submit" className="buero-knopf" disabled={laeuft}>
         {laeuft ? 'meldet an …' : 'Anmelden'}

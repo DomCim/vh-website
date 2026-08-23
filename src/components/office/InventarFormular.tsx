@@ -9,6 +9,7 @@ import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { LieferantFeld } from './LieferantFeld'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type InventarWerte = {
   id?: number | string
@@ -113,15 +114,7 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
         }}
         aufVerwerfen={entwurf.verwerfen}
       />
-      {/*
-        Die Hülle steht immer da, auch leer. Ein Bereich, der erst mit seinem
-        Text entsteht, wird von Vorlesern oft überhört — angesagt wird, was
-        sich in einem **vorhandenen** Bereich ändert. Beim Erfassen in Reihe
-        ist diese Zeile die einzige Rückmeldung, dass etwas angelegt wurde.
-      */}
-      <div role="status" aria-live="polite">
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
-      </div>
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Bezeichnung</span>

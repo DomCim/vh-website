@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 
 import { signaturAlsHtml, textAlsAbsaetze } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
+import { Rueckmeldung } from './Rueckmeldung'
 
 type Art = 'angebot' | 'rechnung' | 'bestaetigung' | 'mahnung' | 'lieferschein'
 
@@ -140,7 +141,7 @@ export function VersandKnopf({
         width: '100%',
       }}
     >
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
       <p className="buero-unterzeile" style={{ marginBottom: '.75rem' }}>
         {w.dateiname ? `${w.dateiname} hängt als PDF an` : 'Das PDF hängt an'}
         {w.absender ? ` · Absender ${w.absender}` : ''}

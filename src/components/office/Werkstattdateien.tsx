@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../lib/buero/bestand'
 import { useDarf } from '../../lib/buero/rechte'
 import { absenden } from '../../lib/buero/warteschlange'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Die Bauunterlagen einer Artikelvariante — in Ordnern.
@@ -398,7 +399,7 @@ export function Werkstattdateien({
         liegt hier an der Variante und lässt sich in der Werkstatt herunterladen.
       </p>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {vonDerGrundlage.length > 0 && (
         <>

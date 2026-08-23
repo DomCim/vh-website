@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Rollen anlegen und Rechte anhaken.
@@ -110,7 +111,7 @@ export function RollenVerwaltung() {
         Was eine Rolle darf, gilt für jedes Konto mit dieser Rolle — im Büro und an allen
         Schnittstellen. Wer ein Recht nicht hat, sieht den Bereich gar nicht erst.
       </p>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {rollen.map((rolle) => (
         <div key={rolle.id} className="buero-karte" style={{ marginBottom: '.8rem' }}>

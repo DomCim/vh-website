@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
 import { ANFRAGE_STATUS } from '../../lib/listen'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type AnfrageWerte = {
   id: number | string
@@ -38,7 +39,7 @@ export function AnfrageFormular({ werte }: { werte: AnfrageWerte }) {
 
   return (
     <div className="buero-karte">
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Status</span>

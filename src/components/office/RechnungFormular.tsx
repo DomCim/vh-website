@@ -12,6 +12,7 @@ import { Zahleingabe } from './Zahleingabe'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type Position = {
   description: string
@@ -155,7 +156,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           die Gegenrechnung mit Verweis auf diese hier an.
         </p>
       )}
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-reihe">
         <PartnerBezug

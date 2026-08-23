@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { BESTELL_STATUS } from '../../lib/listen'
 import { Fussleiste } from './Fussleiste'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type BestellungWerte = {
   id: number | string
@@ -58,8 +59,8 @@ export function BestellungFormular({ werte }: { werte: BestellungWerte }) {
 
   return (
     <div className="buero-karte">
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
-      {mailHinweis && w.status !== werte.status && <p className="buero-hinweis">{mailHinweis}</p>}
+      <Rueckmeldung text={meldung} />
+      <Rueckmeldung text={w.status !== werte.status ? mailHinweis : null} />
 
       <div className="buero-reihe">
         <label className="buero-feld">

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Eine gestellte Rechnung zurücknehmen.
@@ -93,7 +94,7 @@ export function StornoKnopf({ id, nummer }: { id: number | string; nummer: strin
           Abbrechen
         </button>
       </div>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
     </div>
   )
 }

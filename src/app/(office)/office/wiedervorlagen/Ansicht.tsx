@@ -7,6 +7,7 @@ import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum } from '../../../../lib/format'
 import { WischZeile } from '../../../../components/office/WischZeile'
+import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
 /**
  * Alle Wiedervorlagen an einem Ort.
@@ -192,7 +193,7 @@ export function WiedervorlagenAnsicht() {
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={anlegen}>
           Merken
         </button>
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
       </div>
 
       <h2>Fällig ({faellig.length})</h2>

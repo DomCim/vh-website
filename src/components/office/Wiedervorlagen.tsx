@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../lib/buero/bestand'
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum } from '../../lib/format'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Wiedervorlagen an einem Vorgang — Partner, Auftrag oder Rechnung.
@@ -158,7 +159,7 @@ export function Wiedervorlagen({ bezug }: { bezug: WiedervorlagenBezug }) {
       <button type="button" className="buero-knopf" disabled={laeuft} onClick={anlegen}>
         Merken
       </button>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {erledigt.length > 0 && (
         <p className="buero-unterzeile" style={{ marginTop: '.8rem' }}>

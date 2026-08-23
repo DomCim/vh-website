@@ -5,6 +5,7 @@ import { absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { Werkstattdateien } from './Werkstattdateien'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -191,7 +192,7 @@ export function ArtikelFormular({
 
   return (
     <div className="buero-karte">
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {/* Für welche Variante das alles gilt. Ohne Varianten fehlt die Reihe —
           dann gibt es nichts umzuschalten. */}

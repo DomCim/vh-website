@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react'
 import { Fussleiste } from '../../../../components/office/Fussleiste'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
+import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
 /**
  * Die Übergabemappen — Ordner, über die Unterlagen mit der Kundschaft hin und
@@ -116,7 +117,7 @@ export function MappenAnsicht() {
         </p>
       </div>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {neu && (
         <div className="buero-karte" style={{ marginBottom: '1rem' }}>

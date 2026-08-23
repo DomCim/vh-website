@@ -2815,3 +2815,27 @@ html.tastatur-offen .buero-inhalt {
   border: 1px solid var(--buero-rahmen);
   font-size: 0.85em;
 }
+
+/*
+ * Die Hülle für Rückmeldungen — siehe `components/office/Rueckmeldung.tsx`.
+ *
+ * Sie steht immer da, damit ein Vorleser die Änderung darin ansagt. Solange
+ * nichts drinsteht, gehört sie aber nicht in den Fluss: In einer Zeile aus
+ * Flex- oder Rasterelementen wäre sie sonst ein Element mit Zwischenraum, und
+ * das an fünfunddreißig Stellen, die niemand nachmisst.
+ *
+ * Nicht `display: none` und nicht `visibility: hidden` — beides nähme sie aus
+ * dem Baum, den der Vorleser liest, und damit wäre der ganze Zweck weg. Der
+ * Weg darunter ist der übliche: ein Pixel groß, weggeschnitten, aber da.
+ */
+.buero-ansage:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

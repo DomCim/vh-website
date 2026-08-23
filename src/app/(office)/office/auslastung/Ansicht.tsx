@@ -13,6 +13,7 @@ import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { zahlAusText } from '../../../../lib/zahleingabe'
 import { Zahleingabe } from '../../../../components/office/Zahleingabe'
+import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
 /**
  * Wie voll die nächsten Wochen sind.
@@ -109,7 +110,7 @@ export function AuslastungAnsicht() {
             </>
           )}
         </p>
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
       </div>
 
       <h2>Die nächsten Wochen</h2>

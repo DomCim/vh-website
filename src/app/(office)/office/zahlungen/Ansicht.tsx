@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { datum, euro } from '../../../../lib/format'
+import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
 /**
  * Zahlungseingänge — der tägliche Blick ins Banking, hier erledigt.
@@ -153,7 +154,7 @@ export function ZahlungenAnsicht() {
             schadet nichts — bekannte Buchungen werden übersprungen.
           </span>
         </label>
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
       </div>
 
       {fehler && <p className="buero-hinweis warn">{fehler}</p>}

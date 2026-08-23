@@ -2,6 +2,7 @@
 
 import { startRegistration } from '@simplewebauthn/browser'
 import React, { useCallback, useEffect, useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Das eigene Konto: Zwei-Faktor und angemeldete Geräte.
@@ -119,7 +120,7 @@ export function MeinKonto() {
   return (
     <>
       <h2>Zwei-Faktor</h2>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {mfaAktiv === null ? (
         <div className="buero-leer">wird geholt …</div>

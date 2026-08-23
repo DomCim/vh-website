@@ -7,6 +7,7 @@ import { EmpfaengerFeld } from './EmpfaengerFeld'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
 import { WischZeile } from './WischZeile'
+import { Rueckmeldung } from './Rueckmeldung'
 
 type Fach = { id: string; label: string; address: string; signatur?: string | null }
 type Ordner = { pfad: string; name: string; ungelesen: number; art: string; trenner: string }
@@ -381,7 +382,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   if (entwurf) {
     return (
       <div className="buero-karte">
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
         {/* Kein `label` um das Feld: Es bringt eine eigene Liste mit, und ein
             Tipp in ein Label geht ans Eingabefeld statt auf den Vorschlag —
             derselbe Grund wie beim Schreibfeld weiter unten. */}
@@ -691,7 +692,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         </form>
       )}
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-liste">
         {liste.length === 0 ? (
