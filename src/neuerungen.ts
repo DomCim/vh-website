@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 55,
+    datum: null,
+    titel: 'Das Postfach am Handy: Uhrzeit, volle Breite, eine Leiste',
+    punkte: [
+      {
+        text: '**In der Liste steht jetzt, wann.** Bisher stand dort stur das Datum — auch bei einer Mail von vor zwei Stunden, und man rechnete im Kopf nach, ob „22.08." nun heute ist. Jetzt gilt: heute die Uhrzeit, gestern **Gestern 17:00**, in der laufenden Woche der Wochentag mit Uhrzeit, älteres wie gehabt das Datum. Der vollständige Zeitpunkt steht im Tooltip und in der geöffneten Nachricht.',
+      },
+      {
+        text: '**Die geöffnete Nachricht läuft am Handy bis an den Rand.** Eine fremde Mail bringt ihr eigenes Layout mit, oft eine Tabelle mit fester Breite. In einer Karte mit Polsterung und Rahmen blieben auf einem üblichen Telefon keine 340 Pixel übrig — der Inhalt wurde seitlich scrollbar oder briefmarkenklein. Am Rechner bleibt die Karte: Dort wäre die volle Breite das andere Extrem.',
+      },
+      {
+        text: '**Aus fünf Kästchen wird eine Leiste.** Die Handlungen über der Mail standen jede in einem eigenen Rahmen nebeneinander und sahen mehr nach Formular aus als nach Werkzeug. Jetzt liegen sie in einem Balken, wie man es aus jedem Mailprogramm kennt: **Antworten** beschriftet, daneben Ungelesen und Löschen als Zeichen.',
+      },
+      {
+        text: '**Markieren und Verschieben liegen hinter „⋯".** Sie kosten dort einen Tipp mehr und nehmen der Zeile dafür die Unruhe — am Telefon der Unterschied zwischen einer Leiste und zwei.',
+      },
+    ],
+  },
+  {
     nummer: 54,
     datum: null,
     titel: 'Jeder Artikel war unter jeder Kategorie erreichbar',

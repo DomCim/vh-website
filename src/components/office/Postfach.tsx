@@ -49,14 +49,52 @@ type Entwurf = {
   antwortAufMessageId?: string
 }
 
+const uhr = (d: Date) => d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+
+/**
+ * Wann die Nachricht kam — so, wie ein Mensch es sagen würde.
+ *
+ * In der Liste stand bisher stur das Datum, auch bei einer Mail von vor zwei
+ * Stunden. Wer nachsieht, ob etwas Neues da ist, rechnet dann im Kopf
+ * „22.08. — ist das heute?" nach. Je näher der Zeitpunkt, desto genauer die
+ * Angabe: heute die Uhrzeit, gestern der Tag samt Uhrzeit, in der laufenden
+ * Woche der Wochentag, älteres das Datum.
+ *
+ * Die Grenze bei sechs Tagen ist Absicht: Bei genau sieben stünde „Sa" für
+ * einen Samstag vor einer Woche neben dem morgigen — der Wochentag wäre
+ * mehrdeutig, und mehrdeutig ist schlechter als lang.
+ */
 const zeit = (v: string | null) => {
   if (!v) return ''
   const d = new Date(v)
-  const heute = new Date()
-  const gleicherTag = d.toDateString() === heute.toDateString()
-  return gleicherTag
-    ? d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-    : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+  const jetzt = new Date()
+  const tage = Math.round(
+    (new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()).getTime() -
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) /
+      86_400_000,
+  )
+  if (tage === 0) return uhr(d)
+  if (tage === 1) return `Gestern ${uhr(d)}`
+  if (tage > 1 && tage < 7)
+    return `${d.toLocaleDateString('de-DE', { weekday: 'short' })} ${uhr(d)}`
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+/**
+ * Der vollständige Zeitpunkt — für die geöffnete Nachricht, für das Zitat in
+ * einer Antwort und als Tooltip in der Liste.
+ *
+ * „Gestern" ist in einem zitierten „Am … schrieb …" wertlos: Die Antwort wird
+ * gelesen, wenn gestern längst vorgestern ist.
+ */
+const zeitVoll = (v: string | null) => {
+  if (!v) return ''
+  const d = new Date(v)
+  return `${d.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })}, ${uhr(d)}`
 }
 
 const groesse = (b: number) =>
@@ -79,6 +117,8 @@ const ZEICHEN: Record<string, React.ReactNode> = {
   verschieben: <path d="M2 5.5h5.5l1.5 2H18v9H2zM2 5.5V16" />,
   loeschen: <path d="M3 5.5h14M8 5.5V3h4v2.5M5 5.5l1 11h8l1-11M8.5 8.5v5M11.5 8.5v5" />,
   zurueck: <path d="M12 4l-6 6 6 6" />,
+  antworten: <path d="M8 5L3 10l5 5M3 10h7a6 6 0 0 1 6 6v1" />,
+  mehr: <path d="M4.5 10h.01M10 10h.01M15.5 10h.01" />,
   plus: <path d="M10 4v12M4 10h12" />,
 }
 
@@ -136,6 +176,8 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [neuerOrdner, setNeuerOrdner] = useState<string | null>(null)
   /** Zeile, deren „⋯"-Menü gerade offen ist — zum Verschieben ohne Öffnen */
   const [mehrOffen, setMehrOffen] = useState<number | null>(null)
+  /** Dasselbe in der geöffneten Nachricht: Markieren und Verschieben */
+  const [detailMehr, setDetailMehr] = useState(false)
 
   const laden = useCallback(
     async (fachId?: string | null, ordnerPfad?: string) => {
@@ -206,6 +248,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         setMeldung('Die Nachricht ließ sich nicht öffnen.')
         return
       }
+      // Das „⋯"-Menü gehört zu der Nachricht, an der es geöffnet wurde —
+      // beim Wechsel wäre es sonst über der nächsten noch offen.
+      setDetailMehr(false)
       setOffen(j.nachricht)
       setListe((v) => v.map((n) => (n.uid === uid ? { ...n, gelesen: true } : n)))
     } finally {
@@ -370,7 +415,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
       text: '',
       html:
         signaturJetzt() +
-        `<p><br></p><p style="color: #666666">Am ${zeit(n.datum)} schrieb ${n.von}:</p>` +
+        `<p><br></p><p style="color: #666666">Am ${zeitVoll(n.datum)} schrieb ${n.von}:</p>` +
         `<blockquote style="color: #666666">${zitat}</blockquote>`,
       antwortAufMessageId: n.messageId,
     })
@@ -494,31 +539,50 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   // ── Nachricht lesen ───────────────────────────────────────────────────────
   if (offen) {
     return (
-      <div className="buero-karte">
+      /*
+       * Randlos am Telefon (siehe office.css).
+       *
+       * Eine fremde Mail bringt ihr eigenes Layout mit — oft eine Tabelle mit
+       * fester Breite. Steckt die in einer Karte mit 1,4 rem Polsterung und
+       * einem Rahmen, bleiben auf einem 390-px-Gerät keine 340 px übrig, und
+       * der Inhalt wird waagerecht scrollbar oder winzig. Am Rechner bleibt
+       * die Karte: Dort wäre die volle Breite das andere Extrem.
+       */
+      <div className="buero-karte buero-mail-offen">
         <button type="button" className="buero-ruecken" onClick={() => setOffen(null)}>
           <Zeichen was="zurueck" /> Zurück
         </button>
         <h2 style={{ marginTop: '.5rem' }}>{offen.betreff}</h2>
         <p className="buero-unterzeile">
-          {offen.von} · {zeit(offen.datum)}
+          {offen.von} · {zeitVoll(offen.datum)}
           {offen.an ? ` · an ${offen.an}` : ''}
         </p>
 
         {/*
-          * Eine große Handlung, der Rest als Zeichen.
+          * Eine Leiste statt fünf einzelner Kästchen.
           *
-          * „Antworten" ist das, was man hier zu neunzig Prozent will — das
-          * bleibt beschriftet. Ungelesen, Markieren, Verschieben und Löschen
-          * passen daneben in eine Zeile, statt drei zu füllen. Jeder behält
-          * seine 44 Pixel; nur die Beschriftung wandert zum Screenreader.
+          * Vorher stand jede Handlung in einem eigenen Rahmen nebeneinander —
+          * am Telefon eine Reihe abgesetzter Quadrate, die mehr nach Formular
+          * aussah als nach Werkzeug. Jetzt liegt alles in einem Balken, die
+          * Zeichen darin sind flach; das ist die Form, die man aus jedem
+          * Mailprogramm kennt (Wunsch Dominik 08/2026, Vorbild Outlook).
+          *
+          * Offen steht, was man ständig braucht: Antworten, Ungelesen,
+          * Löschen. Markieren und Verschieben liegen hinter „⋯" — sie kosten
+          * dort einen Tipp mehr und nehmen dafür der Zeile die Unruhe.
           */}
-        <div className="buero-werkzeuge">
-          <button type="button" className="buero-knopf" onClick={() => antworten(offen)}>
-            Antworten
+        <div className="buero-mailleiste">
+          <button
+            type="button"
+            className="buero-mailknopf ist-haupt"
+            onClick={() => antworten(offen)}
+          >
+            <Zeichen was="antworten" />
+            <span>Antworten</span>
           </button>
           <button
             type="button"
-            className="buero-symbolknopf"
+            className="buero-mailknopf"
             title="Als ungelesen zurücklegen"
             aria-label="Als ungelesen zurücklegen"
             onClick={() => void aktion(offen.uid, 'ungelesen')}
@@ -527,41 +591,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
           </button>
           <button
             type="button"
-            className={`buero-symbolknopf${offen.markiert ? ' ist-an' : ''}`}
-            title={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
-            aria-label={offen.markiert ? 'Markierung entfernen' : 'Markieren'}
-            aria-pressed={offen.markiert}
-            onClick={() => void aktion(offen.uid, offen.markiert ? 'unmarkiert' : 'markiert')}
-          >
-            <Zeichen was="markieren" />
-          </button>
-          {/*
-            * Verschieben als Auswahlfeld und nicht als eigenes Menü: Das
-            * Zielverzeichnis ist die Frage, nicht das Verschieben selbst. Am
-            * Telefon öffnet das native Rad, das man ohnehin kennt.
-            */}
-          {ordnerAlle.length > 1 && (
-            <select
-              className="buero-fach-wahl"
-              aria-label="In einen anderen Ordner verschieben"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) void verschieben(offen.uid, e.target.value)
-              }}
-            >
-              <option value="">Verschieben nach …</option>
-              {ordnerAlle
-                .filter((o) => o.pfad !== ordner)
-                .map((o) => (
-                  <option key={o.pfad} value={o.pfad}>
-                    {ordnerName(o)}
-                  </option>
-                ))}
-            </select>
-          )}
-          <button
-            type="button"
-            className="buero-symbolknopf gefahr"
+            className="buero-mailknopf gefahr"
             title="In den Papierkorb legen"
             aria-label="In den Papierkorb legen"
             onClick={() => {
@@ -571,7 +601,61 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
           >
             <Zeichen was="loeschen" />
           </button>
+          <button
+            type="button"
+            className={`buero-mailknopf${detailMehr ? ' ist-an' : ''}`}
+            title="Weitere Handlungen"
+            aria-label="Weitere Handlungen"
+            aria-expanded={detailMehr}
+            onClick={() => setDetailMehr((v) => !v)}
+          >
+            <Zeichen was="mehr" />
+          </button>
         </div>
+
+        {detailMehr && (
+          <div className="buero-mail-mehr">
+            <button
+              type="button"
+              className="buero-mailknopf breit"
+              aria-pressed={offen.markiert}
+              onClick={() => {
+                setDetailMehr(false)
+                void aktion(offen.uid, offen.markiert ? 'unmarkiert' : 'markiert')
+              }}
+            >
+              <Zeichen was="markieren" />
+              <span>{offen.markiert ? 'Markierung entfernen' : 'Markieren'}</span>
+            </button>
+            {/*
+              * Verschieben als Auswahlfeld und nicht als eigenes Menü: Das
+              * Zielverzeichnis ist die Frage, nicht das Verschieben selbst. Am
+              * Telefon öffnet das native Rad, das man ohnehin kennt.
+              */}
+            {ordnerAlle.length > 1 && (
+              <select
+                className="buero-fach-wahl breit"
+                aria-label="In einen anderen Ordner verschieben"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDetailMehr(false)
+                    void verschieben(offen.uid, e.target.value)
+                  }
+                }}
+              >
+                <option value="">Verschieben nach …</option>
+                {ordnerAlle
+                  .filter((o) => o.pfad !== ordner)
+                  .map((o) => (
+                    <option key={o.pfad} value={o.pfad}>
+                      {ordnerName(o)}
+                    </option>
+                  ))}
+              </select>
+            )}
+          </div>
+        )}
 
         {offen.dateien.length > 0 && (
           <div className="buero-liste" style={{ marginBottom: '1rem' }}>
@@ -756,7 +840,9 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                     {n.markiert && <span className="buero-marker offen">markiert</span>}
                     {!n.gelesen && <span className="buero-marker gut">neu</span>}
-                    <span className="buero-zeile-neben">{zeit(n.datum)}</span>
+                    <span className="buero-zeile-neben" title={zeitVoll(n.datum)}>
+                      {zeit(n.datum)}
+                    </span>
                     <button
                       type="button"
                       className="buero-knopf leise schmal"

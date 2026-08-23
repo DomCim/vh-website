@@ -1432,6 +1432,99 @@ html.tastatur-offen .buero-inhalt {
   text-align: center;
 }
 
+/* ── Postfach: die geöffnete Nachricht ──────────────────────────────────── */
+
+/*
+ * Die Werkzeugleiste über der Mail.
+ *
+ * Vorher stand jede Handlung in einem eigenen Rahmen nebeneinander — am
+ * Telefon eine Reihe abgesetzter Quadrate, die mehr nach Formular aussah als
+ * nach Werkzeug. Jetzt liegt alles in EINEM Balken; die Zeichen darin haben
+ * keine eigene Umrandung mehr, nur einen Hintergrund beim Berühren. Das ist
+ * die Form, die man aus jedem Mailprogramm kennt (Wunsch Dominik 08/2026).
+ */
+.buero-mailleiste {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0.9rem 0;
+  padding: 0.25rem;
+  border-radius: 12px;
+  /* Papierfarbe auf der Karte: hell ein zarter Grauton, dunkel der tiefere
+     Grund — der Balken hebt sich in beiden Themen ab, ohne einen Rahmen zu
+     brauchen. */
+  background: var(--buero-papier);
+}
+
+.buero-mailknopf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* „Antworten" ist das, was man hier zu neunzig Prozent will — es behält seine
+   Beschriftung und schiebt den Rest nach rechts. */
+.buero-mailknopf.ist-haupt {
+  margin-right: auto;
+  padding-right: 0.9rem;
+  font-weight: 600;
+  color: var(--buero-bronze);
+}
+
+.buero-mailknopf:hover {
+  background: var(--buero-flaeche);
+  color: var(--buero-bronze);
+}
+
+.buero-mailknopf:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: -2px;
+}
+
+/* Rot bleibt dem Wegnehmen vorbehalten — dieselbe Regel wie überall im Büro */
+.buero-mailknopf.gefahr:hover {
+  color: var(--buero-rot);
+}
+
+.buero-mailknopf.ist-an {
+  background: var(--buero-flaeche);
+  color: var(--buero-bronze);
+}
+
+.buero-mailknopf svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Was hinter „⋯" liegt: Markieren und Verschieben, jeweils über die Breite */
+.buero-mailknopf.breit {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.buero-fach-wahl.breit {
+  width: 100%;
+}
+
 /* ── Angefangenes ───────────────────────────────────────────────────────── */
 /* Steht über einem Formular, wenn dazu ein Entwurf gefunden wurde. Sieht
  * bewusst aus wie ein Hinweis und nicht wie ein Fehler: Es ist nichts kaputt,
@@ -2760,6 +2853,49 @@ html.tastatur-offen .buero-inhalt {
 
   .buero-fussleiste .buero-knopf:not(.schmal),
   .buero-fussleiste a.buero-knopf:not(.schmal) {
+    width: auto;
+  }
+
+  /*
+   * Die geöffnete Nachricht läuft bis an den Rand.
+   *
+   * Eine fremde Mail bringt ihr eigenes Layout mit, oft eine Tabelle mit
+   * fester Breite. Steckt sie in einer Karte mit 1,4 rem Polsterung plus
+   * Rahmen, bleiben auf einem 390-px-Gerät keine 340 px übrig: Der Inhalt
+   * wird waagerecht scrollbar oder auf Briefmarkengröße geschrumpft. Gemeldet
+   * von Dominik 08/2026 an einer weitergeleiteten dm-Bestätigung.
+   *
+   * Die negativen Ränder heben die Polsterung der umgebenden Spalte auf —
+   * deshalb 100vw und nicht 100%: Die Karte selbst weiß nicht, wie viel
+   * Abstand links von ihr liegt.
+   *
+   * Am Rechner bleibt die Karte. Dort wäre die volle Breite das andere
+   * Extrem: Fließtext über 1600 px liest niemand gern.
+   */
+  .buero-mail-offen {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+    max-width: 100vw;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  /* Der Mailrahmen selbst geht noch weiter — bis an die Gerätekanten */
+  .buero-mail-offen .buero-mailrahmen {
+    margin-left: -0.9rem;
+    margin-right: -0.9rem;
+    width: calc(100% + 1.8rem);
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+
+  /* Ein voller Knopf je Zeile gilt hier nicht: Die Leiste verteilt selbst */
+  .buero-mail-offen .buero-mailknopf {
     width: auto;
   }
 }
