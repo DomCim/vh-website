@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Rabatt ist jetzt in der Sprache des Hauses ausgezeichnet.** Die erste Fassung schrieb ihn in rote Kästen und färbte auch den Preis rot — das sah aus wie ein Prospekt, und im dunklen Thema sprangen bei vier Kacheln acht rote Signale gleichzeitig. Jetzt steht über dem Preis der Name der Aktion in gesperrten Versalien mit dem auslaufenden **Corten-Strich** darunter, so wie unter jeder Überschrift der Seite. Am Bild sitzt in der Übersicht ein **Etikett** mit dem Prozentsatz: heller Grund, dünne Bronzelinie, abgerückt vom Rand. Der Preis selbst ist wieder schwarz — dass etwas günstiger ist, sagt der durchgestrichene Betrag daneben.
+
+- **Die Frist steht dort, wo sie hingehört.** Auf der Artikelseite steht neben Name und Prozentsatz auch, bis wann die Aktion läuft. In der Übersicht bleibt sie weg: Dieselbe Frist zwölfmal untereinander sagt niemandem etwas, und die Kachel soll den Artikel zeigen.
+
 - **Die Aktionsseite führt jetzt zur Ware.** „40 % Rabatt auf alle Outdoor-Möbel“ stand da — und wer daraufdrückte, bei dem passierte nichts. Jetzt stehen unter jeder Aktion die Stücke, die dazugehören, als Kacheln mit Streichpreis. Bezieht sich die Aktion auf **eine** Kategorie, führt außerdem das Plakat selbst dorthin; bei mehreren gibt es kein eindeutiges Ziel, dann sind die Kacheln der Weg.
 
 - **Gezeigt wird genau, was auch rabattiert wird.** Die Auswahl folgt derselben Regel wie der Warenkorb. Eine Aktion, die für bestimmte Kategorien gelten soll und keine nennt, zeigt deshalb **nichts** statt alles — sonst stünde das ganze Sortiment als reduziert da, während die Kasse nichts abzieht.

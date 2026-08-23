@@ -5,6 +5,7 @@ import React from 'react'
 import { Bild, type BildQuelle } from '../../../../components/Bild'
 
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
+import { Etikett } from '../../../../components/Preis'
 import { ProductCard } from '../../../../components/ProductCard'
 import { aktionFuerArtikel } from '../../../../lib/aktionspreis'
 import {
@@ -91,8 +92,8 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
                     />
                   </div>
                 ) : (
-                  <div className="bg-accent text-on-ink flex items-center justify-center p-8 text-4xl font-bold">
-                    {p.discountType === 'percent' ? `−${p.discountValue}%` : `−${p.discountValue} €`}
+                  <div className="bg-paper-soft border-line text-bronze flex items-center justify-center border-b p-8 text-4xl font-semibold tabular-nums sm:border-b-0 sm:border-r">
+                    {p.discountType === 'percent' ? `−${p.discountValue} %` : `−${p.discountValue} €`}
                   </div>
                 )}
                 <div className="p-6">
@@ -103,11 +104,13 @@ export default async function PromotionsPage({ params }: { params: Promise<{ loc
                     <p className="text-ink-soft mt-2 leading-relaxed">{p.description}</p>
                   )}
                   <div className="text-ink-soft mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                    <span className="bg-accent tracking-nav text-on-ink px-3 py-1 text-xs font-semibold uppercase">
-                      {p.discountType === 'percent'
-                        ? `−${p.discountValue} %`
-                        : `−${p.discountValue} €`}
-                    </span>
+                    {p.discountType === 'percent' ? (
+                      <Etikett prozent={p.discountValue} />
+                    ) : (
+                      <span className="tracking-nav border-bronze text-ink inline-block border bg-paper px-2 py-1 text-[11px] font-semibold uppercase tabular-nums">
+                        −{p.discountValue} €
+                      </span>
+                    )}
                     <span>
                       {dict.promotions.validUntil} {formatDate(p.endDate, locale)}
                     </span>

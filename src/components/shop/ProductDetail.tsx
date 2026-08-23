@@ -249,30 +249,20 @@ export function ProductDetail({
             </>
           ) : (
             <>
-              <div className="text-2xl font-semibold">
-                <Preis
-                  betrag={unitPrice}
-                  aktion={aktion}
-                  locale={locale}
-                  labels={{ instead: dict.instead }}
-                  gross
-                />
-              </div>
-              {aktion ? (
-                /*
-                 * Titel und Ende der Aktion gehören dazu. „−40 %" allein sagt
-                 * nicht, worauf sich das gründet und wie lange es gilt — und
-                 * ein Rabatt ohne Frist wirkt wie der neue Normalpreis.
-                 */
-                <p className="text-accent mt-1 text-xs font-medium">
-                  {aktion.titel} · {dict.promoUntil}{" "}
-                  {new Date(aktion.giltBis).toLocaleDateString(locale, {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
-                </p>
-              ) : null}
+              {/*
+                * Titel und Ende der Aktion stehen über dem Preis, im Corten-Ton
+                * mit dem Strich darunter — dieselbe Form wie unter jeder
+                * Überschrift der Seite. „−40 %" allein sagt weder, worauf sich
+                * das gründet, noch wie lange es gilt; ein Rabatt ohne Frist
+                * wirkt wie der neue Normalpreis.
+                */}
+              <Preis
+                betrag={unitPrice}
+                aktion={aktion}
+                locale={locale}
+                labels={{ instead: dict.instead, until: dict.promoUntil }}
+                gross
+              />
               <p className="text-ink-soft mt-1 text-xs">
                 {dict.priceNote}
                 {" · "}

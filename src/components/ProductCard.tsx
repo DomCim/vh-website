@@ -4,7 +4,7 @@ import React from "react";
 import { preisaktionAnzeigen, type Preisaktion } from "../lib/aktionspreis";
 import { type Locale } from "../lib/i18n";
 import { Bild, type BildQuelle } from "./Bild";
-import { Preis, Rabattband } from "./Preis";
+import { Etikett, Preis } from "./Preis";
 
 type Product = {
   slug?: string | null;
@@ -58,7 +58,7 @@ export function ProductCard({
           />
         ) : null}
         {zeigtAktion && aktion ? (
-          <Rabattband prozent={aktion.prozent} className="absolute left-0 top-3" />
+          <Etikett prozent={aktion.prozent} className="absolute left-3 top-3" />
         ) : null}
       </div>
       <div className="p-5">
@@ -80,7 +80,6 @@ export function ProductCard({
               locale={locale}
               labels={{ instead: labels.instead, from: labels.from }}
               ab={hasVariants}
-              ohneBand
             />
           )}
         </div>
