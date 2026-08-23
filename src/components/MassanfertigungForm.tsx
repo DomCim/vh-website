@@ -1,6 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+
+import { alsListe, useDateiablage } from '../lib/buero/dateiablage'
 
 import type { Locale } from '../lib/i18n'
 import { zahlAusText } from '../lib/zahleingabe'
@@ -25,6 +27,15 @@ type Labels = {
 export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels: Labels }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [anhaenge, setAnhaenge] = useState<{ id: number; datei: string }[]>([])
+
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog (siehe lib/buero/dateiablage.ts).
+   * Wer eine Maßanfertigung anfragt, hat die Skizze oder das Foto vom Vorbild
+   * meist schon offen — dann ist Hineinziehen der kürzere Weg als der Umweg
+   * über den Dateidialog.
+   */
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  const ablage = useDateiablage(ablageBereich, (d) => void hochladen(alsListe(d)))
 
   async function hochladen(dateien: FileList | null) {
     if (!dateien?.length) return
@@ -130,7 +141,12 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
       <input name="purpose" placeholder={labels.purpose} className={inputClass} />
       <input name="desiredDate" placeholder={labels.desiredDate} className={inputClass} />
 
-      <div>
+      <div
+        ref={ablageBereich}
+        className={`border border-dashed p-3 transition-colors ${
+          ablage.drueber ? 'border-bronze bg-bronze/5' : 'border-transparent'
+        }`}
+      >
         <label className="text-ink-soft block text-sm">
           {labels.upload}
           <input

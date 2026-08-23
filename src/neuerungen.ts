@@ -26,6 +26,44 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 58,
+    datum: null,
+    titel: 'Dateien lassen sich jetzt überall einfügen und hineinziehen',
+    punkte: [
+      {
+        text: '**An jeder Stelle, an der man eine Datei auswählt, geht das jetzt auch mit Strg+V oder durch Hineinziehen** — Beleg, Lieferschein, Kontoauszug, Werkstattdatei (auch je Ordner), Vorgangsdatei, Übergabemappe, Postfach-Anhang und Fehlermeldung, dazu die drei Formulare auf der Website. Der Knopf bleibt, wo er war; das sind nur zwei zusätzliche Wege in dasselbe Feld.',
+      },
+      {
+        text: '**Der Umweg über die Festplatte fällt weg.** Ein Bildschirmfoto lag bisher in der Zwischenablage und musste erst irgendwohin gespeichert werden, um es wieder auswählen zu können. Gerade bei Fehlermeldungen war das der Grund, warum das Foto oft fehlte.',
+      },
+      {
+        text: '**Im Schreibfeld bleibt Einfügen dem Text.** Steht der Zeiger in einem Eingabefeld oder im Textbearbeiter, geht Strg+V dorthin — dort will man Text einsetzen. Gibt es auf einer Seite mehrere Ablagen, entscheidet die Maus: Was man einfügt, landet dort, wo man steht.',
+      },
+      {
+        text: '**Am Telefon ändert sich nichts.** Dort gibt es kein Ziehen und in der Zwischenablage selten eine Datei; der Kamera- und Dateidialog bleibt der schnellere Weg und ist unverändert.',
+      },
+    ],
+  },
+  {
+    nummer: 57,
+    datum: null,
+    titel: 'Anhänge im Postfach: Dateien gehen jetzt mit der Antwort raus',
+    punkte: [
+      {
+        text: '**Beim Schreiben lassen sich Dateien anhängen** — auswählen, hineinziehen oder einfügen. Was angehängt ist, steht unter dem Textfeld mit Name und Größe und lässt sich einzeln wieder entfernen, solange die Mail noch nicht raus ist.',
+      },
+      {
+        text: '**Bisher ging das gar nicht.** Wer aus dem Büro heraus eine Zeichnung oder eine Rechnung mitschicken wollte, musste dafür ins Mailprogramm wechseln — und die Antwort stand danach im falschen Verlauf. Damit ist der letzte Grund weg, das Postfach zu verlassen.',
+      },
+      {
+        text: '**Zusammen bis 25 MB.** Darüber lehnt so gut wie jeder Mailserver ab, und zwar erst nach dem Hochladen und mit einer Meldung, die niemand versteht. Die Grenze steht deshalb vorher da, mit dem Hinweis, dass bei größeren Dateien ein Abhol-Link der bessere Weg ist — den gibt es an der Werkstattdatei und an der Übergabemappe.',
+      },
+      {
+        text: '**Ohne Anhang ändert sich nichts** — eine Antwort ohne Dateien geht denselben Weg wie bisher. Wie das ganze Postfach braucht auch der Versand mit Anhang Netz: Gelesen wird ohnehin beim Anbieter, ohne Verbindung steht das Postfach still.',
+      },
+    ],
+  },
+  {
     nummer: 56,
     datum: null,
     titel: 'Farbe in den Listen: was drängt, sieht man jetzt im Vorbeigehen',

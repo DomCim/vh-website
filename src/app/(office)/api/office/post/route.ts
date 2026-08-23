@@ -17,6 +17,15 @@ import { abhaken } from '../../../../../lib/push'
 import { ordnernameGueltig, ordnerPfadNeben } from '../../../../../lib/ordnerpfad'
 import { darf } from '../../../../../lib/wache'
 
+/**
+ * Wie viel Anhang eine Mail tragen darf — zusammen, nicht je Datei.
+ *
+ * Fünfundzwanzig Megabyte sind die Grenze, bis zu der die meisten Anbieter
+ * annehmen. Darüber lehnt der Mailserver ab, und zwar erst nach dem
+ * Hochladen; besser, es steht vorher da.
+ */
+const ANHANG_MAX_BYTES = 25 * 1024 * 1024
+
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
@@ -130,7 +139,52 @@ export async function POST(req: Request) {
     const { payload, user } = await wache(req)
     if (!user) return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
 
-    const b = (await req.json()) as Record<string, any>
+    /*
+     * Zwei Wege in dieselbe Schnittstelle.
+     *
+     * Alles im Postfach kommt als JSON — gelesen markieren, verschieben,
+     * löschen. Nur der Versand kann Dateien mitbringen, und Dateien gehören
+     * nicht als base64 in ein JSON: Das bläht sie um ein Drittel auf und legt
+     * sie zusätzlich als Zeichenkette in den Speicher, bevor überhaupt
+     * jemand entschieden hat, ob sie durchpassen. `multipart/form-data`
+     * reicht sie durch, wie der Browser sie ohnehin hat — dasselbe Muster wie
+     * beim Beleg-Upload.
+     */
+    const istFormular = (req.headers.get('content-type') ?? '').includes('multipart/form-data')
+    let anhaenge: { name: string; inhalt: Buffer; typ?: string }[] = []
+    let b: Record<string, any>
+
+    if (istFormular) {
+      const formular = await req.formData()
+      b = JSON.parse(String(formular.get('daten') ?? '{}')) as Record<string, any>
+      const dateien = formular.getAll('dateien').filter((d): d is File => d instanceof File)
+
+      /*
+       * Die Grenze steht hier und nicht erst beim Mailserver.
+       *
+       * Ein Mailserver weist zu große Post ab — aber erst, nachdem alles
+       * hochgeladen und die Nachricht gebaut ist, und mit einer Meldung, die
+       * niemand versteht. Fünfundzwanzig Megabyte sind das, was die meisten
+       * Anbieter noch annehmen; darüber hilft ohnehin nur ein Link.
+       */
+      const gesamt = dateien.reduce((s, d) => s + d.size, 0)
+      if (gesamt > ANHANG_MAX_BYTES) {
+        return NextResponse.json(
+          { error: 'anhaenge-zu-gross', grenze: ANHANG_MAX_BYTES },
+          { status: 400 },
+        )
+      }
+      anhaenge = await Promise.all(
+        dateien.map(async (d) => ({
+          name: d.name,
+          inhalt: Buffer.from(await d.arrayBuffer()),
+          typ: d.type || undefined,
+        })),
+      )
+    } else {
+      b = (await req.json()) as Record<string, any>
+    }
+
     const fach = await postfachFinden(payload, b.fach)
     if (!fach) return NextResponse.json({ error: 'postfach-unbekannt' }, { status: 404 })
 
@@ -144,6 +198,7 @@ export async function POST(req: Request) {
         text: b.text || '',
         html: typeof b.html === 'string' ? b.html : undefined,
         antwortAufMessageId: b.antwortAufMessageId || undefined,
+        dateien: anhaenge.length ? anhaenge : undefined,
       })
       // Die Mail ist raus; ob sie auch im eigenen Ordner liegt, ist eine
       // zweite Frage — und eine, die der Mensch davor beantwortet haben will

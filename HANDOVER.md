@@ -546,13 +546,22 @@ das zurückkommt.
    - **Zahlungsabgleich für Ausgaben.** Der Kontoauszug-Abgleich schlägt nur
      eigene Rechnungen vor; Belege (`expenses.paid`) müssen weiter von Hand
      abgehakt werden.
-   - **Postfach kann beim Antworten keine Anhänge mitschicken** (lesen ja).
-     `nachrichtSenden` kann es längst — es fehlt nur der Weg durch
-     `api/office/post`.
+   - ~~**Postfach kann beim Antworten keine Anhänge mitschicken**~~ —
+     **erledigt (08/2026).** `api/office/post` nimmt beim Senden zusätzlich
+     `multipart/form-data` an: JSON im Feld `daten`, Dateien in `dateien`.
+     Grenze 25 MB zusammen, geprüft **vor** der Postfachsuche, weil ein
+     Mailserver sonst erst nach dem Hochladen ablehnt.
    - **Bestandsabbuchung beim Shop-Verkauf.** Ein verkauftes Einzelstück
      wird nur auf „nicht verfügbar" gestellt; der Inventarposten
      (`fertigware`) bleibt unberührt und der Inventarwert zu hoch. Ebenso
      gibt es keine Reservierung gegen Doppelverkauf im Zahlfenster.
+   - **Bestehende Werkstattdateien in die Übergabemappe legen.** Heute wird
+     dort hochgeladen; was am Artikel schon liegt, muss man erst
+     herunterladen und wieder hinaufschieben. Gewünscht ist die Auswahl aus
+     den vorhandenen Dateien — und zwar als **Verweis, nicht als Kopie**:
+     Wird die Zeichnung im Haus überarbeitet, soll der Kunde die neue
+     Fassung sehen. Dasselbe Prinzip wie bei der Weitergabe an den
+     Zulieferer (`lib/weitergabe.ts`), nur in die andere Richtung.
    - **MCP-Scopes je Rolle.** Es gibt zwei Stufen (voll/lesend), das Büro
      kennt fünfzehn Rechte. Ein Schlüssel je Rolle wäre der nächste Schritt.
    - **Rest-Risiko DNS-Rebinding** in `bild_hochladen`: Die URL-Prüfung löst

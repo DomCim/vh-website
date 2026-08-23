@@ -8,6 +8,7 @@ import { useBestand } from '../../lib/buero/bestand'
 import { datum } from '../../lib/format'
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
 import { Rueckmeldung } from './Rueckmeldung'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 
 /**
  * Die Dateien eines Vorgangs — Anfrage, Angebot oder Auftrag.
@@ -115,6 +116,17 @@ export function Vorgangsdateien({
       (m) => kennungen.has(String(m.id)) || bezug(m[anker.feld]) === String(anker.id),
     )
   }, [dateien, mappen, anker])
+
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog — eine Zeichnung liegt am
+   * Rechner meist schon im Zwischenspeicher (siehe lib/buero/dateiablage.ts).
+   *
+   * Steht **vor** der frühen Rückgabe darunter: Haken müssen in jeder Runde
+   * in derselben Reihenfolge laufen. Dahinter liefe er nur manchmal, und React
+   * verlöre die Zuordnung seiner Zustände.
+   */
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  const ablage = useDateiablage(ablageBereich, (d: File[]) => void hochladen(d), darfAendern)
 
   if (!anker) return null
 
@@ -276,7 +288,10 @@ export function Vorgangsdateien({
       )}
 
       {darfAendern && (
-        <div style={{ marginTop: '.6rem', display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+        <div
+          ref={ablageBereich}
+          className={`buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+          style={{ marginTop: '.6rem', display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
           <input
             ref={feld}
             type="file"
