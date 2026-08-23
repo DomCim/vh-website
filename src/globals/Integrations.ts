@@ -846,6 +846,53 @@ export const Integrations: GlobalConfig = {
     },
     {
       /*
+       * Wohin eine Fehlermeldung aus dem Büro geht.
+       *
+       * **Warum überhaupt.** Was im Betrieb auffällt, fällt beim Arbeiten auf
+       * — mitten in der Werkstatt, das Handy in der Hand. Bis daraus eine
+       * Nachricht wird, die jemand nachvollziehen kann, ist der Gedanke meist
+       * weg. Ein Eintrag im Repository hält ihn dort fest, wo er hingehört:
+       * mit Bild, mit Seite, mit Fassung.
+       *
+       * **Warum das Zugangswort hier steht und nicht im Stack.** Aus
+       * demselben Grund wie beim KI-Assistenten: Wer es wechseln muss, soll
+       * dafür nicht ausrollen müssen. Es ist ein Wort mit Schreibrecht auf
+       * ein Repository und gehört entsprechend eng vergeben.
+       *
+       * Steht hier nichts, ist das Melden im Büro gar nicht erst zu sehen.
+       * Das ist zugleich der Ausschalter.
+       */
+      name: 'github',
+      label: 'Fehlermeldungen (GitHub)',
+      type: 'group',
+      admin: {
+        description:
+          'Damit aus „das stimmt hier nicht" ein Eintrag im Repository wird — mit Foto. ' +
+          'Leer heißt: Im Büro erscheint kein Melde-Knopf.',
+      },
+      fields: [
+        {
+          name: 'repository',
+          label: 'Repository',
+          type: 'text',
+          admin: { description: 'In der Form Besitzer/Name, z.B. DomCim/vh-website' },
+        },
+        {
+          name: 'token',
+          label: 'Zugangswort (Fine-grained Token)',
+          type: 'text',
+          admin: {
+            description:
+              'Auf github.com unter Settings → Developer settings → Personal access tokens → ' +
+              'Fine-grained. Nur dieses eine Repository auswählen und als einzige Berechtigung ' +
+              '„Issues: Read and write" geben — mehr braucht es nicht.',
+            components: { Field: '/components/admin/GeheimFeld#GeheimFeld' },
+          },
+        },
+      ],
+    },
+    {
+      /*
        * Google Kundenrezensionen — die Frage nach der Bewertung.
        *
        * Nach dem Bestellen wird der Kunde gefragt, ob Google ihm später eine

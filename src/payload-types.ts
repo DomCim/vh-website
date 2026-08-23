@@ -3543,6 +3543,19 @@ export interface Integration {
     behaltenNas?: number | null;
   };
   /**
+   * Damit aus „das stimmt hier nicht" ein Eintrag im Repository wird — mit Foto. Leer heißt: Im Büro erscheint kein Melde-Knopf.
+   */
+  github?: {
+    /**
+     * In der Form Besitzer/Name, z.B. DomCim/vh-website
+     */
+    repository?: string | null;
+    /**
+     * Auf github.com unter Settings → Developer settings → Personal access tokens → Fine-grained. Nur dieses eine Repository auswählen und als einzige Berechtigung „Issues: Read and write" geben — mehr braucht es nicht.
+     */
+    token?: string | null;
+  };
+  /**
    * Fragt nach dem Bestellen, ob Google später eine kurze Bewertungsumfrage schicken darf. Ohne Händler-ID passiert nichts — dann wird auch kein Google-Skript geladen.
    */
   googleReviews?: {
@@ -3851,6 +3864,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
         uhrzeit?: T;
         behaltenLokal?: T;
         behaltenNas?: T;
+      };
+  github?:
+    | T
+    | {
+        repository?: T;
+        token?: T;
       };
   googleReviews?:
     | T

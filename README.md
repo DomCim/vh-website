@@ -738,6 +738,47 @@ Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **
   node_modules/.bin/payload run scripts/benutzer.ts
   ```
 
+## Fehler melden (Eintrag im Repository)
+
+Im Büro steht unter **Sonstiges → Fehler melden** ein kurzes Formular:
+Überschrift, was passiert ist, Fotos. Daraus wird ein Issue im Repository —
+mit Bild, Seite, Gerät, Fassung, Melder und Zeitpunkt.
+
+### Einrichten
+
+1. Auf github.com unter **Settings → Developer settings → Personal access
+   tokens → Fine-grained** ein Token erzeugen. Nur dieses eine Repository
+   auswählen und als einzige Berechtigung **Issues: Read and write** geben.
+2. Im Büro unter **Einstellungen → Integrationen → Fehlermeldungen** das
+   Repository (`Besitzer/Name`) und das Token eintragen.
+
+Steht dort nichts, erscheint der Punkt zwar in der Navigation, sagt aber, dass
+der Zugang fehlt — der Knopf führt nie ins Leere. Ersatzweise gehen auch die
+Umgebungsvariablen `GITHUB_REPOSITORY` und `GITHUB_TOKEN`; sie greifen nur,
+wenn im Büro nichts hinterlegt ist.
+
+**Melden darf jeder, der im Büro angemeldet ist** — bewusst ohne eigenes
+Recht. Eine Hürde vor „hier stimmt was nicht" bekommt man nie wieder weg.
+
+### Wo die Fotos liegen
+
+GitHub kann kein Bild aus einer geschützten Ablage anzeigen. Damit es im
+Eintrag zu sehen ist, muss es unter einer Adresse liegen, die GitHub erreicht
+— es einfach in die öffentliche Mediathek zu legen wäre der bequeme und der
+falsche Weg, denn dort stehen die Produktbilder.
+
+Stattdessen liegen die Fotos in der geschützten Dateiablage
+(`product-files`, Ordner *Fehlermeldungen*), und der Link trägt seine
+Berechtigung selbst: eine Prüfsumme über die Datei, geschlüsselt mit
+`PAYLOAD_SECRET`. Ausgeliefert wird über `/api/fehlermeldung/bild`, und die
+Stelle prüft dreierlei — Unterschrift, Ordner und Bildart. Wer die Nummer in
+der Adresse hochzählt, bekommt nichts.
+
+**Ohne Ablaufdatum, und das ist Absicht:** Ein Eintrag wird in einem halben
+Jahr gelesen, wenn jemand denselben Fehler noch einmal sucht; ein bis dahin
+abgelaufenes Bild machte ihn wertlos. Ein Foto zurückziehen heißt: die Datei
+in der Website-Verwaltung löschen — dann läuft der Link sofort ins Leere.
+
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 
 Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte, Kategorien, Referenzen, Kundenstimmen, News inkl. Facebook-/Instagram-Post, Aktionen, Bestellungen, Anfragen, Mediathek, Seitentexte und Auswertungen.

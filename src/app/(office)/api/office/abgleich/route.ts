@@ -10,6 +10,7 @@ import {
   neuerStand,
 } from '../../../../../lib/bereiche'
 import { payloadClient } from '../../../../../lib/data'
+import { repoZerlegen } from '../../../../../lib/fehlermeldung'
 import { firmenAngaben, getIntegrations } from '../../../../../lib/settings'
 import { darf, rechteFuer } from '../../../../../lib/wache'
 
@@ -60,6 +61,12 @@ async function rahmen(
     // dastehen, sonst begrüßt die Einstellungsseite ein leeres „Angemeldet als".
     benutzer: { email: benutzer.email || benutzer.username || '', name: benutzer.name ?? '' },
     kiVerfuegbar: false,
+    /*
+     * Ob ein Fehler von hier aus gemeldet werden kann. Der Knopf hängt daran —
+     * ohne hinterlegtes Zugangswort führte er ins Leere, und ein Knopf, der
+     * beim Antippen „nicht eingerichtet" sagt, ist schlimmer als keiner.
+     */
+    meldenMoeglich: false,
     stundensatz: 65,
     wunschaufschlag: 40,
     // Wie voll eine Woche ist, rechnet die Seite im Gerät — dafür muss die
@@ -81,6 +88,9 @@ async function rahmen(
   try {
     const integrationen = await getIntegrations(payload)
     rahmen.kiVerfuegbar = Boolean(integrationen.anthropic.apiKey)
+    rahmen.meldenMoeglich = Boolean(
+      integrationen.github.token && repoZerlegen(integrationen.github.repository),
+    )
     // Die Frage nach dem Werkstattplatz stellt das Gerät selbst — also muss
     // die Frist mit ins Gerät, sonst steht sie ohne Netz auf der Voreinstellung
     const ziele = (await payload.findGlobal({ slug: 'integrations', depth: 0 })) as {
