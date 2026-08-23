@@ -4,6 +4,8 @@ import { admins, anyone } from '../access'
 
 export const Promotions: CollectionConfig = {
   slug: 'promotions',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Aktion',
     plural: 'Aktionen',

@@ -56,6 +56,7 @@ import * as migration_20260823_115500_digitale_ware from './20260823_115500_digi
 import * as migration_20260823_154000_bestellung_digital_at from './20260823_154000_bestellung_digital_at';
 import * as migration_20260823_160000_neuerungen from './20260823_160000_neuerungen';
 import * as migration_20260823_170000_besuche from './20260823_170000_besuche';
+import * as migration_20260823_181614_papierkorb from './20260823_181614_papierkorb';
 
 export const migrations = [
   {
@@ -341,11 +342,16 @@ export const migrations = [
   {
     up: migration_20260823_160000_neuerungen.up,
     down: migration_20260823_160000_neuerungen.down,
-    name: '20260823_160000_neuerungen'
+    name: '20260823_160000_neuerungen',
   },
   {
     up: migration_20260823_170000_besuche.up,
     down: migration_20260823_170000_besuche.down,
-    name: '20260823_170000_besuche'
+    name: '20260823_170000_besuche',
+  },
+  {
+    up: migration_20260823_181614_papierkorb.up,
+    down: migration_20260823_181614_papierkorb.down,
+    name: '20260823_181614_papierkorb'
   },
 ];

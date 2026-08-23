@@ -18,6 +18,8 @@ import { liveHooks } from '../lib/liveHooks'
  */
 export const BankTransactions: CollectionConfig = {
   slug: 'bank-transactions',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Kontobewegung',
     plural: 'Kontobewegungen',

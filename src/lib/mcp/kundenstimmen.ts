@@ -11,6 +11,7 @@ import {
   ok,
   sprache,
 } from './helpers'
+import { wegwerfen } from '../wegwerfen'
 
 const NUR_ECHTE =
   'Nur echte Stimmen mit Einverständnis der Kundschaft eintragen — erfundene Bewertungen sind wettbewerbswidrig.'
@@ -186,7 +187,7 @@ export function registerKundenstimmen(server: McpServer) {
   server.registerTool(
     'kundenstimme_loeschen',
     {
-      description: 'Löscht eine Kundenstimme. Ohne bestaetigen=true nur Vorschau.',
+      description: 'Wirft eine Kundenstimme in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true nur Vorschau.',
       inputSchema: { id: z.number(), bestaetigen },
     },
     async ({ id, bestaetigen: jetzt }) => {
@@ -196,7 +197,7 @@ export function registerKundenstimmen(server: McpServer) {
         .catch(() => null)
       if (!doc) return fehler(`Kundenstimme ${id} nicht gefunden`)
       if (!jetzt) return bestaetigungNoetig({ id, name: doc.author, zitat: doc.quote })
-      await payload.delete({ collection: 'testimonials', id })
+      await wegwerfen(payload, 'kundenstimmen', id)
       return ok({ ok: true, geloescht: doc.author })
     },
   )

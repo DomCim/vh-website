@@ -14,6 +14,7 @@ import {
   tokenErzeugen,
 } from '../../../../../lib/uebergabe'
 import { darf } from '../../../../../lib/wache'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 
@@ -265,7 +266,7 @@ export async function POST(req: Request) {
       if (String((datei as { mappe?: unknown }).mappe ?? '') !== String(b.id)) {
         return NextResponse.json({ error: 'gehoert-nicht-dazu' }, { status: 400 })
       }
-      await payload.delete({ collection: 'product-files', id: b.datei, overrideAccess: true })
+      await wegwerfen(payload, 'werkstattdateien', b.datei)
       return NextResponse.json({ ok: true })
     }
 

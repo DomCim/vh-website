@@ -3,7 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { admins, anyone } from '../access'
 import { postNewsToFacebook } from '../lib/facebook'
 import { indexNowHooks } from '../lib/indexnow'
-import { autoSlug } from '../lib/slug'
+import { autoSlug, slugFreigeben } from '../lib/slug'
 
 /**
  * Nur Veröffentlichtes wird gemeldet — ein Entwurf hat draußen keine Seite,
@@ -16,6 +16,8 @@ const indexNowNews = indexNowHooks((doc) =>
 
 export const News: CollectionConfig = {
   slug: 'news',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'News-Beitrag',
     plural: 'News',
@@ -36,6 +38,8 @@ export const News: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
+    // Der Slug wird beim Wegwerfen frei (siehe lib/slug.ts)
+    beforeChange: [slugFreigeben],
     // Ein Beitrag, den niemand kennt, ist kein Beitrag: veröffentlichte
     // Beiträge werden den Suchdiensten sofort gemeldet (siehe lib/indexnow.ts)
     afterChange: [postNewsToFacebook, ...indexNowNews.afterChange],

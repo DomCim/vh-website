@@ -26,6 +26,31 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 50,
+    datum: null,
+    titel: 'Gelöscht ist nicht mehr weg — es gibt einen Papierkorb',
+    punkte: [
+      {
+        text: '**Für den Betrieb ändert sich nichts.** Der Knopf heißt weiter „Löschen", der Datensatz verschwindet sofort aus jeder Liste, aus der Suche und vom Handy. Es gibt keine zweite Frage und keine Wahl zwischen „archivieren" und „löschen" — sobald man die hätte, zögerte man an jedem Knopf.',
+      },
+      {
+        text: '**Dahinter wird nichts mehr weggeworfen.** Was gelöscht wird, wandert in den Papierkorb und lässt sich in der Website-Verwaltung wiederherstellen — bei jeder Sammlung im Reiter „Papierkorb". Das gilt für Artikel, Kategorien, News, Referenzen, Kundenstimmen, Aktionen, Bilder, Anfragen, Angebote, Aufträge, Bestellungen, Belege, Kontobewegungen, Inventar, Inventuren, Wareneingänge, Partner, Kundenmappen, Werkstattdateien, Wiedervorlagen und Newsletter-Anmeldungen.',
+      },
+      {
+        text: '**Warum das die bessere Sicherung ist.** Für „einer hat sich verklickt" war bisher nur die nächtliche Sicherung da, und die ist das falsche Werkzeug: Sie dreht die Zeit für alle zurück, um einen Datensatz zu retten — der Artikel käme wieder, aber jede Bestellung seit der Nacht wäre weg. Ein Papierkorb holt genau das eine zurück und lässt alles andere in Ruhe.',
+      },
+      {
+        text: '**Der URL-Pfad wird beim Löschen wieder frei.** Ein weggeworfener Artikel „gartentisch" blockiert seinen Namen nicht: Legt jemand ihn neu an, bekommt er wieder `gartentisch` und nicht wortlos `gartentisch-2`. Wird der alte später zurückgeholt und der Name ist inzwischen vergeben, bekommt der zurückgeholte den nächsten freien — was steht, geht vor.',
+      },
+      {
+        text: '**Geleert wird von Hand.** Eine Automatik, die den Papierkorb nach ein paar Wochen ausräumt, führte genau den Verlust wieder ein, den er abschaffen soll. Und wenn jemand nach Datenschutzrecht die Löschung seiner Daten verlangt, muss das ohnehin ein Mensch entscheiden — in der Verwaltung gibt es dafür „endgültig löschen".',
+      },
+      {
+        text: '**Eine Kategorie mit Artikeln bleibt stehen.** Das war beim endgültigen Löschen schon so und gilt jetzt auch fürs Wegwerfen — sonst zeigten die Artikel darin auf etwas, das niemand mehr sieht.',
+      },
+    ],
+  },
+  {
     nummer: 49,
     datum: null,
     titel: 'Die Datenschutzerklärung sagt, was die Statistik wirklich tut',

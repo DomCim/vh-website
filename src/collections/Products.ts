@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
-import { autoSlug } from '../lib/slug'
+import { autoSlug, slugFreigeben } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
 
@@ -27,6 +27,8 @@ const indexNowArtikel = indexNowHooks(async (doc, payload) => {
 
 export const Products: CollectionConfig = {
   slug: 'products',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Produkt',
     plural: 'Produkte',
@@ -44,6 +46,9 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [autoSlug()],
+    // Der Slug wird beim Wegwerfen frei, damit derselbe Name wieder vergeben
+    // werden kann (siehe lib/slug.ts)
+    beforeChange: [slugFreigeben],
     // Offene Büro-Seiten über Änderungen unterrichten, und die Suchdienste
     // über die öffentliche Artikelseite (siehe lib/indexnow.ts)
     afterChange: [...liveHooks('artikel').afterChange, ...indexNowArtikel.afterChange],

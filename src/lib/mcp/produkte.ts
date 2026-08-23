@@ -15,6 +15,7 @@ import {
   richTextZuText,
   sprache,
 } from './helpers'
+import { wegwerfen } from '../wegwerfen'
 
 export function registerProdukte(server: McpServer) {
   // ── Produkte ──────────────────────────────────────────────────────────────
@@ -406,7 +407,7 @@ export function registerProdukte(server: McpServer) {
     'produkt_loeschen',
     {
       description:
-        'Löscht ein Produkt endgültig. Ohne bestaetigen=true wird nur angezeigt, was gelöscht würde. Alternative ohne Datenverlust: produkt_aendern mit verfuegbar=false.',
+        'Wirft ein Produkt in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true wird nur angezeigt, was verschwindet. Alternative: produkt_aendern mit verfuegbar=false.',
       inputSchema: { slug: z.string(), bestaetigen },
     },
     async ({ slug, bestaetigen: jetzt }) => {
@@ -416,7 +417,7 @@ export function registerProdukte(server: McpServer) {
       if (!jetzt) {
         return bestaetigungNoetig({ id: p.id, titel: p.title, slug: p.slug, preis: p.price ?? null })
       }
-      await payload.delete({ collection: 'products', id: p.id })
+      await wegwerfen(payload, 'artikel', p.id)
       return ok({ ok: true, geloescht: p.title })
     },
   )

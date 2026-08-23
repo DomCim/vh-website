@@ -696,6 +696,23 @@ pnpm rechtstexte --ueberschreiben   # ersetzt vorhandene Texte
 
 In der **Kasse** wird vor dem Absenden bestätigt: AGB und Widerrufsbelehrung gelesen, und — falls ein Stück nach Vorgabe entsteht — dass dafür kein Widerrufsrecht besteht. Beides wird mit Zeitpunkt an der Bestellung festgehalten. Der Bestellknopf heißt „Zahlungspflichtig bestellen"; der Hinweis auf die Weiterleitung zu PayPal steht darunter.
 
+## Papierkorb (gelöscht ist nicht weg)
+
+Für den Betrieb heißt der Knopf **Löschen**, und er tut, was er sagt: Der Datensatz ist sofort aus jeder Liste, aus der Suche und vom Handy verschwunden. Es gibt bewusst keine zweite Frage und keine Wahl zwischen „archivieren" und „löschen" — sobald man die hätte, zögerte man an jedem Knopf.
+
+Dahinter wird trotzdem nichts weggeworfen. Was gelöscht wird, bekommt nur ein Datum (`deletedAt`) und liegt im Papierkorb. Zurückholen geht in der Website-Verwaltung: bei jeder Sammlung im Reiter **Papierkorb**, dort **Wiederherstellen**. Daneben steht **endgültig löschen** — das ist der einzige Weg, auf dem wirklich etwas verschwindet.
+
+**Warum nicht die nächtliche Sicherung reicht.** Die ist das Werkzeug für „der Server ist hin". Für „einer hat sich verklickt" ist sie das falsche: Sie dreht die Zeit für alle zurück, um einen Datensatz zu retten — der Artikel käme wieder, aber jede Bestellung seit der Nacht wäre weg. Ein Papierkorb holt genau das eine zurück und lässt alles andere in Ruhe.
+
+Es gilt für alles Betriebliche: Artikel, Kategorien, News, Referenzen, Kundenstimmen, Aktionen, Bilder, Anfragen, Angebote, Aufträge, Bestellungen, Rechnungsentwürfe, Belege, Kontobewegungen, Inventar, Inventuren, Wareneingänge, Partner, Kundenmappen, Werkstattdateien, Wiedervorlagen, Newsletter-Anmeldungen. Nicht dabei sind Benutzer und Rollen (dort ist die E-Mail eindeutig, ein Papierkorb blockierte die Neuanlage) und alles Kurzlebige — Anmeldecodes, Entwürfe, Meldungen, Mailprotokoll, Grabsteine.
+
+Zwei Dinge laufen automatisch mit:
+
+- **Der URL-Pfad wird frei.** Ein weggeworfener Artikel `gartentisch` blockiert seinen Namen nicht — sonst bekäme ein gleichnamiger neuer wortlos `gartentisch-2`, blockiert von etwas, das niemand mehr sieht. Beim Zurückholen wird der Name neu vergeben: der alte, wenn er noch frei ist, sonst der nächste. Was steht, geht vor.
+- **Die Geräte erfahren davon.** Wegwerfen ist für die Datenbank eine Änderung, für ein Handy im Funkloch aber dasselbe wie eine Löschung. Deshalb entsteht ein Grabstein (`deletions`), den der Abgleich ausliefert — und der beim Zurückholen wieder verschwindet.
+
+**Geleert wird von Hand.** Eine Automatik, die den Papierkorb nach ein paar Wochen ausräumt, führte genau den Verlust wieder ein, den er abschaffen soll. Und wenn jemand nach Art. 17 DSGVO die Löschung seiner Daten verlangt, muss das ohnehin ein Mensch entscheiden.
+
 ## Sicherung (Büro → Sicherung)
 
 Jede Sicherung ist ein einzelnes Archiv mit **der gesamten Datenbank und allen Bildern** — beides gehört zusammen, denn die Datenbank verweist auf die Dateien. Daneben liegt im Archiv eine `LIESMICH.txt` mit den Schritten zum Zurückspielen; im Ernstfall liest niemand mehr Dokumentation.

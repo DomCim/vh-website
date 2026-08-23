@@ -22,6 +22,8 @@ import { meldungVerschicken } from '../lib/auftragsmeldung'
  */
 export const Jobs: CollectionConfig = {
   slug: 'jobs',
+  // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
+  trash: true,
   labels: {
     singular: 'Auftrag',
     plural: 'Fertigungsaufträge',

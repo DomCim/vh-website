@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -197,7 +198,7 @@ export async function POST(req: Request) {
     }
 
     if (b.aktion === 'datei-loeschen') {
-      await payload.delete({ collection: 'product-files', id: b.id, overrideAccess: true })
+      await wegwerfen(payload, 'werkstattdateien', b.id)
       return NextResponse.json({ ok: true })
     }
 

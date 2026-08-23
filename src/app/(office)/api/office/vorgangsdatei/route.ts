@@ -4,6 +4,7 @@ import { payloadClient } from '../../../../../lib/data'
 import { dateiEintragen, stromAblegen, ZuGross } from '../../../../../lib/dateiAblage'
 import { dateiName, endungErlaubt, MAX_BYTES, ordnerName } from '../../../../../lib/uebergabe'
 import { darf } from '../../../../../lib/wache'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 900
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
     if (!gehoertDazu) return NextResponse.json({ error: 'gehoert-nicht-dazu' }, { status: 400 })
 
     if (b.aktion === 'loeschen') {
-      await payload.delete({ collection: 'product-files', id: b.id, overrideAccess: true })
+      await wegwerfen(payload, 'werkstattdateien', b.id)
       return NextResponse.json({ ok: true })
     }
 

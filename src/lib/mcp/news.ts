@@ -14,6 +14,7 @@ import {
   richTextZuText,
   sprache,
 } from './helpers'
+import { wegwerfenIn } from '../wegwerfen'
 
 export function registerNews(server: McpServer) {
   // ── News ──────────────────────────────────────────────────────────────────
@@ -228,7 +229,7 @@ export function registerNews(server: McpServer) {
     'news_loeschen',
     {
       description:
-        'Löscht einen News-Beitrag endgültig. Ohne bestaetigen=true nur Vorschau. Schonender: news_aendern mit veroeffentlichen=false setzt ihn zurück in den Entwurf.',
+        'Wirft einen News-Beitrag in den Papierkorb (in der Verwaltung wiederherstellbar). Ohne bestaetigen=true nur Vorschau. Schonender: news_aendern mit veroeffentlichen=false setzt ihn zurück in den Entwurf.',
       inputSchema: { slug: z.string(), bestaetigen },
     },
     async ({ slug, bestaetigen: jetzt }) => {
@@ -241,7 +242,7 @@ export function registerNews(server: McpServer) {
       if (!jetzt) {
         return bestaetigungNoetig({ id: n.id, titel: n.title, slug: n.slug, status: n._status })
       }
-      await payload.delete({ collection: 'news', id: n.id })
+      await wegwerfenIn(payload, 'news', n.id)
       return ok({ ok: true, geloescht: n.title })
     },
   )

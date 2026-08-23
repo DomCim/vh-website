@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../lib/data'
 import { darf } from '../../../../../lib/wache'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
+import { wegwerfen } from '@/lib/wegwerfen'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
       if (angebot.quoteNumber) {
         return NextResponse.json({ error: 'schon-versendet' }, { status: 409 })
       }
-      await payload.delete({ collection: 'quotes', id: b.id, overrideAccess: true })
+      await wegwerfen(payload, 'angebote', b.id)
       return NextResponse.json({ ok: true })
     }
 
