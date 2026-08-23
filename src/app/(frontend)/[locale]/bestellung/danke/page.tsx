@@ -3,20 +3,26 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { Reveal } from '../../../../../components/motion/Reveal'
+import { GoogleBewertung } from '../../../../../components/shop/GoogleBewertung'
 import { payloadClient } from '../../../../../lib/data'
+import { bewertungsDaten } from '../../../../../lib/googleBewertung'
 import { isLocale, t } from '../../../../../lib/i18n'
 import { markOrderPaid } from '../../../../../lib/orderHooks'
 import { capturePayPalOrder, paypalConfig } from '../../../../../lib/paypal'
 
 export const dynamic = 'force-dynamic'
 
-/** Rückkehr von PayPal: Zahlung server-seitig einziehen und Bestellung abschließen */
+/**
+ * Rückkehr von PayPal: Zahlung server-seitig einziehen und Bestellung
+ * abschließen. Gibt die Bestellung zurück — die Seite braucht sie für die
+ * Frage nach der Bewertung (Bestellnummer, Adresse, Lieferland).
+ */
 async function capturePayPalIfPresent(paypalToken?: string) {
-  if (!paypalToken) return
+  if (!paypalToken) return null
   try {
     const payload = await payloadClient()
     const cfg = await paypalConfig(payload)
-    if (!cfg) return
+    if (!cfg) return null
     const { docs } = await payload.find({
       collection: 'orders',
       where: { paypalOrderId: { equals: paypalToken } },
@@ -25,7 +31,8 @@ async function capturePayPalIfPresent(paypalToken?: string) {
       depth: 0,
     })
     const order = docs[0]
-    if (!order || order.status !== 'pending') return
+    if (!order) return null
+    if (order.status !== 'pending') return order
     const result = await capturePayPalOrder(cfg, paypalToken)
     if (result.status === 'COMPLETED') {
       // Lieferadresse aus PayPal übernehmen, falls noch keine an der Bestellung steht
@@ -48,8 +55,10 @@ async function capturePayPalIfPresent(paypalToken?: string) {
       }
       await markOrderPaid(payload, order.id, { paypalCaptureId: result.captureId })
     }
+    return order
   } catch (err) {
     console.error('PayPal-Capture fehlgeschlagen:', err)
+    return null
   }
 }
 
@@ -65,7 +74,16 @@ export default async function ThankYouPage({
   if (!isLocale(locale)) notFound()
   const dict = t(locale)
 
-  await capturePayPalIfPresent(token)
+  const bestellung = await capturePayPalIfPresent(token)
+
+  /*
+   * Die Frage nach der Bewertung — nur, wenn im Büro eine Händler-ID steht
+   * und die Bestellung bekannt ist. Ohne beides bleibt die Seite so, wie sie
+   * war, und im Browser wird nichts von Google geladen.
+   */
+  const bewertung = bestellung
+    ? await bewertungsDaten(await payloadClient(), bestellung as never)
+    : null
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
@@ -84,6 +102,19 @@ export default async function ThankYouPage({
           {dict.thanks.backHome}
         </Link>
       </Reveal>
+
+      {bewertung && (
+        <GoogleBewertung
+          daten={bewertung}
+          labels={{
+            title: dict.thanks.reviewTitle,
+            text: dict.thanks.reviewText,
+            button: dict.thanks.reviewButton,
+            loading: dict.thanks.reviewLoading,
+            error: dict.thanks.reviewError,
+          }}
+        />
+      )}
     </div>
   )
 }

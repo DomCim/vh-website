@@ -130,6 +130,13 @@ const de = {
     title: 'Vielen Dank für Ihre Bestellung!',
     text: 'Wir haben Ihre Bestellung erhalten und melden uns in Kürze mit allen Details zur Lieferung.',
     backHome: 'Zur Startseite',
+    reviewTitle: 'Eine Bitte zum Schluss',
+    reviewText:
+      'Wenn Sie mögen, darf Google Sie einige Wochen nach der Lieferung kurz fragen, wie zufrieden Sie waren. Zwei Fragen, nicht mehr. Ihre E-Mail-Adresse geht dafür an Google — erst, wenn Sie hier zustimmen.',
+    reviewButton: 'Ja, gern fragen',
+    reviewLoading: 'Einen Moment, das Fenster von Google wird geladen …',
+    reviewError:
+      'Google ist gerade nicht erreichbar. Kein Problem — an Ihrer Bestellung ändert das nichts.',
   },
   account: {
     title: 'Meine Bestellungen',
@@ -515,6 +522,13 @@ const fr: Dictionary = {
     title: 'Merci pour votre commande !',
     text: 'Nous avons bien reçu votre commande et vous contacterons prochainement avec tous les détails de livraison.',
     backHome: "Retour à l'accueil",
+    reviewTitle: 'Une dernière demande',
+    reviewText:
+      "Si vous le souhaitez, Google peut vous demander dans quelques semaines, après la livraison, si vous avez été satisfait. Deux questions, pas plus. Votre adresse électronique sera transmise à Google — seulement si vous acceptez ici.",
+    reviewButton: 'Oui, volontiers',
+    reviewLoading: 'Un instant, la fenêtre de Google se charge …',
+    reviewError:
+      "Google n'est pas joignable pour le moment. Aucune importance — cela ne change rien à votre commande.",
   },
   account: {
     title: 'Mes commandes',
@@ -893,6 +907,13 @@ const en: Dictionary = {
     title: 'Thank you for your order!',
     text: 'We have received your order and will contact you shortly with all delivery details.',
     backHome: 'Back to home',
+    reviewTitle: 'One last request',
+    reviewText:
+      'If you like, Google may ask you a few weeks after delivery how satisfied you were. Two questions, no more. Your email address will be passed to Google — only if you agree here.',
+    reviewButton: 'Yes, please ask',
+    reviewLoading: "One moment, Google's window is loading …",
+    reviewError:
+      'Google cannot be reached right now. No matter — it changes nothing about your order.',
   },
   account: {
     title: 'My orders',

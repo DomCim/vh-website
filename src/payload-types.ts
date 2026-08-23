@@ -3542,6 +3542,19 @@ export interface Integration {
     behaltenLokal?: number | null;
     behaltenNas?: number | null;
   };
+  /**
+   * Fragt nach dem Bestellen, ob Google später eine kurze Bewertungsumfrage schicken darf. Ohne Händler-ID passiert nichts — dann wird auch kein Google-Skript geladen.
+   */
+  googleReviews?: {
+    /**
+     * Die Kundennummer aus dem Google Merchant Center, nur Ziffern. Leer = abgeschaltet.
+     */
+    merchantId?: string | null;
+    /**
+     * Google braucht ein Datum, um zu wissen, wann es fragen darf. Hier gehört die übliche Zeit von der Bestellung bis zur Lieferung hin — lieber großzügig: Wer nach der Lieferung gefragt wird, antwortet freundlicher als jemand, der noch wartet.
+     */
+    lieferzeitTage?: number | null;
+  };
   facebook?: {
     pageId?: string | null;
     /**
@@ -3838,6 +3851,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
         uhrzeit?: T;
         behaltenLokal?: T;
         behaltenNas?: T;
+      };
+  googleReviews?:
+    | T
+    | {
+        merchantId?: T;
+        lieferzeitTage?: T;
       };
   facebook?:
     | T

@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { Bestellstand, type BestellungAnsicht } from '../../../../../components/shop/Bestellstand'
+import { GoogleBewertung } from '../../../../../components/shop/GoogleBewertung'
 import { payloadClient } from '../../../../../lib/data'
+import { bewertungsDaten } from '../../../../../lib/googleBewertung'
 import { isLocale, t } from '../../../../../lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -34,6 +36,13 @@ export default async function BestellStatusSeite({
   })
   const bestellung = docs[0]
 
+  /*
+   * Wer auf Rechnung bestellt, landet hier statt auf der Danke-Seite — für
+   * ihn ist das die Bestätigungsseite. Also gehört die Frage nach der
+   * Bewertung auch hierhin, sonst fehlte die Hälfte der Bestellungen.
+   */
+  const bewertung = await bewertungsDaten(payload, bestellung as never)
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
       <h1 className="tracking-nav text-ink text-2xl font-semibold uppercase">
@@ -54,6 +63,19 @@ export default async function BestellStatusSeite({
               labels={dict.orderStatus}
             />
           </div>
+          {bewertung && (
+            <GoogleBewertung
+              daten={bewertung}
+              labels={{
+                title: dict.thanks.reviewTitle,
+                text: dict.thanks.reviewText,
+                button: dict.thanks.reviewButton,
+                loading: dict.thanks.reviewLoading,
+                error: dict.thanks.reviewError,
+              }}
+            />
+          )}
+
           <Link
             href={`/${locale}/konto`}
             className="text-ink-soft hover:text-bronze mt-10 inline-block text-sm underline transition-colors"

@@ -50,6 +50,7 @@ import * as migration_20260821_055731_auftragsmeldungen from './20260821_055731_
 import * as migration_20260821_065058_meldungen from './20260821_065058_meldungen';
 import * as migration_20260821_213813_abnahme_bausteine_belege from './20260821_213813_abnahme_bausteine_belege';
 import * as migration_20260822_135017_reichweite_sterne_faq from './20260822_135017_reichweite_sterne_faq';
+import * as migration_20260823_073210_google_rezensionen from './20260823_073210_google_rezensionen';
 
 export const migrations = [
   {
@@ -310,6 +311,11 @@ export const migrations = [
   {
     up: migration_20260822_135017_reichweite_sterne_faq.up,
     down: migration_20260822_135017_reichweite_sterne_faq.down,
-    name: '20260822_135017_reichweite_sterne_faq'
+    name: '20260822_135017_reichweite_sterne_faq',
+  },
+  {
+    up: migration_20260823_073210_google_rezensionen.up,
+    down: migration_20260823_073210_google_rezensionen.down,
+    name: '20260823_073210_google_rezensionen'
   },
 ];

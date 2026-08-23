@@ -845,6 +845,56 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      /*
+       * Google Kundenrezensionen — die Frage nach der Bewertung.
+       *
+       * Nach dem Bestellen wird der Kunde gefragt, ob Google ihm später eine
+       * kurze Umfrage schicken darf. Sagt er ja, kommt sie ein paar Wochen
+       * nach der voraussichtlichen Lieferung; die Antworten zählen als
+       * Verkäuferbewertung im Merchant Center.
+       *
+       * **Warum das hier steht und nicht fest im Code.** Ohne Händler-Kennung
+       * passiert gar nichts — kein Skript, kein Aufruf zu Google, kein
+       * Hinweis. Wer die Sache abstellen will, leert dieses Feld; es braucht
+       * kein Ausrollen dafür.
+       *
+       * **Warum es die Seite nicht cookiefrei-los macht.** Googles Skript
+       * wird erst geladen, wenn der Kunde auf der Bestätigungsseite
+       * ausdrücklich zustimmt. Wer nicht klickt, bekommt nichts von Google
+       * zu sehen — und der Rest der Website bleibt unberührt.
+       */
+      name: 'googleReviews',
+      label: 'Google Kundenrezensionen',
+      type: 'group',
+      admin: {
+        description:
+          'Fragt nach dem Bestellen, ob Google später eine kurze Bewertungsumfrage schicken darf. Ohne Händler-ID passiert nichts — dann wird auch kein Google-Skript geladen.',
+      },
+      fields: [
+        {
+          name: 'merchantId',
+          label: 'Händler-ID (Merchant Center)',
+          type: 'text',
+          admin: {
+            description:
+              'Die Kundennummer aus dem Google Merchant Center, nur Ziffern. Leer = abgeschaltet.',
+          },
+        },
+        {
+          name: 'lieferzeitTage',
+          label: 'Voraussichtliche Lieferzeit (Tage)',
+          type: 'number',
+          min: 1,
+          max: 365,
+          defaultValue: 28,
+          admin: {
+            description:
+              'Google braucht ein Datum, um zu wissen, wann es fragen darf. Hier gehört die übliche Zeit von der Bestellung bis zur Lieferung hin — lieber großzügig: Wer nach der Lieferung gefragt wird, antwortet freundlicher als jemand, der noch wartet.',
+          },
+        },
+      ],
+    },
+    {
       name: 'facebook',
       label: 'Facebook & Instagram (News-Autopost)',
       type: 'group',

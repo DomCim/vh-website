@@ -6,6 +6,14 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Nach dem Bestellen wird gefragt, ob Google um eine Bewertung bitten darf.** Auf der Bestätigungsseite steht dafür ein Absatz in unseren eigenen Worten und ein Knopf. Sagt der Kunde ja, meldet sich Google einige Wochen nach der voraussichtlichen Lieferung mit zwei Fragen; die Antworten zählen als **Verkäuferbewertung im Merchant Center**. Die Frage steht auf beiden Wegen — nach PayPal wie nach dem Kauf auf Rechnung.
+
+- **Das Google-Skript wird erst nach der Zustimmung geladen.** Wer nicht drückt, bekommt von Google nichts zu sehen: kein Skript, kein Aufruf, nichts. Das war die Bedingung — diese Website setzt kein Cookie und braucht deshalb kein Einwilligungsbanner, und das sollte so bleiben. Die Ausnahme in der Sicherheitsrichtlinie gilt ausschließlich für die Bestätigungsseiten, nicht für die übrige Website.
+
+- **Eingeschaltet wird es mit einer Zahl.** In der Website-Verwaltung unter Integrationen → Google Kundenrezensionen gehört die **Händler-ID** aus dem Merchant Center hin, dazu die übliche Lieferzeit in Tagen (Vorgabe 28 — Google braucht ein Datum, um zu wissen, wann es fragen darf). Steht dort nichts, passiert nichts. Das ist zugleich der Ausschalter.
+
+- **Vor dem Einschalten gehört ein Absatz in die Datenschutzerklärung** — dass bei Zustimmung E-Mail-Adresse, Bestellnummer und voraussichtliches Lieferdatum an Google übermittelt werden. Der Text liegt bereit und wird nachgezogen.
+
 - **Die häufigen Fragen haben jetzt eine eigene Seite.** Sie standen bisher nur ganz unten unter „Maßanfertigung" — dort waren sie entstanden, dort blieben sie. Nur handelt kaum eine davon von einer Maßanfertigung: Fertigungszeit, Farben, Cortenstahl, Versandkosten, Abholung, Rückgabe. Wer eine solche Frage hatte, musste sie ausgerechnet auf der Seite suchen, auf der er sie am wenigsten vermutet. Jetzt gibt es sie unter **/faq**, in allen drei Sprachen, verlinkt im Fußbereich jeder Seite.
 
 - **Auf der Startseite stehen die ersten vier Fragen offen da.** Wer wissen will, wie lange eine Fertigung dauert oder ob man abholen kann, bekommt die Antwort, ohne erst irgendwo hinzuklicken; darunter führt ein Verweis zu allen Fragen. Unter „Maßanfertigung" bleiben sie ebenfalls stehen — wer gerade das Formular ausfüllt, fragt sich genau dort, wie lange es dauert.
