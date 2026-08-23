@@ -6,6 +6,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Aktionsseite führt jetzt zur Ware.** „40 % Rabatt auf alle Outdoor-Möbel“ stand da — und wer daraufdrückte, bei dem passierte nichts. Jetzt stehen unter jeder Aktion die Stücke, die dazugehören, als Kacheln mit Streichpreis. Bezieht sich die Aktion auf **eine** Kategorie, führt außerdem das Plakat selbst dorthin; bei mehreren gibt es kein eindeutiges Ziel, dann sind die Kacheln der Weg.
+
+- **Gezeigt wird genau, was auch rabattiert wird.** Die Auswahl folgt derselben Regel wie der Warenkorb. Eine Aktion, die für bestimmte Kategorien gelten soll und keine nennt, zeigt deshalb **nichts** statt alles — sonst stünde das ganze Sortiment als reduziert da, während die Kasse nichts abzieht.
+
 ## 22.08.2026 — Sichtbare Rabatte, gestaltbare Rechtstexte und eine schärfere Übersetzungsprüfung
 
 - **Eine Aktion steht jetzt am Preis.** Der Sommer-Sale war richtig eingerichtet und die Kasse zog die 40 % auch ab — nur sah man davon nichts: Auf der Übersicht stand am Sofa unverändert **1.990 €**, und der Rabatt tauchte erst im Warenkorb auf. Wer nicht auf gut Glück etwas hineinlegte, erfuhr nie davon. Jetzt trägt die Kachel ein Band mit dem Prozentsatz, und am Preis steht der Aktionspreis mit dem durchgestrichenen alten daneben. Auf der Artikelseite kommen Name der Aktion und das Datum dazu, bis zu dem sie läuft.

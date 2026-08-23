@@ -314,6 +314,8 @@ const de = {
     validUntil: 'Gültig bis',
     empty: 'Derzeit keine laufenden Aktionen.',
     code: 'Code',
+    included: 'Das ist dabei',
+    viewAll: 'Alle ansehen',
   },
   contact: {
     title: 'Kontakt',
@@ -686,6 +688,8 @@ const fr: Dictionary = {
     validUntil: "Valable jusqu'au",
     empty: 'Aucune offre en cours actuellement.',
     code: 'Code',
+    included: 'Les pièces concernées',
+    viewAll: 'Tout voir',
   },
   contact: {
     title: 'Contact',
@@ -1055,6 +1059,8 @@ const en: Dictionary = {
     validUntil: 'Valid until',
     empty: 'No offers running at the moment.',
     code: 'Code',
+    included: "What's included",
+    viewAll: 'View all',
   },
   contact: {
     title: 'Contact',

@@ -1,7 +1,7 @@
 import config from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
 
-import type { Aktionsregel } from './aktionspreis'
+import { auswahlFuerAktion, type Aktionsregel } from './aktionspreis'
 import type { Locale } from './i18n'
 import { laufendeAktionen } from './promotions'
 
@@ -266,4 +266,45 @@ export async function getProjectsForProduct(productId: number | string, locale: 
 export async function getPreisaktionen(locale: Locale): Promise<Aktionsregel[]> {
   const payload = await payloadClient()
   return laufendeAktionen(payload, locale)
+}
+
+/**
+ * Die Stücke, für die eine Aktion gilt.
+ *
+ * Auf der Aktionsseite stand bisher nur, worum es geht — „40 % auf alle
+ * Outdoor-Möbel" —, und wer wissen wollte, welche Stücke das sind, musste
+ * raten und suchen. Eine Aktion, die den Weg zur Ware nicht zeigt, verkauft
+ * nichts.
+ *
+ * Ausgewählt wird nach derselben Regel wie im Warenkorb: über die Kategorie,
+ * die am Artikel steht. Damit stehen hier genau die Stücke, die den Rabatt
+ * auch wirklich bekommen — und keines mehr.
+ */
+export async function getProductsForPromotion(
+  promotion: {
+    appliesTo?: string | null
+    categories?: unknown
+    products?: unknown
+  },
+  locale: Locale,
+  limit = 12,
+) {
+  const auswahl = auswahlFuerAktion(promotion)
+  if (auswahl.art === 'keine') return []
+
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'products',
+    where: {
+      and: [
+        { available: { equals: true } },
+        ...(auswahl.art === 'feld' ? [{ [auswahl.feld]: { in: auswahl.werte } } as Where] : []),
+      ],
+    },
+    sort: 'order',
+    locale,
+    limit,
+    depth: 1,
+  })
+  return docs
 }

@@ -133,3 +133,41 @@ export function preisaktionAnzeigen(
   if (artikel.onRequestOnly) return false
   return typeof artikel.preis === 'number'
 }
+
+/**
+ * Welche Artikel gehören zu einer Aktion?
+ *
+ * Gibt keine Datenbankabfrage zurück, sondern die Entscheidung dahinter — so
+ * lässt sie sich prüfen, ohne eine Datenbank zu starten, und sie steht neben
+ * `aktionFuerArtikel`, mit dem sie übereinstimmen muss.
+ *
+ * Drei Ausgänge, und der dritte ist der wichtige: `'keine'` steht für eine
+ * Aktion, die „für bestimmte Kategorien" gelten soll und keine genannt hat.
+ * Ohne diesen Fall bliebe eine leere Liste übrig, aus der eine Abfrage ohne
+ * Bedingung würde — und die Aktionsseite zeigte das ganze Sortiment als
+ * reduziert an, während die Kasse nichts abzieht.
+ */
+export type Artikelauswahl =
+  | { art: 'alle' }
+  | { art: 'keine' }
+  | { art: 'feld'; feld: 'category' | 'id'; werte: string[] }
+
+export function auswahlFuerAktion(promotion: {
+  appliesTo?: string | null
+  categories?: unknown
+  products?: unknown
+}): Artikelauswahl {
+  if (promotion.appliesTo !== 'categories' && promotion.appliesTo !== 'products') {
+    return { art: 'alle' }
+  }
+
+  const feld = promotion.appliesTo === 'categories' ? 'category' : 'id'
+  const werte = bezugsIds(
+    (promotion.appliesTo === 'categories' ? promotion.categories : promotion.products) as
+      | ({ id: number | string } | number | string)[]
+      | null
+      | undefined,
+  )
+
+  return werte.length === 0 ? { art: 'keine' } : { art: 'feld', feld, werte }
+}

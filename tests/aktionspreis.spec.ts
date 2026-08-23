@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import {
   aktionFuerArtikel,
+  auswahlFuerAktion,
   mitRabatt,
   preisaktionAnzeigen,
   type Aktionsregel,
@@ -126,4 +127,36 @@ test('auf Anfrage bleibt auf Anfrage, auch während einer Aktion', () => {
   expect(preisaktionAnzeigen({ onRequestOnly: false, preis: null }, laufend)).toBe(false)
   expect(preisaktionAnzeigen({ onRequestOnly: false, preis: 1990 }, null)).toBe(false)
   expect(preisaktionAnzeigen({ onRequestOnly: false, preis: 1990 }, laufend)).toBe(true)
+})
+
+/**
+ * Welche Stücke unter einer Aktion stehen — und wann keines.
+ *
+ * Der gefährliche Fall ist der leere: Eine Aktion, die „für bestimmte
+ * Kategorien" gelten soll und keine genannt hat, darf **nicht** das ganze
+ * Sortiment zeigen. Käme daraus eine Abfrage ohne Bedingung, zeigte die
+ * Aktionsseite jeden Artikel des Hauses als reduziert an — während die Kasse
+ * nichts abzieht.
+ */
+test('die Auswahl einer Aktion trifft dieselben Artikel wie der Warenkorb', () => {
+  expect(auswahlFuerAktion({ appliesTo: 'all' })).toEqual({ art: 'alle' })
+
+  // Ohne Angabe ist „alle" die Vorgabe — so steht es auch in der Collection.
+  expect(auswahlFuerAktion({})).toEqual({ art: 'alle' })
+
+  expect(auswahlFuerAktion({ appliesTo: 'categories', categories: [{ id: 8 }, 9] })).toEqual({
+    art: 'feld',
+    feld: 'category',
+    werte: ['8', '9'],
+  })
+
+  expect(auswahlFuerAktion({ appliesTo: 'products', products: [4] })).toEqual({
+    art: 'feld',
+    feld: 'id',
+    werte: ['4'],
+  })
+
+  // Kategorien versprochen, keine genannt: kein einziger Artikel.
+  expect(auswahlFuerAktion({ appliesTo: 'categories', categories: [] })).toEqual({ art: 'keine' })
+  expect(auswahlFuerAktion({ appliesTo: 'products' })).toEqual({ art: 'keine' })
 })
