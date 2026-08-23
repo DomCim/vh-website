@@ -75,25 +75,33 @@ for (const pfad of ['/de/warenkorb', '/de/kasse', '/de/newsletter']) {
  */
 test('ein Artikel unter fremder Kategorie leitet auf seine eigene um', async ({ request }) => {
   const karte = await request.get(`${BASIS}/sitemap.xml`)
-  const adressen = [...(await karte.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1])
-  const nachLocale = (u: string) => u.replace(`${BASIS}/de`, '')
+  const adressen = [...(await karte.text()).matchAll(/<loc>(.*?)<\/loc>/g)]
+    .map((m) => m[1])
+    .filter((u) => u.startsWith(`${BASIS}/de/`))
+    .map((u) => u.slice(`${BASIS}/de/`.length))
 
-  const artikel = adressen.find((u) => u.startsWith(`${BASIS}/de/`) && nachLocale(u).split('/').length === 3)
-  const kategorien = adressen.filter(
-    (u) => u.startsWith(`${BASIS}/de/`) && nachLocale(u).split('/').length === 2,
-  )
-  test.skip(!artikel || kategorien.length < 2, 'Ohne Artikel in zwei Kategorien nicht prüfbar')
-
-  const [, eigene, artikelSlug] = nachLocale(artikel!).split('/')
-  const fremde = kategorien
-    .map((u) => nachLocale(u).slice(1))
-    .find((k) => k !== eigene && !k.includes('/'))
-  test.skip(!fremde, 'Es gibt nur eine Kategorie')
-
-  const antwort = await request.get(`${BASIS}/de/${fremde}/${artikelSlug}`, {
-    maxRedirects: 0,
+  /*
+   * Die festen Seiten sehen wie Kategorien aus, sind aber keine.
+   *
+   * In der Sitemap steht `/de/news` neben `/de/moebel`, und `/de/news/<slug>`
+   * neben `/de/moebel/<artikel>` — an der Adresse allein ist das nicht zu
+   * unterscheiden. Genau daran ist diese Prüfung beim ersten Anlauf
+   * gescheitert: Sie hielt einen News-Beitrag für einen Artikel und wunderte
+   * sich, dass nichts umgeleitet wurde.
+   */
+  const feste = ['news', 'projekte', 'ueber-uns', 'aktionen', 'massanfertigung', 'faq', 'kontakt']
+  const kategorien = adressen.filter((a) => !a.includes('/') && !feste.includes(a))
+  const artikel = adressen.find((a) => {
+    const [kat, rest] = a.split('/')
+    return rest && kategorien.includes(kat)
   })
+  test.skip(!artikel || kategorien.length < 2, 'Ohne Artikel und zwei Kategorien nicht prüfbar')
+
+  const [eigene, artikelSlug] = artikel!.split('/')
+  const fremde = kategorien.find((k) => k !== eigene)
+
+  const antwort = await request.get(`${BASIS}/de/${fremde}/${artikelSlug}`, { maxRedirects: 0 })
   // Dauerhaft, nicht vorübergehend: Google soll die Falschadresse aufgeben.
-  expect([301, 308]).toContain(antwort.status())
+  expect([301, 308], `${fremde}/${artikelSlug} sollte umleiten`).toContain(antwort.status())
   expect(antwort.headers()['location']).toContain(`/de/${eigene}/${artikelSlug}`)
 })
