@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 53,
+    datum: null,
+    titel: 'Gelöschte Mails landen jetzt wirklich im Papierkorb',
+    punkte: [
+      {
+        text: '**Der Fehler, wie Dominik ihn gemeldet hat:** Eine Mail im Postfach löschen — sie verschwindet aus dem Eingang. Seite neu laden — sie ist wieder da. Und im Papierkorb lag sie nie.',
+      },
+      {
+        text: '**Woran es lag.** Beim Löschen wurde der Ordner mit dem eingestellten Namen gesucht, in der Voreinstellung „Trash". Heißt er beim Anbieter anders — `INBOX.Trash`, `Papierkorb`, `Gelöschte Objekte` —, dann gab es diesen Ordner gar nicht, und das Verschieben scheiterte. Der Fehlschlag wurde stillschweigend aufgefangen: Die Mail bekam nur eine Markierung, und eine Markierung entfernt nichts. Nach außen meldete das Büro trotzdem „hat geklappt", deshalb nahm die Liste die Zeile heraus.',
+      },
+      {
+        text: '**Jetzt wird gefragt statt geraten.** Der Mailserver weiß selbst, welcher seiner Ordner der Papierkorb ist, und sagt es auf Nachfrage — unabhängig davon, wie er heißt. Nur wenn er das nicht tut, gilt der eingestellte Name, und auch der erst, wenn es den Ordner wirklich gibt. Fehlt er ganz, wird er angelegt.',
+      },
+      {
+        text: '**Und wenn doch etwas schiefgeht, steht es da.** Bisher hieß es „Das hat nicht geklappt" — die nutzloseste aller Antworten, denn woran es lag, wusste nur der Mailserver. Jetzt steht der Grund in der Meldung, etwa dass kein Ordner „Papierkorb" gefunden wurde. Dann weiß man sofort, wo man nachsieht.',
+      },
+      {
+        text: '**Dieselbe Falle gab es beim Ordner „Gesendet" schon einmal**, dort wurde sie längst beseitigt — nur eben an einer Stelle und nicht an beiden. Beide Ordner werden jetzt über denselben Weg bestimmt, damit das nicht ein drittes Mal auseinanderläuft.',
+      },
+    ],
+  },
+  {
     nummer: 52,
     datum: null,
     titel: 'Versandkosten und Rückgabefrist stehen jetzt im Suchergebnis',

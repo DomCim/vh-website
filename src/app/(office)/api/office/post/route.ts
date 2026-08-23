@@ -194,6 +194,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Postfach-Aktion fehlgeschlagen:', err)
-    return NextResponse.json({ error: 'fehlgeschlagen' }, { status: 500 })
+    /*
+     * Der Grund geht mit hinaus, nicht nur ins Serverprotokoll.
+     *
+     * „Das hat nicht geklappt" ist bei einem Postfach die nutzloseste aller
+     * Antworten: Woran es liegt, weiß nur der Mailserver, und dorthin kommt
+     * niemand, der gerade eine Mail wegwerfen wollte. Steht dagegen da, dass
+     * kein Ordner „Papierkorb" gefunden wurde, weiß man sofort, wo man
+     * nachsieht — in den Postfach-Einstellungen. Das Büro liegt hinter der
+     * Anmeldung, und der Text handelt vom eigenen Postfach.
+     */
+    return NextResponse.json(
+      { error: 'fehlgeschlagen', grund: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    )
   }
 }
