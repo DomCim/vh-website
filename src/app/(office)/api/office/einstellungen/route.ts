@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 
-import type { FeldBeschreibung } from '../../../../../lib/felderLesen'
 import { Integrations } from '../../../../../globals/Integrations'
 import { SiteSettings } from '../../../../../globals/SiteSettings'
 import { payloadClient } from '../../../../../lib/data'
 import { locales, type Locale } from '../../../../../lib/i18n'
 import { felderLesen } from '../../../../../lib/felderLesen'
+import { nurUebersetzbares } from '../../../../../lib/sprachfelder'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -71,44 +71,6 @@ async function wachePassieren(req: Request) {
   return payload
 }
 
-/**
- * Nur die Felder herausfiltern, die es je Sprache gibt.
- *
- * Beim Schreiben einer fremden Sprachfassung darf nichts anderes mitgehen.
- * Nicht aus Ordnungsliebe: Ein Feld, das es nur einmal gibt — die IBAN, der
- * Stundensatz, die Zugangsdaten —, würde beim Speichern der französischen
- * Fassung mit dem überschrieben, was gerade im Formular steht. Und dort steht
- * bei einer Sprachfassung womöglich nichts.
- *
- * Gruppen sind selbst nicht übersetzbar, ihre Felder darin aber schon (die
- * SEO-Standardtexte etwa). Deshalb wird hineingeschaut statt abgewiesen.
- */
-function nurUebersetzbares(
-  felder: FeldBeschreibung[],
-  werte: Record<string, unknown>,
-): Record<string, unknown> {
-  const raus: Record<string, unknown> = {}
-  for (const feld of felder) {
-    if (!(feld.name in werte)) continue
-    if (feld.uebersetzt) {
-      raus[feld.name] = werte[feld.name]
-      continue
-    }
-    if (feld.art === 'gruppe' && feld.felder) {
-      const inneres = werte[feld.name]
-      if (inneres && typeof inneres === 'object') {
-        const gefiltert = nurUebersetzbares(feld.felder, inneres as Record<string, unknown>)
-        if (Object.keys(gefiltert).length) raus[feld.name] = gefiltert
-      }
-    }
-  }
-  return raus
-}
-
-function spracheLesen(roh: string | null): Locale {
-  return (locales as readonly string[]).includes(roh ?? '') ? (roh as Locale) : 'de'
-}
-
 export async function GET(req: Request) {
   const payload = await wachePassieren(req)
   if (!payload) return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
@@ -117,25 +79,36 @@ export async function GET(req: Request) {
   const bereich = pruefen(url.searchParams.get('bereich'))
   if (!bereich) return NextResponse.json({ error: 'unbekannter-bereich' }, { status: 400 })
 
-  const sprache = spracheLesen(url.searchParams.get('sprache'))
   const { global, slug } = BEREICHE[bereich]
 
   /*
+   * Alle Sprachen auf einmal — und warum das die richtige Menge ist.
+   *
+   * Früher holte das Formular eine Sprache und lud beim Umschalten neu. Das
+   * zwang zu einem Modus: Solange „Französisch" galt, war die halbe Liste weg,
+   * denn Anschrift und Bankverbindung gibt es nur einmal. Jetzt liegt die
+   * Sprache am einzelnen Feld, nicht an der Seite — dafür müssen alle drei
+   * Fassungen gleichzeitig vorliegen.
+   *
    * `fallbackLocale: false` — sonst reicht Payload für eine leere französische
    * Fassung den deutschen Text durch. Im Büro sähe das aus, als sei übersetzt,
    * und beim Speichern stünde der deutsche Text als französischer fest.
    */
-  const werte = await payload.findGlobal({
-    slug,
-    locale: sprache,
-    fallbackLocale: false as never,
-    depth: 0,
-  })
+  const alle = await Promise.all(
+    locales.map(async (sprache) => [
+      sprache,
+      await payload.findGlobal({
+        slug,
+        locale: sprache,
+        fallbackLocale: false as never,
+        depth: 0,
+      }),
+    ]),
+  )
 
   return NextResponse.json({
-    sprache,
     felder: felderLesen(global.fields),
-    werte,
+    werte: Object.fromEntries(alle),
   })
 }
 
@@ -144,33 +117,47 @@ export async function POST(req: Request) {
   if (!payload) return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
 
   try {
-    const { bereich: roh, sprache: rohSprache, werte } = (await req.json()) as {
+    const { bereich: roh, werte } = (await req.json()) as {
       bereich?: string
-      sprache?: string
-      werte?: Record<string, unknown>
+      werte?: Partial<Record<Locale, Record<string, unknown>>>
     }
     const bereich = pruefen(roh ?? null)
-    if (!bereich || !werte) {
+    if (!bereich || !werte || typeof werte !== 'object') {
       return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
     }
 
-    const sprache = spracheLesen(rohSprache ?? null)
     const { global, slug } = BEREICHE[bereich]
+    const felder = felderLesen(global.fields)
 
-    // Bei einer fremden Sprachfassung geht nur mit, was es je Sprache gibt
-    const daten =
-      sprache === 'de' ? werte : nurUebersetzbares(felderLesen(global.fields), werte)
-    if (!Object.keys(daten).length) {
-      return NextResponse.json({ error: 'nichts-uebersetzbares' }, { status: 400 })
+    /*
+     * Je Sprache ein Schreibvorgang: Payload nimmt pro Aufruf genau eine.
+     * Nacheinander und nicht nebenher — zwei gleichzeitige Schreibzugriffe auf
+     * dasselbe Global überschreiben einander je nach Reihenfolge des Servers.
+     */
+    const geschrieben: Locale[] = []
+    for (const sprache of locales) {
+      const roh = werte[sprache]
+      if (!roh || typeof roh !== 'object') continue
+
+      // In eine fremde Sprachfassung geht nur, was es je Sprache gibt: Anschrift,
+      // Bankverbindung und Zugangsdaten würden sonst mit dem überschrieben, was
+      // gerade im Formular steht — und dort steht bei einer Übersetzung nichts.
+      const daten = sprache === 'de' ? roh : nurUebersetzbares(felder, roh)
+      if (!Object.keys(daten).length) continue
+
+      await payload.updateGlobal({
+        slug,
+        locale: sprache,
+        data: daten as never,
+        overrideAccess: true,
+      })
+      geschrieben.push(sprache)
     }
 
-    await payload.updateGlobal({
-      slug,
-      locale: sprache,
-      data: daten as never,
-      overrideAccess: true,
-    })
-    return NextResponse.json({ ok: true, sprache })
+    if (!geschrieben.length) {
+      return NextResponse.json({ error: 'nichts-zu-speichern' }, { status: 400 })
+    }
+    return NextResponse.json({ ok: true, sprachen: geschrieben })
   } catch (err) {
     console.error('Einstellungen speichern fehlgeschlagen:', err)
     return NextResponse.json(

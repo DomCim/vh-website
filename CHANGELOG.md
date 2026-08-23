@@ -6,6 +6,14 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Sprachwahl in den Einstellungen sitzt jetzt am Feld statt über der Seite.** Bisher stand ein Schalter ganz oben und legte die ganze Ansicht um. Weil es Anschrift, Bankverbindung und Zugangsdaten nur einmal gibt, verschwand beim Umschalten die halbe Liste — und über dem Pinterest-Code stand eine Sprachwahl, die ihn nichts angeht. Jetzt zeigt die Übersicht **immer alles**, und die Sprachwahl erscheint erst, wenn man einen Eintrag öffnet, der wirklich etwas zu übersetzen hat.
+
+- **In der Übersicht steht, welche Sprachen gepflegt sind.** Bei allem Übersetzbaren stehen statt „eingerichtet" die drei Kürzel **DE FR EN** — die gepflegten grün, die fehlenden blass. Damit sieht man auf einen Blick, wo noch etwas fehlt, ohne dreimal umzuschalten.
+
+- **Was es nur einmal gibt, bleibt sichtbar und bearbeitbar.** Es trägt in einer fremden Sprache den Vermerk „gilt für alle Sprachen" und wird immer in die deutsche Fassung geschrieben. Früher war es schlicht weg.
+
+- **Gespeichert wird jetzt in einem Zug.** Wer am Slogan die französische und die englische Fassung ändert und einmal auf Speichern drückt, bekommt beide gespeichert — vorher ging pro Speichern nur eine Sprache.
+
 - **Die Sprachwahl im Büro zeigte die falsche Sprache als gewählt.** In den Einstellungen und bei den Rechtstexten war der **aktive** Knopf blass und die **inaktiven** hatten eine Fläche — genau verkehrt herum. Wer „Französisch" hervorgehoben sah, war in Wahrheit auf Deutsch und wunderte sich, warum Felder auftauchen, die es nur einmal gibt. Jetzt ist der gewählte Reiter bronze hinterlegt, wie überall sonst im Büro.
 
 - **Nach dem Bestellen wird gefragt, ob Google um eine Bewertung bitten darf.** Auf der Bestätigungsseite steht dafür ein Absatz in unseren eigenen Worten und ein Knopf. Sagt der Kunde ja, meldet sich Google einige Wochen nach der voraussichtlichen Lieferung mit zwei Fragen; die Antworten zählen als **Verkäuferbewertung im Merchant Center**. Die Frage steht auf beiden Wegen — nach PayPal wie nach dem Kauf auf Rechnung.

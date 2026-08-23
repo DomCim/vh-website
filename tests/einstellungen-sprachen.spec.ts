@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 import { felderLesen } from '../src/lib/felderLesen'
+import {
+  hatUebersetzbares,
+  nurUebersetzbares,
+  uebersetzbarerTeil,
+} from '../src/lib/sprachfelder'
 import { SiteSettings } from '../src/globals/SiteSettings'
 import { Integrations } from '../src/globals/Integrations'
 
@@ -45,4 +50,69 @@ test('Bei den Integrationen gibt es nichts zu übersetzen', () => {
   const tief = (liste: ReturnType<typeof felderLesen>): boolean =>
     liste.some((f) => f.uebersetzt || (f.felder ? tief(f.felder) : false))
   expect(tief(felderLesen(Integrations.fields))).toBe(false)
+})
+
+/**
+ * Die Sprachwahl steht am Feld, nicht über der Seite.
+ *
+ * Vorher hing sie ganz oben und schaltete die ganze Liste um. Weil es nur
+ * einmal gibt, was es nur einmal gibt, verschwand dabei die halbe Seite —
+ * Anschrift, Bankverbindung, Zugangsdaten. Über dem Pinterest-Code stand
+ * damit eine Sprachwahl, die ihn nichts angeht, und wer eine Übersetzung
+ * pflegte, fand den Rest nicht mehr.
+ *
+ * Diese Prüfungen halten die Regeln fest, nach denen jetzt entschieden wird.
+ */
+test('die Sprachwahl erscheint nur an Einträgen, die etwas zu übersetzen haben', () => {
+  expect(hatUebersetzbares(finde('tagline')!), 'Slogan').toBe(true)
+  expect(hatUebersetzbares(finde('faq')!), 'häufige Fragen').toBe(true)
+  // Die Gruppe selbst ist nicht übersetzbar, ihre Meta-Texte darin schon.
+  expect(hatUebersetzbares(finde('seo')!), 'SEO-Standardwerte').toBe(true)
+  expect(hatUebersetzbares(finde('craft')!), 'Handarbeit & Fertigung').toBe(true)
+
+  expect(hatUebersetzbares(finde('siteName')!), 'Website-Name').toBe(false)
+  expect(hatUebersetzbares(finde('contact')!), 'Kontaktdaten').toBe(false)
+  expect(hatUebersetzbares(finde('company')!), 'Firmenangaben').toBe(false)
+  expect(hatUebersetzbares(finde('pinterestVerification')!), 'Pinterest-Code').toBe(false)
+})
+
+test('der Sprachstand zählt nur die übersetzbaren Teile', () => {
+  const craft = finde('craft')!
+
+  // Nur ein nicht übersetzbares Feld gefüllt: Für den Sprachstand ist hier
+  // nichts gepflegt. Sonst stünde die Zeile in allen drei Sprachen auf grün,
+  // obwohl kein einziger Text übersetzt ist.
+  expect(uebersetzbarerTeil(craft, { madeToOrder: true })).toBeUndefined()
+
+  // Ein übersetzbares Feld gefüllt: genau das zählt.
+  expect(uebersetzbarerTeil(craft, { notice: 'Alles von Hand.', madeToOrder: true })).toEqual({
+    notice: 'Alles von Hand.',
+  })
+
+  // Ein einfaches übersetzbares Feld reicht seinen Wert unverändert durch.
+  expect(uebersetzbarerTeil(finde('tagline')!, 'Stahl aus einer Hand')).toBe(
+    'Stahl aus einer Hand',
+  )
+})
+
+/**
+ * Die Sicherung beim Schreiben: Was hier durchfällt, kann eine fremde
+ * Sprachfassung nicht kaputt machen.
+ */
+test('in eine fremde Sprachfassung geht nur, was es je Sprache gibt', () => {
+  const gefiltert = nurUebersetzbares(felder, {
+    tagline: 'Acier sur mesure',
+    siteName: 'Vincent Hellmann',
+    company: { iban: 'FR76…', legalName: 'Next-Concept SAS' },
+    seo: { metaTitle: 'Titre', metaDescription: 'Description' },
+  })
+
+  expect(gefiltert.tagline).toBe('Acier sur mesure')
+  expect(gefiltert.seo).toEqual({ metaTitle: 'Titre', metaDescription: 'Description' })
+
+  // Der Website-Name und die Firmenangaben dürfen nicht mitgehen: Eine
+  // französische IBAN gibt es nicht, und ein Speichern hier überschriebe die
+  // einzige, die es gibt.
+  expect(gefiltert.siteName).toBeUndefined()
+  expect(gefiltert.company).toBeUndefined()
 })

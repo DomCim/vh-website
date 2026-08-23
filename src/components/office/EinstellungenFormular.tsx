@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { FeldBeschreibung } from '../../lib/felderLesen'
 import { locales, type Locale } from '../../lib/i18n'
+import { hatUebersetzbares, uebersetzbarerTeil } from '../../lib/sprachfelder'
 import { htmlHatInhalt } from '../../lib/mailhtml'
 import { Fussleiste } from './Fussleiste'
 import { Schreibfeld } from './Schreibfeld'
@@ -37,6 +38,18 @@ import { Schreibfeld } from './Schreibfeld'
  */
 
 type Werte = Record<string, unknown>
+
+/**
+ * Alle drei Sprachfassungen nebeneinander.
+ *
+ * Früher lag immer nur eine im Formular, und das Umschalten holte neu. Das
+ * erzwang einen Modus, in dem die halbe Liste verschwand — denn Anschrift und
+ * Bankverbindung gibt es nur einmal. Jetzt liegen alle drei bereit, und jedes
+ * Feld greift sich die Fassung, die es angeht.
+ */
+type AlleWerte = Record<Locale, Werte>
+
+const LEERE_WERTE: AlleWerte = { de: {}, fr: {}, en: {} }
 
 function tiefLesen(werte: Werte, pfad: string[]): unknown {
   return pfad.reduce<unknown>(
@@ -156,14 +169,33 @@ function Feld({
   pfad,
   werte,
   setzen,
+  sprache,
+  erbt,
 }: {
   feld: FeldBeschreibung
   pfad: string[]
-  werte: Werte
-  setzen: (pfad: string[], wert: unknown) => void
+  werte: AlleWerte
+  setzen: (sprache: Locale, pfad: string[], wert: unknown) => void
+  /** Welche Fassung gerade bearbeitet wird */
+  sprache: Locale
+  /** Steht dieses Feld in etwas, das es je Sprache gibt? (Einträge einer übersetzten Liste) */
+  erbt: boolean
 }) {
   const eigenerPfad = [...pfad, feld.name]
-  const wert = tiefLesen(werte, eigenerPfad)
+
+  /*
+   * Die Sprache hängt am Feld, nicht am Blatt.
+   *
+   * Ein übersetzbares Feld wird in der gewählten Sprache gelesen und
+   * geschrieben. Alles andere — Anschrift, IBAN, Stundensatz — gibt es nur
+   * einmal; es bleibt sichtbar und bearbeitbar, geht aber immer in die
+   * deutsche Fassung. Früher verschwand es stattdessen aus der Ansicht, und
+   * wer eine Übersetzung pflegte, sah die halbe Seite nicht mehr.
+   */
+  const jeSprache = erbt || feld.uebersetzt === true
+  const ziel: Locale = jeSprache ? sprache : 'de'
+  const wert = tiefLesen(werte[ziel], eigenerPfad)
+  const nurEinmal = !jeSprache && sprache !== 'de'
 
   if (feld.art === 'haken') {
     return (
@@ -171,9 +203,10 @@ function Feld({
         <input
           type="checkbox"
           checked={Boolean(wert)}
-          onChange={(e) => setzen(eigenerPfad, e.target.checked)}
+          onChange={(e) => setzen(ziel, eigenerPfad, e.target.checked)}
         />
         <span>{feld.label}</span>
+        {nurEinmal && <span className="buero-unterzeile"> — gilt für alle Sprachen</span>}
         {feld.hinweis && <span className="buero-unterzeile"> — {feld.hinweis}</span>}
       </label>
     )
@@ -192,7 +225,7 @@ function Feld({
           */}
         <Schreibfeld
           wert={klartextAlsHtml((wert as string) ?? '')}
-          aendern={(html) => setzen(eigenerPfad, htmlHatInhalt(html) ? html : '')}
+          aendern={(html) => setzen(ziel, eigenerPfad, htmlHatInhalt(html) ? html : '')}
           platzhalter="Mit freundlichen Grüßen …"
         />
         {feld.hinweis && <span className="buero-unterzeile">{feld.hinweis}</span>}
@@ -205,16 +238,20 @@ function Feld({
       <span>
         {feld.label}
         {feld.pflicht ? ' *' : ''}
+        {nurEinmal && <span className="buero-unterzeile"> · gilt für alle Sprachen</span>}
       </span>
 
       {feld.art === 'absatz' ? (
         <textarea
           rows={3}
           value={(wert as string) ?? ''}
-          onChange={(e) => setzen(eigenerPfad, e.target.value)}
+          onChange={(e) => setzen(ziel, eigenerPfad, e.target.value)}
         />
       ) : feld.art === 'auswahl' ? (
-        <select value={(wert as string) ?? ''} onChange={(e) => setzen(eigenerPfad, e.target.value)}>
+        <select
+          value={(wert as string) ?? ''}
+          onChange={(e) => setzen(ziel, eigenerPfad, e.target.value)}
+        >
           <option value="">— bitte wählen —</option>
           {(feld.optionen ?? []).map((o) => (
             <option key={o.wert} value={o.wert}>
@@ -223,7 +260,7 @@ function Feld({
           ))}
         </select>
       ) : feld.geheim ? (
-        <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(eigenerPfad, neu)} />
+        <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(ziel, eigenerPfad, neu)} />
       ) : (
         <input
           type={feld.art === 'zahl' ? 'number' : feld.art === 'email' ? 'email' : 'text'}
@@ -231,6 +268,7 @@ function Feld({
           value={wert == null ? '' : String(wert)}
           onChange={(e) =>
             setzen(
+              ziel,
               eigenerPfad,
               feld.art === 'zahl'
                 ? e.target.value === ''
@@ -260,15 +298,22 @@ function Listenblock({
   werte,
   setzen,
   oeffnen,
+  sprache,
+  erbt,
 }: {
   feld: FeldBeschreibung
   pfad: string[]
-  werte: Werte
-  setzen: (pfad: string[], wert: unknown) => void
+  werte: AlleWerte
+  setzen: (sprache: Locale, pfad: string[], wert: unknown) => void
   oeffnen: (weg: string[]) => void
+  sprache: Locale
+  erbt: boolean
 }) {
   const eigenerPfad = [...pfad, feld.name]
-  const wert = tiefLesen(werte, eigenerPfad)
+  // Eine übersetzte Liste hat je Sprache eigene Einträge — die häufigen Fragen
+  // etwa können auf Französisch andere sein als auf Deutsch.
+  const ziel: Locale = erbt || feld.uebersetzt === true ? sprache : 'de'
+  const wert = tiefLesen(werte[ziel], eigenerPfad)
   const eintraege = Array.isArray(wert) ? (wert as Werte[]) : []
   const unterfelder = feld.felder ?? []
 
@@ -302,7 +347,7 @@ function Listenblock({
         onClick={() => {
           // Gleich öffnen: Wer „Hinzufügen" tippt, will tippen, nicht eine
           // neue leere Zeile ansehen
-          setzen(eigenerPfad, [...eintraege, {}])
+          setzen(ziel, eigenerPfad, [...eintraege, {}])
           oeffnen([...eigenerPfad, String(eintraege.length)])
         }}
       >
@@ -326,12 +371,16 @@ function Ebene({
   werte,
   setzen,
   oeffnen,
+  sprache,
+  erbt,
 }: {
   felder: FeldBeschreibung[]
   pfad: string[]
-  werte: Werte
-  setzen: (pfad: string[], wert: unknown) => void
+  werte: AlleWerte
+  setzen: (sprache: Locale, pfad: string[], wert: unknown) => void
   oeffnen: (weg: string[]) => void
+  sprache: Locale
+  erbt: boolean
 }) {
   return (
     <>
@@ -349,6 +398,8 @@ function Ebene({
                 werte={werte}
                 setzen={setzen}
                 oeffnen={oeffnen}
+                sprache={sprache}
+                erbt={erbt}
               />
             </section>
           )
@@ -365,12 +416,24 @@ function Ebene({
                 werte={werte}
                 setzen={setzen}
                 oeffnen={oeffnen}
+                sprache={sprache}
+                erbt={erbt || feld.uebersetzt === true}
               />
             </fieldset>
           )
         }
 
-        return <Feld key={feld.name} feld={feld} pfad={pfad} werte={werte} setzen={setzen} />
+        return (
+          <Feld
+            key={feld.name}
+            feld={feld}
+            pfad={pfad}
+            werte={werte}
+            setzen={setzen}
+            sprache={sprache}
+            erbt={erbt}
+          />
+        )
       })}
     </>
   )
@@ -382,34 +445,6 @@ const SPRACHNAMEN: Record<Locale, string> = {
   en: 'Englisch',
 }
 
-/**
- * Was es je Sprache gibt — und nur das.
- *
- * Bei einer fremden Sprachfassung sollen nicht alle Felder dastehen. Nicht aus
- * Ordnungsliebe: Die IBAN, der Stundensatz und die Zugangsdaten gibt es nur
- * einmal. Stünden sie in der französischen Ansicht, sähe es aus, als könne man
- * dort eine französische IBAN eintragen — und beim Speichern überschriebe man
- * die einzige, die es gibt.
- *
- * Gruppen sind selbst nicht übersetzbar, ihre Felder darin aber schon (die
- * SEO-Standardtexte etwa). Eine Gruppe bleibt deshalb stehen, wenn wenigstens
- * ein Feld darin übersetzbar ist — mit genau diesen Feldern.
- */
-function nurUebersetzbareFelder(felder: FeldBeschreibung[]): FeldBeschreibung[] {
-  const raus: FeldBeschreibung[] = []
-  for (const feld of felder) {
-    if (feld.uebersetzt) {
-      raus.push(feld)
-      continue
-    }
-    if (feld.art === 'gruppe' && feld.felder) {
-      const innen = nurUebersetzbareFelder(feld.felder)
-      if (innen.length) raus.push({ ...feld, felder: innen })
-    }
-  }
-  return raus
-}
-
 export function EinstellungenFormular({
   bereich,
   titel,
@@ -418,29 +453,34 @@ export function EinstellungenFormular({
   titel: string
 }) {
   const [felder, setFelder] = useState<FeldBeschreibung[] | null>(null)
-  const [werte, setWerte] = useState<Werte>({})
+  const [werte, setWerte] = useState<AlleWerte>(LEERE_WERTE)
   /** Der Stand beim Öffnen — daran wird gemessen, was wirklich geändert wurde. */
-  const [urspruenglich, setUrspruenglich] = useState<Werte>({})
+  const [urspruenglich, setUrspruenglich] = useState<AlleWerte>(LEERE_WERTE)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
   /** Wo man gerade ist: [] = Übersicht, ['email'] = Bereich, ['mailboxes','0'] = Eintrag */
   const [weg, setWeg] = useState<string[]>([])
+  /**
+   * Welche Sprachfassung gerade bearbeitet wird — gilt nur innerhalb eines
+   * geöffneten Eintrags. Beim Zurückgehen fällt sie auf Deutsch, sonst stünde
+   * man im nächsten Eintrag unversehens auf Französisch.
+   */
   const [sprache, setSprache] = useState<Locale>('de')
 
   useEffect(() => {
     let abgebrochen = false
     void (async () => {
       try {
-        const antwort = await fetch(
-          `/api/office/einstellungen?bereich=${bereich}&sprache=${sprache}`,
-          { credentials: 'include' },
-        )
+        const antwort = await fetch(`/api/office/einstellungen?bereich=${bereich}`, {
+          credentials: 'include',
+        })
         if (!antwort.ok) throw new Error('nicht erreichbar')
         const daten = await antwort.json()
         if (abgebrochen) return
+        const alle: AlleWerte = { ...LEERE_WERTE, ...(daten.werte ?? {}) }
         setFelder(daten.felder)
-        setWerte(daten.werte ?? {})
-        setUrspruenglich(daten.werte ?? {})
+        setWerte(alle)
+        setUrspruenglich(alle)
       } catch {
         if (!abgebrochen) setMeldung('Einstellungen brauchen eine Verbindung.')
       }
@@ -448,31 +488,53 @@ export function EinstellungenFormular({
     return () => {
       abgebrochen = true
     }
-  }, [bereich, sprache])
+  }, [bereich])
 
-  const setzen = useCallback((pfad: string[], wert: unknown) => {
-    setWerte((v) => tiefSetzen(v, pfad, wert) as Werte)
+  const setzen = useCallback((wohin: Locale, pfad: string[], wert: unknown) => {
+    setWerte((v) => ({ ...v, [wohin]: tiefSetzen(v[wohin], pfad, wert) as Werte }))
     setMeldung(null)
   }, [])
 
-  /** Gibt es hier überhaupt etwas zu übersetzen? Entscheidet über die Sprachwahl. */
-  const uebersetzbares = useMemo(() => (felder ? nurUebersetzbareFelder(felder) : []), [felder])
-
-  /** In einer fremden Sprachfassung steht nur, was es je Sprache gibt */
-  const sichtbareFelder = useMemo(
-    () => (!felder ? null : sprache === 'de' ? felder : nurUebersetzbareFelder(felder)),
-    [felder, sprache],
-  )
+  /** Zurück zur Übersicht — und zurück auf Deutsch */
+  const zurueck = useCallback((neuerWeg: string[]) => {
+    setWeg(neuerWeg)
+    setSprache('de')
+    setMeldung(null)
+  }, [])
 
   /** Das Feld, auf das der Weg zeigt — und der Datenpfad dorthin */
   const ziel = useMemo(() => {
-    if (!sichtbareFelder || weg.length === 0) return null
-    const oben = sichtbareFelder.find((f) => f.name === weg[0])
+    if (!felder || weg.length === 0) return null
+    const oben = felder.find((f) => f.name === weg[0])
     if (!oben) return null
     // Zweiter Schritt ist immer eine Nummer: der Eintrag einer Liste
     const eintrag = weg.length > 1 ? weg[1] : null
     return { feld: oben, eintrag }
-  }, [sichtbareFelder, weg])
+  }, [felder, weg])
+
+  /**
+   * Die Sprachwahl über einem geöffneten Eintrag — und nur dort, wo es etwas
+   * zu übersetzen gibt.
+   */
+  const sprachwahl =
+    ziel && hatUebersetzbares(ziel.feld) ? (
+      <div className="buero-reiter" role="tablist">
+        {locales.map((l) => (
+          <button
+            key={l}
+            type="button"
+            role="tab"
+            aria-selected={l === sprache}
+            onClick={() => {
+              setSprache(l)
+              setMeldung(null)
+            }}
+          >
+            {SPRACHNAMEN[l]}
+          </button>
+        ))}
+      </div>
+    ) : null
 
   async function speichern() {
     /*
@@ -483,11 +545,15 @@ export function EinstellungenFormular({
      * kann lange offen stehen. Payload übernimmt, was mitkommt, und lässt den
      * Rest, wie er ist.
      */
-    const geaendert: Werte = {}
-    for (const schluessel of Object.keys(werte)) {
-      if (JSON.stringify(werte[schluessel]) !== JSON.stringify(urspruenglich[schluessel])) {
-        geaendert[schluessel] = werte[schluessel]
+    const geaendert: Partial<Record<Locale, Werte>> = {}
+    for (const l of locales) {
+      const proSprache: Werte = {}
+      for (const schluessel of Object.keys(werte[l])) {
+        if (JSON.stringify(werte[l][schluessel]) !== JSON.stringify(urspruenglich[l][schluessel])) {
+          proSprache[schluessel] = werte[l][schluessel]
+        }
       }
+      if (Object.keys(proSprache).length) geaendert[l] = proSprache
     }
 
     if (!Object.keys(geaendert).length) {
@@ -502,7 +568,7 @@ export function EinstellungenFormular({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ bereich, sprache, werte: geaendert }),
+        body: JSON.stringify({ bereich, werte: geaendert }),
       })
       if (antwort.ok) {
         setUrspruenglich(werte)
@@ -534,7 +600,7 @@ export function EinstellungenFormular({
     </Fussleiste>
   )
 
-  if (!felder || !sichtbareFelder) {
+  if (!felder) {
     return (
       <>
         <h2>{titel}</h2>
@@ -547,8 +613,10 @@ export function EinstellungenFormular({
   if (ziel?.eintrag != null) {
     const unterfelder = ziel.feld.felder ?? []
     const datenPfad = [ziel.feld.name, ziel.eintrag]
-    const eintrag = (tiefLesen(werte, datenPfad) ?? {}) as Werte
-    const alle = (tiefLesen(werte, [ziel.feld.name]) ?? []) as Werte[]
+    // Eine übersetzte Liste hat je Sprache eigene Einträge
+    const listenSprache: Locale = ziel.feld.uebersetzt ? sprache : 'de'
+    const eintrag = (tiefLesen(werte[listenSprache], datenPfad) ?? {}) as Werte
+    const alle = (tiefLesen(werte[listenSprache], [ziel.feld.name]) ?? []) as Werte[]
 
     return (
       <>
@@ -558,6 +626,7 @@ export function EinstellungenFormular({
         <h2 style={{ marginTop: '.5rem' }}>
           {eintragTitel(eintrag, unterfelder, Number(ziel.eintrag) + 1)}
         </h2>
+        {sprachwahl}
         {meldung && <p className="buero-hinweis">{meldung}</p>}
 
         <div className="buero-karte">
@@ -567,6 +636,8 @@ export function EinstellungenFormular({
             werte={werte}
             setzen={setzen}
             oeffnen={setWeg}
+            sprache={sprache}
+            erbt={ziel.feld.uebersetzt === true}
           />
           <button
             type="button"
@@ -575,6 +646,7 @@ export function EinstellungenFormular({
             onClick={() => {
               if (!window.confirm('Diesen Eintrag entfernen?')) return
               setzen(
+                listenSprache,
                 [ziel.feld.name],
                 alle.filter((_, k) => k !== Number(ziel.eintrag)),
               )
@@ -594,10 +666,11 @@ export function EinstellungenFormular({
   if (ziel) {
     return (
       <>
-        <button type="button" className="buero-ruecken" onClick={() => setWeg([])}>
+        <button type="button" className="buero-ruecken" onClick={() => zurueck([])}>
           ← {titel}
         </button>
         <h2 style={{ marginTop: '.5rem' }}>{ziel.feld.label}</h2>
+        {sprachwahl}
         {meldung && <p className="buero-hinweis">{meldung}</p>}
 
         {ziel.feld.art === 'liste' ? (
@@ -609,6 +682,8 @@ export function EinstellungenFormular({
               werte={werte}
               setzen={setzen}
               oeffnen={setWeg}
+              sprache={sprache}
+              erbt={false}
             />
           </>
         ) : (
@@ -619,6 +694,8 @@ export function EinstellungenFormular({
               werte={werte}
               setzen={setzen}
               oeffnen={setWeg}
+              sprache={sprache}
+              erbt={ziel.feld.art === 'gruppe' && ziel.feld.uebersetzt === true}
             />
           </div>
         )}
@@ -632,49 +709,33 @@ export function EinstellungenFormular({
   return (
     <>
       <h2>{titel}</h2>
-      {/*
-        * Die Sprachwahl steht nur dort, wo es überhaupt etwas zu übersetzen
-        * gibt. Bei den Integrationen — Zugangsdaten, Schlüssel, Server — wäre
-        * sie eine Einladung zu einem Missverständnis.
-        */}
-      {uebersetzbares.length > 0 && (
-        <div className="buero-reiter" role="tablist">
-          {locales.map((l) => (
-            <button
-              key={l}
-              type="button"
-              role="tab"
-              aria-selected={l === sprache}
-              onClick={() => {
-                setSprache(l)
-                setWeg([])
-                setMeldung(null)
-              }}
-            >
-              {SPRACHNAMEN[l]}
-            </button>
-          ))}
-        </div>
-      )}
-      {sprache !== 'de' && (
-        <p className="buero-unterzeile">
-          Nur die Felder, die es je Sprache gibt. Alles Übrige — Anschrift, Bankverbindung,
-          Stundensatz — gilt sprachübergreifend und steht unter Deutsch.
-        </p>
-      )}
       {meldung && <p className="buero-hinweis">{meldung}</p>}
 
       <div className="buero-liste">
-        {sichtbareFelder.map((feld) => {
-          const wert = tiefLesen(werte, [feld.name])
+        {felder.map((feld) => {
+          const wert = tiefLesen(werte.de, [feld.name])
           const gefuellt = istGefuellt(wert)
           const anzahl = Array.isArray(wert) ? wert.length : null
+
+          /*
+           * Bei allem Übersetzbaren steht statt „eingerichtet" der Stand je
+           * Sprache: DE FR EN, gefüllte hervorgehoben. Das ist der Ersatz für
+           * den alten Schalter oben — und er sagt mehr als der: Man sieht,
+           * **wo** noch etwas fehlt, ohne dreimal umzuschalten.
+           */
+          const sprachen = hatUebersetzbares(feld)
+            ? locales.map((l) => ({
+                sprache: l,
+                da: istGefuellt(uebersetzbarerTeil(feld, tiefLesen(werte[l], [feld.name]))),
+              }))
+            : null
+
           return (
             <button
               key={feld.name}
               type="button"
               className="buero-zeile buero-zeile-knopf"
-              onClick={() => setWeg([feld.name])}
+              onClick={() => zurueck([feld.name])}
             >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">{feld.label}</div>
@@ -682,23 +743,33 @@ export function EinstellungenFormular({
                   <div className="buero-zeile-neben knapp">{feld.hinweis}</div>
                 )}
               </div>
-              {/*
-                * Ein Wort dazu, ob hier etwas steht. Das ist der eigentliche
-                * Grund für die Übersicht: Man sieht auf einen Blick, was
-                * eingerichtet ist, statt sieben Bereiche zu öffnen, um es
-                * herauszufinden.
-                */}
-              <span className={`buero-marker${gefuellt ? ' gut' : ''}`}>
-                {anzahl != null
-                  ? anzahl === 0
-                    ? 'keine'
-                    : anzahl === 1
-                      ? '1 Eintrag'
-                      : `${anzahl} Einträge`
-                  : gefuellt
-                    ? 'eingerichtet'
-                    : 'leer'}
-              </span>
+              {sprachen ? (
+                <span className="buero-sprachstand" aria-label="Gepflegte Sprachen">
+                  {sprachen.map((e) => (
+                    <span key={e.sprache} className={e.da ? 'da' : undefined}>
+                      {e.sprache.toUpperCase()}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                /*
+                 * Ein Wort dazu, ob hier etwas steht. Das ist der eigentliche
+                 * Grund für die Übersicht: Man sieht auf einen Blick, was
+                 * eingerichtet ist, statt sieben Bereiche zu öffnen, um es
+                 * herauszufinden.
+                 */
+                <span className={`buero-marker${gefuellt ? ' gut' : ''}`}>
+                  {anzahl != null
+                    ? anzahl === 0
+                      ? 'keine'
+                      : anzahl === 1
+                        ? '1 Eintrag'
+                        : `${anzahl} Einträge`
+                    : gefuellt
+                      ? 'eingerichtet'
+                      : 'leer'}
+                </span>
+              )}
             </button>
           )
         })}
