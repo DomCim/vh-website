@@ -8,6 +8,7 @@ import { hatUebersetzbares, uebersetzbarerTeil } from '../../lib/sprachfelder'
 import { htmlHatInhalt } from '../../lib/mailhtml'
 import { Fussleiste } from './Fussleiste'
 import { Schreibfeld } from './Schreibfeld'
+import { Zahleingabe } from './Zahleingabe'
 
 /**
  * Einstellungen im Büro — gerendert aus der Feldbeschreibung von Payload.
@@ -262,22 +263,26 @@ function Feld({
       ) : feld.geheim ? (
         <Geheimfeld wert={(wert as string) ?? ''} aendern={(neu) => setzen(ziel, eigenerPfad, neu)} />
       ) : (
-        <input
-          type={feld.art === 'zahl' ? 'number' : feld.art === 'email' ? 'email' : 'text'}
-          inputMode={feld.art === 'zahl' ? 'decimal' : undefined}
-          value={wert == null ? '' : String(wert)}
-          onChange={(e) =>
-            setzen(
-              ziel,
-              eigenerPfad,
-              feld.art === 'zahl'
-                ? e.target.value === ''
-                  ? null
-                  : Number(e.target.value)
-                : e.target.value,
-            )
-          }
-        />
+        /*
+         * Zahlen bekommen ein eigenes Feld, und das ist hier besonders
+         * wichtig: Hinter „Zahl" stecken der Stundensatz, der Steuersatz und
+         * der Wunschaufschlag. Mit dem alten `type="number"` ließ sich kein
+         * Komma eintippen — ein französischer Satz von 5,5 % war schlicht
+         * nicht einzugeben, und ein halb getipptes „19," stand als „NaN" im
+         * Feld.
+         */
+        feld.art === 'zahl' ? (
+          <Zahleingabe
+            wert={typeof wert === 'number' ? wert : null}
+            aendern={(neu) => setzen(ziel, eigenerPfad, neu)}
+          />
+        ) : (
+          <input
+            type={feld.art === 'email' ? 'email' : 'text'}
+            value={wert == null ? '' : String(wert)}
+            onChange={(e) => setzen(ziel, eigenerPfad, e.target.value)}
+          />
+        )
       )}
 
       {feld.hinweis && <span className="buero-unterzeile">{feld.hinweis}</span>}

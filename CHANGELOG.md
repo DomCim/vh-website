@@ -10,6 +10,10 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 - **Jetzt geht beides, Komma und Punkt.** Auch ein deutscher Tausenderpunkt wird verstanden, wenn ein Komma dabei ist („1.000,50"). Angezeigt wird mit Komma, so wie hier geschrieben wird. Ein leeres Feld bleibt leer und wird nicht stillschweigend zu einer Null — beim Mindestbestand ist das der Unterschied zwischen „keine Meldung" und „meld dich sofort".
 
+- **Beim Nachsehen kamen vier weitere Felder derselben Art heraus.** In den **Einstellungen** betraf es Stundensatz, Steuersatz, Wunschaufschlag und Stammkapital — ein französischer Steuersatz von 5,5 % war schlicht nicht einzugeben, und ein halb getipptes „19," stand als „NaN" im Feld. Am **Auftrag** ließ sich die Fertigungszeit nur in vollen Stunden schätzen, obwohl halbe vorgesehen waren. In der **Auslastung** galt dasselbe für beide Stundenfelder.
+
+- **Auch die Maßanfertigungs-Anfrage auf der Website war betroffen.** Wer „120,5" als Breite eintrug, dessen Anfrage erreichte die Werkstatt **ohne Maß** — je nach Browser kam das Komma gar nicht erst an oder wurde zu einem ungültigen Wert. Im Formular sah dabei alles richtig aus, gemerkt hätte es niemand.
+
 - **Der Lieferant lässt sich jetzt direkt beim Posten anlegen.** In der Auswahl „Bezogen von" steht ganz unten **+ Neuer Lieferant**. Ein Klick klappt ein Namensfeld auf, Enter legt an, und der neue Lieferant ist sofort ausgewählt. Bisher hieß das: Formular verlassen, unter Partner anlegen, zurücknavigieren. Verloren ging dabei nichts, aber der Faden riss — und nach zweimal Hüpfen greift man zur Tabelle. Anschrift und Steuernummer lassen sich später unter Partner nachtragen.
 
 - **Neben dem Speichern steht „& nächster Posten".** Er legt an und stellt sofort ein leeres Formular hin, behält aber **Art, Einheit, Lagerort und Lieferant** stehen. Bei zwanzig Schraubensorten ändern sich damit vier Felder je Posten statt zehn, und es gibt keinen Sprung auf die Detailseite und zurück. Eine Zeile meldet, was angelegt wurde und wie viele es in dieser Runde waren. Wer nur einen Posten erfasst, nimmt „Speichern & schließen" daneben.

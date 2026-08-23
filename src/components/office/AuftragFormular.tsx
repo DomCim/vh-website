@@ -205,16 +205,14 @@ export function AuftragFormular({
         </label>
         <label className="buero-feld">
           <span>Fertigungszeit (Stunden)</span>
-          <input
-            type="number"
-            min={0}
-            step={0.5}
-            value={w.plannedMinutes == null ? '' : Math.round((w.plannedMinutes / 60) * 10) / 10}
-            onChange={(e) =>
-              setzen({
-                plannedMinutes: e.target.value === '' ? null : Math.round(Number(e.target.value) * 60),
-              })
-            }
+          {/*
+            Gespeichert wird in Minuten, eingetippt in Stunden — „1,5" sind
+            90 Minuten. Genau dafür braucht es ein Feld, das ein Komma
+            aushält; mit `type="number"` ging bis hierher nur die volle Stunde.
+          */}
+          <Zahleingabe
+            wert={w.plannedMinutes == null ? null : Math.round((w.plannedMinutes / 60) * 10) / 10}
+            aendern={(v) => setzen({ plannedMinutes: v == null ? null : Math.round(v * 60) })}
             placeholder="z.B. 20"
           />
           <span style={{ marginTop: '.4rem' }}>

@@ -11,6 +11,8 @@ import {
 } from '../../../../lib/auslastung'
 import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
+import { zahlAusText } from '../../../../lib/zahleingabe'
+import { Zahleingabe } from '../../../../components/office/Zahleingabe'
 
 /**
  * Wie voll die nächsten Wochen sind.
@@ -64,7 +66,8 @@ export function AuslastungAnsicht() {
    * Woche geht nichts". Das ist nicht dasselbe, und deshalb sind es zwei Fälle.
    */
   async function setzen(woche: string, wert: string) {
-    const stundenWert = wert.trim() === '' ? null : Math.max(Number(wert) || 0, 0)
+    const gelesen = zahlAusText(wert, null)
+    const stundenWert = gelesen == null ? null : Math.max(gelesen, 0)
     setMeldung(null)
     try {
       const { sofort } = await absenden({
@@ -91,13 +94,7 @@ export function AuslastungAnsicht() {
       <div className="buero-karte">
         <label className="buero-feld">
           <span>Wie viele Stunden braucht das neue Stück?</span>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={gebraucht}
-            onChange={(e) => setGebraucht(Number(e.target.value) || 0)}
-          />
+          <Zahleingabe wert={gebraucht} beiLeer={0} aendern={(v) => setGebraucht(v ?? 0)} />
         </label>
         <p style={{ margin: 0 }}>
           {frei ? (
@@ -172,9 +169,7 @@ export function AuslastungAnsicht() {
                     verfügbar{w.eigeneKapazitaet ? '' : ' (Regel)'}
                   </span>
                   <input
-                    type="number"
-                    min={0}
-                    step={1}
+                    inputMode="decimal"
                     defaultValue={w.eigeneKapazitaet ? w.kapazitaet : ''}
                     placeholder={String(wochenstunden)}
                     onBlur={(e) => void setzen(w.schluessel, e.target.value)}
