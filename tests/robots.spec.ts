@@ -25,8 +25,6 @@ test('robots.txt lässt die Bilder durch und sperrt den Rest der Schnittstelle',
     expect(erlaubt, `${name} darf die Bilder nicht holen`).toContain('/api/media/')
     expect(gesperrt, `${name}: die Schnittstelle muss gesperrt bleiben`).toContain('/api/')
     expect(gesperrt, `${name}: die Verwaltung muss gesperrt bleiben`).toContain('/admin')
-    // Der KI-Zugang liegt in der Wurzel und war deshalb als einziger offen
-    expect(gesperrt, `${name}: der KI-Zugang muss gesperrt bleiben`).toContain('/mcp')
   }
 })
 
@@ -38,6 +36,23 @@ test('robots.txt lässt die Bilder durch und sperrt den Rest der Schnittstelle',
  * verlinkt. Wer nicht crawlen darf, liest das `noindex` nie — eine Sperre
  * hier bewirkte also das Gegenteil dessen, wonach sie aussieht.
  */
+/**
+ * Der KI-Zugang liegt unter `/api/mcp` und ist damit von `/api/` erfasst.
+ *
+ * Es sah nach einer Adresse in der Wurzel aus, und eine eigene Zeile dafür
+ * wäre eine Regel für einen Pfad gewesen, den es nicht gibt. Was hier bleibt,
+ * ist die Prüfung: Wer die Sperre für `/api/` je aufweicht, nimmt den
+ * KI-Zugang mit — und soll darüber stolpern.
+ */
+test('der KI-Zugang bleibt über die Sperre der Schnittstelle gedeckt', () => {
+  const regeln = robots().rules
+  const liste = Array.isArray(regeln) ? regeln : [regeln]
+  for (const regel of liste) {
+    const gesperrt = [regel.disallow].flat()
+    expect(gesperrt.some((pfad) => '/api/mcp'.startsWith(String(pfad)))).toBe(true)
+  }
+})
+
 test('das Büro wird nicht gesperrt, sondern trägt noindex', () => {
   const regeln = robots().rules
   const liste = Array.isArray(regeln) ? regeln : [regeln]

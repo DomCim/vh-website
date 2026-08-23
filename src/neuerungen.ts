@@ -39,9 +39,6 @@ export const NEUERUNGEN: Neuerung[] = [
       {
         text: '**Die alten Zahlen bleiben, wie sie sind.** Was einmal gezählt wurde, lässt sich nicht rückwirkend aussortieren; die Werte werden also erst mit den Tagen sauber. In den einzelnen Besuchen sieht man den Unterschied sofort — ein Prüflauf geht auf eine Seite und ist weg, ein Mensch geht weiter.',
       },
-      {
-        text: '**Der KI-Zugang wird von Suchmaschinen nicht mehr abgeklopft.** Er liegt unter `/mcp` in der Wurzel und war als einziger Zugang nicht in der Sperrliste für Suchmaschinen. Zu holen gibt es dort nichts, aber eine Adresse, die auf jeden Abruf mit einem Fehler antwortet, gehört nicht in den Bestand einer Suchmaschine.',
-      },
     ],
   },
   {

@@ -44,12 +44,10 @@ const basis = () => process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000
  * aber namentlich. Es kostet vier Zeilen, und eine Beanstandung, die man mit
  * vier Zeilen ausräumen kann, diskutiert man nicht.
  *
- * **Warum `/mcp` dazugehört.** Der KI-Zugang liegt in der Wurzel und nicht
- * unter `/api/`, war also als einziger nicht gesperrt. Zu holen gibt es dort
- * nichts — ohne Schlüssel antwortet er mit „nicht gefunden", und auf eine
- * Anfrage ohne Inhalt gar nicht —, aber genau das ist der Punkt: Eine Adresse,
- * die auf jeden Abruf mit einem Fehler antwortet, gehört nicht in den
- * Bestand einer Suchmaschine, und abgeklopft werden muss sie auch nicht.
+ * **Der KI-Zugang braucht keine eigene Zeile.** Er liegt unter `/api/mcp` und
+ * ist damit von `/api/` schon erfasst — nachgesehen, weil er nach einer
+ * Adresse in der Wurzel aussieht. Wer hier je eine breitere Erlaubnis für
+ * `/api/` einträgt, öffnet ihn mit; die Prüfung nebenan hält das fest.
  *
  * **Warum das Büro NICHT hier steht.** `/office` trägt in seinen Seiten
  * `noindex` (siehe app/(office)/layout.tsx), und das ist die schärfere
@@ -60,7 +58,7 @@ const basis = () => process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000
  */
 const REGELN = {
   allow: ['/', '/api/media/'],
-  disallow: ['/admin', '/api/', '/mcp'],
+  disallow: ['/admin', '/api/'],
 }
 
 export default function robots(): MetadataRoute.Robots {
