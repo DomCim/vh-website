@@ -141,6 +141,18 @@ function Zahlen({ daten }: { daten: Auswertung }) {
         <Liste titel="Aus welchem Land" reihen={daten.laender} />
         <Liste titel="Womit sie lesen" reihen={daten.geraete} />
       </div>
+
+      {/*
+        * Alles hier oben sind Summen — sie sagen, wie viele kamen, aber nicht,
+        * was einer getan hat. Der Weg eines einzelnen Besuchs steht auf einer
+        * eigenen Seite: Er wird woanders gelesen, dauert länger, und wenn der
+        * Zugang dorthin fehlt, sollen davon nicht die Zahlen ausfallen.
+        */}
+      <p style={{ marginTop: '1.25rem' }}>
+        <Link href="/office/statistik/besuche" className="buero-knopf leise">
+          Einzelne Besuche ansehen
+        </Link>
+      </p>
     </>
   )
 }

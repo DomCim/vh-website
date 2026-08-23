@@ -500,6 +500,54 @@ Plausible kann **nicht** unter einem Unterpfad wie `/statistic` laufen — die C
 
 Ab dann steht die Auswertung im Büro unter **Statistik**.
 
+### Einzelne Besuche: woher einer kam und was er angesehen hat
+
+Die Auswertung oben zeigt Summen — wie viele kamen, welche Seiten oben stehen,
+aus welchem Land. Was sie **nicht** beantwortet, ist die Frage, die man sich
+beim Zusehen stellt: Der eine, der gestern Abend über Google kam — hat der die
+Gartenbank angesehen und dann aufgehört, oder ist er bis zur Anfrage gegangen?
+
+Plausible kann das nicht sagen, und zwar aus Prinzip: Seine Auswertung addiert,
+bevor sie herausgibt. In seiner eigenen Datenbank (ClickHouse) steht je
+Ereignis aber eine Zeile mit einer Sitzungskennung — daraus lässt sich der Weg
+zusammensetzen. Genau das tut die Seite **Statistik → Einzelne Besuche**.
+
+**Am Besucher ändert sich dadurch nichts.** Kein Cookie, keine Kennung im
+Gerät, kein Banner: Es wird nichts zusätzlich erhoben, sondern nur anders
+gelesen, was ohnehin schon da ist. Die Sitzungskennung ist Plausibles eigene.
+
+Zwei Handgriffe sind nötig:
+
+1. **Die Datenbank ins Website-Netz hängen.** ClickHouse steht sonst allein im
+   Netz `statistik`, und der Büro-Container kommt nicht heran. Im
+   Statistik-Stack beim Dienst `plausible_events_db` unter `networks:` das Netz
+   `website` ergänzen (in `docker-compose.statistik.yml` steht es schon drin),
+   dann den Stack neu ausrollen.
+
+2. **Die Adresse eintragen** unter **Integrationen → Besucherzählung →
+   Ereignis-Datenbank**: `http://plausible_events_db:8123`. Datenbank, Benutzer
+   und Passwort bleiben leer — die Vorgaben (`plausible_events_db`, `default`,
+   kein Passwort) passen zum Stack, weil der ClickHouse mit
+   `CLICKHOUSE_SKIP_USER_SETUP` fährt.
+
+Ohne Adresse bleibt die Seite aus und sagt das; die Zahlen daneben laufen
+unabhängig davon weiter.
+
+**Was dabei zu wissen ist:**
+
+- **Gelesen wird ausschließlich lesend.** Jede Abfrage geht mit `readonly=1`
+  hinaus — ein Tippfehler kann die Statistik nicht verändern.
+- **Wir hängen an Plausibles Schema.** Ein Update kann Spalten umbenennen.
+  Deshalb sieht die Abfrage vorher nach, welche Spalten es gibt, und baut sich
+  daraus zusammen: Fehlt etwas Entbehrliches (Land, Browser), bleibt die Angabe
+  leer; fehlt etwas Tragendes, sagt die Seite das im Klartext.
+- **Die Kennung sagt nichts über eine Person.** Sie ist Plausibles
+  Sitzungsnummer, gekürzt auf vier Stellen — sie unterscheidet zwei Besuche
+  voneinander, mehr nicht.
+- **Bei langen Zeiträumen kann der Anfang eines Weges fehlen.** Gelesen werden
+  die letzten paar tausend Ereignisse; die Seite sagt dazu, wenn sie an diese
+  Grenze gestoßen ist.
+
 ### Was der Besucher davon sieht
 
 Auf der Datenschutzseite erscheint automatisch ein Abschnitt „Besucherzählung" in allen drei Sprachen — er kommt aus dem Haken, nicht aus einem Textfeld. Wird die Zählung abgeschaltet, verschwindet er wieder. Der umgekehrte Fall — gezählt wird, der Absatz fehlt — kann damit gar nicht erst eintreten.

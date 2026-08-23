@@ -90,7 +90,6 @@ COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=node:node /app/src ./src
 COPY --from=builder --chown=node:node /app/scripts ./scripts
 COPY --from=builder --chown=node:node /app/docker-entrypoint.sh ./docker-entrypoint.sh
-COPY --from=builder --chown=node:node /app/CHANGELOG.md ./CHANGELOG.md
 
 # Persistente Verzeichnisse (als Volumes mounten!)
 RUN mkdir -p /app/media /app/backups \

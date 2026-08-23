@@ -2,7 +2,7 @@
 
 Diese Datei gilt für Claude. Sie sagt, wo Arbeit hingeht und was vor dem
 Abgeben erledigt sein muss. Alles Fachliche steht im README, alles Offene in
-HANDOVER.md, alles Geschehene im CHANGELOG.
+HANDOVER.md, alles Geschehene in `src/neuerungen.ts`.
 
 ## Branches
 
@@ -81,15 +81,25 @@ Produktion tut das der Containerstart; wer eine Collection anlegt, die der
 Abgleich abfragt, sperrt sonst das ganze Büro aus, weil jede Abfrage auf eine
 fehlende Tabelle läuft.
 
-## CHANGELOG
+## Neuerungen (das Änderungsprotokoll)
 
-Jede Änderung, die jemand merkt, bekommt einen Eintrag unter **„Noch nicht
-ausgerollt"**. Die Datei wird im Büro unter `/office/neuerungen` gelesen, und
-zwar von jemandem, der den Code nicht sieht: Es zählt, was sich für den
-Betrieb ändert und warum — nicht, welche Dateien angefasst wurden.
+Jede Änderung, die jemand merkt, bekommt einen Eintrag in **`src/neuerungen.ts`**
+— neueste zuerst, mit der nächsthöheren `nummer` und `datum: null`. Das Datum
+setzt der Server beim ersten Einspielen, also am Tag des Ausrollens; ein
+Abschnitt „Noch nicht ausgerollt" gibt es nicht mehr, weil ein Eintrag genau
+dann im Büro steht, wenn die Fassung läuft, die ihn mitbringt.
 
-Der Umsetzer dort kennt nur `## `, `- ` und `**fett**`. Keine Codeblöcke, keine
-Links, keine Tabellen, keine Zwischenüberschriften darunter.
+Gelesen wird das im Büro unter `/office/neuerungen`, und zwar von jemandem, der
+den Code nicht sieht: Es zählt, was sich für den Betrieb ändert und warum —
+nicht, welche Dateien angefasst wurden.
+
+Die Anzeige kennt genau zwei Auszeichnungen: `**fett**` und Backticks um Pfade.
+Kein Kursiv, keine Links, keine Tabellen — was sie nicht kennt, steht als
+Zeichen mitten im Satz.
+
+**Nummern sind stabil.** An ihnen hängt `users.neuerungGesehen`, also der
+Banner im Büro. Einen Eintrag, der schon draußen ist, nicht erweitern: Was
+danach kommt, bekommt einen eigenen.
 
 ## Ton
 

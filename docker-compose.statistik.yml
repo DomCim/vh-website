@@ -198,6 +198,23 @@ services:
       - event-logs:/var/log/clickhouse-server
     networks:
       - statistik
+      # Auch im Website-Netz — für die einzelnen Besuchswege im Büro.
+      #
+      # Die Auswertung (Summen) holt sich das Büro bei Plausible; die Frage
+      # „woher kam dieser eine und was hat er angesehen" beantwortet Plausible
+      # bewusst nicht, sie steht nur hier in den Ereignissen. Ohne diese Zeile
+      # kommt der Büro-Container nicht heran, und die Seite bleibt leer.
+      #
+      # Ehrlich dazu: Damit kann jeder Container im Website-Netz diese
+      # Datenbank ansprechen, und `CLICKHOUSE_SKIP_USER_SETUP` heißt „Benutzer
+      # default, kein Passwort". Im Netz stehen nur die eigenen Dienste, und
+      # das Büro fragt ausschließlich lesend (`readonly=1`, siehe
+      # lib/besuche.ts). Wer das enger haben will, legt in ClickHouse einen
+      # eigenen Benutzer mit Leserecht an und trägt ihn im Admin ein.
+      #
+      # Wer die Besuchswege nicht braucht, lässt die Zeile weg — alles
+      # andere läuft davon unberührt weiter.
+      - website
     healthcheck:
       # **`127.0.0.1`, nicht `localhost`.** Daran hing der ganze Stack.
       #

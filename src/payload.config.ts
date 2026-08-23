@@ -12,6 +12,7 @@ import sharp from 'sharp'
 
 import { BankTransactions } from './collections/BankTransactions'
 import { Categories } from './collections/Categories'
+import { Changelog } from './collections/Changelog'
 import { Contacts } from './collections/Contacts'
 import { Counters } from './collections/Counters'
 import { Deletions } from './collections/Deletions'
@@ -108,6 +109,7 @@ export default buildConfig({
     SystemState,
     MailLog,
     Notifications,
+    Changelog,
     PushSubscriptions,
     Media,
     Users,

@@ -123,6 +123,50 @@ export const Users: CollectionConfig = {
       },
     },
     {
+      /*
+       * Bis wohin die Neuerungen gelesen wurden.
+       *
+       * Die höchste Nummer, die dastand, als jemand zuletzt „Neuerungen"
+       * geöffnet oder den Banner weggeklickt hat (siehe `lib/neuerungen.ts`).
+       * Am Konto und nicht am Gerät: Wer am Rechner gelesen hat, soll am
+       * Tablet nicht dasselbe noch einmal angeboten bekommen.
+       *
+       * Eine 0 heißt „noch nichts gesehen". Neue Konten fangen dagegen beim
+       * aktuellen Stand an — die ganze Hausgeschichte als Neuigkeit zu
+       * bekommen, hilft niemandem (siehe `lib/neuerungenEinspielen.ts`).
+       */
+      name: 'neuerungGesehen',
+      label: 'Neuerungen gelesen bis',
+      type: 'number',
+      /*
+       * Ein neues Konto fängt beim aktuellen Stand an.
+       *
+       * Sonst begrüßte der Banner jeden neuen Zugang mit der gesammelten
+       * Hausgeschichte seit dem ersten Tag — vierundvierzig Einträge, von
+       * denen keiner eine Neuigkeit für ihn ist.
+       */
+      defaultValue: async ({ req }) => {
+        try {
+          const { docs } = await req.payload.find({
+            collection: 'changelog',
+            sort: '-nummer',
+            limit: 1,
+            depth: 0,
+            overrideAccess: true,
+          })
+          return Number((docs[0] as { nummer?: number } | undefined)?.nummer ?? 0)
+        } catch {
+          // Beim allerersten Aufbau gibt es die Tabelle noch nicht
+          return 0
+        }
+      },
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Nummer der zuletzt gelesenen Neuerung. Setzt das Büro selbst.',
+      },
+    },
+    {
       name: 'mfaSetup',
       type: 'ui',
       admin: {

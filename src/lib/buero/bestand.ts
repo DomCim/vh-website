@@ -57,6 +57,19 @@ export type Rahmen = {
   erechnungStand: string
   /** Was der angemeldete Mensch darf — die Navigation richtet sich danach */
   rechte: string[]
+  /**
+   * Bis zu welcher Nummer die Neuerungen gelesen wurden.
+   *
+   * Steht am Konto und nicht am Gerät: Wer am Rechner gelesen hat, soll am
+   * Tablet nicht dasselbe noch einmal vorgesetzt bekommen.
+   *
+   * `null` heißt **nicht bekannt** und ist nicht dasselbe wie 0. Ein Gerät,
+   * das seinen Rahmen von einer Fassung vor dieser hat, kennt das Feld noch
+   * nicht; als 0 gelesen hielte es die gesamte Hausgeschichte für ungelesen
+   * und meldete beim ersten Start nach dem Ausrollen fünfundvierzig
+   * Neuigkeiten. Solange es unbekannt ist, wird nichts gemeldet.
+   */
+  neuerungGesehen: number | null
 }
 
 const RAHMEN_LEER: Rahmen = {
@@ -70,6 +83,7 @@ const RAHMEN_LEER: Rahmen = {
   platzFreigebenNachTagen: 21,
   erechnungStand: 'offen',
   rechte: [],
+  neuerungGesehen: null,
 }
 let rahmen: Rahmen = RAHMEN_LEER
 const rahmenHoerer = new Set<() => void>()

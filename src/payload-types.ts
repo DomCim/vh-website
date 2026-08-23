@@ -97,6 +97,7 @@ export interface Config {
     'system-state': SystemState;
     'mail-log': MailLog;
     notifications: Notification;
+    changelog: Changelog;
     'push-subscriptions': PushSubscription;
     media: Media;
     users: User;
@@ -137,6 +138,7 @@ export interface Config {
     'system-state': SystemStateSelect<false> | SystemStateSelect<true>;
     'mail-log': MailLogSelect<false> | MailLogSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    changelog: ChangelogSelect<false> | ChangelogSelect<true>;
     'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -1495,6 +1497,10 @@ export interface User {
    * Wird über die Einrichtung unten aktiviert.
    */
   mfaEnabled?: boolean | null;
+  /**
+   * Nummer der zuletzt gelesenen Neuerung. Setzt das Büro selbst.
+   */
+  neuerungGesehen?: number | null;
   passkeys?:
     | {
         credentialId: string;
@@ -1722,6 +1728,30 @@ export interface Notification {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "changelog".
+ */
+export interface Changelog {
+  id: number;
+  nummer: number;
+  titel: string;
+  datum?: string | null;
+  punkte?:
+    | {
+        text: string;
+        unter?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "push-subscriptions".
  */
 export interface PushSubscription {
@@ -1877,6 +1907,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'notifications';
         value: number | Notification;
+      } | null)
+    | ({
+        relationTo: 'changelog';
+        value: number | Changelog;
       } | null)
     | ({
         relationTo: 'push-subscriptions';
@@ -2787,6 +2821,29 @@ export interface NotificationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "changelog_select".
+ */
+export interface ChangelogSelect<T extends boolean = true> {
+  nummer?: T;
+  titel?: T;
+  datum?: T;
+  punkte?:
+    | T
+    | {
+        text?: T;
+        unter?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "push-subscriptions_select".
  */
 export interface PushSubscriptionsSelect<T extends boolean = true> {
@@ -2879,6 +2936,7 @@ export interface UsersSelect<T extends boolean = true> {
   rolle?: T;
   role?: T;
   mfaEnabled?: T;
+  neuerungGesehen?: T;
   passkeys?:
     | T
     | {
@@ -3431,6 +3489,22 @@ export interface Integration {
      * In Plausible unter Settings → API Keys anlegen. Nur zum Lesen der Zahlen; ohne ihn bleibt die Auswertung im Büro leer, gezählt wird trotzdem.
      */
     apiKey?: string | null;
+    /**
+     * z.B. http://plausible_events_db:8123 — nur nötig für die einzelnen Besuchswege. Der Container muss dafür im selben Netz stehen (siehe README, „Einzelne Besuche").
+     */
+    chUrl?: string | null;
+    /**
+     * Vorgabe: plausible_events_db
+     */
+    chDatenbank?: string | null;
+    /**
+     * Vorgabe: default — so kommt ClickHouse aus dem Stack
+     */
+    chBenutzer?: string | null;
+    /**
+     * Bleibt leer, solange ClickHouse wie im Stack ohne Benutzerverwaltung läuft.
+     */
+    chPasswort?: string | null;
   };
   paypal?: {
     /**
@@ -3815,6 +3889,10 @@ export interface IntegrationsSelect<T extends boolean = true> {
         url?: T;
         seite?: T;
         apiKey?: T;
+        chUrl?: T;
+        chDatenbank?: T;
+        chBenutzer?: T;
+        chPasswort?: T;
       };
   paypal?:
     | T

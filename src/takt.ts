@@ -54,6 +54,24 @@ export async function taktStarten(): Promise<void> {
     return
   }
 
+  /*
+   * Die Neuerungen ins Haus holen — einmal beim Start, im Web-Container.
+   *
+   * Sie liegen als Quelle im Abbild (`src/neuerungen.ts`) und gehören in die
+   * Datenbank, weil sich nur dort merken lässt, wer sie gelesen hat. Der
+   * Start ist der richtige Zeitpunkt dafür: Was hier eingespielt wird, läuft
+   * ab diesem Augenblick auch wirklich — „geschrieben" und „ausgerollt" sind
+   * damit dasselbe, und niemand muss hinterher ein Datum nachtragen.
+   *
+   * Fällt es aus, läuft das Büro weiter mit dem Stand, der schon dasteht.
+   */
+  void payloadClient()
+    .then(async (payload) => {
+      const { neuerungenEinspielen } = await import('./lib/neuerungenEinspielen')
+      return neuerungenEinspielen(payload)
+    })
+    .catch((err) => console.error('Neuerungen konnten nicht eingespielt werden:', err))
+
   const { istFaellig, postfachPruefen, takteinstellungen, wartungslauf } = await import(
     './lib/wartung'
   )

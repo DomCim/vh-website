@@ -53,7 +53,7 @@ type BereichsAntwort = {
  */
 async function rahmen(
   payload: Awaited<ReturnType<typeof payloadClient>>,
-  benutzer: { email?: string; username?: string; name?: string },
+  benutzer: { email?: string; username?: string; name?: string; neuerungGesehen?: number | null },
   rechte: string[],
 ) {
   const rahmen = {
@@ -84,6 +84,14 @@ async function rahmen(
      * Antippen „nicht erlaubt" sagt, ist ein Versprechen, das keines war.
      */
     rechte,
+    /*
+     * Bis wohin die Neuerungen gelesen sind — daran hängt der Banner.
+     *
+     * Aus dem angemeldeten Konto und nicht aus einer eigenen Abfrage: Payload
+     * gibt den Datensatz bei der Anmeldung ohnehin heraus, und der Abgleich
+     * läuft oft genug, dass eine Abfrage mehr je Aufruf sich lohnen müsste.
+     */
+    neuerungGesehen: Number(benutzer.neuerungGesehen ?? 0),
   }
   try {
     const integrationen = await getIntegrations(payload)
@@ -236,7 +244,7 @@ export async function POST(req: Request) {
     voll: vollstaendig,
     rahmen: await rahmen(
       payload,
-      user as { email?: string; username?: string; name?: string },
+      user as { email?: string; username?: string; name?: string; neuerungGesehen?: number | null },
       rechte,
     ),
   })
