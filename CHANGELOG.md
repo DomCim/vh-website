@@ -6,6 +6,16 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Im Büro lässt sich jetzt ein Fehler melden — mit Foto.** Unter **Sonstiges → Fehler melden** stehen drei Felder: worum es geht, was passiert ist, und wo. Dazu bis zu fünf Fotos vom Handy. Daraus wird ein Eintrag im Repository, den sich jemand ansieht. Die Antwort ist die Nummer des Eintrags samt Link.
+
+- **Was niemand aus dem Kopf weiß, trägt die Seite selbst bei:** die Seite, auf der es passiert ist, das Gerät, die laufende Fassung, der Name und der Zeitpunkt. Genau diese Angaben fehlen sonst, wenn jemand Wochen später nachsehen will. Die Seite steht sichtbar im Formular und lässt sich ändern — wer von der Inventarliste kommt, aber die Bestellung meint, schreibt es hin.
+
+- **Melden darf jeder, der im Büro angemeldet ist.** Bewusst ohne eigenes Recht: Eine Hürde vor „hier stimmt was nicht" bekommt man nie wieder weg, und gemeldet wird dann gar nicht mehr, sondern beim nächsten Treffen erzählt.
+
+- **Eingeschaltet wird es in den Einstellungen.** Unter Integrationen → Fehlermeldungen gehören das Repository und ein Zugangswort von GitHub hin. Steht dort nichts, sagt die Seite das und bietet gar nicht erst einen Knopf an, der ins Leere führt. Die Fotos liegen dabei **nicht** in der Mediathek bei den Produktbildern, sondern geschützt — sichtbar sind sie nur über einen unterschriebenen Link im Eintrag. Ein Foto zurückziehen heißt: die Datei löschen, dann ist der Link sofort tot.
+
+- **Ohne Netz geht das Melden nicht**, und das ist anders als im übrigen Büro. Eine Meldung, die schweigend in der Warteschlange liegt, hilft niemandem — und die Nummer des Eintrags ist der halbe Zweck.
+
 - **Im Büro ließ sich in kein Zahlenfeld ein Komma eintragen — das ist behoben.** Betroffen war nicht nur der Wert je Einheit im Inventar, sondern **jedes** Zahlenfeld: Einzelpreis und Steuersatz in Angebot und Rechnung, Anzahlungs- und Zwischenprozente am Auftrag, Kosten je Dienstleister, Beträge am Beleg, Mengen bei Wareneingang und Inventur. Wer „0," tippte, sah augenblicklich wieder „0" — das Komma verschwand, bevor die nächste Ziffer kam. Damit war seit Wochen kein Betrag mit Cent und keine Menge mit Nachkommastelle eingebbar. Aufgefallen ist es niemandem, weil ein runder Betrag richtig aussieht.
 
 - **Jetzt geht beides, Komma und Punkt.** Auch ein deutscher Tausenderpunkt wird verstanden, wenn ein Komma dabei ist („1.000,50"). Angezeigt wird mit Komma, so wie hier geschrieben wird. Ein leeres Feld bleibt leer und wird nicht stillschweigend zu einer Null — beim Mindestbestand ist das der Unterschied zwischen „keine Meldung" und „meld dich sofort".

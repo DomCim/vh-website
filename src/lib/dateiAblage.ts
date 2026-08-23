@@ -68,6 +68,8 @@ export function typVonEndung(name: string, gemeldet?: string | null): string {
     png: 'image/png',
     jpg: 'image/jpeg',
     jpeg: 'image/jpeg',
+    webp: 'image/webp',
+    gif: 'image/gif',
     txt: 'text/plain',
     csv: 'text/csv',
   }
