@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum, euro } from '../../../../lib/format'
-import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte } from '../../../../lib/listen'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte, balkenKlasse } from '../../../../lib/listen'
 import { istOffenerPosten, tageSeit } from '../../../../lib/zahlungsstand'
 
 /** Rechnungen — gerechnet aus dem Bestand im Gerät. */
@@ -148,7 +148,7 @@ export function RechnungenAnsicht() {
             const spaet = ueberfaellig(r)
             const gemahnt = (r.reminders ?? []).length
             return (
-              <div key={r.id} className="buero-zeile">
+              <div key={r.id} className={`buero-zeile ${balkenKlasse(STATUS[r.status ?? '']?.art)}`}>
                 <Link
                   href={`/office/rechnungen/${r.id}`}
                   className="buero-zeile-haupt"

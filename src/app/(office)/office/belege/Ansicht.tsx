@@ -105,8 +105,20 @@ export function BelegeAnsicht() {
             </Link>
           </div>
         ) : (
+          /*
+           * Bronze heißt „wartet auf uns" — beim Beleg also: noch nicht
+           * geprüft oder noch nicht bezahlt. Ein geprüfter und bezahlter Beleg
+           * bekommt bewusst keinen grünen Balken: Er ist Ablage, und in einer
+           * Liste voller Ablage sagt Grün nichts mehr.
+           */
           belege.map((b) => (
-            <Link key={b.id} href={`/office/belege/${b.id}`} className="buero-zeile">
+            <Link
+              key={b.id}
+              href={`/office/belege/${b.id}`}
+              className={`buero-zeile ${
+                b.extraction?.status === 'ungeprueft' || !b.paid ? 'ist-offen' : ''
+              }`}
+            >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">
                   {b.title || b.supplierName || 'ohne Bezeichnung'}

@@ -119,3 +119,18 @@ export const statusKarte = (
   liste: readonly Eintrag[],
 ): Record<string, { text: string; art: string }> =>
   Object.fromEntries(liste.map((e) => [e.value, { text: e.label, art: e.art ?? '' }]))
+
+/**
+ * Die Zustandsklasse für den Statusbalken einer Listenzeile.
+ *
+ * `art` beschreibt seit jeher die Ampelfarbe des Status-Abzeichens — dieselbe
+ * Sprache, die der Balken links an der Zeile spricht (siehe office.css,
+ * „Der Statusbalken links"). Statt sie in jeder Übersicht neu zu übersetzen,
+ * steht die Umrechnung hier: Wer einen Status ergänzt, gibt ihm sein `art`
+ * und bekommt Abzeichen **und** Balken auf einmal richtig.
+ *
+ * Leeres `art` heißt „kein Vorrang" und damit kein Balken — das ist die
+ * richtige Antwort für Entwürfe und Erledigtes, das niemanden mehr angeht.
+ */
+export const balkenKlasse = (art: string | undefined | null): string =>
+  art ? `ist-${art}` : ''

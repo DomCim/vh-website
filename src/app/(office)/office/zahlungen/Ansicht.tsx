@@ -169,7 +169,19 @@ export function ZahlungenAnsicht() {
           eingaenge.map((b) => {
             const marker = b.vorschlag ? MARKER[b.vorschlag.sicherheit] : null
             return (
-              <div key={b.id} className="buero-karte" style={{ marginBottom: '.6rem' }}>
+              /*
+               * Hier steht jede Karte für EINE Buchung — deshalb der Balken
+               * oben und nicht der Streifen links (siehe office.css,
+               * „Balken oben"). Die Farbe ist die des Zuordnungsvorschlags:
+               * grün heißt „passt", bronze „wahrscheinlich", rot „prüfen".
+               * Ohne Vorschlag bleibt der Balken neutral — dort ist nichts
+               * entschieden, und Grau sagt genau das.
+               */
+              <div
+                key={b.id}
+                className={`buero-karte balken-oben ${marker ? `ist-${marker.klasse}` : ''}`}
+                style={{ marginBottom: '.6rem' }}
+              >
                 <div className="buero-zeile" style={{ padding: 0 }}>
                   <div className="buero-zeile-haupt">
                     <div className="buero-zeile-titel">

@@ -5,7 +5,7 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
-import { ANFRAGE_ARTEN, ANFRAGE_STATUS, statusKarte, textKarte } from '../../../../lib/listen'
+import { ANFRAGE_ARTEN, ANFRAGE_STATUS, statusKarte, textKarte, balkenKlasse } from '../../../../lib/listen'
 
 /** Anfragen — neueste zuerst, gerechnet aus dem Bestand im Gerät. */
 
@@ -46,7 +46,11 @@ export function AnfragenAnsicht() {
           anfragen.map((a) => {
             const s = STATUS[a.status ?? ''] ?? { text: a.status, art: '' }
             return (
-              <Link key={a.id} href={`/office/anfragen/${a.id}`} className="buero-zeile">
+              <Link
+                key={a.id}
+                href={`/office/anfragen/${a.id}`}
+                className={`buero-zeile ${balkenKlasse(STATUS[a.status ?? '']?.art)}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {a.name} · {ART[a.type ?? ''] ?? a.type}

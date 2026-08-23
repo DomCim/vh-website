@@ -5,7 +5,7 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
-import { ANGEBOT_STATUS, statusKarte } from '../../../../lib/listen'
+import { ANGEBOT_STATUS, statusKarte, balkenKlasse } from '../../../../lib/listen'
 
 /** Angebote — gerechnet aus dem Bestand im Gerät. */
 
@@ -73,7 +73,11 @@ export function AngeboteAnsicht() {
               a.validUntil &&
               new Date(a.validUntil).getTime() < Date.now()
             return (
-              <Link key={a.id} href={`/office/angebote/${a.id}`} className="buero-zeile">
+              <Link
+                key={a.id}
+                href={`/office/angebote/${a.id}`}
+                className={`buero-zeile ${balkenKlasse(STATUS[a.status ?? '']?.art)}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {a.quoteNumber ?? 'Entwurf'} · {a.title || a.customerName || 'ohne Bezeichnung'}

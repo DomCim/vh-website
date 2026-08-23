@@ -5,7 +5,7 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
-import { BESTELL_STATUS, statusKarte } from '../../../../lib/listen'
+import { BESTELL_STATUS, statusKarte, balkenKlasse } from '../../../../lib/listen'
 
 /** Bestellungen aus dem Shop — gerechnet aus dem Bestand im Gerät. */
 
@@ -49,7 +49,11 @@ export function BestellungenAnsicht() {
             const s = STATUS[o.status ?? ''] ?? { text: o.status, art: '' }
             const anzahl = (o.items ?? []).length
             return (
-              <Link key={o.id} href={`/office/bestellungen/${o.id}`} className="buero-zeile">
+              <Link
+                key={o.id}
+                href={`/office/bestellungen/${o.id}`}
+                className={`buero-zeile ${balkenKlasse(STATUS[o.status ?? '']?.art)}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {o.orderNumber} · {o.customer?.name ?? 'ohne Namen'}
