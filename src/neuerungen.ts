@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 47,
+    datum: null,
+    titel: 'Statistik: umschalten statt scrollen',
+    punkte: [
+      {
+        text: '**Die einzelnen Besuche lagen hinter einem Knopf ganz unten.** Man musste also bis ans Ende der Zahlen scrollen, um zu erfahren, dass es die andere Ansicht überhaupt gibt — und wer es nicht wusste, fand sie nie. Jetzt stehen **Zusammenfassung** und **Einzelne Besuche** oben nebeneinander, gleich über der Zeitraum-Wahl.',
+      },
+      {
+        text: '**Der Zeitraum wandert beim Umschalten mit.** Wer sich dreißig Tage angesehen hat und dann wissen will, wer da einzeln kam, meint dieselben dreißig Tage. Ihn dabei stillschweigend auf sieben zurückzusetzen, wäre die Art Kleinigkeit, aus der falsche Schlüsse entstehen.',
+      },
+    ],
+  },
+  {
     nummer: 46,
     datum: null,
     titel: 'Die Statistik zeigt jetzt einzelne Besuche',

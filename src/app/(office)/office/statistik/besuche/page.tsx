@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import React from 'react'
 
+import { Statistikreiter } from '../../../../../components/office/Statistikreiter'
 import { besucheLesen, besuchszugang, type Besuch, type Besuchsliste } from '../../../../../lib/besuche'
 import { payloadClient } from '../../../../../lib/data'
 import { bueroBenutzer } from '../../../../../lib/office'
@@ -42,8 +42,10 @@ export default async function BesucheSeite({
 }) {
   await bueroBenutzer('website.pflegen')
   const { zeitraum: gewuenscht } = await searchParams
-  // Sieben Tage als Vorgabe: Einzelne Wege sieht man sich an, solange man sich
-  // noch erinnert, was man in der Zeit getan hat — ein Jahr davon liest niemand.
+  // Sieben Tage als Vorgabe, wenn niemand etwas anderes sagt: Einzelne Wege
+  // sieht man sich an, solange man noch weiß, was in der Zeit war — ein Jahr
+  // davon liest niemand. Kommt man von der Zusammenfassung, bringt der Reiter
+  // deren Zeitraum mit, und der gilt dann.
   const zeitraum: Zeitraum = istZeitraum(gewuenscht) ? gewuenscht : '7t'
 
   const payload = await payloadClient()
@@ -63,25 +65,17 @@ export default async function BesucheSeite({
 
   return (
     <>
-      <h1>Einzelne Besuche</h1>
+      {/*
+        * „Statistik" und nicht „Einzelne Besuche": Es sind zwei Ansichten auf
+        * dieselbe Sache, und die Überschrift ist am Handy zugleich der Titel
+        * in der Kopfleiste. Welche Ansicht offen ist, sagt der Reiter darunter.
+        */}
+      <h1>Statistik</h1>
       <p className="buero-unterzeile">
-        Woher jemand kam und was er sich der Reihe nach angesehen hat.{' '}
-        <Link href="/office/statistik" className="buero-knopf stumm">
-          Zurück zu den Zahlen
-        </Link>
+        Woher jemand kam und was er sich der Reihe nach angesehen hat.
       </p>
 
-      <div className="buero-reiter">
-        {(Object.keys(ZEITRAEUME) as Zeitraum[]).map((z) => (
-          <Link
-            key={z}
-            href={`/office/statistik/besuche?zeitraum=${z}`}
-            aria-current={z === zeitraum ? 'page' : undefined}
-          >
-            {ZEITRAEUME[z].label}
-          </Link>
-        ))}
-      </div>
+      <Statistikreiter ansicht="besuche" zeitraum={zeitraum} />
 
       {!zugang ? (
         <div className="buero-hinweis warn" style={{ marginTop: '1rem' }}>
