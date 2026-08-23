@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Wer ins Haus darf.
@@ -123,7 +124,7 @@ export function BenutzerVerwaltung() {
   return (
     <>
       <h2>Benutzer</h2>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-liste">
         {konten.map((k) => (

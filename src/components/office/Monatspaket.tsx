@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 const MONATE = [
   'Januar',
@@ -100,7 +101,7 @@ export function Monatspaket({ kanzlei }: { kanzlei: string | null }) {
         </select>
       </label>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
         <a className="buero-knopf leise" href={`/api/office/steuer/monat?jahr=${jahr}&monat=${monat}`}>

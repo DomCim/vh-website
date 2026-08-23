@@ -1,4 +1,5 @@
 import React from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Was die Kundschaft schon erfahren hat.
@@ -61,7 +62,7 @@ export function Meldestand({
         * Hindernis („keine E-Mail") oder eine Einschränkung („ohne
         * Sendungsnummer"). Beides will man sehen, ohne danach zu suchen.
         */}
-      {hinweis && <p className="buero-hinweis">{hinweis}</p>}
+      <Rueckmeldung text={hinweis} />
     </div>
   )
 }

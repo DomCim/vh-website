@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Die Abnahme mit Unterschrift auf dem Telefon.
@@ -163,7 +164,7 @@ export function AbnahmeKnopf({
         Der Kunde prüft die Leistung und unterschreibt hier. Daraus entsteht das
         Abnahmeprotokoll als PDF am Auftrag — das braucht Netz.
       </p>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-reihe">
         <label className="buero-feld">

@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type InventurZeile = {
   item: number
@@ -110,7 +111,7 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
 
   return (
     <div className="buero-karte">
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
       {fertig && (
         <p className="buero-hinweis">
           Abgeschlossen — die gezählten Mengen stehen im Inventar, der Wert ist eingefroren.

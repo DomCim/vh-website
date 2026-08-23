@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Wer sich das Büro vorlesen lässt, hört jetzt auch die Rückmeldungen.** „Gespeichert", „Gemerkt — geht raus, sobald wieder Netz da ist", „Das hat nicht geklappt": Diese Zeilen standen zwar sichtbar da, wurden aber nicht angesagt. In einundvierzig Formularen war das so — beim Anmelden, im Postfach, an jeder Rechnung, an jedem Auftrag. Am meisten fehlte es beim Erfassen in Reihe, wo diese eine Zeile die einzige Auskunft ist, dass etwas angelegt wurde.
+
 - **Der Shop kann jetzt Dateien verkaufen.** Ein Artikel lässt sich als **digitale Ware** kennzeichnen; die dazugehörigen Dateien kreuzt man unter Werkstattdateien an. Der Anlass war handfest: Auf Etsy steht ein Bauplan als Download und hatte drei Leute im Warenkorb — hier ging das bis jetzt nicht.
 
 - **Für den Kunden fällt weg, was keinen Sinn hat.** Kein Versand, und bei einem Korb voller Dateien auch keine Anschrift. Dafür kommt ein Haken dazu: Digitale Inhalte werden sofort bereitgestellt, und damit erlischt das Widerrufsrecht — das muss ausdrücklich verlangt werden, sonst entsteht gar keine Bestellung. Festgehalten wird es mit Zeitpunkt an der Bestellung, getrennt vom Verzicht bei Einzelanfertigung, weil es ein anderer Grund ist.

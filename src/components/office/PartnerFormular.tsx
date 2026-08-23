@@ -6,6 +6,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type PartnerWerte = {
   id?: number | string
@@ -98,7 +99,7 @@ export function PartnerFormular({
         }}
         aufVerwerfen={entwurf.verwerfen}
       />
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-reihe">
         <label className="buero-feld" style={{ gridColumn: 'span 2' }}>

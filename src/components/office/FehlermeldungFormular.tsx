@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { MAX_FOTOS } from '../../lib/fehlermeldung'
 import { Fussleiste } from './Fussleiste'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * „Das stimmt hier nicht" — der Weg vom Auffallen zum Eintrag.
@@ -154,15 +155,7 @@ export function FehlermeldungFormular() {
 
   return (
     <div className="buero-karte">
-      {/*
-        Die Hülle steht immer da, auch leer. Ein Bereich, der erst mit seinem
-        Text entsteht, wird von Vorlesern oft überhört — angesagt wird, was
-        sich in einem **vorhandenen** Bereich ändert. Beim Erfassen in Reihe
-        ist diese Zeile die einzige Rückmeldung, dass etwas angelegt wurde.
-      */}
-      <div role="status" aria-live="polite">
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
-      </div>
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Worum geht es?</span>

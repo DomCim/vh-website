@@ -9,6 +9,7 @@ import { htmlHatInhalt } from '../../lib/mailhtml'
 import { Fussleiste } from './Fussleiste'
 import { Schreibfeld } from './Schreibfeld'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Einstellungen im Büro — gerendert aus der Feldbeschreibung von Payload.
@@ -632,7 +633,7 @@ export function EinstellungenFormular({
           {eintragTitel(eintrag, unterfelder, Number(ziel.eintrag) + 1)}
         </h2>
         {sprachwahl}
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
 
         <div className="buero-karte">
           <Ebene
@@ -676,7 +677,7 @@ export function EinstellungenFormular({
         </button>
         <h2 style={{ marginTop: '.5rem' }}>{ziel.feld.label}</h2>
         {sprachwahl}
-        {meldung && <p className="buero-hinweis">{meldung}</p>}
+        <Rueckmeldung text={meldung} />
 
         {ziel.feld.art === 'liste' ? (
           <>
@@ -714,7 +715,7 @@ export function EinstellungenFormular({
   return (
     <>
       <h2>{titel}</h2>
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <div className="buero-liste">
         {felder.map((feld) => {

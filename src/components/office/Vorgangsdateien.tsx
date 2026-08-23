@@ -7,6 +7,7 @@ import React, { useMemo, useRef, useState } from 'react'
 import { useBestand } from '../../lib/buero/bestand'
 import { datum } from '../../lib/format'
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
+import { Rueckmeldung } from './Rueckmeldung'
 
 /**
  * Die Dateien eines Vorgangs — Anfrage, Angebot oder Auftrag.
@@ -194,7 +195,7 @@ export function Vorgangsdateien({
         über eine Übergabemappe hereinkam.
       </p>
 
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       {dateien.length > 0 ? (
         <div className="buero-liste">

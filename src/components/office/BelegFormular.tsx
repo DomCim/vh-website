@@ -7,6 +7,7 @@ import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type Kategorie = { label: string; value: string }
 
@@ -245,7 +246,7 @@ export function BelegFormular({
 
       {laeuft === 'upload' && <p className="buero-hinweis">Wird hochgeladen …</p>}
       {laeuft === 'lesen' && <p className="buero-hinweis">Beleg wird gelesen …</p>}
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Bezeichnung</span>

@@ -13,6 +13,7 @@ import { Zahleingabe } from './Zahleingabe'
 import { ArtikelBezug } from './ArtikelBezug'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
+import { Rueckmeldung } from './Rueckmeldung'
 
 export type AngebotPosition = {
   description: string
@@ -150,7 +151,7 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
           Positionen oder Nachlass ändern und speichern. Die Nummer bleibt, die Fassung zählt hoch.
         </p>
       )}
-      {meldung && <p className="buero-hinweis">{meldung}</p>}
+      <Rueckmeldung text={meldung} />
 
       <label className="buero-feld">
         <span>Bezeichnung</span>
