@@ -645,7 +645,6 @@ export function EinstellungenFormular({
               type="button"
               role="tab"
               aria-selected={l === sprache}
-              className={`buero-knopf schmal ${l === sprache ? '' : 'leise'}`}
               onClick={() => {
                 setSprache(l)
                 setWeg([])

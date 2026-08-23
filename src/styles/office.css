@@ -598,10 +598,19 @@
   color: var(--buero-tinte);
 }
 
+/* Der aktive Reiter — und warum hier zwei Kennzeichen stehen.
+   Eine Leiste aus Links markiert ihr Ziel mit `aria-current='page'`, eine aus
+   Knöpfen mit `role="tab"` dagegen mit `aria-selected`. Stand hier nur das
+   erste, blieb die Sprachwahl ohne Hervorhebung: Der aktive Knopf wurde von
+   `.buero-reiter button` auf durchsichtig gesetzt, während die inaktiven über
+   `.leise` eine Fläche bekamen — also genau verkehrt herum. Wer Französisch
+   sah, war auf Deutsch. */
 .buero-reiter a[aria-current='page'],
-.buero-reiter button[aria-current='page'] {
+.buero-reiter button[aria-current='page'],
+.buero-reiter button[aria-selected='true'] {
   background: var(--buero-bronze);
   color: var(--buero-auf-bronze);
+  font-weight: 600;
 }
 
 /* ── Tableiste am unteren Rand (nur Handy) ────────────────────────────────

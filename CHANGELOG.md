@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die Sprachwahl im Büro zeigte die falsche Sprache als gewählt.** In den Einstellungen und bei den Rechtstexten war der **aktive** Knopf blass und die **inaktiven** hatten eine Fläche — genau verkehrt herum. Wer „Französisch" hervorgehoben sah, war in Wahrheit auf Deutsch und wunderte sich, warum Felder auftauchen, die es nur einmal gibt. Jetzt ist der gewählte Reiter bronze hinterlegt, wie überall sonst im Büro.
+
 - **Nach dem Bestellen wird gefragt, ob Google um eine Bewertung bitten darf.** Auf der Bestätigungsseite steht dafür ein Absatz in unseren eigenen Worten und ein Knopf. Sagt der Kunde ja, meldet sich Google einige Wochen nach der voraussichtlichen Lieferung mit zwei Fragen; die Antworten zählen als **Verkäuferbewertung im Merchant Center**. Die Frage steht auf beiden Wegen — nach PayPal wie nach dem Kauf auf Rechnung.
 
 - **Das Google-Skript wird erst nach der Zustimmung geladen.** Wer nicht drückt, bekommt von Google nichts zu sehen: kein Skript, kein Aufruf, nichts. Das war die Bedingung — diese Website setzt kein Cookie und braucht deshalb kein Einwilligungsbanner, und das sollte so bleiben. Die Ausnahme in der Sicherheitsrichtlinie gilt ausschließlich für die Bestätigungsseiten, nicht für die übrige Website.
