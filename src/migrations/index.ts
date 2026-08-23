@@ -53,6 +53,7 @@ import * as migration_20260822_135017_reichweite_sterne_faq from './20260822_135
 import * as migration_20260823_073210_google_rezensionen from './20260823_073210_google_rezensionen'
 import * as migration_20260823_110500_meldungen_github from './20260823_110500_meldungen_github'
 import * as migration_20260823_115500_digitale_ware from './20260823_115500_digitale_ware';
+import * as migration_20260823_154000_bestellung_digital_at from './20260823_154000_bestellung_digital_at'
 
 export const migrations = [
   {
@@ -329,5 +330,10 @@ export const migrations = [
     up: migration_20260823_115500_digitale_ware.up,
     down: migration_20260823_115500_digitale_ware.down,
     name: '20260823_115500_digitale_ware'
+  },
+  {
+    up: migration_20260823_154000_bestellung_digital_at.up,
+    down: migration_20260823_154000_bestellung_digital_at.down,
+    name: '20260823_154000_bestellung_digital_at'
   },
 ];
