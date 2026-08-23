@@ -12,6 +12,11 @@
  * jedem Ausrollen zurück. Wer neue Beispielinhalte will, setzt einmalig
  * `SEED_NACHTRAGEN=true`.
  *
+ * Woran „eingerichtet" erkannt wird, steht bei `istEingerichtet` — und das ist
+ * die Stelle, an der es einmal schiefging: Die Frage hing an einer einzelnen
+ * Beispielkategorie, und als die im Büro gelöscht wurde, legte der nächste
+ * Start sie wieder an.
+ *
  * WICHTIG: Preise sind Platzhalter/Demowerte und müssen im Admin unter
  * „Produkte" mit den echten Verkaufspreisen ersetzt werden.
  */
@@ -63,6 +68,61 @@ async function uploadImage(
   }
 }
 
+/** Der Merker, an dem der Seed erkennt, dass er hier schon war */
+const MERKER = 'seed'
+
+/**
+ * Ist diese Datenbank schon eingerichtet?
+ *
+ * **Der Fehler, aus dem diese Funktion entstanden ist.** Vorher hing die
+ * Antwort an einer einzigen Kategorie: Gibt es `outdoor-moebel`, gilt die
+ * Datenbank als eingerichtet. Das war bequem und falsch — es ist eine
+ * Beispielkategorie, und Beispiele löscht man. Genau das geschah: Zwei leere
+ * Kategorien wurden im Büro entfernt, und beim nächsten Ausrollen hielt der
+ * Seed die eingerichtete Datenbank für leer und legte sie wieder an. Eine
+ * Entscheidung, die jemand getroffen hatte, wurde vom Startskript
+ * zurückgenommen.
+ *
+ * Jetzt entscheidet zuerst ein Merker im Systemzustand — den löscht niemand
+ * versehentlich, weil ihn niemand sieht. Fehlt er (alle Installationen, die
+ * es vor dieser Änderung schon gab), zählt ersatzweise, ob überhaupt etwas
+ * dasteht: eine Kategorie, ein Artikel oder ein Benutzer. Eine wirklich leere
+ * Datenbank hat von allem dreien nichts.
+ */
+async function istEingerichtet(payload: Payload): Promise<boolean> {
+  const merker = await payload.find({
+    collection: 'system-state',
+    where: { key: { equals: MERKER } },
+    limit: 1,
+  })
+  if (merker.totalDocs > 0) return true
+
+  for (const sammlung of ['categories', 'products', 'users'] as const) {
+    const { totalDocs } = await payload.find({ collection: sammlung, limit: 1, depth: 0 })
+    if (totalDocs > 0) {
+      // Einmal festhalten, damit die Frage künftig nicht mehr an Inhalten
+      // hängt, die jemand löschen darf.
+      await merkerSetzen(payload, 'beim Start als eingerichtet erkannt')
+      return true
+    }
+  }
+  return false
+}
+
+async function merkerSetzen(payload: Payload, notiz: string): Promise<void> {
+  const vorhanden = await payload.find({
+    collection: 'system-state',
+    where: { key: { equals: MERKER } },
+    limit: 1,
+  })
+  const daten = { key: MERKER, lastRun: new Date().toISOString(), ok: true, note: notiz }
+  if (vorhanden.docs[0]) {
+    await payload.update({ collection: 'system-state', id: vorhanden.docs[0].id, data: daten })
+  } else {
+    await payload.create({ collection: 'system-state', data: daten })
+  }
+}
+
 async function run() {
   const payload = await getPayload({ config })
   console.log('Seed startet …')
@@ -78,25 +138,14 @@ async function run() {
     console.log(`✓ Admin angelegt: ${ADMIN_EMAIL} (Passwort bitte sofort ändern!)`)
   }
 
-  const seeded = await payload.find({
-    collection: 'categories',
-    where: { slug: { equals: 'outdoor-moebel' } },
-    limit: 1,
-  })
-  if (seeded.totalDocs > 0) {
+  if (await istEingerichtet(payload)) {
     /*
      * Eine eingerichtete Datenbank wird nicht noch einmal angefasst.
      *
-     * Bisher liefen hier die „Extras" bei **jedem** Start mit — und die legen
-     * an, was gerade fehlt. Wer eine Beispiel-Referenz oder einen
-     * Ratgeber-Beitrag gelöscht hat, weil er nicht zum Betrieb gehört, hatte
-     * ihn beim nächsten Ausrollen wieder dastehen. Das ist kein Nachtragen,
-     * das ist Zurücknehmen einer Entscheidung, die jemand getroffen hat.
-     *
      * Bleibt `SEED=true` im Stack stehen — und es bleibt stehen, weil niemand
-     * daran denkt, es wieder herauszunehmen —, dann passiert ab jetzt genau
-     * nichts. Neue Beispielinhalte trägt nur nach, wer ausdrücklich darum
-     * bittet: `SEED_NACHTRAGEN=true`, einmalig, und danach wieder weg.
+     * daran denkt, es wieder herauszunehmen —, dann passiert genau nichts.
+     * Neue Beispielinhalte trägt nur nach, wer ausdrücklich darum bittet:
+     * `SEED_NACHTRAGEN=true`, einmalig, und danach wieder weg.
      */
     if (process.env.SEED_NACHTRAGEN !== 'true') {
       console.log('Datenbank ist eingerichtet — Seed übersprungen.')
@@ -680,6 +729,15 @@ async function run() {
   await rechtstexteEinspielen(payload)
 
   await seedExtras(payload)
+
+  /*
+   * Den Merker setzen — die eigentliche Absicherung.
+   *
+   * Ab hier gilt diese Datenbank als eingerichtet, unabhängig davon, was
+   * später an Beispielinhalten gelöscht wird. Genau daran fehlte es: Die
+   * Erkennung hing an einer Beispielkategorie, und mit ihr fiel sie.
+   */
+  await merkerSetzen(payload, 'vollständig eingerichtet')
 
   console.log('✓ Seed abgeschlossen.')
   console.log(`  Admin-Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`)

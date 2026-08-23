@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Gelöschte Kategorien kamen beim Ausrollen zurück — der Grund ist behoben.** Das Startskript erkannte eine eingerichtete Datenbank ausgerechnet daran, ob die Beispielkategorie „Outdoor Möbel" existiert. Genau die war im Büro gelöscht worden, weil sie leer war. Damit hielt das Skript die volle Datenbank für leer und legte die Beispielkategorien wieder an — eine Entscheidung, die jemand getroffen hatte, wurde vom Server zurückgenommen. Jetzt merkt sich der Server in seinem eigenen Merkzettel, dass er hier schon war; ersatzweise zählt, ob überhaupt eine Kategorie, ein Artikel oder ein Benutzer dasteht. An Beispielinhalten hängt die Frage nicht mehr.
+
 ## 23.08.2026 — Die Aktion führt zur Ware, die Fragen bekommen eine Seite, die Sprache zieht ins Feld
 
 - **Die Sprachwahl in den Einstellungen sitzt jetzt am Feld statt über der Seite.** Bisher stand ein Schalter ganz oben und legte die ganze Ansicht um. Weil es Anschrift, Bankverbindung und Zugangsdaten nur einmal gibt, verschwand beim Umschalten die halbe Liste — und über dem Pinterest-Code stand eine Sprachwahl, die ihn nichts angeht. Jetzt zeigt die Übersicht **immer alles**, und die Sprachwahl erscheint erst, wenn man einen Eintrag öffnet, der wirklich etwas zu übersetzen hat.
