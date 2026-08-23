@@ -235,6 +235,14 @@ const de = {
     show: 'Unterlagen',
     error: 'Das hat nicht geklappt. Bitte erneut versuchen.',
   },
+  downloads: {
+    title: 'Ihre Dateien',
+    intro: 'Zum Herunterladen bereit. Der Link gilt ein Jahr; im Kundenkonto steht er danach neu bereit.',
+    wartet: 'Sobald die Zahlung eingegangen ist, stehen Ihre Dateien hier bereit.',
+    laden: 'Herunterladen',
+    hinweisKasse:
+      'Ich verlange die sofortige Bereitstellung der Dateien und weiß, dass mein Widerrufsrecht damit erlischt.',
+  },
   orderStatus: {
     title: 'Ihre Bestellung',
     notFound: 'Diese Bestellung konnte nicht gefunden werden.',
@@ -623,6 +631,15 @@ const fr: Dictionary = {
     show: 'Documents',
     error: "Cela n'a pas fonctionné. Merci de réessayer.",
   },
+  downloads: {
+    title: 'Vos fichiers',
+    intro:
+      'Prêts au téléchargement. Le lien reste valable un an ; ensuite, il se renouvelle dans votre compte client.',
+    wartet: 'Dès réception du paiement, vos fichiers seront disponibles ici.',
+    laden: 'Télécharger',
+    hinweisKasse:
+      "Je demande la mise à disposition immédiate des fichiers et je sais que je perds ainsi mon droit de rétractation.",
+  },
   orderStatus: {
     title: 'Votre commande',
     notFound: 'Cette commande est introuvable.',
@@ -1007,6 +1024,14 @@ const en: Dictionary = {
     atJob: 'Documents for this project',
     show: 'Documents',
     error: 'That did not work. Please try again.',
+  },
+  downloads: {
+    title: 'Your files',
+    intro: 'Ready to download. The link is valid for one year; after that it is reissued in your account.',
+    wartet: 'As soon as the payment arrives, your files will be available here.',
+    laden: 'Download',
+    hinweisKasse:
+      'I request immediate provision of the files and understand that I thereby lose my right of withdrawal.',
   },
   orderStatus: {
     title: 'Your order',

@@ -446,6 +446,30 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      /*
+       * Digitale Ware — geliefert wird eine Datei, kein Stück Stahl.
+       *
+       * **Warum das ein eigenes Häkchen ist.** An ihm hängen drei Dinge, die
+       * sonst jedes für sich falsch wären: Es gibt keinen Versand, es gibt
+       * keine Anschrift, und beim Bestellen erlischt das Widerrufsrecht aus
+       * einem anderen Grund als bei einer Einzelanfertigung — nämlich weil
+       * sofort geliefert wird. Die Kasse muss das wissen, bevor sie
+       * irgendetwas berechnet.
+       *
+       * Welche Dateien der Kunde bekommt, steht an den Werkstattdateien: Dort
+       * trägt jede ihr eigenes Häkchen. Bewusst nicht jede freigegebene Datei
+       * — an einem Bauplan hängen auch Fertigungsdaten, die im Haus bleiben.
+       */
+      name: 'digital',
+      label: 'Digitale Ware — wird als Download geliefert',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Kein Versand, keine Anschrift. Die Dateien stehen unter Werkstattdateien.',
+      },
+    },
+    {
       name: 'onRequestOnly',
       label: 'Nur auf Anfrage (kein Online-Kauf)',
       type: 'checkbox',

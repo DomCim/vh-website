@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 
 import { bestellungAlsRechnung } from './invoice'
+import { dateienZurBestellung, downloadBis, downloadLink } from './digitaleware'
 import {
   orderConfirmationEmail,
   orderInProductionEmail,
@@ -62,8 +63,24 @@ export async function markOrderPaid(
       payload.logger.error({ err }, `Rechnung für ${order.orderNumber} konnte nicht erzeugt werden`)
     }
 
+    /*
+     * Bei digitaler Ware ist diese Mail die Lieferung. Sie geht erst hier
+     * raus, also nach der Zahlung — genau der Zeitpunkt, an dem die Links
+     * gelten dürfen.
+     */
+    let dateien: { name: string; url: string }[] = []
+    try {
+      const bis = downloadBis()
+      dateien = (await dateienZurBestellung(payload, order as never)).map((d) => ({
+        name: d.name,
+        url: downloadLink(order.id, d.id, bis),
+      }))
+    } catch (err) {
+      payload.logger.error({ err }, `Dateien zu ${order.orderNumber} konnten nicht ermittelt werden`)
+    }
+
     await sendMail(payload, {
-      ...orderConfirmationEmail(order, company, craftNotice),
+      ...orderConfirmationEmail(order, company, craftNotice, dateien),
       attachments: anhang,
       art: 'bestellung',
       bezug: { order: order.id },

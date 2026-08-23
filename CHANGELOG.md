@@ -6,6 +6,16 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Shop kann jetzt Dateien verkaufen.** Ein Artikel lässt sich als **digitale Ware** kennzeichnen; die dazugehörigen Dateien kreuzt man unter Werkstattdateien an. Der Anlass war handfest: Auf Etsy steht ein Bauplan als Download und hatte drei Leute im Warenkorb — hier ging das bis jetzt nicht.
+
+- **Für den Kunden fällt weg, was keinen Sinn hat.** Kein Versand, und bei einem Korb voller Dateien auch keine Anschrift. Dafür kommt ein Haken dazu: Digitale Inhalte werden sofort bereitgestellt, und damit erlischt das Widerrufsrecht — das muss ausdrücklich verlangt werden, sonst entsteht gar keine Bestellung. Festgehalten wird es mit Zeitpunkt an der Bestellung, getrennt vom Verzicht bei Einzelanfertigung, weil es ein anderer Grund ist.
+
+- **Geliefert wird ab „bezahlt", und keinen Schritt früher.** Die Links stehen in der Bestellbestätigung und auf der Bestellseite. Vorher steht dort der Grund und kein leerer Fleck. Sie gelten ein Jahr und werden bei jedem Aufruf der Bestellseite neu erzeugt; eine stornierte Bestellung liefert nichts mehr.
+
+- **Die Widerrufsbelehrung hat einen Absatz dazu bekommen**, in allen drei Sprachen. Er muss noch in den veröffentlichten Text übernommen werden — die Entwürfe im Code sind nicht das, was auf der Website steht.
+
+- **Eine Frage für die Kanzlei, nicht für den Code:** Digitale Leistungen an Verbraucher im EU-Ausland werden im Land des Kunden besteuert, nicht am Betriebssitz. Bis 10.000 € Jahresumsatz aus solchen Verkäufen bleibt der französische Satz; darüber führt der Weg über die OSS-Meldung. Bei einzelnen Bauplänen ist das unkritisch, aber es sollte jemand wissen, bevor es mehr wird.
+
 - **Beim Melden stand im Feld „Wo war das?" immer „/office".** Egal, von welcher Seite man kam. Der Grund: Das Büro wechselt die Seite im Browser, ohne die Seite neu zu laden — die Herkunftsangabe des Browsers bleibt dabei auf dem stehen, womit alles einmal geladen wurde. Jetzt bringt der Punkt „Fehler melden" selbst mit, wo man gerade war.
 
 - **Im Büro lässt sich jetzt ein Fehler melden — mit Foto.** Unter **Sonstiges → Fehler melden** stehen drei Felder: worum es geht, was passiert ist, und wo. Dazu bis zu fünf Fotos vom Handy. Daraus wird ein Eintrag im Repository, den sich jemand ansieht. Die Antwort ist die Nummer des Eintrags samt Link.

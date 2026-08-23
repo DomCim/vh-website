@@ -218,6 +218,27 @@ export const ProductFiles: CollectionConfig = {
       type: 'text',
       admin: { description: 'Wie die Datei im Büro heißt. Leer = Dateiname.' },
     },
+    {
+      /*
+       * Gehört diese Datei zum Download eines digitalen Artikels?
+       *
+       * **Warum das Häkchen daneben nicht genügt.** `freigabe` heißt „Der
+       * Auftraggeber darf sie in seiner Mappe sehen" — eine Frage, die sich
+       * bei Lohnfertigung stellt. Hier geht es um etwas anderes: Was bekommt
+       * jeder, der diesen Artikel kauft? Ein Bauplan wird verkauft, das
+       * Fertigungsprogramm daneben bleibt im Haus. Zwei Bedeutungen an einem
+       * Kästchen laufen früher oder später auseinander, und das merkt man
+       * erst, wenn es beim Kunden liegt.
+       */
+      name: 'download',
+      label: 'Gehört zum Download dieses Artikels',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        description: 'Nur bei digitaler Ware. Wer den Artikel kauft, bekommt genau diese Dateien.',
+      },
+    },
     { name: 'note', label: 'Bemerkung', type: 'textarea' },
   ],
 }

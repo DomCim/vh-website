@@ -364,6 +364,19 @@ export const Orders: CollectionConfig = {
           type: 'checkbox',
           admin: { readOnly: true },
         },
+        {
+          /*
+           * Bei digitaler Ware erlischt das Widerrufsrecht aus einem anderen
+           * Grund als bei einer Einzelanfertigung: nicht weil das Stück
+           * eigens gefertigt wurde, sondern weil die Datei sofort bereitsteht.
+           * Deshalb ein eigenes Feld — stünde beides unter einem Haken, hieße
+           * es im Streitfall nur noch „irgendetwas wurde bestätigt".
+           */
+          name: 'digitalAt',
+          label: 'Sofortige Bereitstellung digitaler Inhalte verlangt am',
+          type: 'date',
+          admin: { readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
+        },
       ],
     },
     {
