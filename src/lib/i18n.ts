@@ -261,6 +261,13 @@ const de = {
       kundenstimme: 'Kundenstimmen',
     },
   },
+  faq: {
+    title: 'Häufige Fragen',
+    intro:
+      'Was uns am häufigsten gefragt wird — zu Fertigungszeit, Farben, Lieferung und Rückgabe. Steht Ihre Frage nicht dabei, schreiben Sie uns einfach.',
+    all: 'Alle Fragen',
+    ask: 'Frage stellen',
+  },
   custom: {
     title: 'Maßanfertigung',
     faqTitle: 'Häufige Fragen',
@@ -635,6 +642,13 @@ const fr: Dictionary = {
       kundenstimme: 'Témoignages',
     },
   },
+  faq: {
+    title: 'Questions fréquentes',
+    intro:
+      "Ce qu'on nous demande le plus souvent — délais de fabrication, teintes, livraison et retour. Si votre question n'y figure pas, écrivez-nous.",
+    all: 'Toutes les questions',
+    ask: 'Poser une question',
+  },
   custom: {
     title: 'Sur mesure',
     faqTitle: 'Questions fréquentes',
@@ -1005,6 +1019,13 @@ const en: Dictionary = {
       kategorie: 'Sections',
       kundenstimme: 'Testimonials',
     },
+  },
+  faq: {
+    title: 'Frequently asked questions',
+    intro:
+      'What we are asked most often — lead times, colours, delivery and returns. If your question is not here, just write to us.',
+    all: 'All questions',
+    ask: 'Ask a question',
   },
   custom: {
     title: 'Made to measure',

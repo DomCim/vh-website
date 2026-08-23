@@ -5,6 +5,7 @@ import React from "react";
 import { Bild, bildQuellen, type BildQuelle } from "../../../components/Bild";
 
 import { CategoryTile } from "../../../components/CategoryTile";
+import { Fragen, gueltigeFragen } from "../../../components/Fragen";
 import { HeroCarousel, type HeroSlide } from "../../../components/HeroCarousel";
 import { ImageReveal } from "../../../components/motion/ImageReveal";
 import { Marquee } from "../../../components/motion/Marquee";
@@ -23,6 +24,7 @@ import {
   getHomepage,
   getMainCategories,
   getNews,
+  getSiteSettings,
   mediaAlt,
   mediaUrl,
 } from "../../../lib/data";
@@ -47,6 +49,7 @@ export default async function HomePage({
     promotions,
     featuredProjects,
     testimonials,
+    settings,
   ] = await Promise.all([
     getHomepage(locale),
     getMainCategories(locale),
@@ -54,7 +57,22 @@ export default async function HomePage({
     getActivePromotions(locale),
     getFeaturedProjects(locale),
     getFeaturedTestimonials(locale),
+    getSiteSettings(locale),
   ]);
+
+  /*
+   * Ein Anriss der häufigen Fragen, nicht die ganze Liste.
+   *
+   * Die Fragen standen bisher allein unter „Maßanfertigung" — dort, wo sie
+   * entstanden sind, und dort, wo sie kaum jemand sucht. Auf der Startseite
+   * stehen die ersten vier offen da: Wer wissen will, wie lange eine Fertigung
+   * dauert oder ob man abholen kann, bekommt die Antwort, ohne erst irgendwo
+   * hinzuklicken. Der Rest steht eine Zeile weiter unter „Alle Fragen".
+   *
+   * Die Auszeichnung für Suchmaschinen sitzt bewusst nicht hier, sondern auf
+   * `/faq` — sonst stritten Startseite und FAQ-Seite um denselben Treffer.
+   */
+  const fragen = gueltigeFragen(settings?.faq).slice(0, 4);
 
   const slides: HeroSlide[] = await Promise.all(
     (homepage?.heroSlides ?? []).map(async (s) => ({
@@ -277,6 +295,29 @@ export default async function HomePage({
               </RevealItem>
             ))}
           </RevealStagger>
+        </section>
+      )}
+
+      {fragen.length > 0 && (
+        <section className="bg-paper-soft">
+          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+            <Reveal>
+              <div className="mb-8 flex items-baseline justify-between gap-4">
+                <h2 className="tracking-nav text-ink rule-bronze text-xl font-semibold uppercase">
+                  {dict.faq.title}
+                </h2>
+                <Link
+                  href={`/${locale}/faq`}
+                  className="tracking-nav text-ink-soft hover:text-ink shrink-0 text-xs uppercase underline-offset-4 hover:underline"
+                >
+                  {dict.faq.all} →
+                </Link>
+              </div>
+            </Reveal>
+            <Reveal>
+              <Fragen fragen={fragen} offenAb={0} />
+            </Reveal>
+          </div>
         </section>
       )}
 

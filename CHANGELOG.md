@@ -6,6 +6,12 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Die häufigen Fragen haben jetzt eine eigene Seite.** Sie standen bisher nur ganz unten unter „Maßanfertigung" — dort waren sie entstanden, dort blieben sie. Nur handelt kaum eine davon von einer Maßanfertigung: Fertigungszeit, Farben, Cortenstahl, Versandkosten, Abholung, Rückgabe. Wer eine solche Frage hatte, musste sie ausgerechnet auf der Seite suchen, auf der er sie am wenigsten vermutet. Jetzt gibt es sie unter **/faq**, in allen drei Sprachen, verlinkt im Fußbereich jeder Seite.
+
+- **Auf der Startseite stehen die ersten vier Fragen offen da.** Wer wissen will, wie lange eine Fertigung dauert oder ob man abholen kann, bekommt die Antwort, ohne erst irgendwo hinzuklicken; darunter führt ein Verweis zu allen Fragen. Unter „Maßanfertigung" bleiben sie ebenfalls stehen — wer gerade das Formular ausfüllt, fragt sich genau dort, wie lange es dauert.
+
+- **Gepflegt wird weiterhin an einer Stelle.** Im Büro unter Einstellungen → Häufige Fragen. Was dort steht, erscheint auf allen drei Seiten gleichzeitig; die Auszeichnung für Suchmaschinen sitzt nur auf der neuen Seite, damit nicht zwei Seiten um denselben Treffer streiten. Die Seite steht in der Sitemap und ist auch in der Datei verlinkt, die KI-Diensten das Haus erklärt.
+
 - **Der Rabatt ist jetzt in der Sprache des Hauses ausgezeichnet.** Die erste Fassung schrieb ihn in rote Kästen und färbte auch den Preis rot — das sah aus wie ein Prospekt, und im dunklen Thema sprangen bei vier Kacheln acht rote Signale gleichzeitig. Jetzt steht über dem Preis der Name der Aktion in gesperrten Versalien mit dem auslaufenden **Corten-Strich** darunter, so wie unter jeder Überschrift der Seite. Am Bild sitzt in der Übersicht ein **Etikett** mit dem Prozentsatz: heller Grund, dünne Bronzelinie, abgerückt vom Rand. Der Preis selbst ist wieder schwarz — dass etwas günstiger ist, sagt der durchgestrichene Betrag daneben.
 
 - **Die Frist steht dort, wo sie hingehört.** Auf der Artikelseite steht neben Name und Prozentsatz auch, bis wann die Aktion läuft. In der Übersicht bleibt sie weg: Dieselbe Frist zwölfmal untereinander sagt niemandem etwas, und die Kachel soll den Artikel zeigen.
