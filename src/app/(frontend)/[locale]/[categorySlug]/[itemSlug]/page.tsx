@@ -30,6 +30,7 @@ import {
   BASE_URL,
   breadcrumbJsonLd,
   jsonLd,
+  versandUndRueckgabe,
 } from "../../../../../lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -204,6 +205,14 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
           url: `${BASE_URL}/${locale}${artikelPfad}`,
+          /*
+           * Versandkosten und Rückgabefrist gehören ans Angebot, nicht auf
+           * eine Unterseite: Google zeigt beides unter dem Treffer an, und
+           * ohne die Angaben bleibt dort die Zeile leer, in der bei der
+           * Konkurrenz „Kostenloser Versand" steht. Begründung und Herkunft
+           * der Werte in lib/seo.ts.
+           */
+          ...versandUndRueckgabe(product),
         },
       }),
   });

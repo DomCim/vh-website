@@ -26,6 +26,31 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 52,
+    datum: null,
+    titel: 'Versandkosten und Rückgabefrist stehen jetzt im Suchergebnis',
+    punkte: [
+      {
+        text: '**Googles Prüfwerkzeug bemängelte drei Angaben am Artikel** — Versandkosten, Rückgabebedingungen und den Beginn der Preisgültigkeit. Alle drei waren als „optional" gekennzeichnet, und genau das führt in die Irre: Optional sind sie für die Prüfung, nicht für die Anzeige. Ohne sie bleibt unter dem Treffer die Zeile leer, in der bei anderen „Kostenloser Versand" oder „14 Tage Rückgabe" steht, und im Merchant Center gilt eine fehlende Rückgabebedingung als Mangel am ganzen Konto.',
+      },
+      {
+        text: '**Jetzt stehen sie da, und zwar mit den echten Zahlen.** Die Versandkosten sind die des Artikels — dieselbe Zahl, die auch die Kasse berechnet. Wer hier großzügig aufrundete, produzierte eine Abweichung zwischen Auszeichnung und Seite, und die kostet im Zweifel das ganze Suchergebnis samt Preis.',
+      },
+      {
+        text: '**Geliefert wird nach Frankreich, Deutschland, Österreich und in die Schweiz.** Das stand bisher nirgends im System: Das Länderfeld in der Kasse ist freier Text mit einem Vorschlag je nach Sprache. Für eine Suchmaschine muss es konkret sein.',
+      },
+      {
+        text: '**Rückgabe innerhalb von 14 Tagen, die Rücksendung zahlt der Kunde** — genau so, wie es in der Widerrufsbelehrung steht. Beides muss zusammenpassen: Was dort nicht ausdrücklich dasteht, gilt nicht, gleich was ausgezeichnet ist.',
+      },
+      {
+        text: '**Digitale Ware bekommt keine Rückgabefrist versprochen.** Dort erlischt das Widerrufsrecht mit der Lieferung, eine 14-Tage-Zusage wäre schlicht falsch. Das entscheidet dasselbe Häkchen, an dem auch die Kasse hängt.',
+      },
+      {
+        text: '**Sternebewertungen fehlen weiterhin — das ist richtig so.** Google vermisst „review" und „aggregateRating". Beides ist längst eingebaut und erscheint von selbst, sobald zu einem Artikel eine freigegebene Kundenstimme mit Sternen vorliegt. Erfundene Bewertungen gibt es nicht, auch nicht für ein hübscheres Suchergebnis.',
+      },
+    ],
+  },
+  {
     nummer: 51,
     datum: null,
     titel: 'Drei Seiten haben Google erzählt, sie seien die Startseite',
