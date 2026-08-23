@@ -5,6 +5,13 @@ import React from 'react'
 import { Bestellstand, type BestellungAnsicht } from '../../../../../components/shop/Bestellstand'
 import { GoogleBewertung } from '../../../../../components/shop/GoogleBewertung'
 import { payloadClient } from '../../../../../lib/data'
+import {
+  darfHerunterladen,
+  dateienZurBestellung,
+  downloadBis,
+  downloadLink,
+} from '../../../../../lib/digitaleware'
+import { Downloads } from '../../../../../components/shop/Downloads'
 import { bewertungsDaten } from '../../../../../lib/googleBewertung'
 import { isLocale, t } from '../../../../../lib/i18n'
 
@@ -43,6 +50,20 @@ export default async function BestellStatusSeite({
    */
   const bewertung = await bewertungsDaten(payload, bestellung as never)
 
+  /*
+   * Die gekauften Dateien. Der Link entsteht bei jedem Aufruf neu — so gilt
+   * er ab dem Ansehen wieder ein volles Jahr, statt ab dem Kauf abzulaufen,
+   * während der Kunde noch auf der Seite steht.
+   */
+  const dateien = bestellung ? await dateienZurBestellung(payload, bestellung as never) : []
+  const bis = downloadBis()
+  const downloads = dateien.map((d) => ({
+    name: d.name,
+    groesse: d.groesse,
+    url: downloadLink(bestellung!.id, d.id, bis),
+  }))
+
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
       <h1 className="tracking-nav text-ink text-2xl font-semibold uppercase">
@@ -57,6 +78,11 @@ export default async function BestellStatusSeite({
             {dict.account.orderNumber} {bestellung.orderNumber}
           </p>
           <div className="mt-8">
+            <Downloads
+              dateien={downloads}
+              bezahlt={darfHerunterladen(bestellung.status)}
+              labels={dict.downloads}
+            />
             <Bestellstand
               bestellung={bestellung as unknown as BestellungAnsicht}
               locale={locale}

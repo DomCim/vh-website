@@ -19,6 +19,8 @@ type ProductProps = {
   available: boolean;
   productionTime?: string | null;
   readyMade?: boolean;
+  /** Wird als Datei geliefert — kein Versand, keine Anschrift */
+  digital?: boolean;
   variants: { id?: string | null; title: string; price: number }[];
   colorOptions: { name: string; hex?: string }[];
   images: {
@@ -108,13 +110,17 @@ export function ProductDetail({
         : undefined,
       color: product.colorOptions[colorIndex]?.name,
       unitPrice,
-      shippingCost: product.shippingCost ?? 0,
+      // Eine Datei wird nicht verschickt. Der Server rechnet ohnehin ohne
+      // Versand; stünde hier eine Zahl, zeigte der Warenkorb sie trotzdem an —
+      // und der Kunde sähe eine Summe, die an der Kasse eine andere ist.
+      shippingCost: product.digital ? 0 : (product.shippingCost ?? 0),
       quantity: 1,
       image: product.images[0]?.url,
       categorySlug: product.categorySlug,
       // Fertige Werkstattstücke liegen schon da; alles andere entsteht erst
       // nach der Bestellung — und zwar nach Vorgabe.
       madeToOrder: !product.readyMade,
+      digital: product.digital || undefined,
     });
     setJustAdded(true);
     window.setTimeout(() => setJustAdded(false), 1800);

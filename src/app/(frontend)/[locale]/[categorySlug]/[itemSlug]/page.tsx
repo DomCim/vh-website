@@ -250,6 +250,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               settings?.craft?.defaultProductionTime ??
               null,
             readyMade: Boolean(product.readyMade),
+            digital: Boolean(product.digital),
             variants: (product.variants ?? []).map((v) => ({
               id: v.id,
               title: v.title,

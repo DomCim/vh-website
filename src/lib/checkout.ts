@@ -23,8 +23,10 @@ export type PricedLine = {
   color?: string
   quantity: number
   unitPrice: number
-  /** Versandkosten pro Stück (0 bei versandkostenfrei oder Abholung) */
+  /** Versandkosten pro Stück (0 bei versandkostenfrei, Abholung oder digitaler Ware) */
   shippingCost: number
+  /** Wird als Download geliefert — kein Versand, keine Anschrift */
+  digital?: boolean
 }
 
 export type PricedCart = {
@@ -35,6 +37,45 @@ export type PricedCart = {
   total: number
   promotionTitle?: string
   deliveryMethod: DeliveryMethod
+  /** Nur Dateien im Korb — dann braucht es weder Anschrift noch Versandart */
+  nurDigital: boolean
+}
+
+/**
+ * Was für Ware im Korb liegt — beantwortet, bevor gerechnet wird.
+ *
+ * Die Kasse muss zwei Dinge früh wissen, und zwar bevor sie nach einer
+ * Anschrift verlangt: Ob überhaupt etwas verschickt werden muss, und ob etwas
+ * dabei ist, das sofort geliefert wird. Das sind zwei verschiedene Fragen —
+ * ein Bauplan neben einem Tisch braucht beides: die Anschrift für den Tisch
+ * und die Einwilligung für den Bauplan.
+ */
+export async function wareImKorb(
+  payload: Payload,
+  items: CheckoutItemInput[],
+): Promise<{ hatDigitales: boolean; nurDigital: boolean }> {
+  const ids = [...new Set(items.map((i) => i.productId))]
+  if (ids.length === 0) return { hatDigitales: false, nurDigital: false }
+
+  const { docs } = await payload.find({
+    collection: 'products',
+    where: { id: { in: ids } },
+    limit: ids.length,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  /*
+   * Ein Artikel, den es nicht gibt, zählt hier als nicht digital. Ihn
+   * abzuweisen ist nicht die Aufgabe dieser Stelle — das tut `priceCart`
+   * gleich danach, mit einer Meldung, die den Artikel benennt.
+   */
+  const digital = new Set(docs.filter((d) => d.digital).map((d) => String(d.id)))
+  const alle = items.map((i) => String(i.productId))
+  return {
+    hatDigitales: alle.some((id) => digital.has(id)),
+    nurDigital: alle.length > 0 && alle.every((id) => digital.has(id)),
+  }
 }
 
 /**
@@ -99,7 +140,15 @@ export async function priceCart(
       color,
       quantity,
       unitPrice,
-      shippingCost: deliveryMethod === 'pickup' ? 0 : (product.shippingCost ?? 0),
+      /*
+       * Eine Datei wird nicht verschickt. Stünde hier der Versand des
+       * Artikels, zahlte jemand Fracht für einen Download — und beim
+       * gemischten Korb fiele es niemandem auf, weil dort ohnehin Versand
+       * steht.
+       */
+      shippingCost:
+        product.digital || deliveryMethod === 'pickup' ? 0 : (product.shippingCost ?? 0),
+      digital: product.digital || undefined,
     })
     pricedItems.push({
       productId: product.id,
@@ -123,6 +172,7 @@ export async function priceCart(
     total,
     promotionTitle: best?.promotion.title,
     deliveryMethod,
+    nurDigital: lines.every((l) => l.digital),
   }
 }
 

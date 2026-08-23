@@ -108,6 +108,7 @@ export function CheckoutForm({
   locale,
   dict,
   cartDict,
+  downloadDict,
   initialCode,
   paypalAvailable = false,
   vatRate = 20,
@@ -115,6 +116,8 @@ export function CheckoutForm({
   locale: Locale
   dict: CheckoutDict
   cartDict: CartDict
+  /** Nur der eine Satz für die sofortige Bereitstellung */
+  downloadDict: { hinweisKasse: string }
   initialCode?: string
   paypalAvailable?: boolean
   vatRate?: number
@@ -157,17 +160,31 @@ export function CheckoutForm({
   const [differentAddress, setDifferentAddress] = useState(false)
   const [zustimmung, setZustimmung] = useState(false)
   const [verzicht, setVerzicht] = useState(false)
+  const [sofort, setSofort] = useState(false)
   const [fehlendeZustimmung, setFehlendeZustimmung] = useState(false)
 
   // Bei PayPal kommt die Lieferadresse aus dem PayPal-Konto, außer der Kunde
   // will ausdrücklich eine abweichende angeben. Bei Rechnung gibt es diese
   // Quelle nicht — dort ist die Adresse bei Lieferung Pflicht.
+  /*
+   * Digitale Ware ändert zwei Dinge an dieser Kasse.
+   *
+   * Ist überhaupt etwas dabei, muss die sofortige Bereitstellung ausdrücklich
+   * verlangt werden — sonst bliebe der Kauf widerrufbar, obwohl die Datei
+   * längst heruntergeladen ist. Liegt **nur** Digitales im Korb, entfällt die
+   * Anschrift: Es wird nichts verschickt, und ein Pflichtfeld für eine
+   * Lieferung, die es nicht gibt, ist eine Hürde ohne Zweck.
+   */
+  const hatDigitales = items.some((i) => i.digital === true)
+  const nurDigital = items.length > 0 && items.every((i) => i.digital === true)
+
   const showAddressForm =
-    deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
+    !nurDigital && deliveryMethod === 'shipping' && (paymentMethod === 'rechnung' || differentAddress)
 
   // Nur wenn wir sicher wissen, dass ein Stück nach Vorgabe entsteht, wird der
   // Verzicht abgefragt — sonst spräche die Kasse jemandem ein Recht ab, das er hat.
   const einzelanfertigung = items.some((i) => i.madeToOrder === true)
+
 
   const shipping =
     deliveryMethod === 'pickup'
@@ -315,7 +332,7 @@ export function CheckoutForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!zustimmung || (einzelanfertigung && !verzicht)) {
+    if (!zustimmung || (einzelanfertigung && !verzicht) || (hatDigitales && !sofort)) {
       setFehlendeZustimmung(true)
       return
     }
@@ -356,7 +373,11 @@ export function CheckoutForm({
           emailCode: emailCode || undefined,
           // Was bestätigt wurde, gehört in die Bestellung — im Streitfall zählt
           // nicht, was auf der Seite stand, sondern was belegbar ist.
-          consent: { terms: true, waiver: einzelanfertigung ? verzicht : undefined },
+          consent: {
+            terms: true,
+            waiver: einzelanfertigung ? verzicht : undefined,
+            sofortigeLieferung: hatDigitales ? sofort : undefined,
+          },
         }),
       })
       const result = (await res.json()) as { url?: string; error?: string }
@@ -675,6 +696,19 @@ export function CheckoutForm({
                             className="accent-ink mt-0.5"
                           />
                           <span>{dict.consentWaiver}</span>
+                        </label>
+                      )}
+
+                      {hatDigitales && (
+                        <label className="text-ink-soft flex cursor-pointer items-start gap-3 text-sm">
+                          <input
+                            type="checkbox"
+                            required
+                            checked={sofort}
+                            onChange={(e) => setSofort(e.target.checked)}
+                            className="accent-ink mt-0.5"
+                          />
+                          <span>{downloadDict.hinweisKasse}</span>
                         </label>
                       )}
 

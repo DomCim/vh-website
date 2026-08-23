@@ -62,6 +62,8 @@ function widerruf(angaben: Firmenangaben, sprache: Sprache): string {
       'Exception : pièces réalisées sur mesure',
       "Conformément à l'article L221-28 du code de la consommation, le droit de rétractation ne s'applique pas aux biens confectionnés selon les spécifications du consommateur ou nettement personnalisés. Dans cet atelier, chaque pièce est fabriquée à l'unité : les commandes sur mesure et les pièces réalisées d'après vos indications (dimensions, coloris RAL, exécution) en sont donc exclues dès le début de la fabrication.",
       "Les pièces déjà terminées et disponibles en atelier ne sont pas concernées par cette exception : pour elles, le droit de rétractation s'applique pleinement.",
+      'Exception : contenus numériques',
+      "Conformément à l'article L221-28 13° du code de la consommation, le droit de rétractation ne s'applique pas non plus à la fourniture de contenus numériques non fournis sur un support matériel — plans de construction et fichiers de fabrication à télécharger, par exemple. Le droit de rétractation s'éteint dès lors que vous avez expressément demandé l'exécution avant la fin du délai de rétractation et reconnu que vous perdiez ainsi ce droit. Ces deux points sont recueillis lors de la commande et conservés, horodatés, avec celle-ci ; les fichiers sont disponibles dès réception du paiement.",
       HINWEIS.fr,
     ].join('\n\n')
   }
@@ -79,6 +81,8 @@ function widerruf(angaben: Firmenangaben, sprache: Sprache): string {
       'Exception: made-to-order pieces',
       'There is no right of withdrawal for goods that are not prefabricated and are made on the basis of an individual choice or decision by the consumer, or which are clearly tailored to personal needs. In this workshop every piece is made individually, so bespoke commissions and pieces built to your specifications (dimensions, RAL colour, execution) are excluded once production begins.',
       'Finished pieces already available in the workshop are not covered by this exception — for those the right of withdrawal applies in full.',
+      'Exception: digital content',
+      'Nor is there a right of withdrawal for digital content not supplied on a tangible medium — construction plans and production files for download, for example. The right of withdrawal lapses once you have expressly requested that we begin performance before the withdrawal period ends and have acknowledged that you thereby lose that right. Both are collected at checkout and stored with your order, with a timestamp; the files are available as soon as the payment arrives.',
       HINWEIS.en,
     ].join('\n\n')
   }
@@ -95,6 +99,8 @@ function widerruf(angaben: Firmenangaben, sprache: Sprache): string {
     'Ausnahme: Einzelanfertigungen',
     'Kein Widerrufsrecht besteht bei Waren, die nicht vorgefertigt sind und für deren Herstellung eine individuelle Auswahl oder Bestimmung durch Sie maßgeblich ist oder die eindeutig auf Ihre persönlichen Bedürfnisse zugeschnitten sind. In dieser Werkstatt entsteht jedes Stück einzeln: Maßanfertigungen und nach Ihren Vorgaben gefertigte Stücke (Maße, RAL-Farbton, Ausführung) sind davon erfasst, sobald die Fertigung beginnt.',
     'Fertige Werkstattstücke, die bereits vorhanden sind, fallen nicht unter diese Ausnahme — dort gilt das Widerrufsrecht uneingeschränkt.',
+    'Ausnahme: digitale Inhalte',
+    'Kein Widerrufsrecht besteht ferner bei digitalen Inhalten, die nicht auf einem körperlichen Datenträger geliefert werden — etwa Bauplänen und Fertigungsdateien zum Herunterladen. Das Widerrufsrecht erlischt, wenn Sie beim Bestellen ausdrücklich verlangt haben, dass wir vor Ablauf der Widerrufsfrist mit der Ausführung beginnen, und Sie bestätigt haben, dass Sie damit Ihr Widerrufsrecht verlieren. Beides wird an der Kasse abgefragt und mit Zeitpunkt zu Ihrer Bestellung festgehalten; die Dateien stehen unmittelbar nach dem Zahlungseingang bereit.',
     HINWEIS.de,
   ].join('\n\n')
 }

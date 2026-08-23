@@ -355,6 +355,10 @@ export interface Product {
    */
   readyMade?: boolean | null;
   /**
+   * Kein Versand, keine Anschrift. Die Dateien stehen unter Werkstattdateien.
+   */
+  digital?: boolean | null;
+  /**
    * Statt Warenkorb wird ein Anfrage-Button angezeigt
    */
   onRequestOnly?: boolean | null;
@@ -767,6 +771,7 @@ export interface Order {
   consent?: {
     termsAt?: string | null;
     waiver?: boolean | null;
+    digitalAt?: string | null;
   };
   customerNote?: string | null;
   updatedAt: string;
@@ -1351,6 +1356,10 @@ export interface ProductFile {
    * Wie die Datei im Büro heißt. Leer = Dateiname.
    */
   label?: string | null;
+  /**
+   * Nur bei digitaler Ware. Wer den Artikel kauft, bekommt genau diese Dateien.
+   */
+  download?: boolean | null;
   note?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2011,6 +2020,7 @@ export interface ProductsSelect<T extends boolean = true> {
   productionMinutes?: T;
   productionTime?: T;
   readyMade?: T;
+  digital?: T;
   onRequestOnly?: T;
   available?: T;
   featured?: T;
@@ -2167,6 +2177,7 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         termsAt?: T;
         waiver?: T;
+        digitalAt?: T;
       };
   customerNote?: T;
   updatedAt?: T;
@@ -2583,6 +2594,7 @@ export interface ProductFilesSelect<T extends boolean = true> {
   variantTitle?: T;
   folder?: T;
   label?: T;
+  download?: T;
   note?: T;
   updatedAt?: T;
   createdAt?: T;

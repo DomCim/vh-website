@@ -24,6 +24,14 @@ export type CartItem = {
    * Widerrufsrecht als eine Kundschaft, der man es zu Unrecht abspricht.
    */
   madeToOrder?: boolean
+  /**
+   * Wird als Datei geliefert. Wie bei `madeToOrder` gilt eine fehlende Angabe
+   * bewusst als „nein": Ein alter Warenkorb im Browser soll niemandem sein
+   * Widerrufsrecht nehmen. Verbindlich entscheidet ohnehin der Server — er
+   * liest das Häkchen am Artikel und weist die Bestellung ab, wenn die
+   * Einwilligung fehlt.
+   */
+  digital?: boolean
 }
 
 type CartContextValue = {

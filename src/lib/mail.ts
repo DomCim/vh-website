@@ -334,10 +334,35 @@ function fertigungsHinweis(order: OrderLike, hinweis?: string | null): string {
   return teile.join('')
 }
 
+/**
+ * Die gekauften Dateien in der Bestätigungsmail.
+ *
+ * Das ist bei digitaler Ware die Lieferung selbst und nicht eine Beigabe —
+ * deshalb steht sie vor der Bestellübersicht. Wer einen Bauplan kauft, will
+ * ihn haben und nicht erst die Summe nachrechnen.
+ *
+ * Die Links tragen ihre Berechtigung selbst; eine Anmeldung wäre hier die
+ * sicherste Art, den Kauf im Postfach liegen zu lassen. Was das kostet und
+ * warum es vertretbar ist, steht in `lib/digitaleware.ts`.
+ */
+function downloadBlock(dateien: { name: string; url: string }[]): string {
+  if (dateien.length === 0) return ''
+  const zeilen = dateien
+    .map(
+      (d) =>
+        `<p style="margin:6px 0"><a href="${d.url}" style="color:#a5622d;font-weight:600">${d.name}</a></p>`,
+    )
+    .join('')
+  return `${ueberschrift('Ihre Dateien')}
+        ${zeilen}
+        <p style="margin-top:8px;font-size:13px;color:#666">Die Links gelten ein Jahr. Danach stehen die Dateien in Ihrem Kundenkonto neu bereit.</p>`
+}
+
 export function orderConfirmationEmail(
   order: OrderLike,
   company?: CompanyInfo,
   craftNotice?: string | null,
+  dateien: { name: string; url: string }[] = [],
 ) {
   return {
     to: order.customer?.email ?? '',
@@ -348,6 +373,7 @@ export function orderConfirmationEmail(
         Ihre Zahlung ist bei uns eingegangen. Ihr Stück wird jetzt für Sie gefertigt — wir melden uns,
         sobald es in die Werkstatt geht.</p>
         ${fertigungsHinweis(order, craftNotice)}
+        ${downloadBlock(dateien)}
         ${ueberschrift('Ihre Bestellung')}
         ${orderTable(order, company)}
         ${ueberschrift(order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse')}
