@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 49,
+    datum: null,
+    titel: 'Die Datenschutzerklärung sagt, was die Statistik wirklich tut',
+    punkte: [
+      {
+        text: '**Ein Satz stimmte seit der neuen Besuchsansicht nicht mehr.** In der Datenschutzerklärung stand, die Zahlen würden „ausschließlich zusammengefasst" ausgewertet. Seit die Statistik einzelne Besuchswege zeigt, ist das nicht mehr die ganze Wahrheit — erhoben wird zwar nichts Neues, aber der Satz beschreibt die Auswertung, und die hat sich geändert.',
+      },
+      {
+        text: '**Jetzt steht dort, was passiert:** zusammengefasst ausgewertet, und zusätzlich sichtbar, welche Seiten innerhalb eines Besuchs nacheinander aufgerufen wurden. Dazu der Grund, warum trotzdem niemand erkennbar ist — die Prüfsumme trägt keinen Namen und wechselt täglich. In allen drei Sprachen.',
+      },
+    ],
+  },
+  {
     nummer: 48,
     datum: null,
     titel: 'In der Statistik stehen jetzt nur noch echte Besucher',
