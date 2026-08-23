@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Beim Melden stand im Feld „Wo war das?" immer „/office".** Egal, von welcher Seite man kam. Der Grund: Das Büro wechselt die Seite im Browser, ohne die Seite neu zu laden — die Herkunftsangabe des Browsers bleibt dabei auf dem stehen, womit alles einmal geladen wurde. Jetzt bringt der Punkt „Fehler melden" selbst mit, wo man gerade war.
+
 - **Im Büro lässt sich jetzt ein Fehler melden — mit Foto.** Unter **Sonstiges → Fehler melden** stehen drei Felder: worum es geht, was passiert ist, und wo. Dazu bis zu fünf Fotos vom Handy. Daraus wird ein Eintrag im Repository, den sich jemand ansieht. Die Antwort ist die Nummer des Eintrags samt Link.
 
 - **Was niemand aus dem Kopf weiß, trägt die Seite selbst bei:** die Seite, auf der es passiert ist, das Gerät, die laufende Fassung, der Name und der Zeitpunkt. Genau diese Angaben fehlen sonst, wenn jemand Wochen später nachsehen will. Die Seite steht sichtbar im Formular und lässt sich ändern — wer von der Inventarliste kommt, aber die Bestellung meint, schreibt es hin.

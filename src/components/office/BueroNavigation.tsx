@@ -396,6 +396,20 @@ function Zaehler({ anzahl, inline }: { anzahl: number; inline?: boolean }) {
 const istAktiv = (pfad: string | null, href: string) =>
   href === '/office' ? pfad === '/office' : Boolean(pfad?.startsWith(href))
 
+/**
+ * Wohin ein Navigationspunkt führt.
+ *
+ * Der Melde-Punkt nimmt mit, wo man gerade war. Das muss er selbst tun: Das
+ * Büro wechselt die Seite im Browser, ohne das Dokument neu zu laden, und
+ * `document.referrer` bleibt dabei auf dem stehen, womit es einmal geladen
+ * wurde — beim Melden stand deshalb immer „/office" statt der Seite, auf der
+ * etwas nicht stimmte.
+ */
+function ziel(href: string, pfad: string): string {
+  if (href !== '/office/melden' || !pfad || pfad === href) return href
+  return `${href}?von=${encodeURIComponent(pfad)}`
+}
+
 export function BueroNavigation() {
   const pfad = usePathname()
   /* Am Handy ist immer höchstens ein Bereich aufgeklappt — hier steht,
@@ -511,7 +525,7 @@ export function BueroNavigation() {
                   {b.punkte.map((p) => (
                     <Link
                       key={p.href}
-                      href={p.href}
+                      href={ziel(p.href, pfad)}
                       role="menuitem"
                       aria-current={istAktiv(pfad, p.href) ? 'page' : undefined}
                       onClick={() => setOffeneGruppe(null)}
@@ -589,7 +603,7 @@ export function BueroNavigation() {
               {(gruppen.find((b) => b.titel === offenesBlatt)?.punkte ?? []).map((p) => (
                 <Link
                   key={p.href}
-                  href={p.href}
+                  href={ziel(p.href, pfad)}
                   aria-current={
                     p.href.startsWith('/office') && istAktiv(pfad, p.href) ? 'page' : undefined
                   }
