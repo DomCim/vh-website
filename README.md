@@ -559,6 +559,8 @@ Der Text beschreibt, was tatsächlich passiert; wie die übrigen Pflichttexte ge
 - **Im Büro steht „Noch nicht eingerichtet".** Dann fehlen die Angaben unter Integrationen. Gezählt wird davon unabhängig — die Meldung betrifft nur das Lesen der Zahlen.
 - **Die Auswertung ist leer, obwohl Besucher da waren.** Meist stimmt der Name der Website nicht mit dem in Plausible überein. Er muss auf beiden Seiten Zeichen für Zeichen gleich sein.
 - **Alle Besucher kommen aus demselben Land und sehen aus wie einer.** Dann erreicht `X-Forwarded-For` den Server nicht. Im Nginx Proxy Manager muss die Kopfzeile durchgereicht werden.
+- **Die eigenen Prüfläufe tauchen nicht auf — das ist Absicht.** Ein ferngesteuerter Browser (Playwright, Puppeteer, kopfloser Chrome) wird nicht gezählt; das Zählskript wird beim Ausliefern in eine Wache gehüllt (`zaehlskriptMitWache` in `lib/statistik.ts`). Vorher waren zwei Drittel der Besucher unsere eigenen Läufe gegen die laufende Website. Wer beim Prüfen doch einmal mitzählen will, muss `navigator.webdriver` im Testlauf zurückdrehen.
+- **Der KI-Zugang taucht dort ohnehin nie auf.** `/mcp` ist eine Schnittstelle ohne Browser: Gezählt wird ausschließlich über das Skript im Browser des Besuchers, und das läuft dort nicht. In der `robots.txt` ist die Adresse trotzdem gesperrt — abklopfen soll sie niemand.
 
 ## Büro (`/office`) — Betrieb, Zahlen, Postfach
 

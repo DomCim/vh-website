@@ -43,10 +43,24 @@ const basis = () => process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000
  * Gruppe mit dem Stern; die Prüfung des Merchant Centers verlangt die beiden
  * aber namentlich. Es kostet vier Zeilen, und eine Beanstandung, die man mit
  * vier Zeilen ausräumen kann, diskutiert man nicht.
+ *
+ * **Warum `/mcp` dazugehört.** Der KI-Zugang liegt in der Wurzel und nicht
+ * unter `/api/`, war also als einziger nicht gesperrt. Zu holen gibt es dort
+ * nichts — ohne Schlüssel antwortet er mit „nicht gefunden", und auf eine
+ * Anfrage ohne Inhalt gar nicht —, aber genau das ist der Punkt: Eine Adresse,
+ * die auf jeden Abruf mit einem Fehler antwortet, gehört nicht in den
+ * Bestand einer Suchmaschine, und abgeklopft werden muss sie auch nicht.
+ *
+ * **Warum das Büro NICHT hier steht.** `/office` trägt in seinen Seiten
+ * `noindex` (siehe app/(office)/layout.tsx), und das ist die schärfere
+ * Ansage: Es hält eine Adresse aus dem Bestand, auch wenn jemand von außen
+ * darauf verlinkt. Eine Sperre in dieser Datei bewirkte das Gegenteil — wer
+ * nicht crawlen darf, liest das `noindex` nie und nimmt die Adresse
+ * womöglich trotzdem auf, dann eben ohne Inhalt.
  */
 const REGELN = {
   allow: ['/', '/api/media/'],
-  disallow: ['/admin', '/api/'],
+  disallow: ['/admin', '/api/', '/mcp'],
 }
 
 export default function robots(): MetadataRoute.Robots {

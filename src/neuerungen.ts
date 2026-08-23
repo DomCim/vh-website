@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 48,
+    datum: null,
+    titel: 'In der Statistik stehen jetzt nur noch echte Besucher',
+    punkte: [
+      {
+        text: '**Zwei Drittel der Besucher waren wir selbst.** Von 75 Besuchern der letzten dreißig Tage kamen 48 aus den Vereinigten Staaten, fast alle mit nur einer Seite und ohne Herkunft. Das sah nach Bots aus, war aber die eigene Qualitätsprüfung: Vor jedem Ausrollen wird die laufende Website mit einem ferngesteuerten Browser durchgeklickt, und der zählt mit wie jeder andere Besucher.',
+      },
+      {
+        text: '**Das ist schlimmer als gar keine Zahl**, denn man liest sie ja und schließt etwas daraus. „Nur eine Seite: 62 %" hieß in Wahrheit „unsere Prüfläufe rufen eine Seite auf", und „die meisten kommen aus den USA" hieß gar nichts. Ab jetzt zählt ein ferngesteuerter Browser nicht mehr mit — gefiltert wird beim Zählen und nicht beim Auswerten, damit später niemand etwas herausrechnen muss.',
+      },
+      {
+        text: '**Die alten Zahlen bleiben, wie sie sind.** Was einmal gezählt wurde, lässt sich nicht rückwirkend aussortieren; die Werte werden also erst mit den Tagen sauber. In den einzelnen Besuchen sieht man den Unterschied sofort — ein Prüflauf geht auf eine Seite und ist weg, ein Mensch geht weiter.',
+      },
+      {
+        text: '**Der KI-Zugang wird von Suchmaschinen nicht mehr abgeklopft.** Er liegt unter `/mcp` in der Wurzel und war als einziger Zugang nicht in der Sperrliste für Suchmaschinen. Zu holen gibt es dort nichts, aber eine Adresse, die auf jeden Abruf mit einem Fehler antwortet, gehört nicht in den Bestand einer Suchmaschine.',
+      },
+    ],
+  },
+  {
     nummer: 47,
     datum: null,
     titel: 'Statistik: umschalten statt scrollen',
