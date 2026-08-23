@@ -64,8 +64,14 @@ export function Downloads({
                     <span className="text-ink-soft ml-2 text-xs">{groesse(d.groesse)}</span>
                   )}
                 </span>
+                {/*
+                  Die Beschriftung steht bei jeder Zeile gleich da. Wer die
+                  Seite vorlesen lässt und von Link zu Link springt, hörte
+                  sonst dreimal „Herunterladen" und wüsste nicht, was wovon.
+                */}
                 <a
                   href={d.url}
+                  aria-label={`${labels.laden}: ${d.name}`}
                   className="border-bronze text-ink tracking-nav hover:bg-bronze hover:text-on-ink border px-5 py-2 text-xs font-semibold uppercase transition-colors"
                 >
                   {labels.laden}
