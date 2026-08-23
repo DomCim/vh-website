@@ -41,7 +41,7 @@ jobs:
       buero: ${{ steps.pruefen.outputs.buero }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -118,7 +118,7 @@ jobs:
 
       - name: Checkout
         if: steps.dran.outputs.noetig == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Docker Buildx einrichten
         if: steps.dran.outputs.noetig == 'true'

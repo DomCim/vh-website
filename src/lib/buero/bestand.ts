@@ -44,6 +44,8 @@ export type Datensatz = Record<string, unknown> & { id: number | string }
 export type Rahmen = {
   benutzer: { email: string; name: string }
   kiVerfuegbar: boolean
+  /** Ob ein Fehler von hier aus gemeldet werden kann — siehe lib/fehlermeldung.ts */
+  meldenMoeglich: boolean
   stundensatz: number
   wunschaufschlag: number
   /** Fertigungsstunden je Woche — die Kapazität der Werkstatt */
@@ -60,6 +62,7 @@ export type Rahmen = {
 const RAHMEN_LEER: Rahmen = {
   benutzer: { email: '', name: '' },
   kiVerfuegbar: false,
+  meldenMoeglich: false,
   stundensatz: 65,
   wunschaufschlag: 40,
   wochenstunden: 30,

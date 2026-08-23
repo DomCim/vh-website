@@ -68,6 +68,11 @@ export type ResolvedIntegrations = {
     apiKey?: string
     model: string
   }
+  /** Wohin eine Fehlermeldung aus dem Büro geht — siehe lib/meldung.ts */
+  github: {
+    token?: string
+    repository?: string
+  }
 }
 
 const val = (dbValue: unknown, envValue: string | undefined): string | undefined => {
@@ -150,6 +155,10 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
     anthropic: {
       apiKey: val(doc?.anthropic?.apiKey, process.env.ANTHROPIC_API_KEY),
       model: val(doc?.anthropic?.model, process.env.ANTHROPIC_MODEL) || 'claude-opus-5',
+    },
+    github: {
+      token: val(doc?.github?.token, process.env.GITHUB_TOKEN),
+      repository: val(doc?.github?.repository, process.env.GITHUB_REPOSITORY),
     },
   }
 }

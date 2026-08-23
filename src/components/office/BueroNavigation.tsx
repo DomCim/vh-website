@@ -91,6 +91,9 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       // Einstellungen und Neuerungen stehen jedem offen: Dort liegen das eigene
       // Konto, die Meldungen dieses Geräts und der Änderungsverlauf.
       { href: '/office/meldungen', label: 'Meldungen' },
+      // Melden darf jeder, der im Büro ist: Eine Hürde vor „hier stimmt was
+      // nicht" bekommt man nie wieder weg — gemeldet wird dann gar nicht mehr.
+      { href: '/office/melden', label: 'Fehler melden' },
       { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
       { href: '/office/rechtliches', label: 'Rechtstexte', recht: 'website.pflegen' },
@@ -313,6 +316,14 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
     </>
   ),
   /* Meldungen: dieselbe Glocke wie oben in der Kopfleiste */
+  /* Fehler melden: Käfer — das Zeichen dafür kennt jeder */
+  '/office/melden': (
+    <>
+      <path d="M8 8.5a4 4 0 0 1 8 0v3.5a4 4 0 0 1-8 0z" />
+      <path d="M9.5 6.2A2.5 2.5 0 0 1 12 4a2.5 2.5 0 0 1 2.5 2.2" />
+      <path d="M8 9.5H4.8M8 13H4.8M16 9.5h3.2M16 13h3.2M9.2 16.4 7 18.6M14.8 16.4 17 18.6M12 16v4" />
+    </>
+  ),
   '/office/meldungen': (
     <>
       <path d="M18 9.5a6 6 0 0 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5z" />

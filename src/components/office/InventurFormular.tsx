@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 
 export type InventurZeile = {
   item: number
@@ -152,15 +153,13 @@ export function InventurFormular({ werte }: { werte: InventurWerte }) {
             </label>
             <label className="buero-feld">
               <span>Gezählt</span>
-              <input
-                inputMode="decimal"
-                value={z.counted}
+              <Zahleingabe
+                wert={z.counted}
+                beiLeer={0}
                 disabled={fertig}
-                onChange={(e) =>
+                aendern={(v) =>
                   setzen({
-                    lines: w.lines.map((x, idx) =>
-                      idx === i ? { ...x, counted: Number(e.target.value) || 0 } : x,
-                    ),
+                    lines: w.lines.map((x, idx) => (idx === i ? { ...x, counted: v ?? 0 } : x)),
                   })
                 }
               />

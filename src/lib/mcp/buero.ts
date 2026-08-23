@@ -8,8 +8,10 @@ import { db, fehler, ok, type McpServer } from './helpers'
  * Werkzeuge für das Büro — bisher gab es nur welche für den Shop.
  *
  * Die übrigen Werkzeuge pflegen die Website: Artikel, Bilder, Texte, News.
- * Der Betrieb selbst — Aufträge, Rechnungen, Material, Partner — war von
- * außen nicht ansprechbar, obwohl dort die Arbeit liegt.
+ * Der Betrieb selbst — Aufträge, Rechnungen, Partner — war von außen nicht
+ * ansprechbar, obwohl dort die Arbeit liegt. (Das Lager hat inzwischen ein
+ * eigenes Modul, `inventar.ts`: Dort gehört mehr dazu als eine Liste, weil
+ * Bestand nur gebucht und nie gesetzt werden darf.)
  *
  * **Was hier lesend ist, ist wirklich lesend.** Die Namen enden auf `_liste`
  * oder `_lesen`, damit sie beim Nur-Lese-Schlüssel sichtbar bleiben und ohne
@@ -137,50 +139,6 @@ export function registerBuero(server: McpServer) {
           ),
         })),
       })
-    },
-  )
-
-  // ── Was knapp wird ────────────────────────────────────────────────────────
-  server.registerTool(
-    'material_liste',
-    {
-      description:
-        'Lagerbestand. Standardmäßig nur, was unter dem Mindestbestand liegt — die Frage ' +
-        'ist fast immer „was muss ich nachbestellen?".',
-      inputSchema: {
-        alles: z.boolean().optional().describe('true = der ganze Bestand, nicht nur das Knappe'),
-        suche: z.string().optional().describe('Suchbegriff im Namen'),
-      },
-    },
-    async ({ alles, suche }) => {
-      const payload = await db()
-      const { docs } = await payload.find({
-        collection: 'inventory-items',
-        ...(suche ? { where: { name: { contains: suche } } } : {}),
-        limit: 500,
-        depth: 0,
-        overrideAccess: true,
-        sort: 'name',
-      })
-
-      const posten = docs
-        .map((m: Record<string, any>) => {
-          const bestand = Number(m.quantity) || 0
-          const mindest = Number(m.minQuantity) || 0
-          return {
-            name: m.name,
-            bestand,
-            einheit: m.unit ?? null,
-            mindestbestand: mindest || null,
-            knapp: mindest > 0 && bestand <= mindest,
-            lagerort: m.location ?? null,
-            // Was ohne Preis dasteht, taucht in keiner Nachkalkulation auf
-            wert_je_einheit: m.unitValue ? euro(Number(m.unitValue)) : null,
-          }
-        })
-        .filter((m) => (alles ? true : m.knapp))
-
-      return ok({ anzahl: posten.length, posten })
     },
   )
 

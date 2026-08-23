@@ -521,9 +521,14 @@ das zurückkommt.
    sobald die alte Adresse weg ist.
 4. **Merge nach `main`** — CI abwarten, dann PR. Danach Abbilder als `latest`.
 5. Aus dem ersten Durchgang weiter offen (Betrieb, nicht Code):
-   Volumes gehören dem falschen Benutzer (`chown 1000:1000`), `SEED=true`
-   steht noch im Stack, `MCP_API_KEY` und `POSTGRES_PASSWORD` sind derselbe
-   Wert, übriggebliebener Container `vincent-hellmann-backup-1`.
+   Volumes gehören dem falschen Benutzer (`chown 1000:1000`),
+   übriggebliebener Container `vincent-hellmann-backup-1`, und `SEED=true`
+   im Stack ist zu prüfen — auf dem letzten Blick in Portainer stand es nicht
+   mehr in der Liste, bestätigt ist das aber nicht.
+   Erledigt: `MCP_API_KEY` ist aus dem Stack raus — der Schlüssel steht im
+   Büro unter Integrationen, und der Wert aus der Datenbank gewinnt ohnehin
+   gegen die Umgebungsvariable. Damit ist auch der Doppelgebrauch desselben
+   Wertes als Datenbank-Passwort vom Tisch.
 6. **Beim Ausrollen einmal die X-Forwarded-For-Kette nachmessen.** Das
    Anmelde-Limit nimmt jetzt den ersten öffentlichen Eintrag von rechts
    (eigene Proxys — NPM, Traefik — haben private Adressen und werden

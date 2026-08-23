@@ -6,6 +6,36 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Im Büro lässt sich jetzt ein Fehler melden — mit Foto.** Unter **Sonstiges → Fehler melden** stehen drei Felder: worum es geht, was passiert ist, und wo. Dazu bis zu fünf Fotos vom Handy. Daraus wird ein Eintrag im Repository, den sich jemand ansieht. Die Antwort ist die Nummer des Eintrags samt Link.
+
+- **Was niemand aus dem Kopf weiß, trägt die Seite selbst bei:** die Seite, auf der es passiert ist, das Gerät, die laufende Fassung, der Name und der Zeitpunkt. Genau diese Angaben fehlen sonst, wenn jemand Wochen später nachsehen will. Die Seite steht sichtbar im Formular und lässt sich ändern — wer von der Inventarliste kommt, aber die Bestellung meint, schreibt es hin.
+
+- **Melden darf jeder, der im Büro angemeldet ist.** Bewusst ohne eigenes Recht: Eine Hürde vor „hier stimmt was nicht" bekommt man nie wieder weg, und gemeldet wird dann gar nicht mehr, sondern beim nächsten Treffen erzählt.
+
+- **Eingeschaltet wird es in den Einstellungen.** Unter Integrationen → Fehlermeldungen gehören das Repository und ein Zugangswort von GitHub hin. Steht dort nichts, sagt die Seite das und bietet gar nicht erst einen Knopf an, der ins Leere führt. Die Fotos liegen dabei **nicht** in der Mediathek bei den Produktbildern, sondern geschützt — sichtbar sind sie nur über einen unterschriebenen Link im Eintrag. Ein Foto zurückziehen heißt: die Datei löschen, dann ist der Link sofort tot.
+
+- **Ohne Netz geht das Melden nicht**, und das ist anders als im übrigen Büro. Eine Meldung, die schweigend in der Warteschlange liegt, hilft niemandem — und die Nummer des Eintrags ist der halbe Zweck.
+
+- **Im Büro ließ sich in kein Zahlenfeld ein Komma eintragen — das ist behoben.** Betroffen war nicht nur der Wert je Einheit im Inventar, sondern **jedes** Zahlenfeld: Einzelpreis und Steuersatz in Angebot und Rechnung, Anzahlungs- und Zwischenprozente am Auftrag, Kosten je Dienstleister, Beträge am Beleg, Mengen bei Wareneingang und Inventur. Wer „0," tippte, sah augenblicklich wieder „0" — das Komma verschwand, bevor die nächste Ziffer kam. Damit war seit Wochen kein Betrag mit Cent und keine Menge mit Nachkommastelle eingebbar. Aufgefallen ist es niemandem, weil ein runder Betrag richtig aussieht.
+
+- **Jetzt geht beides, Komma und Punkt.** Auch ein deutscher Tausenderpunkt wird verstanden, wenn ein Komma dabei ist („1.000,50"). Angezeigt wird mit Komma, so wie hier geschrieben wird. Ein leeres Feld bleibt leer und wird nicht stillschweigend zu einer Null — beim Mindestbestand ist das der Unterschied zwischen „keine Meldung" und „meld dich sofort".
+
+- **Beim Nachsehen kamen vier weitere Felder derselben Art heraus.** In den **Einstellungen** betraf es Stundensatz, Steuersatz, Wunschaufschlag und Stammkapital — ein französischer Steuersatz von 5,5 % war schlicht nicht einzugeben, und ein halb getipptes „19," stand als „NaN" im Feld. Am **Auftrag** ließ sich die Fertigungszeit nur in vollen Stunden schätzen, obwohl halbe vorgesehen waren. In der **Auslastung** galt dasselbe für beide Stundenfelder.
+
+- **Auch die Maßanfertigungs-Anfrage auf der Website war betroffen.** Wer „120,5" als Breite eintrug, dessen Anfrage erreichte die Werkstatt **ohne Maß** — je nach Browser kam das Komma gar nicht erst an oder wurde zu einem ungültigen Wert. Im Formular sah dabei alles richtig aus, gemerkt hätte es niemand.
+
+- **Der Lieferant lässt sich jetzt direkt beim Posten anlegen.** In der Auswahl „Bezogen von" steht ganz unten **+ Neuer Lieferant**. Ein Klick klappt ein Namensfeld auf, Enter legt an, und der neue Lieferant ist sofort ausgewählt. Bisher hieß das: Formular verlassen, unter Partner anlegen, zurücknavigieren. Verloren ging dabei nichts, aber der Faden riss — und nach zweimal Hüpfen greift man zur Tabelle. Anschrift und Steuernummer lassen sich später unter Partner nachtragen.
+
+- **Neben dem Speichern steht „& nächster Posten".** Er legt an und stellt sofort ein leeres Formular hin, behält aber **Art, Einheit, Lagerort und Lieferant** stehen. Bei zwanzig Schraubensorten ändern sich damit vier Felder je Posten statt zehn, und es gibt keinen Sprung auf die Detailseite und zurück. Eine Zeile meldet, was angelegt wurde und wie viele es in dieser Runde waren. Wer nur einen Posten erfasst, nimmt „Speichern & schließen" daneben.
+
+- **Das Lager ist jetzt auch über den KI-Assistenten zu erreichen.** Neu sind: einen Posten vollständig lesen, einen anlegen, Stammdaten ändern und Bestand buchen. Gedacht ist das vor allem für die **erstmalige Übernahme** einer gewachsenen Liste — einmal ansagen statt zweihundertmal ein Formular ausfüllen. Danach wird wieder im Büro erfasst.
+
+- **Bestand wird auch dort nur gebucht, nie gesetzt.** Der Assistent gibt an, was sich **verändert** — „2 Meter verbraucht" —, und muss einen Grund nennen. Daraus entsteht dieselbe Zeile im Bestandsverlauf wie bei jeder Korrektur im Büro. Die Menge einfach zu überschreiben kann er gar nicht: Genau dieses Loch hatte der Verlauf schon einmal, und wer nachrechnete, fand die Lücken ausgerechnet dort, wo am meisten korrigiert wird.
+
+- **Ein Lieferantenname, den es nicht gibt, wird abgewiesen.** Der Assistent legt Geschäftspartner nicht nebenbei an — ein Tippfehler brächte sonst still einen zweiten Händler in die Kartei, und aufgefallen wäre es erst bei der nächsten Bestellanfrage.
+
+- **Gelöschte Kategorien kamen beim Ausrollen zurück — der Grund ist behoben.** Das Startskript erkannte eine eingerichtete Datenbank ausgerechnet daran, ob die Beispielkategorie „Outdoor Möbel" existiert. Genau die war im Büro gelöscht worden, weil sie leer war. Damit hielt das Skript die volle Datenbank für leer und legte die Beispielkategorien wieder an — eine Entscheidung, die jemand getroffen hatte, wurde vom Server zurückgenommen. Jetzt merkt sich der Server in seinem eigenen Merkzettel, dass er hier schon war; ersatzweise zählt, ob überhaupt eine Kategorie, ein Artikel oder ein Benutzer dasteht. An Beispielinhalten hängt die Frage nicht mehr.
+
 ## 23.08.2026 — Die Aktion führt zur Ware, die Fragen bekommen eine Seite, die Sprache zieht ins Feld
 
 - **Die Sprachwahl in den Einstellungen sitzt jetzt am Feld statt über der Seite.** Bisher stand ein Schalter ganz oben und legte die ganze Ansicht um. Weil es Anschrift, Bankverbindung und Zugangsdaten nur einmal gibt, verschwand beim Umschalten die halbe Liste — und über dem Pinterest-Code stand eine Sprachwahl, die ihn nichts angeht. Jetzt zeigt die Übersicht **immer alles**, und die Sprachwahl erscheint erst, wenn man einen Eintrag öffnet, der wirklich etwas zu übersetzen hat.

@@ -738,6 +738,47 @@ Legt `vh@vincent-hellmann.com` und `admin@vincent-hellmann.com` mit der Rolle **
   node_modules/.bin/payload run scripts/benutzer.ts
   ```
 
+## Fehler melden (Eintrag im Repository)
+
+Im Büro steht unter **Sonstiges → Fehler melden** ein kurzes Formular:
+Überschrift, was passiert ist, Fotos. Daraus wird ein Issue im Repository —
+mit Bild, Seite, Gerät, Fassung, Melder und Zeitpunkt.
+
+### Einrichten
+
+1. Auf github.com unter **Settings → Developer settings → Personal access
+   tokens → Fine-grained** ein Token erzeugen. Nur dieses eine Repository
+   auswählen und als einzige Berechtigung **Issues: Read and write** geben.
+2. Im Büro unter **Einstellungen → Integrationen → Fehlermeldungen** das
+   Repository (`Besitzer/Name`) und das Token eintragen.
+
+Steht dort nichts, erscheint der Punkt zwar in der Navigation, sagt aber, dass
+der Zugang fehlt — der Knopf führt nie ins Leere. Ersatzweise gehen auch die
+Umgebungsvariablen `GITHUB_REPOSITORY` und `GITHUB_TOKEN`; sie greifen nur,
+wenn im Büro nichts hinterlegt ist.
+
+**Melden darf jeder, der im Büro angemeldet ist** — bewusst ohne eigenes
+Recht. Eine Hürde vor „hier stimmt was nicht" bekommt man nie wieder weg.
+
+### Wo die Fotos liegen
+
+GitHub kann kein Bild aus einer geschützten Ablage anzeigen. Damit es im
+Eintrag zu sehen ist, muss es unter einer Adresse liegen, die GitHub erreicht
+— es einfach in die öffentliche Mediathek zu legen wäre der bequeme und der
+falsche Weg, denn dort stehen die Produktbilder.
+
+Stattdessen liegen die Fotos in der geschützten Dateiablage
+(`product-files`, Ordner *Fehlermeldungen*), und der Link trägt seine
+Berechtigung selbst: eine Prüfsumme über die Datei, geschlüsselt mit
+`PAYLOAD_SECRET`. Ausgeliefert wird über `/api/fehlermeldung/bild`, und die
+Stelle prüft dreierlei — Unterschrift, Ordner und Bildart. Wer die Nummer in
+der Adresse hochzählt, bekommt nichts.
+
+**Ohne Ablaufdatum, und das ist Absicht:** Ein Eintrag wird in einem halben
+Jahr gelesen, wenn jemand denselben Fehler noch einmal sucht; ein bis dahin
+abgelaufenes Bild machte ihn wertlos. Ein Foto zurückziehen heißt: die Datei
+in der Website-Verwaltung löschen — dann läuft der Link sofort ins Leere.
+
 ## MCP-Server (Verwaltung per KI-Assistent, optional)
 
 Die Website bringt einen eingebauten MCP-Server mit, über den sich Shop und Inhalte per Claude (oder anderem MCP-Client) verwalten lassen — Produkte, Kategorien, Referenzen, Kundenstimmen, News inkl. Facebook-/Instagram-Post, Aktionen, Bestellungen, Anfragen, Mediathek, Seitentexte und Auswertungen.
@@ -768,8 +809,27 @@ Es gibt **zwei Schlüssel**: Der volle Zugriff bringt sämtliche Werkzeuge und w
 | **Mediathek** | `medien_liste`, `bild_hochladen`, `bild_aendern`, `bild_loeschen` |
 | **Seitentexte** | `seite_lesen`, `seite_schreiben` (Startseite, Über uns, Einstellungen, Rechtliches) |
 | **Auswertung** | `suchen`, `uebersetzungen_pruefen`, `website_check`, `shop_statistik` |
-| **Büro** | `offene_posten_liste`, `auftraege_liste`, `material_liste`, `partner_liste`, `partner_anlegen`, `partner_aendern`, `stueckliste_setzen`, `wiedervorlagen_liste`, `wiedervorlage_anlegen`, `angebot_entwurf_anlegen`, `rechnung_entwurf_anlegen` |
+| **Büro** | `offene_posten_liste`, `auftraege_liste`, `partner_liste`, `partner_anlegen`, `partner_aendern`, `stueckliste_setzen`, `wiedervorlagen_liste`, `wiedervorlage_anlegen`, `angebot_entwurf_anlegen`, `rechnung_entwurf_anlegen` |
+| **Inventar** | `material_liste`, `material_lesen`, `material_anlegen`, `material_aendern`, `bestand_buchen` |
 | **Leitplanken** | `leitplanken_lesen` — Hausregeln plus Freigabe, ohne die kein schreibendes Werkzeug arbeitet |
+
+### Bestand wird gebucht, nicht gesetzt
+
+`material_aendern` kennt die Menge ausdrücklich nicht. Wer Bestand ändern
+will, nimmt `bestand_buchen` und gibt die **Veränderung** an, nicht den neuen
+Stand: „2 Meter verbraucht" ist `-2`. Daraus entsteht eine Zeile im Verlauf am
+Posten, mit Grund und Urheber.
+
+Der Grund ist eine Erfahrung: Der Verlauf beantwortet „warum sind aus 50
+plötzlich 48 geworden?" — und er taugt nur, solange **jede** Änderung dort
+landet. Genau das war hier schon einmal kaputt (siehe
+`lib/bestandsbewegung.ts`). Ein Werkzeug, das die Zahl von außen setzen darf,
+risse dasselbe Loch wieder auf, nur an einer Stelle, an der niemand mehr
+nachsehen kann.
+
+`material_anlegen` ist für die **erstmalige Übernahme** einer vorhandenen
+Liste gedacht, nicht für den Alltag: Erfasst wird im Büro, dort steht neben
+dem Speichern ein „& nächster Posten".
 
 ### Vier Regeln, die überall gelten
 

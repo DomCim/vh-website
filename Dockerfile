@@ -45,12 +45,18 @@ RUN set -e; \
       *) echo "Baue beides in ein Abbild." ;; \
     esac
 
-# Dummy-Werte nur für den Build — zur Laufzeit kommen die echten aus dem Stack
-ENV PAYLOAD_SECRET=build-time-secret \
+# Dummy-Werte nur für den Build — zur Laufzeit kommen die echten aus dem Stack.
+#
+# Bewusst am Befehl statt als ENV: Payload liest Schlüssel und Datenbankadresse
+# schon beim Übersetzen, gebraucht werden sie aber nur für diesen einen Schritt.
+# Als ENV blieben sie in der Beschreibung des Zwischenabbilds stehen — und ein
+# Eintrag namens PAYLOAD_SECRET wird von der Prüfung des Runners als Geheimnis
+# gemeldet, auch wenn nur ein Platzhalter darin steht. Eine Warnung, die man
+# jedes Mal wegerklären muss, ist so gut wie keine.
+RUN export PAYLOAD_SECRET=build-time-secret \
     DATABASE_URI=postgres://build:build@localhost:5432/build \
-    NODE_ENV=production
-
-RUN pnpm build && pnpm prune --prod
+    NODE_ENV=production; \
+    pnpm build && pnpm prune --prod
 
 # ── Runtime-Stage ────────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner

@@ -9,6 +9,7 @@ import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { Zahleingabe } from './Zahleingabe'
 import { ArtikelBezug } from './ArtikelBezug'
 import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
@@ -204,16 +205,14 @@ export function AuftragFormular({
         </label>
         <label className="buero-feld">
           <span>Fertigungszeit (Stunden)</span>
-          <input
-            type="number"
-            min={0}
-            step={0.5}
-            value={w.plannedMinutes == null ? '' : Math.round((w.plannedMinutes / 60) * 10) / 10}
-            onChange={(e) =>
-              setzen({
-                plannedMinutes: e.target.value === '' ? null : Math.round(Number(e.target.value) * 60),
-              })
-            }
+          {/*
+            Gespeichert wird in Minuten, eingetippt in Stunden — „1,5" sind
+            90 Minuten. Genau dafür braucht es ein Feld, das ein Komma
+            aushält; mit `type="number"` ging bis hierher nur die volle Stunde.
+          */}
+          <Zahleingabe
+            wert={w.plannedMinutes == null ? null : Math.round((w.plannedMinutes / 60) * 10) / 10}
+            aendern={(v) => setzen({ plannedMinutes: v == null ? null : Math.round(v * 60) })}
             placeholder="z.B. 20"
           />
           <span style={{ marginTop: '.4rem' }}>
@@ -343,19 +342,17 @@ export function AuftragFormular({
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Anzahlung (%)</span>
-          <input
-            inputMode="decimal"
-            value={w.anzahlungProzent ?? ''}
-            onChange={(e) => setzen({ anzahlungProzent: Number(e.target.value) || 0 })}
+          <Zahleingabe
+            wert={w.anzahlungProzent}
+            aendern={(v) => setzen({ anzahlungProzent: v })}
             disabled={Boolean(w.rechnungsBasis)}
           />
         </label>
         <label className="buero-feld">
           <span>Zwischenrechnung (%)</span>
-          <input
-            inputMode="decimal"
-            value={w.zwischenProzent ?? ''}
-            onChange={(e) => setzen({ zwischenProzent: Number(e.target.value) || 0 })}
+          <Zahleingabe
+            wert={w.zwischenProzent}
+            aendern={(v) => setzen({ zwischenProzent: v })}
             disabled={Boolean(w.rechnungsBasis)}
           />
         </label>
@@ -410,13 +407,13 @@ export function AuftragFormular({
           />
           <label className="buero-feld">
             <span>Menge</span>
-            <input
-              inputMode="decimal"
-              value={p.quantity}
-              onChange={(e) =>
+            <Zahleingabe
+              wert={p.quantity}
+              beiLeer={0}
+              aendern={(v) =>
                 setzen({
                   positions: (w.positions ?? []).map((x, idx) =>
-                    idx === i ? { ...x, quantity: Number(e.target.value) || 0 } : x,
+                    idx === i ? { ...x, quantity: v ?? 0 } : x,
                   ),
                 })
               }
@@ -424,14 +421,11 @@ export function AuftragFormular({
           </label>
           <label className="buero-feld">
             <span>Preis (EUR)</span>
-            <input
-              inputMode="decimal"
-              value={p.price ?? ''}
-              onChange={(e) =>
+            <Zahleingabe
+              wert={p.price}
+              aendern={(v) =>
                 setzen({
-                  positions: (w.positions ?? []).map((x, idx) =>
-                    idx === i ? { ...x, price: Number(e.target.value) || 0 } : x,
-                  ),
+                  positions: (w.positions ?? []).map((x, idx) => (idx === i ? { ...x, price: v } : x)),
                 })
               }
             />
@@ -501,13 +495,13 @@ export function AuftragFormular({
           </label>
           <label className="buero-feld">
             <span>Menge</span>
-            <input
-              inputMode="decimal"
-              value={m.quantity}
-              onChange={(e) =>
+            <Zahleingabe
+              wert={m.quantity}
+              beiLeer={0}
+              aendern={(v) =>
                 setzen({
                   material: (w.material ?? []).map((x, idx) =>
-                    idx === i ? { ...x, quantity: Number(e.target.value) || 0 } : x,
+                    idx === i ? { ...x, quantity: v ?? 0 } : x,
                   ),
                 })
               }
