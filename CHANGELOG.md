@@ -6,6 +6,8 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+## 23.08.2026 — Die Aktion führt zur Ware, die Fragen bekommen eine Seite, die Sprache zieht ins Feld
+
 - **Die Sprachwahl in den Einstellungen sitzt jetzt am Feld statt über der Seite.** Bisher stand ein Schalter ganz oben und legte die ganze Ansicht um. Weil es Anschrift, Bankverbindung und Zugangsdaten nur einmal gibt, verschwand beim Umschalten die halbe Liste — und über dem Pinterest-Code stand eine Sprachwahl, die ihn nichts angeht. Jetzt zeigt die Übersicht **immer alles**, und die Sprachwahl erscheint erst, wenn man einen Eintrag öffnet, der wirklich etwas zu übersetzen hat.
 
 - **In der Übersicht steht, welche Sprachen gepflegt sind.** Bei allem Übersetzbaren stehen statt „eingerichtet" die drei Kürzel **DE FR EN** — die gepflegten grün, die fehlenden blass. Damit sieht man auf einen Blick, wo noch etwas fehlt, ohne dreimal umzuschalten.
