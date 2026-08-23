@@ -6,6 +6,16 @@ Was sich auf vincent-hellmann.com getan hat — neueste Einträge zuerst. Dieses
 
 *Gesammelt, wartet auf das Wort zum Ausrollen.*
 
+- **Der Lieferant lässt sich jetzt direkt beim Posten anlegen.** In der Auswahl „Bezogen von" steht ganz unten **+ Neuer Lieferant**. Ein Klick klappt ein Namensfeld auf, Enter legt an, und der neue Lieferant ist sofort ausgewählt. Bisher hieß das: Formular verlassen, unter Partner anlegen, zurücknavigieren. Verloren ging dabei nichts, aber der Faden riss — und nach zweimal Hüpfen greift man zur Tabelle. Anschrift und Steuernummer lassen sich später unter Partner nachtragen.
+
+- **Neben dem Speichern steht „& nächster Posten".** Er legt an und stellt sofort ein leeres Formular hin, behält aber **Art, Einheit, Lagerort und Lieferant** stehen. Bei zwanzig Schraubensorten ändern sich damit vier Felder je Posten statt zehn, und es gibt keinen Sprung auf die Detailseite und zurück. Eine Zeile meldet, was angelegt wurde und wie viele es in dieser Runde waren. Wer nur einen Posten erfasst, nimmt „Speichern & schließen" daneben.
+
+- **Das Lager ist jetzt auch über den KI-Assistenten zu erreichen.** Neu sind: einen Posten vollständig lesen, einen anlegen, Stammdaten ändern und Bestand buchen. Gedacht ist das vor allem für die **erstmalige Übernahme** einer gewachsenen Liste — einmal ansagen statt zweihundertmal ein Formular ausfüllen. Danach wird wieder im Büro erfasst.
+
+- **Bestand wird auch dort nur gebucht, nie gesetzt.** Der Assistent gibt an, was sich **verändert** — „2 Meter verbraucht" —, und muss einen Grund nennen. Daraus entsteht dieselbe Zeile im Bestandsverlauf wie bei jeder Korrektur im Büro. Die Menge einfach zu überschreiben kann er gar nicht: Genau dieses Loch hatte der Verlauf schon einmal, und wer nachrechnete, fand die Lücken ausgerechnet dort, wo am meisten korrigiert wird.
+
+- **Ein Lieferantenname, den es nicht gibt, wird abgewiesen.** Der Assistent legt Geschäftspartner nicht nebenbei an — ein Tippfehler brächte sonst still einen zweiten Händler in die Kartei, und aufgefallen wäre es erst bei der nächsten Bestellanfrage.
+
 - **Gelöschte Kategorien kamen beim Ausrollen zurück — der Grund ist behoben.** Das Startskript erkannte eine eingerichtete Datenbank ausgerechnet daran, ob die Beispielkategorie „Outdoor Möbel" existiert. Genau die war im Büro gelöscht worden, weil sie leer war. Damit hielt das Skript die volle Datenbank für leer und legte die Beispielkategorien wieder an — eine Entscheidung, die jemand getroffen hatte, wurde vom Server zurückgenommen. Jetzt merkt sich der Server in seinem eigenen Merkzettel, dass er hier schon war; ersatzweise zählt, ob überhaupt eine Kategorie, ein Artikel oder ein Benutzer dasteht. An Beispielinhalten hängt die Frage nicht mehr.
 
 ## 23.08.2026 — Die Aktion führt zur Ware, die Fragen bekommen eine Seite, die Sprache zieht ins Feld

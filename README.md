@@ -768,8 +768,27 @@ Es gibt **zwei Schlüssel**: Der volle Zugriff bringt sämtliche Werkzeuge und w
 | **Mediathek** | `medien_liste`, `bild_hochladen`, `bild_aendern`, `bild_loeschen` |
 | **Seitentexte** | `seite_lesen`, `seite_schreiben` (Startseite, Über uns, Einstellungen, Rechtliches) |
 | **Auswertung** | `suchen`, `uebersetzungen_pruefen`, `website_check`, `shop_statistik` |
-| **Büro** | `offene_posten_liste`, `auftraege_liste`, `material_liste`, `partner_liste`, `partner_anlegen`, `partner_aendern`, `stueckliste_setzen`, `wiedervorlagen_liste`, `wiedervorlage_anlegen`, `angebot_entwurf_anlegen`, `rechnung_entwurf_anlegen` |
+| **Büro** | `offene_posten_liste`, `auftraege_liste`, `partner_liste`, `partner_anlegen`, `partner_aendern`, `stueckliste_setzen`, `wiedervorlagen_liste`, `wiedervorlage_anlegen`, `angebot_entwurf_anlegen`, `rechnung_entwurf_anlegen` |
+| **Inventar** | `material_liste`, `material_lesen`, `material_anlegen`, `material_aendern`, `bestand_buchen` |
 | **Leitplanken** | `leitplanken_lesen` — Hausregeln plus Freigabe, ohne die kein schreibendes Werkzeug arbeitet |
+
+### Bestand wird gebucht, nicht gesetzt
+
+`material_aendern` kennt die Menge ausdrücklich nicht. Wer Bestand ändern
+will, nimmt `bestand_buchen` und gibt die **Veränderung** an, nicht den neuen
+Stand: „2 Meter verbraucht" ist `-2`. Daraus entsteht eine Zeile im Verlauf am
+Posten, mit Grund und Urheber.
+
+Der Grund ist eine Erfahrung: Der Verlauf beantwortet „warum sind aus 50
+plötzlich 48 geworden?" — und er taugt nur, solange **jede** Änderung dort
+landet. Genau das war hier schon einmal kaputt (siehe
+`lib/bestandsbewegung.ts`). Ein Werkzeug, das die Zahl von außen setzen darf,
+risse dasselbe Loch wieder auf, nur an einer Stelle, an der niemand mehr
+nachsehen kann.
+
+`material_anlegen` ist für die **erstmalige Übernahme** einer vorhandenen
+Liste gedacht, nicht für den Alltag: Erfasst wird im Büro, dort steht neben
+dem Speichern ein „& nächster Posten".
 
 ### Vier Regeln, die überall gelten
 

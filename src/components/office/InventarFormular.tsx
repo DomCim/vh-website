@@ -1,11 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
+import { naechsterPosten } from '../../lib/inventarerfassung'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
+import { LieferantFeld } from './LieferantFeld'
 
 export type InventarWerte = {
   id?: number | string
@@ -20,7 +22,8 @@ export type InventarWerte = {
   location?: string | null
   purchaseDate?: string | null
   purchaseValue?: number | null
-  supplier?: number | '' | null
+  /** Ohne Netz eine vorläufige Kennung (`neu:…`) — siehe LieferantFeld */
+  supplier?: number | string | '' | null
   notes?: string | null
 }
 
@@ -35,13 +38,7 @@ const ARTEN = [
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
 /** Ein Posten im Lager — Bestand, Wert und wo er liegt. */
-export function InventarFormular({
-  werte,
-  lieferanten,
-}: {
-  werte: InventarWerte
-  lieferanten: { id: number; name: string }[]
-}) {
+export function InventarFormular({ werte }: { werte: InventarWerte }) {
   const router = useRouter()
   const [anfang] = useState<InventarWerte>(() => ({
     type: 'material',
@@ -50,16 +47,22 @@ export function InventarFormular({
     ...werte,
   }))
   const [w, setW] = useState<InventarWerte>(anfang)
+  const nameFeld = useRef<HTMLInputElement>(null)
 
   // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
   const entwurf = useEntwurf(`inventar:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+  const [angelegt, setAngelegt] = useState(0)
 
   const setzen = (teil: Partial<InventarWerte>) => setW((v) => ({ ...v, ...teil }))
 
-  async function speichern() {
-    if (!w.name?.trim()) {
+  /** Ein neuer Posten ist es, solange das Formular nicht auf einem vorhandenen sitzt */
+  const neu = !werte.id
+
+  async function speichern(weiter = false) {
+    const bezeichnung = w.name?.trim()
+    if (!bezeichnung) {
       setMeldung('Eine Bezeichnung wird gebraucht.')
       return
     }
@@ -72,7 +75,25 @@ export function InventarFormular({
         koerper: { ...w },
       })
       entwurf.erledigt()
-      if (!w.id && sofort) router.push(`/office/inventar/${id}`)
+
+      if (weiter) {
+        /*
+         * Kein Sprung auf die Detailseite: Wer „& nächster" drückt, will
+         * weitertippen und nicht erst zurücknavigieren. Übernommen wird nur,
+         * was sich zwischen zwei Posten derselben Kiste nicht ändert.
+         */
+        const gezaehlt = angelegt + 1
+        setW(naechsterPosten(w))
+        setAngelegt(gezaehlt)
+        setMeldung(
+          `${bezeichnung} ist angelegt${sofort ? '' : ' und geht raus, sobald wieder Netz da ist'} — ` +
+            `${gezaehlt} in dieser Runde.`,
+        )
+        nameFeld.current?.focus()
+        return
+      }
+
+      if (neu && sofort) router.push(`/office/inventar/${id}`)
       else setMeldung(sofort ? 'Gespeichert.' : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
     } catch {
       setMeldung('Das hat nicht geklappt.')
@@ -95,7 +116,11 @@ export function InventarFormular({
 
       <label className="buero-feld">
         <span>Bezeichnung</span>
-        <input value={w.name ?? ''} onChange={(e) => setzen({ name: e.target.value })} />
+        <input
+          ref={nameFeld}
+          value={w.name ?? ''}
+          onChange={(e) => setzen({ name: e.target.value })}
+        />
       </label>
 
       <div className="buero-reihe">
@@ -178,20 +203,7 @@ export function InventarFormular({
           <span>Lagerort</span>
           <input value={w.location ?? ''} onChange={(e) => setzen({ location: e.target.value })} />
         </label>
-        <label className="buero-feld">
-          <span>Bezogen von</span>
-          <select
-            value={w.supplier ?? ''}
-            onChange={(e) => setzen({ supplier: Number(e.target.value) || '' })}
-          >
-            <option value="">— keiner —</option>
-            {lieferanten.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <LieferantFeld wert={w.supplier} aendern={(id) => setzen({ supplier: id })} />
       </div>
 
       <div className="buero-reihe">
@@ -220,10 +232,44 @@ export function InventarFormular({
         <textarea rows={2} value={w.notes ?? ''} onChange={(e) => setzen({ notes: e.target.value })} />
       </label>
 
+      {/*
+       * Beim Anlegen ist „& nächster" die Hauptsache und nicht die Zugabe: Wer
+       * eine Kiste Kleinteile erfasst, drückt neunzehnmal ihn und einmal den
+       * anderen. Die Fußleiste lässt genau eine Hauptaktion unten stehen und
+       * schiebt alles `leise` am Handy hinter „⋯" — stünde der häufige Knopf
+       * dort, kostete jeder Posten zwei Tipper statt einem, und zwar an der
+       * Werkbank, wo genau das niemand will.
+       */}
       <Fussleiste>
-        <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
-          Speichern
-        </button>
+        {neu ? (
+          <>
+            <button
+              type="button"
+              className="buero-knopf"
+              disabled={laeuft}
+              onClick={() => void speichern(true)}
+            >
+              Speichern &amp; nächster Posten
+            </button>
+            <button
+              type="button"
+              className="buero-knopf leise"
+              disabled={laeuft}
+              onClick={() => void speichern()}
+            >
+              Speichern &amp; schließen
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="buero-knopf"
+            disabled={laeuft}
+            onClick={() => void speichern()}
+          >
+            Speichern
+          </button>
+        )}
       </Fussleiste>
     </div>
   )

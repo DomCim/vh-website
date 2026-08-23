@@ -16,7 +16,6 @@ import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/
  */
 
 type Posten = { id: number | string; name?: string | null; [feld: string]: unknown }
-type Partner = { id: number | string; name?: string | null }
 type Artikel = {
   id: number | string
   title?: string | null
@@ -27,17 +26,8 @@ type Artikel = {
 export function PostenAnsicht() {
   const { id } = useParams<{ id: string }>()
   const i = useDatensatz<Posten>('inventar', id)
-  const partner = useBestand<Partner>('partner')
   const artikel = useBestand<Artikel>('artikel')
   const { bereit } = useAbgleich()
-
-  const lieferanten = useMemo(
-    () =>
-      [...partner]
-        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'de'))
-        .map((l) => ({ id: Number(l.id), name: l.name ?? '' })),
-    [partner],
-  )
 
   const verwendet = useMemo(() => {
     const trifft = (zeilen: { item?: unknown }[] | null | undefined) =>
@@ -99,10 +89,15 @@ export function PostenAnsicht() {
           location: i.location as string,
           purchaseDate: i.purchaseDate as string,
           purchaseValue: i.purchaseValue as number,
-          supplier: Number(i.supplier) || undefined,
+          // Eine vorläufige Kennung bleibt stehen: Der Posten kann ohne Netz
+          // angelegt worden sein und auf einen Lieferanten zeigen, den der
+          // Server noch nicht kennt.
+          supplier:
+            typeof i.supplier === 'string' && i.supplier.startsWith('neu:')
+              ? i.supplier
+              : Number(i.supplier) || undefined,
           notes: i.notes as string,
         }}
-        lieferanten={lieferanten}
       />
 
       <Bestandskorrektur

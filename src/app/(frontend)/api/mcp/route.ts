@@ -7,6 +7,7 @@ import { registerAnfragen } from '../../../../lib/mcp/anfragen'
 import { registerBestellungen } from '../../../../lib/mcp/bestellungen'
 import { registerBuero } from '../../../../lib/mcp/buero'
 import { registerFaq } from '../../../../lib/mcp/faq'
+import { registerInventar } from '../../../../lib/mcp/inventar'
 import { registerKategorien } from '../../../../lib/mcp/kategorien'
 import { registerKundenstimmen } from '../../../../lib/mcp/kundenstimmen'
 import { registerMedien } from '../../../../lib/mcp/medien'
@@ -73,6 +74,7 @@ function alleWerkzeuge(server: McpServer) {
   registerSeiten(server)
   registerAnalyse(server)
   registerBuero(server)
+  registerInventar(server)
 }
 
 const handler = createMcpHandler(
