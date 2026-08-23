@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 51,
+    datum: null,
+    titel: 'Drei Seiten haben Google erzählt, sie seien die Startseite',
+    punkte: [
+      {
+        text: '**Google meldete „Duplikat".** Die Search Console schrieb, einige Seiten würden nicht aufgenommen — unter anderem, weil Google eine andere Seite für maßgeblich hält als wir. Nachgemessen: `/news`, `/aktionen` und `/kontakt` trugen in ihrem Quelltext die Angabe, die eigentliche Adresse sei die Startseite. In allen drei Sprachen, also neun Adressen.',
+      },
+      {
+        text: '**Sie standen gleichzeitig in der Sitemap.** Wir haben Google also gesagt „nimm diese Seiten auf", und die Seiten selbst haben widersprochen. Das Ergebnis ist, dass sie gar nicht aufgenommen wurden — wer bei Google „Vincent Hellmann Kontakt" sucht, hat die Seite nie gefunden.',
+      },
+      {
+        text: '**Auffallen konnte das niemandem.** Die Seiten sehen richtig aus, laden normal und sind im Browser von einer gesunden Seite nicht zu unterscheiden. Die Angabe steht unsichtbar im Quelltext, und sie war nirgends falsch eingetragen — sie fehlte, und dann gilt die der Startseite.',
+      },
+      {
+        text: '**Jetzt haben die drei eine eigene Überschrift, eine eigene Beschreibung und den Verweis auf sich selbst** — samt Hinweis auf die französische und englische Fassung. Warenkorb, Kasse und Newsletter-Seite hatten dasselbe Problem; die gehören ohnehin nicht in eine Suchmaschine und sind jetzt ausdrücklich ausgenommen.',
+      },
+      {
+        text: 'Eine Prüfung holt künftig die Sitemap und vergleicht jede Adresse mit dem, was die Seite über sich selbst behauptet. Beim nächsten Mal fällt so etwas beim Entwickeln auf und nicht Monate später in einer Mail von Google.',
+      },
+    ],
+  },
+  {
     nummer: 50,
     datum: null,
     titel: 'Gelöscht ist nicht mehr weg — es gibt einen Papierkorb',
