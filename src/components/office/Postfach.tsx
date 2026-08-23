@@ -119,6 +119,7 @@ const ZEICHEN: Record<string, React.ReactNode> = {
   zurueck: <path d="M12 4l-6 6 6 6" />,
   antworten: <path d="M8 5L3 10l5 5M3 10h7a6 6 0 0 1 6 6v1" />,
   mehr: <path d="M4.5 10h.01M10 10h.01M15.5 10h.01" />,
+  faehnchen: <path d="M5 17V3.5h9l-2 3 2 3H5" />,
   plus: <path d="M10 4v12M4 10h12" />,
 }
 
@@ -816,7 +817,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
                 <div
                   role="button"
                   tabIndex={0}
-                  className="buero-zeile buero-zeile-knopf"
+                  className={`buero-zeile buero-zeile-knopf${n.gelesen ? '' : ' ist-neu'}`}
                   onClick={() => void oeffnen(n.uid)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -825,11 +826,31 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
                     }
                   }}
                 >
+                  {/*
+                    * Ungelesen und markiert stehen vorn, nicht hinten als
+                    * beschriftete Pille.
+                    *
+                    * „NEU" und „MARKIERT" brauchten rechts je gut neunzig
+                    * Pixel — zusammen mit Zeit und „⋯" blieb dem Absender auf
+                    * einem 390-px-Gerät ein Drittel der Zeile, und
+                    * „Kundenservice IONOS" wurde mitten im Wort abgeschnitten.
+                    *
+                    * Ungelesen ist jetzt der Statusbalken links, den die
+                    * Listen des Hauses ohnehin haben (`.buero-zeile::before`)
+                    * — das Postfach hat ihn nur nie benutzt. Vorgemerkt
+                    * bleibt ein Fähnchen davor; zwei Zustände können sich
+                    * einen Balken nicht teilen. Vorschlag Dominik 08/2026.
+                    */}
+                  <span className="buero-mailmarken" aria-hidden={!n.markiert}>
+                    {n.markiert && <Zeichen was="faehnchen" />}
+                  </span>
                   <div className="buero-zeile-haupt">
                     <div
                       className="buero-zeile-titel"
                       style={{ fontWeight: n.gelesen ? 400 : 600 }}
                     >
+                      {!n.gelesen && <span className="buero-nur-vorlesen">Ungelesen: </span>}
+                      {n.markiert && <span className="buero-nur-vorlesen">Markiert: </span>}
                       {n.von}
                     </div>
                     <div className="buero-zeile-neben">
@@ -837,10 +858,19 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
                       {n.anhaenge ? ' · Anhang' : ''}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                    {n.markiert && <span className="buero-marker offen">markiert</span>}
-                    {!n.gelesen && <span className="buero-marker gut">neu</span>}
-                    <span className="buero-zeile-neben" title={zeitVoll(n.datum)}>
+                  {/*
+                    * Marker, Zeit und „⋯" dürfen umbrechen.
+                    *
+                    * Zu dritt in einer Zeile drängen sie auf einem 390-px-Gerät
+                    * den Absender auf ein Drittel zusammen — „Kundenservice
+                    * IONOS" wurde dann mitten im Wort abgeschnitten, während
+                    * rechts drei Elemente nebeneinander standen. Umbrechen sie,
+                    * rutscht der Marker in eine eigene Zeile und der Name bleibt
+                    * lesbar; die Zeit bleibt in einem Stück (siehe
+                    * `.buero-mailzeit`), weil sie sonst zweizeilig würde.
+                    */}
+                  <div className="buero-mailzeile-rechts">
+                    <span className="buero-zeile-neben buero-mailzeit" title={zeitVoll(n.datum)}>
                       {zeit(n.datum)}
                     </span>
                     <button

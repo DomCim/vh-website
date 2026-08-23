@@ -27,6 +27,16 @@
   --buero-auf-bronze: #ffffff;
   --buero-gruen: #2f6b46;
   --buero-rot: #a4342c;
+  /*
+   * Blau sagt „ungelesen" — und sonst nichts.
+   *
+   * Die drei anderen sind belegt: rot heißt überfällig, bronze heißt offen,
+   * grün heißt erledigt. Ungelesen ist keines davon; es ist kein Zustand
+   * eines Vorgangs, sondern einer der Aufmerksamkeit. Eine geliehene Farbe
+   * hieße im Postfach etwas anderes als im Kassenbuch — und genau das soll
+   * der Balken verhindern.
+   */
+  --buero-blau: #2f5d8c;
 
   /* Wogegen die Kennzeichen aufgehellt werden: im Hellen Weiß, im Dunkeln
    * die Karte. Sonst werden aus den Markern im Dunkeln Pastellaufkleber. */
@@ -1028,11 +1038,28 @@ html.tastatur-offen .buero-inhalt {
   transition: background-color 0.12s ease;
 }
 
-/* Statusbalken links.
+/*
+ * Der Statusbalken links — die eine Stelle, an der die Farben etwas bedeuten.
  *
- * Damit liest man eine Liste im Vorbeigehen: rot heißt überfällig, bronze
- * heißt offen, grün heißt erledigt. Ohne Zustand bleibt der Streifen leer —
- * die Zeile sieht dann aus wie vorher. */
+ * Damit liest man eine Liste im Vorbeigehen, ohne jede Zeile zu lesen. Das
+ * steht hier seit Monaten und war an ganzen zwei Stellen benutzt; `ist-warn`
+ * und `ist-gut` kamen in der ganzen Anwendung nicht vor. Ausgerollt auf
+ * Wunsch Dominiks (08/2026) — mit einer festen Bedeutung, denn eine Farbe,
+ * die je nach Liste etwas anderes sagt, ist schlechter als gar keine:
+ *
+ *   ist-warn   rot     etwas ist über der Zeit — Rechnung über Ziel,
+ *                      Wiedervorlage vorbei, Bestand unter dem Mindestmaß
+ *   ist-offen  bronze  wartet auf uns — Anfrage unbeantwortet, Angebot
+ *                      draußen, Beleg ungeprüft, Bestellung unversandt
+ *   ist-gut    grün    erledigt — bezahlt, versendet, abgehakt, gebucht
+ *   ist-neu    blau    ungelesen — Postfach, Meldungen. Kein Zustand eines
+ *                      Vorgangs, sondern einer der Aufmerksamkeit.
+ *   (ohne)             kein Vorrang — Artikel, Partner, Inventar, Mediathek.
+ *                      Wo jede Zeile gleich viel gilt, bleibt der Balken leer.
+ *
+ * Eine Zeile trägt höchstens einen Zustand. Trifft mehreres zu, gewinnt das
+ * Dringendere: rot vor bronze vor grün.
+ */
 .buero-zeile::before {
   content: '';
   position: absolute;
@@ -1053,6 +1080,10 @@ html.tastatur-offen .buero-inhalt {
 
 .buero-zeile.ist-gut::before {
   background: var(--buero-gruen);
+}
+
+.buero-zeile.ist-neu::before {
+  background: var(--buero-blau);
 }
 
 .buero-zeile:last-child {
@@ -1432,6 +1463,145 @@ html.tastatur-offen .buero-inhalt {
   text-align: center;
 }
 
+/* ── Kartenform am Handy ────────────────────────────────────────────────── */
+
+/*
+ * Am Telefon wird aus jeder Listenzeile eine eigene Karte, am Rechner bleibt
+ * die dichte Liste (Wunsch Dominik 08/2026, Vorbild seine Home-Assistant-
+ * Oberfläche).
+ *
+ * **Warum nicht überall dasselbe.** Am Telefon ist der Daumen das Maß: Eine
+ * abgesetzte Fläche sagt „hier fasse ich hin", und der Statusbalken bekommt
+ * eine Kante, an der er sichtbar ist. Am Rechner will man das Gegenteil —
+ * möglichst viel auf einmal sehen. Einzelkarten kosten dort ein Drittel der
+ * Einträge pro Bildschirm, ohne dass etwas gewonnen wäre.
+ *
+ * Die umgebende `.buero-liste` gibt ihren Rahmen ab: Ein Kasten um lauter
+ * Kästen ist eine Linie zu viel.
+ */
+@media (max-width: 640px) {
+  .buero-liste {
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .buero-liste > .buero-zeile,
+  .buero-liste > * > .buero-zeile {
+    background: var(--buero-flaeche);
+    border: 1px solid var(--buero-linie);
+    border-bottom: 1px solid var(--buero-linie);
+    border-radius: 12px;
+    box-shadow: var(--buero-schatten);
+    overflow: hidden;
+  }
+
+  /*
+   * Die Fläche nimmt den Ton des Zustands auf — schwach, aber genug.
+   *
+   * Ein vier Pixel breiter Balken an der Kante sagt es erst, wenn man
+   * hinsieht. Färbt sich die ganze Karte einen Hauch mit, sieht man schon
+   * beim Scrollen, wo die Roten liegen und wo das Erledigte anfängt (Wunsch
+   * Dominik 08/2026, Vorbild seine Home-Assistant-Oberfläche).
+   *
+   * Sieben Prozent sind Absicht: Der Text muss auf jeder dieser Flächen
+   * dieselbe Lesbarkeit behalten wie auf der weißen. Wer hier aufdreht,
+   * bekommt eine bunte Liste und einen Kontrast, der im Hellen kippt.
+   */
+  .buero-liste > .buero-zeile.ist-warn,
+  .buero-liste > * > .buero-zeile.ist-warn {
+    background: color-mix(in srgb, var(--buero-rot) 7%, var(--buero-flaeche));
+  }
+  .buero-liste > .buero-zeile.ist-offen,
+  .buero-liste > * > .buero-zeile.ist-offen {
+    background: color-mix(in srgb, var(--buero-bronze) 7%, var(--buero-flaeche));
+  }
+  .buero-liste > .buero-zeile.ist-gut,
+  .buero-liste > * > .buero-zeile.ist-gut {
+    background: color-mix(in srgb, var(--buero-gruen) 7%, var(--buero-flaeche));
+  }
+  .buero-liste > .buero-zeile.ist-neu,
+  .buero-liste > * > .buero-zeile.ist-neu {
+    background: color-mix(in srgb, var(--buero-blau) 7%, var(--buero-flaeche));
+  }
+
+  /* Der Balken folgt der Rundung, sonst steht eine gerade Kante in der Ecke */
+  .buero-liste > .buero-zeile::before,
+  .buero-liste > * > .buero-zeile::before {
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+  }
+
+  /* Ohne Zustand kein Balken — dann braucht die Zeile auch keinen Platz dafür */
+  .buero-liste > .buero-zeile:last-child,
+  .buero-liste > * > .buero-zeile:last-child {
+    border-bottom: 1px solid var(--buero-linie);
+  }
+}
+
+/* ── Balken oben: für Karten, die für EINE Sache stehen ─────────────────── */
+
+/*
+ * Dieselbe Bedeutung wie der Streifen links, nur die andere Kante.
+ *
+ * Der Streifen links gehört an dichte Listenzeilen: Er läuft am Auge
+ * entlang, während man die Liste hinunterliest. Steht dagegen eine ganze
+ * Karte für **eine** Sache — ein Vorgang, ein Abschnitt, eine Person —, dann
+ * ist die Oberkante die richtige Stelle: Sie überspannt die Karte und sagt
+ * schon vor dem ersten Wort, worum es steht. Vorbild ist Dominiks
+ * Home-Assistant-Oberfläche (08/2026).
+ *
+ * Die Farben heißen dasselbe wie oben bei `.buero-zeile::before` — rot über
+ * der Zeit, bronze wartet, grün erledigt, blau ungelesen. Zwei Formen, eine
+ * Sprache; sonst müsste man sich zweierlei merken.
+ */
+.buero-karte.balken-oben {
+  position: relative;
+  overflow: hidden;
+}
+
+.buero-karte.balken-oben::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: var(--buero-rahmen);
+}
+
+.buero-karte.balken-oben.ist-warn::before {
+  background: var(--buero-rot);
+}
+.buero-karte.balken-oben.ist-offen::before {
+  background: var(--buero-bronze);
+}
+.buero-karte.balken-oben.ist-gut::before {
+  background: var(--buero-gruen);
+}
+.buero-karte.balken-oben.ist-neu::before {
+  background: var(--buero-blau);
+}
+
+/* Und dieselbe schwache Einfärbung der Fläche wie bei den Listenkarten */
+.buero-karte.balken-oben.ist-warn {
+  background: color-mix(in srgb, var(--buero-rot) 6%, var(--buero-flaeche));
+}
+.buero-karte.balken-oben.ist-offen {
+  background: color-mix(in srgb, var(--buero-bronze) 6%, var(--buero-flaeche));
+}
+.buero-karte.balken-oben.ist-gut {
+  background: color-mix(in srgb, var(--buero-gruen) 6%, var(--buero-flaeche));
+}
+.buero-karte.balken-oben.ist-neu {
+  background: color-mix(in srgb, var(--buero-blau) 6%, var(--buero-flaeche));
+}
+
 /* ── Postfach: die geöffnete Nachricht ──────────────────────────────────── */
 
 /*
@@ -1507,6 +1677,61 @@ html.tastatur-offen .buero-inhalt {
 .buero-mailknopf svg {
   width: 20px;
   height: 20px;
+  flex: 0 0 auto;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+ * Die Zeitangabe der Liste bleibt in einer Zeile.
+ *
+ * „Gestern 17:00" ist breiter als „22.08.26" und brach am Telefon um — zwei
+ * Zeilen für einen Zeitpunkt, während daneben der Betreff Platz hat. Der
+ * Betreff kürzt ohnehin mit Auslassungspunkten; die Zeit tut es nicht, also
+ * bekommt sie ihre Breite.
+ */
+.buero-mailzeit {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* Die rechte Seite einer Listenzeile: Zeit und „⋯" */
+.buero-mailzeile-rechts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+/*
+ * Vorgemerkt: vorn, als Fähnchen.
+ *
+ * Als beschriftete Pillen („NEU", „MARKIERT") standen sie rechts und
+ * brauchten dort je gut neunzig Pixel. Zusammen mit der Zeit und dem „⋯"
+ * blieb dem Absender auf einem 390-px-Gerät ein Drittel der Zeile.
+ * Vorn kosten beide zusammen vierzehn Pixel — und ein Punkt neben einem
+ * fetten Namen sagt „ungelesen" schneller, als das Wort es könnte.
+ *
+ * Die feste Breite ist Absicht: So beginnen alle Absender auf derselben
+ * senkrechten Linie, ob mit Zeichen oder ohne. Eine Liste, in der die Namen
+ * je nach Zustand um sechs Pixel springen, liest sich unruhig.
+ */
+.buero-mailmarken {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 1rem;
+  margin-right: 0.2rem;
+  color: var(--buero-bronze);
+}
+
+.buero-mailmarken svg {
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
   stroke: currentColor;
   fill: none;
@@ -1608,6 +1833,7 @@ html.tastatur-offen .buero-inhalt {
     --buero-auf-bronze: #16110c;
     --buero-gruen: #77cc96;
     --buero-rot: #ef8579;
+    --buero-blau: #7fb3e8;
     --buero-marker-grund: var(--buero-flaeche);
     /* Im Dunkeln aufgehellt — dieselben Farben, nur so hell, dass sie noch
        als Farbe ankommen und nicht als Fleck */

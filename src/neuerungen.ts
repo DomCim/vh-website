@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 56,
+    datum: null,
+    titel: 'Farbe in den Listen: was drängt, sieht man jetzt im Vorbeigehen',
+    punkte: [
+      {
+        text: '**Es gab den farbigen Streifen schon** — als schmalen Balken links an jeder Listenzeile, mit rot für „überfällig", bronze für „offen" und grün für „erledigt". Benutzt wurde er an genau zwei Stellen; rot und grün kamen in der ganzen Anwendung kein einziges Mal vor. Er stand seit Monaten im Stylesheet und wartete.',
+      },
+      {
+        text: '**Jetzt gilt er überall, und er heißt überall dasselbe:** rot = etwas ist über der Zeit, bronze = wartet auf uns, grün = erledigt, blau = ungelesen. Wo keine Zeile Vorrang vor der anderen hat — Artikel, Partner, Inventar —, bleibt es bewusst schlicht. Eine Farbe, die je nach Liste etwas anderes sagt, wäre schlechter als gar keine.',
+      },
+      {
+        text: '**Blau ist neu dazugekommen.** Die drei anderen sind belegt, und „ungelesen" ist keines davon: Das ist kein Zustand eines Vorgangs, sondern einer der Aufmerksamkeit. Mit einer geliehenen Farbe hieße Bronze im Postfach etwas anderes als im Kassenbuch.',
+      },
+      {
+        text: '**Am Handy wird aus jeder Zeile eine Karte** — abgesetzte Fläche, gerundete Ecken, der Balken an der Kante, und die Fläche nimmt den Farbton schwach mit auf. So sieht man beim Scrollen, wo die Roten liegen. Am Rechner bleibt die dichte Liste: Dort will man viel auf einmal sehen, und Einzelkarten kosteten ein Drittel der Einträge je Bildschirm.',
+      },
+      {
+        text: '**Für Karten, die für eine einzelne Sache stehen**, gibt es dieselbe Aussage an der Oberkante statt an der Seite — ein Balken über die ganze Breite. Zwei Formen, eine Sprache: Der Streifen läuft am Auge entlang, während man eine Liste hinunterliest; der Balken oben überspannt eine Karte und sagt schon vor dem ersten Wort, worum es steht.',
+      },
+    ],
+  },
+  {
     nummer: 55,
     datum: null,
     titel: 'Das Postfach am Handy: Uhrzeit, volle Breite, eine Leiste',
@@ -41,6 +63,9 @@ export const NEUERUNGEN: Neuerung[] = [
       },
       {
         text: '**Markieren und Verschieben liegen hinter „⋯".** Sie kosten dort einen Tipp mehr und nehmen der Zeile dafür die Unruhe — am Telefon der Unterschied zwischen einer Leiste und zwei.',
+      },
+      {
+        text: '**„Neu" und „markiert" stehen jetzt vorn als Zeichen** — ein Punkt heißt ungelesen, ein Fähnchen heißt vorgemerkt. Als beschriftete Pillen brauchten sie rechts je gut neunzig Pixel; zusammen mit Zeit und „⋯" blieb dem Absender ein Drittel der Zeile, und „Kundenservice IONOS" wurde mitten im Wort abgeschnitten. Vorn kosten beide zusammen vierzehn Pixel, und die Namen beginnen alle auf derselben Linie.',
       },
     ],
   },
