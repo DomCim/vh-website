@@ -593,6 +593,39 @@ das zurückkommt.
      andere Antwort bekommen. Gegen Prompt-Injection reicht die Prüfung,
      gegen einen Angreifer mit eigener DNS-Zone hilft nur Netztrennung.
 
+8. **Belege, Wareneingänge und Kundenanhänge gehören aus der Mediathek
+   heraus.** Aufgekommen aus Dominiks Frage (08/2026), ob die Dateien nicht
+   auf getrennte Adressen und ein eigenes Volume gehörten. Beim Nachsehen war
+   die Frage dringender als gedacht: Die Mediathek ist öffentlich lesbar — sie
+   muss es sein, sie liefert die Bilder der Website aus —, und `Expenses`,
+   `GoodsReceipts`, `Inquiries` und `Jobs` legen ihre Anhänge genau dort ab.
+   Der Belegscan einer Lieferantenrechnung lag damit unter derselben Art
+   Adresse wie ein Produktfoto.
+
+   **Sofort geschlossen ist der Weg, nicht die Ursache** (siehe
+   `collections/Media.ts`): Die Liste `/api/media` verlangt jetzt eine
+   Anmeldung, und die Bildadresse gibt nur noch Dateien aus ihrem eigenen
+   Ordner heraus — vorher kam man mit einem kodierten Schrägstrich
+   (`werkstattdateien%2F…`) in den Unterordner mit den Laserdateien. Erratbar
+   bleibt ein Beleg, solange er dort liegt.
+
+   **Der Umbau, der noch aussteht**, in dieser Reihenfolge:
+
+   - Eine zweite Upload-Sammlung („Ablage") mit `read: office`, `staticDir`
+     **außerhalb** von `media/` — nur so kann die Bildadresse sie baulich
+     nicht erreichen. Ausgeliefert über eine geprüfte Route, Vorbild ist
+     `/api/office/werkstattdatei/[id]`.
+   - Die vier Felder darauf umhängen und die vorhandenen Dateien einmalig
+     verschieben (Migration plus `docker-entrypoint.sh`).
+   - Die Werkstattdateien gleich mit: `media/werkstattdateien` ist heute nur
+     deshalb ein Unterordner der Mediathek, weil es das Volume schon gab.
+
+   **Das braucht eine Änderung am Portainer-Stack** — ein eigenes Volume und
+   ein Eintrag in der nächtlichen Sicherung. Ohne beides liegen die Dateien in
+   der Container-Schicht und sind beim nächsten Ausrollen weg. Deshalb nicht
+   nebenbei gemacht: Es ist Dominiks Entscheidung, wann der Stack angefasst
+   wird.
+
 ---
 
 ## Fallen, die in diesem Durchgang Zeit gekostet haben

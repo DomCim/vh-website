@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 65,
+    datum: null,
+    titel: 'Zeichnungen und Belege liegen nicht mehr offen',
+    punkte: [
+      {
+        text: '**Gefunden bei einer Frage, nicht bei einer Störung.** Dominik fragte, ob die Dateien nicht besser auf getrennte Adressen gehörten. Beim Nachsehen zeigte sich: Die Adresse, unter der die Produktbilder ausgeliefert werden, gab mit einem Trick auch die Werkstattdateien heraus — Laserdateien und Zeichnungen, ohne jede Anmeldung. Sie liegen technisch in einem Unterordner der Bildablage, und der Ordner war nicht abgeriegelt.',
+      },
+      {
+        text: '**Und die Bildablage ließ sich durchzählen.** Wer sie abfragte, bekam ohne Anmeldung jeden Eintrag mit Namen aufgelistet. Dort liegen aber nicht nur Produktfotos, sondern auch Belegscans, Wareneingänge und das, was Kundschaft an eine Anfrage hängt. Beides ist geschlossen: Der Unterordner ist von außen nicht mehr erreichbar, und die Liste verlangt eine Anmeldung.',
+      },
+      {
+        text: '**Die Produktbilder bleiben genau so öffentlich wie vorher.** Sie stecken in jeder Seite und Google holt sie dort ab — eine Absicherung, die sie mitnimmt, würde niemandem auffallen und den Laden Kundschaft kosten. Eine Prüfung wacht deshalb über beide Seiten: Das Bild kommt ohne Anmeldung, die Zeichnung nicht.',
+      },
+      {
+        text: '**Was noch aussteht:** Ein Beleg gehört überhaupt nicht in dieselbe Ablage wie ein Produktfoto. Der Umbau auf eine eigene Ablage mit eigenem Speicher steht in der Übergabe — er braucht eine Änderung am Server und wird deshalb nicht nebenbei gemacht.',
+      },
+    ],
+  },
+  {
     nummer: 64,
     datum: null,
     titel: 'Übergabemappen, Kundenbereich und Büro gehören in keine Suchmaschine',

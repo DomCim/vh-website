@@ -1,7 +1,40 @@
-import type { CollectionConfig } from 'payload'
+import type { Access, CollectionConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins } from '../access'
 import { liveHooks } from '../lib/liveHooks'
+
+/**
+ * Wer die Mediathek lesen darf.
+ *
+ * Bisher stand hier `anyone` — und das war zweimal zu großzügig.
+ *
+ * **Die Bilddateien selbst: ja, aber nur die im Ordner.** Payload liefert sie
+ * unter `/api/media/file/<name>` aus, und das muss es auch: Die Website lebt
+ * von ihren Bildern, Google Shopping holt sie dort ab. Der Name wird dabei
+ * aber nur gegen `..` geprüft, nicht gegen einen Schrägstrich — und die
+ * Werkstattdateien liegen als Unterordner **in** diesem Ordner. Mit einem
+ * kodierten Schrägstrich (`werkstattdateien%2F…`) gab die öffentliche
+ * Bildadresse deshalb Laserdateien und Zeichnungen heraus, ohne Anmeldung.
+ * Bemerkt bei Dominiks Frage (08/2026), ob die Dateien nicht besser auf eine
+ * eigene Route gehörten. Ein Dateiname aus dieser Sammlung hat nie einen
+ * Schrägstrich; wer einen mitschickt, will aus dem Ordner heraus.
+ *
+ * **Die Liste: nein.** `/api/media` gab ohne Anmeldung jeden Datensatz
+ * heraus — mit Dateinamen, Alternativtext und allem. In der Mediathek liegen
+ * aber nicht nur Produktfotos: auch Belegscans, Wareneingänge und das, was
+ * Kundschaft an eine Anfrage hängt. Damit waren sie nicht bloß erratbar,
+ * sondern der Reihe nach abzählbar. Die Website braucht diese Liste nicht —
+ * sie wird auf dem Server gebaut und geht dabei an der Zugriffsprüfung
+ * vorbei; im Browser fragt sie niemand ab.
+ *
+ * Das ist die Absicherung, nicht die Lösung: Ein Beleg gehört nicht in eine
+ * Sammlung, deren Dateien öffentlich ausgeliefert werden. Solange er es doch
+ * tut, ist er wenigstens nicht mehr aufzählbar. Siehe HANDOVER.md.
+ */
+const mediathekLesen: Access = ({ data, isReadingStaticFile, req: { user } }) => {
+  if (isReadingStaticFile) return !/[\\/]/.test(String(data?.filename ?? ''))
+  return Boolean(user)
+}
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -17,7 +50,7 @@ export const Media: CollectionConfig = {
   // Offene Büro-Seiten über Änderungen unterrichten
   hooks: liveHooks('medien'),
   access: {
-    read: anyone,
+    read: mediathekLesen,
     create: admins,
     update: admins,
     delete: admins,
