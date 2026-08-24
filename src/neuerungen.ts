@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 60,
+    datum: null,
+    titel: 'Vom Ratgeber zur Ware — und von der Referenz zur Anfrage',
+    punkte: [
+      {
+        text: '**Ein Ratgeber brachte Leser, aber keinen Auftrag.** Am Ende des Textes stand nichts: kein Hinweis darauf, dass es das Beschriebene im Haus zu kaufen gibt. Jetzt lassen sich am News-Beitrag **passende Arbeiten** verknüpfen; sie erscheinen unter dem Text als Kacheln mit Bild und führen direkt auf den Artikel. Gedacht vor allem für Ratgeber: Wer über Pflege liest, soll sehen, worum es geht.',
+      },
+      {
+        text: '**Bewusst nur in diese Richtung.** Auf der Artikelseite jede News zu listen, die ihn einmal erwähnt hat, wäre in einem Jahr eine Liste, die niemand liest. Die Referenzen bleiben davon unberührt — die zeigen ihre Arbeiten wie bisher und erscheinen umgekehrt auch am Artikel.',
+      },
+      {
+        text: '**„So etwas anfragen" an jeder Referenz.** Der Knopf am Ende einer Referenz hieß „Nach Maß fertigen" und führte auf ein leeres Formular — wer eben ein Geländer angesehen hatte, musste dort von vorn erklären, was er meint. Jetzt kommt die Referenz mit: Ihr Name steht über dem Formular, im Nachrichtenfeld vorbelegt, **im Betreff der Mail** und als eigenes Feld an der Anfrage. Auch wenn der Kunde den Text überschreibt, steht im Büro noch, welche Arbeit die Anfrage ausgelöst hat.',
+      },
+      {
+        text: '**Beides geht auch über den Fernzugriff.** Beim Anlegen und Ändern eines Beitrags lassen sich die passenden Arbeiten mitgeben, und beim Lesen kommen sie zurück — ein Pfad, den es nicht gibt, wird dabei als Tippfehler gemeldet und nicht still verschluckt.',
+      },
+    ],
+  },
+  {
     nummer: 59,
     datum: null,
     titel: 'Versandzonen: Was die Fracht wirklich kostet, steht jetzt auch in der Kasse',

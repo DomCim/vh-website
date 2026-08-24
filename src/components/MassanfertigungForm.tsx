@@ -24,7 +24,22 @@ type Labels = {
   error: string
 }
 
-export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels: Labels }) {
+export function MassanfertigungForm({
+  locale,
+  labels,
+  bezug,
+}: {
+  locale: Locale
+  labels: Labels
+  /**
+   * Die Referenz, von der aus gefragt wurde („So etwas anfragen").
+   *
+   * Der Titel steht dann über dem Formular und im Nachrichtenfeld vorbelegt;
+   * mitgeschickt wird er als eigenes Feld, damit im Büro steht, welche Arbeit
+   * die Anfrage ausgelöst hat — auch wenn der Text danach überschrieben wird.
+   */
+  bezug?: { titel: string; pfad: string; vorbelegung: string }
+}) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [anhaenge, setAnhaenge] = useState<{ id: number; datei: string }[]>([])
 
@@ -78,6 +93,8 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
           message: f.get('message'),
           website: f.get('website'),
           locale,
+          referenceTitle: bezug?.titel,
+          referenceUrl: bezug?.pfad,
           custom: {
             width: zahl('width'),
             depth: zahl('depth'),
@@ -107,6 +124,14 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
 
   return (
     <form onSubmit={absenden} className="mt-8 max-w-xl space-y-4">
+      {bezug && (
+        <p className="border-bronze text-ink-soft border-l-2 pl-3 text-sm leading-relaxed">
+          {bezug.vorbelegung}{' '}
+          <a href={bezug.pfad} className="text-ink underline">
+            {bezug.titel}
+          </a>
+        </p>
+      )}
       {/* Honigtopf gegen Spam-Bots — für Menschen unsichtbar */}
       <input
         type="text"
@@ -169,7 +194,14 @@ export function MassanfertigungForm({ locale, labels }: { locale: Locale; labels
       <input name="name" required placeholder={labels.name} className={inputClass} />
       <input name="email" type="email" required placeholder={labels.email} className={inputClass} />
       <input name="phone" type="tel" placeholder={labels.phone} className={inputClass} />
-      <textarea name="message" required rows={5} placeholder={labels.message} className={inputClass} />
+      <textarea
+        name="message"
+        required
+        rows={5}
+        placeholder={labels.message}
+        defaultValue={bezug?.vorbelegung ? `${bezug.vorbelegung}\n\n` : undefined}
+        className={inputClass}
+      />
 
       <button
         type="submit"

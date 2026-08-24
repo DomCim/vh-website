@@ -559,6 +559,12 @@ das zurückkommt.
      `multipart/form-data` an: JSON im Feld `daten`, Dateien in `dateien`.
      Grenze 25 MB zusammen, geprüft **vor** der Postfachsuche, weil ein
      Mailserver sonst erst nach dem Hochladen ablehnt.
+   - ~~**Ein Ratgeber führt nirgendwo hin, und eine Referenz endet in einem
+     leeren Maßformular.**~~ — **erledigt (08/2026).** News tragen
+     `relatedProducts` (unter dem Text als Kacheln, auch per MCP setz- und
+     lesbar); der Knopf an einer Referenz heißt „So etwas anfragen" und
+     reicht Titel und Pfad bis in die Anfrage durch — vorbelegter Text,
+     Mail-Betreff und eigene Felder `referenceTitle`/`referenceUrl`.
    - **Bestandsabbuchung beim Shop-Verkauf.** Ein verkauftes Einzelstück
      wird nur auf „nicht verfügbar" gestellt; der Inventarposten
      (`fertigware`) bleibt unberührt und der Inventarwert zu hoch. Ebenso

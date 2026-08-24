@@ -592,6 +592,10 @@ export interface News {
     [k: string]: unknown;
   } | null;
   /**
+   * Werden unter dem Beitrag gezeigt. Gedacht für Ratgeber: Wer über Pflege liest, soll sehen, worum es geht.
+   */
+  relatedProducts?: (number | Product)[] | null;
+  /**
    * Postet Titel, Teaser, Bild und Link auf die Facebook-Seite
    */
   postToFacebook?: boolean | null;
@@ -815,6 +819,8 @@ export interface Inquiry {
   product?: (number | null) | Product;
   productTitle?: string | null;
   productUrl?: string | null;
+  referenceTitle?: string | null;
+  referenceUrl?: string | null;
   custom?: {
     width?: number | null;
     depth?: number | null;
@@ -2118,6 +2124,7 @@ export interface NewsSelect<T extends boolean = true> {
   coverImage?: T;
   excerpt?: T;
   content?: T;
+  relatedProducts?: T;
   postToFacebook?: T;
   facebookPostId?: T;
   facebookPostError?: T;
@@ -2267,6 +2274,8 @@ export interface InquiriesSelect<T extends boolean = true> {
   product?: T;
   productTitle?: T;
   productUrl?: T;
+  referenceTitle?: T;
+  referenceUrl?: T;
   custom?:
     | T
     | {
