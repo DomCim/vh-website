@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 66,
+    datum: null,
+    titel: 'Die Listen sehen am Rechner wieder aus wie Listen',
+    punkte: [
+      {
+        text: '**Im Postfach fehlten die Trennstriche — alle.** Zwischen zwei Mails lag nichts, die Liste lief als ein Block durch. Der Grund lag tiefer, als es aussah: Seit die Zeilen sich wischen lassen, steckt jede in einer eigenen Hülle. Die Regel „beim letzten Eintrag keinen Strich" fragte aber nur, ob eine Zeile das letzte Kind ist — und in ihrer eigenen Hülle ist jede Zeile das letzte Kind. Also entfiel der Strich überall.',
+      },
+      {
+        text: '**Absender und Betreff standen mittig statt links.** Auf einem breiten Bildschirm hing „Amazon.de" irgendwo in der Mitte, die Uhrzeit klebte am rechten Rand, dazwischen war nichts. Am Handy war es richtig, weil es dort eine eigene Regel gab; am Rechner fehlte sie. Jetzt beginnt jede Zeile links, wo das Auge sie sucht.',
+      },
+      {
+        text: '**Jede Zeile ist jetzt eine eigene Karte — auf jedem Bildschirm.** Bis hierher waren es Karten am Telefon und eine dichte Liste am Rechner. Das ging nicht auf: Der farbige Balken links ist für eine Kartenkante gemacht und deutete in der dichten Liste Grenzen an, die es dort nicht gab. Entweder ganz Karte oder ganz Tabelle — halb beides sah zerrissen aus.',
+      },
+      {
+        text: '**Betrifft alle Listen im Büro,** nicht nur das Postfach: Aufträge, Rechnungen, Belege, Artikel und die Übersicht folgen denselben Regeln. Die Farben behalten ihre Bedeutung — rot über der Zeit, bronze wartet auf uns, grün erledigt, blau ungelesen.',
+      },
+    ],
+  },
+  {
     nummer: 65,
     datum: null,
     titel: 'Zeichnungen und Belege liegen nicht mehr offen',
