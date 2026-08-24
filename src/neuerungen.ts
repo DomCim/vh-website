@@ -26,6 +26,103 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 65,
+    datum: null,
+    titel: 'Zeichnungen und Belege liegen nicht mehr offen',
+    punkte: [
+      {
+        text: '**Gefunden bei einer Frage, nicht bei einer Störung.** Dominik fragte, ob die Dateien nicht besser auf getrennte Adressen gehörten. Beim Nachsehen zeigte sich: Die Adresse, unter der die Produktbilder ausgeliefert werden, gab mit einem Trick auch die Werkstattdateien heraus — Laserdateien und Zeichnungen, ohne jede Anmeldung. Sie liegen technisch in einem Unterordner der Bildablage, und der Ordner war nicht abgeriegelt.',
+      },
+      {
+        text: '**Und die Bildablage ließ sich durchzählen.** Wer sie abfragte, bekam ohne Anmeldung jeden Eintrag mit Namen aufgelistet. Dort liegen aber nicht nur Produktfotos, sondern auch Belegscans, Wareneingänge und das, was Kundschaft an eine Anfrage hängt. Beides ist geschlossen: Der Unterordner ist von außen nicht mehr erreichbar, und die Liste verlangt eine Anmeldung.',
+      },
+      {
+        text: '**Die Produktbilder bleiben genau so öffentlich wie vorher.** Sie stecken in jeder Seite und Google holt sie dort ab — eine Absicherung, die sie mitnimmt, würde niemandem auffallen und den Laden Kundschaft kosten. Eine Prüfung wacht deshalb über beide Seiten: Das Bild kommt ohne Anmeldung, die Zeichnung nicht.',
+      },
+      {
+        text: '**Was noch aussteht:** Ein Beleg gehört überhaupt nicht in dieselbe Ablage wie ein Produktfoto. Der Umbau auf eine eigene Ablage mit eigenem Speicher steht in der Übergabe — er braucht eine Änderung am Server und wird deshalb nicht nebenbei gemacht.',
+      },
+    ],
+  },
+  {
+    nummer: 64,
+    datum: null,
+    titel: 'Übergabemappen, Kundenbereich und Büro gehören in keine Suchmaschine',
+    punkte: [
+      {
+        text: '**Sie standen schon nicht drin** — jede dieser Seiten trägt seit jeher ein Kennzeichen im Seitenkopf, und keine steht in der Sitemap. Das Kennzeichen wird aber nur gelesen, wenn eine Suchmaschine HTML auswertet: Eine PDF-Antwort, ein Bild oder eine Datenauskunft haben keines.',
+      },
+      {
+        text: '**Jetzt sagt es zusätzlich der Server selbst** — als Kopfzeile, die unabhängig vom Inhaltstyp gilt. Betroffen sind Übergabemappen, der Kundenbereich, die Seite nach dem Kauf, das Büro, die Website-Verwaltung und die Schnittstellen. Die Seite nach dem Kauf hatte als einzige gar nichts, dabei steht dort die Bestellnummer.',
+      },
+      {
+        text: '**Die Produktbilder bleiben ausdrücklich auffindbar.** Sie liegen technisch unter derselben Adresse wie die Schnittstellen, sollen aber in der Bildersuche stehen — ein pauschales Verbot hätte sie herausgenommen, ohne dass es jemandem aufgefallen wäre. Eine Prüfung wacht jetzt über beide Seiten: was draußen bleibt und was auffindbar bleibt.',
+      },
+      {
+        text: '**Was bewusst nicht gemacht wurde:** die Übergabemappen in der `robots.txt` sperren. Das verbietet der Suchmaschine das Abrufen — und dann liest sie den Hinweis „nicht aufnehmen" nie. Eine Adresse, die sie anderswo aufschnappt, könnte danach als nackter Link im Ergebnis stehen. Abrufen erlauben und dabei „nicht aufnehmen" sagen ist der sichere Weg.',
+      },
+      {
+        text: '**Der eigentliche Schutz bleibt aber das Passwort.** Eine Suchmaschine ist nicht das Risiko bei einem Link, der per Mail geht — Mail-Scanner, Vorschaubilder in Messengern und Firmen-Proxys sehen ihn genauso. Die Mappe gibt ohne Passwort nichts heraus, und eine erfundene Kennung antwortet genau wie eine echte: Man erfährt nicht einmal, ob es sie gibt.',
+      },
+    ],
+  },
+  {
+    nummer: 63,
+    datum: null,
+    titel: 'Die Farben in den Listen gelten jetzt überall gleich',
+    punkte: [
+      {
+        text: '**Der farbige Balken war nur halb ausgerollt.** Die Aufträge trugen ihn, die Artikel zeigten rechts eine bronzene Marke und links nichts, und die Auslastung zeigte Marken in drei Farben ohne jeden Balken. Eine Farbe, die in einer Liste etwas bedeutet und in der nächsten fehlt, ist schlechter als gar keine: Man gewöhnt sich an hinzusehen und wird dann nicht gewarnt.',
+      },
+      {
+        text: '**Vierzehn Listen nachgezogen** — Übersicht, Artikel, Inventar, Inventur, Auslastung, Nachkalkulation, Wareneingang, Übergabemappen, Mail-Protokoll, Wiedervorlagen und der Zahlplan am Auftrag. Rot heißt weiterhin „über der Zeit", bronze „wartet auf uns", grün „erledigt", blau „ungelesen".',
+      },
+      {
+        text: '**Der Balken markiert, was wartet — nicht jeden Zustand.** Ein gebuchter Wareneingang, eine bezahlte Rechnung im Zahlplan, eine freie Woche bleiben bewusst farblos. Grün auf neun von zehn Zeilen sagt nichts mehr; die Marke rechts nennt es trotzdem.',
+      },
+      {
+        text: '**Und wo keine Farbe hingehört, ist sie weg.** „Von der Grundlage" am Artikel, Zu- und Abgang bei einer Bestandskorrektur, „ansehen" bei den Unterlagen — das sind Herkunft, Richtung und ein Aufklapper, keine Zustände. Sie trugen die Zustandsfarben und zeigten damit Arbeit an, die es nicht gab.',
+      },
+      {
+        text: '**Am Handy wird der Titel nicht mehr abgeschnitten.** Was rechts in der Zeile stand, nahm sich seinen Platz, und der Titel bekam den Rest — bei drei Elementen rechts waren das gut hundert Pixel, aus „KW 39 · 22.09.–28.09." wurde „KW 39 · 2…". Jetzt rutscht der rechte Teil eine Zeile tiefer, wenn er sonst nicht passt, und lange Namen dürfen zweizeilig stehen. Am Rechner bleibt die dichte, einzeilige Liste.',
+      },
+    ],
+  },
+  {
+    nummer: 62,
+    datum: null,
+    titel: 'Fünf Meldungen vom Handy — und Ordnung in der Meldeliste',
+    punkte: [
+      {
+        text: '**Die Navigationsleiste blieb manchmal weg.** In der installierten App auf dem iPhone war nach dem Zurückkehren aus dem Hintergrund keine Navigation mehr da. Die Leiste blendet sich aus, solange die Bildschirmtastatur offen ist — und ob sie offen ist, wurde allein daran gemessen, dass unten etwas fehlt. Beim Aufwachen meldet iOS für einen Moment die alte, kleine Höhe: Das sah aus wie eine Tastatur, und weil danach kein weiteres Ereignis mehr kam, blieb die Leiste weg, bis man die Seite wechselte.',
+      },
+      {
+        text: '**Jetzt zählt zusätzlich, ob überhaupt jemand tippt.** Eine Tastatur ohne Feld, in das sie tippt, gibt es nicht — mit dieser zweiten Bedingung kann eine falsch gemessene Höhe die Leiste nicht mehr verschlucken. Dazu wird beim Zurückkommen mehrfach nachgemessen, weil iOS die richtige Höhe erst nach seiner eigenen Animation herausgibt.',
+      },
+      {
+        text: '**Beim Melden lässt sich jetzt sagen, was es ist** — Fehler, Gestaltung oder Idee. Daraus wird im Repository ein Kennzeichen, und die laufende Fassung kommt von selbst dazu. Der Grund: Fünf Meldungen an einem Morgen standen dort ungeordnet nebeneinander, und dass zwei davon dieselbe Sache aus zwei Fassungen betrafen, fiel nur zufällig auf. Vorbelegt ist „Fehler"; wer nichts umstellt, meldet wie bisher in einem Zug.',
+      },
+      {
+        text: '**Die Rechtstexte hatten als einziger Punkt kein Zeichen.** Nachgetragen (eine Waage). Der eigentliche Fehler war, dass es niemandem auffiel: Ein Punkt ohne hinterlegtes Zeichen zeigt stumm keines. Eine Prüfung wacht jetzt darüber, dass jeder Punkt eines hat — der nächste neue Bereich kann nicht mehr ohne herauskommen.',
+      },
+      {
+        text: '**Ein Auftrag lief in Fertigung und stand im Kalender nirgends.** Der Kalender zeigt, was ein Datum hat — und verschwieg damit alles ohne. Ein Auftrag aus einer Shop-Bestellung entsteht ohne Termin, weil den die Werkstatt setzt und nicht der Shop.',
+      },
+      {
+        text: '**Der Senden-Knopf war bei offener Tastatur nicht zu erreichen** — beim Schreiben einer Mail wie beim Melden eines Fehlers. Die Leiste mit der Hauptaktion rutschte dabei zurück in den Seitenfluss; das war als Ausweichen gedacht und hieß in Wahrheit, dass der einzige Knopf, der zählt, irgendwo weiter unten lag. Jetzt schwebt er beim Tippen unten rechts über der Tastatur mit — nur so breit wie seine Beschriftung, damit er nie im Weg steht.',
+      },
+      {
+        text: '**Das Anhängen eines Fotos klappte mal, mal nicht.** Das Dateifeld war versteckt und wurde vom Knopf aus über ein Skript ausgelöst. Auf dem iPhone zählt so ein Aufruf nur, solange er unmittelbar in der Berührung steckt — kommt ein Neuzeichnen dazwischen, verwirft iOS ihn stillschweigend. Jetzt liegt das Feld selbst unter dem Knopf: Wer ihn berührt, berührt das Feld, und das verwirft kein Browser. Gilt für alle fünf Stellen, an denen Dateien gewählt werden.',
+      },
+      {
+        text: '**Das Schreibfenster im Postfach nimmt am Handy die volle Breite** — wie die geöffnete Mail schon vorher. In der gepolsterten Karte blieben auf einem üblichen Telefon keine 340 Pixel für das, worin man gerade schreibt.',
+      },
+      {
+        text: '**Unter dem Kalenderblatt steht jetzt „Ohne Termin".** Dort liegen die laufenden Aufträge ohne Datum, mit dem Weg zum Auftrag — dort trägt man ihn ein, wenn man ihn weiß. Bewusst unabhängig vom gewählten Monat: Etwas ohne Datum gehört in keinen. Und bewusst ohne geschätztes Datum: Ein gesetzter Termin wandert beim Wechsel in die Fertigung als Zusage in die Mail an die Kundschaft — den gibt kein Automat ab.',
+      },
+    ],
+  },
+  {
     nummer: 61,
     datum: null,
     titel: 'Ein Storno hat jetzt Folgen — und eine Rückgabe ist ein Vorgang',

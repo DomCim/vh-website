@@ -11,6 +11,7 @@ import {
 } from '../../../../lib/auslastung'
 import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
 import { absenden } from '../../../../lib/buero/warteschlange'
+import { balkenKlasse } from '../../../../lib/listen'
 import { zahlAusText } from '../../../../lib/zahleingabe'
 import { Zahleingabe } from '../../../../components/office/Zahleingabe'
 import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
@@ -119,7 +120,16 @@ export function AuslastungAnsicht() {
           const voll = w.stunden >= w.kapazitaet
           const knapp = w.kapazitaet > 0 && w.anteil >= 0.8
           return (
-            <div key={w.schluessel} className="buero-zeile">
+            /*
+             * Rot heißt „über der Zeit" — die Woche ist überbucht. Bronze ab
+             * vier Fünfteln: Da passt nichts Großes mehr hinein. Eine Woche
+             * mit Luft bleibt farblos; grün auf jeder freien Woche hieße, die
+             * Farbe zu verbrauchen, bevor sie etwas sagt.
+             */
+            <div
+              key={w.schluessel}
+              className={`buero-zeile ${balkenKlasse(voll ? 'warn' : knapp ? 'offen' : '')}`}
+            >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">
                   KW {w.woche} · {kurz(w.von)}–{kurz(w.bis)}
@@ -211,7 +221,9 @@ export function AuslastungAnsicht() {
           </p>
           <div className="buero-liste">
             {ohneSchaetzung.map((a) => (
-              <Link key={a.id} href={`/office/auftraege/${a.id}`} className="buero-zeile">
+              // Ohne geschätzte Zeit fehlt der Auslastung oben eine Zahl —
+              // die Woche sieht dadurch leerer aus, als sie ist.
+              <Link key={a.id} href={`/office/auftraege/${a.id}`} className="buero-zeile ist-offen">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{a.title || a.jobNumber}</div>
                   <div className="buero-zeile-neben">

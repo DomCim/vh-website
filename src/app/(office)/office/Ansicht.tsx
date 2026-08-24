@@ -197,10 +197,16 @@ export function UebersichtAnsicht() {
         (knapp.length > 0 && darf('inventar.pflegen')) ||
         (offeneAnfragen > 0 && darf('anfragen.bearbeiten'))) && (
         <>
+          {/*
+            * Jede Zeile hier ist etwas, das wartet — deshalb trägt jede
+            * ihren Balken. Rot heißt „über der Zeit" (überfällig, Pflicht,
+            * fehlender Beleg), bronze „wartet auf uns". Ohne den Balken
+            * stand hier eine Liste, die rechts Farbe zeigte und links keine.
+            */}
           <h2>Kümmern</h2>
           <div className="buero-liste">
             {erechnungOffen && darf('einstellungen.aendern') && (
-              <Link href="/office/einstellungen" className="buero-zeile">
+              <Link href="/office/einstellungen" className="buero-zeile ist-warn">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     Plateforme Agréée: Anmeldung
@@ -216,7 +222,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {faelligeZettel.length > 0 && (
-              <Link href="/office/wiedervorlagen" className="buero-zeile">
+              <Link href="/office/wiedervorlagen" className="buero-zeile ist-offen">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {faelligeZettel.length} Wiedervorlage
@@ -234,7 +240,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {zuZahlen.length > 0 && darf('belege.erfassen') && (
-              <Link href="/office/belege?filter=offen" className="buero-zeile">
+              <Link href="/office/belege?filter=offen" className="buero-zeile ist-warn">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {zuZahlen.length} Beleg{zuZahlen.length === 1 ? '' : 'e'} zu zahlen
@@ -260,7 +266,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {ueberfaellig.length > 0 && darf('rechnungen.schreiben') && (
-              <Link href="/office/rechnungen" className="buero-zeile">
+              <Link href="/office/rechnungen" className="buero-zeile ist-warn">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {ueberfaellig.length} Rechnung{ueberfaellig.length === 1 ? '' : 'en'} überfällig
@@ -273,7 +279,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {zahlen.ungeprueft > 0 && darf('belege.erfassen') && (
-              <Link href="/office/belege?filter=ungeprueft" className="buero-zeile">
+              <Link href="/office/belege?filter=ungeprueft" className="buero-zeile ist-offen">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {zahlen.ungeprueft} ausgelesene Belege ungeprüft
@@ -284,7 +290,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {zahlen.ohneBeleg > 0 && darf('belege.erfassen') && (
-              <Link href="/office/belege?filter=ohne-beleg" className="buero-zeile">
+              <Link href="/office/belege?filter=ohne-beleg" className="buero-zeile ist-warn">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{zahlen.ohneBeleg} Ausgaben ohne Beleg</div>
                   <div className="buero-zeile-neben">
@@ -295,7 +301,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {knapp.length > 0 && darf('inventar.pflegen') && (
-              <Link href="/office/nachbestellen" className="buero-zeile">
+              <Link href="/office/nachbestellen" className="buero-zeile ist-offen">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {knapp.length} Posten unter Mindestbestand
@@ -312,7 +318,7 @@ export function UebersichtAnsicht() {
               </Link>
             )}
             {offeneAnfragen > 0 && darf('anfragen.bearbeiten') && (
-              <Link href="/office/anfragen" className="buero-zeile">
+              <Link href="/office/anfragen" className="buero-zeile ist-offen">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{offeneAnfragen} neue Kundenanfragen</div>
                   <div className="buero-zeile-neben">Noch unbeantwortet</div>
@@ -334,7 +340,7 @@ export function UebersichtAnsicht() {
           offeneRechnungen.map((r) => {
             const spaet = r.dueDate && new Date(r.dueDate).getTime() < heute
             return (
-              <Link key={r.id} href={`/office/rechnungen/${r.id}`} className="buero-zeile">
+              <Link key={r.id} href={`/office/rechnungen/${r.id}`} className="buero-zeile ist-warn">
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {r.invoiceNumber} · {r.customerName ?? 'ohne Kunde'}

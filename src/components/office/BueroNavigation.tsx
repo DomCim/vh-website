@@ -342,6 +342,15 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <path d="M12 3.5 13.9 9l5.6.3-4.4 3.5 1.5 5.4L12 15.1l-4.6 3.1L8.9 12.8 4.5 9.3 10.1 9z" />
     </>
   ),
+  /* Rechtstexte: Waage — AGB, Widerruf, Datenschutz */
+  '/office/rechtliches': (
+    <>
+      <path d="M12 4.2v15.3M8.5 19.5h7" />
+      <path d="M5 7.2h14" />
+      <path d="M5 7.2 2.8 12.4a2.6 2.6 0 0 0 4.4 0z" />
+      <path d="M19 7.2 16.8 12.4a2.6 2.6 0 0 0 4.4 0z" />
+    </>
+  ),
   '/admin': (
     <>
       <circle cx="12" cy="12" r="8.5" />

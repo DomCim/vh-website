@@ -472,7 +472,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   // ── Schreiben ─────────────────────────────────────────────────────────────
   if (entwurf) {
     return (
-      <div className="buero-karte">
+      <div className="buero-karte buero-mail-schreiben">
         <Rueckmeldung text={meldung} />
         {/* Kein `label` um das Feld: Es bringt eine eigene Liste mit, und ein
             Tipp in ein Label geht ans Eingabefeld statt auf den Vorschlag —

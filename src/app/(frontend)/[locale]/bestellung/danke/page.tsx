@@ -2,6 +2,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+/*
+ * Nach dem Kauf, mit der Bestellnummer darauf — das hat in keinem Suchindex
+ * etwas zu suchen. `follow: false`, weil von hier nur in den Kundenbereich
+ * verlinkt wird.
+ */
+export const metadata = { robots: { index: false, follow: false } }
+
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { GoogleBewertung } from '../../../../../components/shop/GoogleBewertung'
 import { payloadClient } from '../../../../../lib/data'

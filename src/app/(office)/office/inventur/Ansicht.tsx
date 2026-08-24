@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
+import { balkenKlasse } from '../../../../lib/listen'
 import { datum, euro } from '../../../../lib/format'
 
 /** Inventurläufe — aus dem Bestand im Gerät. */
@@ -56,7 +57,13 @@ export function InventurAnsicht() {
           <div className="buero-leer">Noch keine Inventur erfasst.</div>
         ) : (
           laeufe.map((s) => (
-            <Link key={s.id} href={`/office/inventur/${s.id}`} className="buero-zeile">
+            <Link
+              key={s.id}
+              href={`/office/inventur/${s.id}`}
+              className={`buero-zeile ${balkenKlasse(
+                s.status === 'abgeschlossen' ? 'gut' : 'offen',
+              )}`}
+            >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">{s.title}</div>
                 <div className="buero-zeile-neben">
