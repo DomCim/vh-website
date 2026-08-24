@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
+import { balkenKlasse } from '../../../../lib/listen'
 import { euro } from '../../../../lib/format'
 
 /** Inventar — Bestandswert und Mindestbestände rechnet die Seite selbst. */
@@ -76,7 +77,13 @@ export function InventarAnsicht() {
           posten.map((i) => {
             const wenig = typeof i.minQuantity === 'number' && (i.quantity ?? 0) < i.minQuantity
             return (
-              <Link key={i.id} href={`/office/inventar/${i.id}`} className="buero-zeile">
+              // Rot heißt „über der Zeit": Unter dem Mindestbestand fehlt
+              // Material, bevor der nächste Auftrag es braucht.
+              <Link
+                key={i.id}
+                href={`/office/inventar/${i.id}`}
+                className={`buero-zeile ${balkenKlasse(wenig ? 'warn' : '')}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{i.name}</div>
                   <div className="buero-zeile-neben">

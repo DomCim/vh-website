@@ -268,7 +268,7 @@ export function ArtikelFormular({
                         {z.note ? ` · ${z.note}` : ''}
                       </div>
                     </div>
-                    <span className="buero-marker offen">von der Grundlage</span>
+                    <span className="buero-marker">von der Grundlage</span>
                   </div>
                 )
               })
@@ -398,7 +398,7 @@ export function ArtikelFormular({
                       {d.leadTime ? ` · ${d.leadTime}` : ''}
                     </div>
                   </div>
-                  <span className="buero-marker offen">von der Grundlage</span>
+                  <span className="buero-marker">von der Grundlage</span>
                 </div>
               )
             })}

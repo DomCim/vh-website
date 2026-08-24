@@ -85,7 +85,9 @@ export function WareneingangAnsicht() {
                   {z.note ? ` · ${z.note}` : ''}
                 </div>
               </div>
-              <span className="buero-marker gut">gebucht</span>
+              {/* Neutral: In dieser Liste ist jede Zeile gebucht — grün auf allen
+                  sagt nichts und nimmt der Farbe ihre Bedeutung. */}
+              <span className="buero-marker">gebucht</span>
             </Link>
           )
         })}

@@ -118,7 +118,9 @@ export function Wiedervorlagen({ bezug }: { bezug: WiedervorlagenBezug }) {
           {offen.map((w) => {
             const faellig = w.dueDate && new Date(w.dueDate).getTime() <= Date.now()
             return (
-              <div key={w.id} className="buero-zeile">
+              // Rot heißt „über der Zeit" — genau das ist eine fällige
+              // Wiedervorlage. Was noch Zeit hat, bleibt farblos.
+              <div key={w.id} className={`buero-zeile ${faellig ? 'ist-warn' : ''}`}>
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{w.title}</div>
                   <div className="buero-zeile-neben">

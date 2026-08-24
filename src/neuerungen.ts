@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 63,
+    datum: null,
+    titel: 'Die Farben in den Listen gelten jetzt überall gleich',
+    punkte: [
+      {
+        text: '**Der farbige Balken war nur halb ausgerollt.** Die Aufträge trugen ihn, die Artikel zeigten rechts eine bronzene Marke und links nichts, und die Auslastung zeigte Marken in drei Farben ohne jeden Balken. Eine Farbe, die in einer Liste etwas bedeutet und in der nächsten fehlt, ist schlechter als gar keine: Man gewöhnt sich an hinzusehen und wird dann nicht gewarnt.',
+      },
+      {
+        text: '**Vierzehn Listen nachgezogen** — Übersicht, Artikel, Inventar, Inventur, Auslastung, Nachkalkulation, Wareneingang, Übergabemappen, Mail-Protokoll, Wiedervorlagen und der Zahlplan am Auftrag. Rot heißt weiterhin „über der Zeit", bronze „wartet auf uns", grün „erledigt", blau „ungelesen".',
+      },
+      {
+        text: '**Der Balken markiert, was wartet — nicht jeden Zustand.** Ein gebuchter Wareneingang, eine bezahlte Rechnung im Zahlplan, eine freie Woche bleiben bewusst farblos. Grün auf neun von zehn Zeilen sagt nichts mehr; die Marke rechts nennt es trotzdem.',
+      },
+      {
+        text: '**Und wo keine Farbe hingehört, ist sie weg.** „Von der Grundlage" am Artikel, Zu- und Abgang bei einer Bestandskorrektur, „ansehen" bei den Unterlagen — das sind Herkunft, Richtung und ein Aufklapper, keine Zustände. Sie trugen die Zustandsfarben und zeigten damit Arbeit an, die es nicht gab.',
+      },
+      {
+        text: '**Am Handy wird der Titel nicht mehr abgeschnitten.** Was rechts in der Zeile stand, nahm sich seinen Platz, und der Titel bekam den Rest — bei drei Elementen rechts waren das gut hundert Pixel, aus „KW 39 · 22.09.–28.09." wurde „KW 39 · 2…". Jetzt rutscht der rechte Teil eine Zeile tiefer, wenn er sonst nicht passt, und lange Namen dürfen zweizeilig stehen. Am Rechner bleibt die dichte, einzeilige Liste.',
+      },
+    ],
+  },
+  {
     nummer: 62,
     datum: null,
     titel: 'Fünf Meldungen vom Handy — und Ordnung in der Meldeliste',

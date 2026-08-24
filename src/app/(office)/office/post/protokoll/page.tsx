@@ -76,7 +76,10 @@ export default async function ProtokollSeite({
           docs.map((m) => {
             const e = ERGEBNIS[m.status] ?? { text: m.status, art: '' }
             return (
-              <div key={m.id} className="buero-zeile">
+              // Rot heißt „über der Zeit": Eine Mail, die nicht rausging,
+              // wartet auf jemanden. Erfolgreiche bleiben farblos — sonst
+              // wäre das ganze Protokoll grün und die Farbe wertlos.
+              <div key={m.id} className={`buero-zeile ${e.art === 'warn' ? 'ist-warn' : ''}`}>
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{m.subject}</div>
                   <div className="buero-zeile-neben">

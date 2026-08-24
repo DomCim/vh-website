@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react'
 
 import { Fussleiste } from '../../../../components/office/Fussleiste'
 import { useBestand } from '../../../../lib/buero/bestand'
+import { balkenKlasse } from '../../../../lib/listen'
 import { datum } from '../../../../lib/format'
 import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
 
@@ -161,7 +162,20 @@ export function MappenAnsicht() {
           sortiert.map((m) => {
             const gueltig = offenerZugang(m)
             return (
-              <Link key={m.id} href={`/office/uebergabe/${m.id}`} className="buero-zeile">
+              /*
+               * Bronze allein bei „Kein Zugang": Dort steht eine Mappe, in
+               * die der Auftraggeber nicht hineinkommt — der Link ist
+               * abgelaufen und niemand weiß es. Eine offene Mappe ist der
+               * Normalfall und eine geschlossene erledigt; beide brauchen
+               * keine Farbe.
+               */
+              <Link
+                key={m.id}
+                href={`/office/uebergabe/${m.id}`}
+                className={`buero-zeile ${balkenKlasse(
+                  !m.geschlossen && !gueltig ? 'offen' : '',
+                )}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{m.title || 'Übergabemappe'}</div>
                   <div className="buero-zeile-neben">
