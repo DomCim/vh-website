@@ -1134,7 +1134,14 @@ html.tastatur-offen .buero-inhalt {
   background: var(--buero-blau);
 }
 
-.buero-zeile:last-child {
+/*
+ * Der Trennstrich aus der Grundregel gilt nur außerhalb einer `.buero-liste`.
+ *
+ * In einer Liste ist jede Zeile eine Karte mit eigenem Rahmen (siehe weiter
+ * unten) — ein zusätzlicher Strich unten wäre dort die zweite Linie an
+ * derselben Kante.
+ */
+.buero-liste .buero-zeile {
   border-bottom: none;
 }
 
@@ -1142,7 +1149,24 @@ html.tastatur-offen .buero-inhalt {
   background: var(--buero-papier);
 }
 
+/*
+ * Der linke Teil einer Zeile nimmt den Platz, der da ist.
+ *
+ * Ohne `flex: 1` schrumpft er auf die Breite seines Textes, und weil die
+ * Zeile `justify-content: space-between` hat, fällt der ganze Rest als Lücke
+ * dazwischen. Am Handy fiel das nie auf — dort ist der Bildschirm schmal und
+ * eine eigene Regel setzt seit jeher `flex: 1 1 13rem`. Am Rechner stand ein
+ * kurzer Absender wie „Amazon.de" plötzlich in der Mitte eines 1900 Punkte
+ * breiten Fensters, die Uhrzeit klebte am rechten Rand, und dazwischen war
+ * nichts. Das sah nach einem Handy-Layout aus, das jemand breitgezogen hat.
+ *
+ * `min-width: 0` muss dabei bleiben: Ohne das weigert sich ein Flex-Element,
+ * unter die Breite seines Inhalts zu gehen, und dann schneidet
+ * `text-overflow: ellipsis` am Titel nicht mehr ab, sondern die Zeile wird
+ * zu breit.
+ */
 .buero-zeile-haupt {
+  flex: 1;
   min-width: 0;
 }
 
@@ -1492,10 +1516,6 @@ html.tastatur-offen .buero-inhalt {
   cursor: pointer;
 }
 
-.buero-zeile-knopf:last-child {
-  border-bottom: none;
-}
-
 /* Fremdes Mail-HTML bleibt im eigenen Rahmen — ohne Skripte, ohne Zugriff */
 .buero-mailrahmen {
   width: 100%;
@@ -1577,85 +1597,79 @@ html.tastatur-offen .buero-inhalt {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Kartenform am Handy ────────────────────────────────────────────────── */
+/* ── Listenzeilen: jede Zeile eine Karte ────────────────────────────────── */
 
 /*
- * Am Telefon wird aus jeder Listenzeile eine eigene Karte, am Rechner bleibt
- * die dichte Liste (Wunsch Dominik 08/2026, Vorbild seine Home-Assistant-
- * Oberfläche).
+ * Jede Listenzeile ist eine eigene Karte — auf jedem Bildschirm.
  *
- * **Warum nicht überall dasselbe.** Am Telefon ist der Daumen das Maß: Eine
- * abgesetzte Fläche sagt „hier fasse ich hin", und der Statusbalken bekommt
- * eine Kante, an der er sichtbar ist. Am Rechner will man das Gegenteil —
- * möglichst viel auf einmal sehen. Einzelkarten kosten dort ein Drittel der
- * Einträge pro Bildschirm, ohne dass etwas gewonnen wäre.
+ * Das war eine Weile anders: Karten am Telefon, dichte Liste am Rechner
+ * (Wunsch Dominik 08/2026, Vorbild seine Home-Assistant-Oberfläche). Der
+ * Gedanke dahinter war, am Rechner mehr Einträge auf einmal zu sehen.
+ *
+ * Aufgehoben, weil die Mischung nicht aufging (Dominik, 08/2026): Der
+ * Statusbalken links ist für eine Kartenkante gemacht — in der dichten Liste
+ * deutet er Kartengrenzen an, die es dort nicht gibt, und die Liste sieht
+ * zerrissen aus. Entweder ganz Karte oder ganz Tabelle; halb beides ist
+ * schlechter als jedes von beidem.
  *
  * Die umgebende `.buero-liste` gibt ihren Rahmen ab: Ein Kasten um lauter
  * Kästen ist eine Linie zu viel.
  */
+.buero-liste {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.buero-liste .buero-zeile {
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-linie);
+  border-bottom: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  box-shadow: var(--buero-schatten);
+  overflow: hidden;
+}
+
+/*
+ * Die Fläche nimmt den Ton des Zustands auf — schwach, aber genug.
+ *
+ * Ein vier Pixel breiter Balken an der Kante sagt es erst, wenn man
+ * hinsieht. Färbt sich die ganze Karte einen Hauch mit, sieht man schon
+ * beim Scrollen, wo die Roten liegen und wo das Erledigte anfängt (Wunsch
+ * Dominik 08/2026, Vorbild seine Home-Assistant-Oberfläche).
+ *
+ * Sieben Prozent sind Absicht: Der Text muss auf jeder dieser Flächen
+ * dieselbe Lesbarkeit behalten wie auf der weißen. Wer hier aufdreht,
+ * bekommt eine bunte Liste und einen Kontrast, der im Hellen kippt.
+ */
+.buero-liste .buero-zeile.ist-warn {
+  background: color-mix(in srgb, var(--buero-rot) 7%, var(--buero-flaeche));
+}
+.buero-liste .buero-zeile.ist-offen {
+  background: color-mix(in srgb, var(--buero-bronze) 7%, var(--buero-flaeche));
+}
+.buero-liste .buero-zeile.ist-gut {
+  background: color-mix(in srgb, var(--buero-gruen) 7%, var(--buero-flaeche));
+}
+.buero-liste .buero-zeile.ist-neu {
+  background: color-mix(in srgb, var(--buero-blau) 7%, var(--buero-flaeche));
+}
+
+/* Der Balken folgt der Rundung, sonst steht eine gerade Kante in der Ecke */
+.buero-liste .buero-zeile::before {
+  width: 4px;
+  border-radius: 12px 0 0 12px;
+}
+
+
+
+/* ── Was nur am schmalen Bildschirm gilt ────────────────────────────────── */
 @media (max-width: 640px) {
-  .buero-liste {
-    background: none;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .buero-liste > .buero-zeile,
-  .buero-liste > * > .buero-zeile {
-    background: var(--buero-flaeche);
-    border: 1px solid var(--buero-linie);
-    border-bottom: 1px solid var(--buero-linie);
-    border-radius: 12px;
-    box-shadow: var(--buero-schatten);
-    overflow: hidden;
-  }
-
-  /*
-   * Die Fläche nimmt den Ton des Zustands auf — schwach, aber genug.
-   *
-   * Ein vier Pixel breiter Balken an der Kante sagt es erst, wenn man
-   * hinsieht. Färbt sich die ganze Karte einen Hauch mit, sieht man schon
-   * beim Scrollen, wo die Roten liegen und wo das Erledigte anfängt (Wunsch
-   * Dominik 08/2026, Vorbild seine Home-Assistant-Oberfläche).
-   *
-   * Sieben Prozent sind Absicht: Der Text muss auf jeder dieser Flächen
-   * dieselbe Lesbarkeit behalten wie auf der weißen. Wer hier aufdreht,
-   * bekommt eine bunte Liste und einen Kontrast, der im Hellen kippt.
-   */
-  .buero-liste > .buero-zeile.ist-warn,
-  .buero-liste > * > .buero-zeile.ist-warn {
-    background: color-mix(in srgb, var(--buero-rot) 7%, var(--buero-flaeche));
-  }
-  .buero-liste > .buero-zeile.ist-offen,
-  .buero-liste > * > .buero-zeile.ist-offen {
-    background: color-mix(in srgb, var(--buero-bronze) 7%, var(--buero-flaeche));
-  }
-  .buero-liste > .buero-zeile.ist-gut,
-  .buero-liste > * > .buero-zeile.ist-gut {
-    background: color-mix(in srgb, var(--buero-gruen) 7%, var(--buero-flaeche));
-  }
-  .buero-liste > .buero-zeile.ist-neu,
-  .buero-liste > * > .buero-zeile.ist-neu {
-    background: color-mix(in srgb, var(--buero-blau) 7%, var(--buero-flaeche));
-  }
-
-  /* Der Balken folgt der Rundung, sonst steht eine gerade Kante in der Ecke */
-  .buero-liste > .buero-zeile::before,
-  .buero-liste > * > .buero-zeile::before {
-    width: 4px;
-    border-radius: 12px 0 0 12px;
-  }
-
-  /* Ohne Zustand kein Balken — dann braucht die Zeile auch keinen Platz dafür */
-  .buero-liste > .buero-zeile:last-child,
-  .buero-liste > * > .buero-zeile:last-child {
-    border-bottom: 1px solid var(--buero-linie);
-  }
 
   /*
    * Am Handy darf die Zeile umbrechen — und zwar nur, wenn sie muss.

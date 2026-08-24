@@ -16,12 +16,24 @@ claude/<thema>   →   develop   →   main
 **`claude/<thema>` — hier wird gearbeitet.** Ein Branch je Aufgabe, abgezweigt
 von `develop`.
 
-**`develop` — hier wird gesammelt.** Fertige Arbeit kommt hierher, und zwar
-laufend. Was auf `develop` liegt, ist fertig, geprüft und wartet nur noch auf
-das Wort zum Veröffentlichen. Ein Branch, der nach `develop` gemerged ist,
-**wird gelöscht** — örtlich und am Server. Seine Commits leben in `develop`
-weiter; ein zweiter Name für dieselbe Arbeit stiftet nur Verwirrung darüber,
-welcher Stand gilt.
+**`develop` — hier wird gesammelt und im Container ausprobiert.** Fertige
+Arbeit kommt hierher, und zwar laufend. Was auf `develop` liegt, ist fertig,
+geprüft und wartet nur noch auf das Wort zum Veröffentlichen.
+
+Dazu gehört seit 08/2026 (Entscheidung Dominik) ein Schritt, den es vorher
+nicht gab: **`develop` wird als Abbild gebaut und gestartet** — auf dem
+Firmenrechner mit Docker Desktop, siehe `ENTWICKLUNG.md`. Der Grund ist eine
+Lücke, die zweimal Geld gekostet hat: Geprüft wurde bis dahin der Quelltext,
+nicht der Weg, den der Betrieb wirklich geht. Ein Containerstart gegen eine
+**leere** Datenbank fällt durch eine Migration, die eine Spalte vergisst; ein
+Volume, das im Stack fehlt, fällt beim zweiten Ausrollen auf, wenn die Dateien
+weg sind. Beides sieht man nur, wenn man es einmal tut. Was Migrationen,
+Volumes oder den Containerstart anfasst, gehört deshalb dort durchgespielt,
+bevor es nach `main` geht.
+
+Ein Branch, der nach `develop` gemerged ist, **wird gelöscht** — örtlich und
+am Server. Seine Commits leben in `develop` weiter; ein zweiter Name für
+dieselbe Arbeit stiftet nur Verwirrung darüber, welcher Stand gilt.
 
 **`main` — nur auf ausdrückliches Wort.** Nach `main` wird gezogen, wenn
 Dominik **„veröffentlichen"** sagt, und sonst nie. Nicht, weil es fertig

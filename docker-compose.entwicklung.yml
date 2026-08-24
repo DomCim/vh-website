@@ -1,0 +1,79 @@
+# Entwicklungsumgebung für den eigenen Rechner (Docker Desktop).
+#
+# Nicht zu verwechseln mit `docker-compose.yml` — das ist der Betriebsstack:
+# zwei getrennte Container hinter Traefik, Abbilder aus der Registry, keine
+# veröffentlichten Ports. Hier gilt das Gegenteil:
+#
+#  - **Ein** Container statt zwei. Das Abbild kennt die Rolle `alles`
+#    (siehe Dockerfile) — Website, Shop, Admin und Büro in einem Prozess.
+#    Getrennt laufen sie, damit ein Fehler im Büro den Shop nicht mitreißt;
+#    auf dem eigenen Rechner ist das nur ein zweiter Container, den man
+#    starten und im Blick behalten muss.
+#  - **Gebaut statt gezogen.** Der Sinn der Übung ist ja, den eigenen Stand
+#    auszuprobieren und nicht den, der schon draußen ist.
+#  - **Ein veröffentlichter Port**, weil kein Traefik davorsteht.
+#
+# Start:  docker compose -f docker-compose.entwicklung.yml up -d --build
+# Siehe ENTWICKLUNG.md.
+
+# Eigener Projektname, damit die Volumes nicht dieselben sind wie die des
+# Betriebsstacks: Beide Dateien liegen im selben Ordner, und Docker leitet den
+# Projektnamen sonst aus dem Ordner ab. `down -v` würde dann Volumes leeren,
+# die zur anderen Datei gehören.
+name: vh-entwicklung
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Ohne Angabe baut das Dockerfile beides in ein Abbild
+        ROLLE: alles
+        GIT_SHA: entwicklung
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # 8001, weil 8000 auf dem Firmenrechner schon belegt ist.
+      # Ändern? Dann auch NEXT_PUBLIC_SERVER_URL mitändern — daran hängen
+      # Links in Mails, der PayPal-Rücksprung und die Kennung der Passkeys.
+      - '${PORT:-8001}:3000'
+    environment:
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-http://localhost:8001}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:-vh}@db:5432/${POSTGRES_DB:-vh}
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vh}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+      # Beispielinhalte beim ersten Start. Das Skript sieht selbst nach, ob
+      # die Datenbank schon eingerichtet ist, und tut dann nichts.
+      SEED: ${SEED:-true}
+      # Büro-Zugänge anlegen. Ohne VH_PASSWORT/ADMIN_PASSWORT würfelt das
+      # Skript sie und schreibt sie ins Log (docker compose logs app).
+      BENUTZER: ${BENUTZER:-true}
+      VH_PASSWORT: ${VH_PASSWORT:-}
+      ADMIN_PASSWORT: ${ADMIN_PASSWORT:-}
+    volumes:
+      - media:/app/media
+      - backups:/app/backups
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vh}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  media:
+  dbdata:
+  backups:

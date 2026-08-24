@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useDateiablage } from '../../lib/buero/dateiablage'
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
 import { EmpfaengerFeld } from './EmpfaengerFeld'
+import { Fussleiste } from './Fussleiste'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
 import { Schreibfeld } from './Schreibfeld'
 import { WischZeile } from './WischZeile'
@@ -477,6 +478,32 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         {/* Kein `label` um das Feld: Es bringt eine eigene Liste mit, und ein
             Tipp in ein Label geht ans Eingabefeld statt auf den Vorschlag —
             derselbe Grund wie beim Schreibfeld weiter unten. */}
+        {/*
+          * Der Absender steht bei den Feldern und nicht bei den Knöpfen.
+          *
+          * Er war früher Teil der Knopfreihe — dort steht er niemandem im
+          * Weg, solange die Reihe unter dem Formular liegt. Seit die
+          * Hauptaktion in der Fußleiste sitzt (und bei offener Tastatur zu
+          * einem schmalen Knopf zusammenschrumpft), wäre er dort ein Fremd-
+          * körper: Von wem die Mail ausgeht, ist eine Angabe zur Nachricht
+          * wie Empfänger und Betreff, keine Handlung.
+          */}
+        {faecher.length > 1 && (
+          <label className="buero-feld">
+            <span>Absender</span>
+            <select
+              className="buero-fach-wahl breit"
+              value={fach ?? ''}
+              onChange={(e) => setFach(e.target.value)}
+            >
+              {faecher.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.address}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="buero-feld">
           <span>An</span>
           <EmpfaengerFeld
@@ -591,27 +618,25 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        {/*
+          * Senden gehört in die Fußleiste — wie in jedem anderen Büro-Formular.
+          *
+          * Gemeldet in #42, und zwar von genau dieser Seite: „Ich komme nicht
+          * an den Senden-Knopf, solange die Tastatur offen ist." Er stand als
+          * gewöhnliche Knopfreihe unter dem Schreibfeld, also bei einer
+          * langen Mail außerhalb des Bildes und hinter der Tastatur. Die
+          * Fußleiste klebt am Handy über der Tableiste und wird bei offener
+          * Tastatur zu einem schmalen Knopf rechts unten (siehe
+          * `Tastaturwache` und `office.css`).
+          */}
+        <Fussleiste>
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void senden()}>
             Senden
           </button>
           <button type="button" className="buero-knopf stumm" onClick={() => setEntwurf(null)}>
             Verwerfen
           </button>
-          {faecher.length > 1 && (
-            <select
-              className="buero-fach-wahl"
-              value={fach ?? ''}
-              onChange={(e) => setFach(e.target.value)}
-            >
-              {faecher.map((f) => (
-                <option key={f.id} value={f.id}>
-                  Absender: {f.address}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        </Fussleiste>
       </div>
     )
   }
