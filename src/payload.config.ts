@@ -49,6 +49,7 @@ import { Homepage } from './globals/Homepage'
 import { Integrations } from './globals/Integrations'
 import { Legal } from './globals/Legal'
 import { SiteSettings } from './globals/SiteSettings'
+import { Versand } from './globals/Versand'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -114,7 +115,7 @@ export default buildConfig({
     Media,
     Users,
   ],
-  globals: [Homepage, About, SiteSettings, Legal, Integrations],
+  globals: [Homepage, About, SiteSettings, Legal, Integrations, Versand],
   // Feste Toolbar: alle Formatierungen immer sichtbar — deutlich besser am Handy
   editor: lexicalEditor({
     features: ({ defaultFeatures }) => [...defaultFeatures, FixedToolbarFeature()],

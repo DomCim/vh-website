@@ -49,6 +49,45 @@ export const AUFTRAG_STATUS = [
   { label: 'Abgebrochen', value: 'abgebrochen', art: 'warn' },
 ] as const
 
+/**
+ * Rückabwicklung — was von einer Bestellung zurückkommt und warum.
+ *
+ * **Warum ein eigener Vorgang und nicht bloß „storniert".** Der Status der
+ * Bestellung sagt, ob sie noch läuft; er sagt nichts darüber, ob das Geld
+ * zurück ist und ob die Ware wieder im Haus steht. Genau daran ging bisher
+ * beides verloren: Ein Storno war folgenlos — kein Geld zurück, das Stück
+ * blieb ausgeblendet, der Auftrag lief weiter.
+ *
+ * **Warum drei Gründe und nicht einer.** An ihnen hängt Verschiedenes.
+ * Beim Storno ist noch keine Ware unterwegs, es geht nur ums Geld. Beim
+ * Widerruf kommt sie zurück, und die Rücksendung zahlt der Kunde (so steht
+ * es in der Widerrufsbelehrung). Bei der Reklamation zahlt sie das Haus.
+ */
+export const RUECKGABE_GRUND = [
+  { label: 'Storniert', value: 'storno' },
+  { label: 'Widerruf (14 Tage)', value: 'widerruf' },
+  { label: 'Reklamation', value: 'reklamation' },
+] as const
+
+export const RUECKGABE_STATUS = [
+  { label: 'Offen', value: 'offen', art: 'offen' },
+  { label: 'Ware zurück', value: 'wareZurueck', art: 'offen' },
+  { label: 'Erstattet', value: 'erstattet', art: 'gut' },
+  { label: 'Abgelehnt', value: 'abgelehnt', art: 'warn' },
+] as const
+
+/*
+ * Kein Weg zurück aus „erstattet" oder „abgelehnt": Beides ist nach außen
+ * geschehen — Geld ist geflossen oder der Kundschaft wurde abgesagt. Wer
+ * korrigieren muss, tut das in der Verwaltung und sieht dabei, was er tut.
+ */
+export const RUECKGABE_UEBERGAENGE: Record<string, readonly string[]> = {
+  offen: ['wareZurueck', 'erstattet', 'abgelehnt'],
+  wareZurueck: ['erstattet', 'abgelehnt'],
+  erstattet: [],
+  abgelehnt: [],
+}
+
 export const BESTELL_STATUS = [
   { label: 'Offen (unbezahlt)', value: 'pending', art: 'offen' },
   { label: 'Bezahlt', value: 'paid', art: 'gut' },

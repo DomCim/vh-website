@@ -5,6 +5,7 @@ import { CheckoutForm } from '../../../../components/shop/CheckoutForm'
 import { getSiteSettings, payloadClient } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { paypalConfigured } from '../../../../lib/paypal'
+import { landName, versandzonen } from '../../../../lib/versand'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,11 +36,27 @@ export default async function CheckoutPage({
   const dict = t(locale)
 
   const payload = await payloadClient()
-  const [paypalAvailable, settings] = await Promise.all([
+  const [paypalAvailable, settings, zonen] = await Promise.all([
     paypalConfigured(payload),
     getSiteSettings(locale),
+    versandzonen(payload),
   ])
   const vatRate = settings?.company?.vatRate ?? 20
+
+  /*
+   * Die Länderauswahl entsteht hier und nicht im Browser: Die Zonen stehen in
+   * der Verwaltung, und die Kasse soll den Aufschlag schon beim Umstellen
+   * zeigen — ohne dafür eine zweite Anfrage zu stellen. Gerechnet wird beim
+   * Abschicken trotzdem noch einmal auf dem Server.
+   */
+  const laender = zonen.flatMap((z) =>
+    z.laender.map((code) => ({
+      code,
+      name: landName(code, locale),
+      aufschlag: z.aufschlag,
+      hinweis: z.hinweis,
+    })),
+  )
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
@@ -54,6 +71,7 @@ export default async function CheckoutPage({
         initialCode={code}
         paypalAvailable={paypalAvailable}
         vatRate={vatRate}
+        laender={laender}
       />
     </div>
   )

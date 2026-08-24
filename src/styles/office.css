@@ -1463,6 +1463,72 @@ html.tastatur-offen .buero-inhalt {
   text-align: center;
 }
 
+/* ── Dateien einfügen und fallen lassen ─────────────────────────────────── */
+
+/*
+ * Die Hervorhebung, solange etwas über einer Dateiauswahl schwebt.
+ *
+ * Ohne sichtbare Antwort ist Ziehen ein Ratespiel: Man lässt los und hofft.
+ * Ein gestrichelter Rahmen in der Akzentfarbe sagt „hier kommt es an" und
+ * verschwindet wieder, sobald man danebengerät.
+ *
+ * Bewusst nur eine Umrandung und kein Schleier über dem Feld — der verdeckte
+ * die Beschriftung, und gerade die braucht man beim Zielen.
+ */
+.buero-ablage {
+  border-radius: 10px;
+  transition:
+    outline-color 0.12s ease,
+    background-color 0.12s ease;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+}
+
+.buero-ablage.ist-drueber {
+  outline-color: var(--buero-bronze);
+  background: color-mix(in srgb, var(--buero-bronze) 6%, transparent);
+}
+
+/* Der leise Hinweis unter einer Dateiauswahl: was hier sonst noch geht */
+.buero-feld-hinweis {
+  font-size: 0.85rem;
+  color: var(--buero-tinte-leise);
+  margin-top: 0.35rem;
+}
+
+/* Die Liste der gewählten Dateien unter dem Feld */
+.buero-anhaenge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.buero-anhang {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 9px;
+  background: var(--buero-papier);
+  font-size: 0.9rem;
+}
+
+.buero-anhang-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buero-anhang-groesse {
+  flex: 0 0 auto;
+  color: var(--buero-tinte-leise);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Kartenform am Handy ────────────────────────────────────────────────── */
 
 /*

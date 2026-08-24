@@ -26,6 +26,113 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 61,
+    datum: null,
+    titel: 'Ein Storno hat jetzt Folgen — und eine Rückgabe ist ein Vorgang',
+    punkte: [
+      {
+        text: '**Bisher änderte ein Storno ein Wort und sonst nichts.** Das verkaufte Werkstattstück blieb ausgeblendet und war für niemanden mehr zu kaufen, der Auftrag lief weiter durch die Fertigung, und dass Geld zurückgeht, wusste nur, wer daran dachte. Alle drei Fäden hingen an einem Menschen, der sich erinnert.',
+      },
+      {
+        text: '**Jetzt räumt das Stornieren auf:** Das Stück steht wieder im Laden, der zugehörige Auftrag wird abgebrochen, und die Rückabwicklung steht als offener Vorgang an der Bestellung. Ein bereits geliefertes Stück wird dabei ausdrücklich nicht angefasst — ist es draußen, geht es um eine Rückgabe und nicht mehr um die Fertigung.',
+      },
+      {
+        text: '**Erstattet wird nichts von selbst.** Der Weg gäbe es — der Zahlungsdienst kann auf Zuruf zurückzahlen. Das wäre aber der einzige Vorgang im Haus, der auf einen Klick hin unumkehrbar Geld verschiebt; dieselbe Linie wie bei Rechnungen und Mahnungen gilt auch hier: Es entsteht ein Vorgang, ausgeführt wird er von Hand. Das Portal merkt sich, was zu erstatten ist, und wartet.',
+      },
+      {
+        text: '**Drei Gründe, weil an ihnen Verschiedenes hängt:** Beim **Storno** ist noch keine Ware unterwegs, es geht nur ums Geld. Beim **Widerruf** kommt sie zurück, und die Rücksendung zahlt der Kunde — so steht es in der Widerrufsbelehrung, deshalb wird der Betrag dort gekürzt eingetragen. Bei der **Reklamation** zahlt sie das Haus.',
+      },
+      {
+        text: '**Der Stand geht vorwärts, nicht zurück:** offen → Ware zurück → erstattet, dazu „abgelehnt". Aus „erstattet" und „abgelehnt" führt kein Weg heraus — beides ist nach außen geschehen. Wer wirklich korrigieren muss, tut das in der Verwaltung und sieht dabei, was er tut.',
+      },
+      {
+        text: '**In der Bestellliste steht, was zurückläuft** — als Zeichen an der Zeile und als Zahl in der Kopfzeile. Eine Erstattung, an die niemand erinnert wird, bleibt sonst liegen, bis der Kunde nachfragt. Über den Fernzugriff lässt sich der Vorgang ebenfalls anlegen und weiterbringen.',
+      },
+    ],
+  },
+  {
+    nummer: 60,
+    datum: null,
+    titel: 'Vom Ratgeber zur Ware — und von der Referenz zur Anfrage',
+    punkte: [
+      {
+        text: '**Ein Ratgeber brachte Leser, aber keinen Auftrag.** Am Ende des Textes stand nichts: kein Hinweis darauf, dass es das Beschriebene im Haus zu kaufen gibt. Jetzt lassen sich am News-Beitrag **passende Arbeiten** verknüpfen; sie erscheinen unter dem Text als Kacheln mit Bild und führen direkt auf den Artikel. Gedacht vor allem für Ratgeber: Wer über Pflege liest, soll sehen, worum es geht.',
+      },
+      {
+        text: '**Bewusst nur in diese Richtung.** Auf der Artikelseite jede News zu listen, die ihn einmal erwähnt hat, wäre in einem Jahr eine Liste, die niemand liest. Die Referenzen bleiben davon unberührt — die zeigen ihre Arbeiten wie bisher und erscheinen umgekehrt auch am Artikel.',
+      },
+      {
+        text: '**„So etwas anfragen" an jeder Referenz.** Der Knopf am Ende einer Referenz hieß „Nach Maß fertigen" und führte auf ein leeres Formular — wer eben ein Geländer angesehen hatte, musste dort von vorn erklären, was er meint. Jetzt kommt die Referenz mit: Ihr Name steht über dem Formular, im Nachrichtenfeld vorbelegt, **im Betreff der Mail** und als eigenes Feld an der Anfrage. Auch wenn der Kunde den Text überschreibt, steht im Büro noch, welche Arbeit die Anfrage ausgelöst hat.',
+      },
+      {
+        text: '**Beides geht auch über den Fernzugriff.** Beim Anlegen und Ändern eines Beitrags lassen sich die passenden Arbeiten mitgeben, und beim Lesen kommen sie zurück — ein Pfad, den es nicht gibt, wird dabei als Tippfehler gemeldet und nicht still verschluckt.',
+      },
+    ],
+  },
+  {
+    nummer: 59,
+    datum: null,
+    titel: 'Versandzonen: Was die Fracht wirklich kostet, steht jetzt auch in der Kasse',
+    punkte: [
+      {
+        text: '**Der Versand war überall derselbe Betrag** — je Stück, ohne Blick auf die Anschrift. Wer in München bestellte, zahlte so viel wie jemand in Straßburg, und wer in Zürich bestellte, ebenfalls. Bei einer Speditionssendung ist das ein Unterschied von mehreren hundert Euro, und der ging zulasten des Hauses.',
+      },
+      {
+        text: '**Jetzt gibt es Zonen** (Verwaltung → Versandzonen): eine Bezeichnung, die Länder, und ein Aufschlag je Stück auf den Versandbetrag des Artikels. Bewusst ein fester Aufschlag und kein Faktor — beim Speditionsgut steigt der Preis mit Entfernung und Zollpapier, nicht mit dem Warenwert, und der Aufschlag lässt sich am Angebot des Spediteurs ablesen.',
+      },
+      {
+        text: '**Wohin nicht geliefert wird, lässt sich auch nicht mehr bestellen.** Das Länderfeld in der Kasse war freier Text — dort kam „Schweiz", „CH" und „Suisse" gleichermaßen an, und keines davon ließ sich verrechnen. Jetzt ist es eine Auswahl aus den Zonen, und der Aufschlag steht schon beim Umstellen in der Summe. Ein Hinweis je Zone lässt sich dazuschreiben, etwa „zzgl. Zoll und Einfuhrumsatzsteuer".',
+      },
+      {
+        text: '**Drei Stellen sagten bisher Verschiedenes.** Die Artikelseite versprach Google Lieferung nach Frankreich, Deutschland, Österreich und in die Schweiz; der Produktfeed nannte drei Länder; die Kasse wusste von keiner der beiden Listen. Jetzt lesen alle drei dieselben Zonen — was unter einem Suchergebnis steht, ist damit dasselbe, was an der Kasse verlangt wird. Die Schweiz bleibt vorerst aus dem Produktfeed heraus: Der rechnet in Euro, das Merchant Center bräuchte dort Franken.',
+      },
+      {
+        text: '**Solange keine Zone gepflegt ist, bleibt alles wie bisher** — Frankreich, Deutschland und Österreich zum Versandbetrag des Artikels. Eine leere Einstellung hält den Shop nicht an und macht ihn auch nicht heimlich teurer.',
+      },
+      {
+        text: '**Im Warenkorb steht weiterhin der Grundbetrag**, denn dort gibt es noch keine Anschrift. Der Aufschlag kommt in der Kasse dazu, sobald das Land gewählt ist — vor dem Bezahlen und nicht danach auf der Rechnung.',
+      },
+    ],
+  },
+  {
+    nummer: 58,
+    datum: null,
+    titel: 'Dateien lassen sich jetzt überall einfügen und hineinziehen',
+    punkte: [
+      {
+        text: '**An jeder Stelle, an der man eine Datei auswählt, geht das jetzt auch mit Strg+V oder durch Hineinziehen** — Beleg, Lieferschein, Kontoauszug, Werkstattdatei (auch je Ordner), Vorgangsdatei, Übergabemappe, Postfach-Anhang und Fehlermeldung, dazu die drei Formulare auf der Website. Der Knopf bleibt, wo er war; das sind nur zwei zusätzliche Wege in dasselbe Feld.',
+      },
+      {
+        text: '**Der Umweg über die Festplatte fällt weg.** Ein Bildschirmfoto lag bisher in der Zwischenablage und musste erst irgendwohin gespeichert werden, um es wieder auswählen zu können. Gerade bei Fehlermeldungen war das der Grund, warum das Foto oft fehlte.',
+      },
+      {
+        text: '**Im Schreibfeld bleibt Einfügen dem Text.** Steht der Zeiger in einem Eingabefeld oder im Textbearbeiter, geht Strg+V dorthin — dort will man Text einsetzen. Gibt es auf einer Seite mehrere Ablagen, entscheidet die Maus: Was man einfügt, landet dort, wo man steht.',
+      },
+      {
+        text: '**Am Telefon ändert sich nichts.** Dort gibt es kein Ziehen und in der Zwischenablage selten eine Datei; der Kamera- und Dateidialog bleibt der schnellere Weg und ist unverändert.',
+      },
+    ],
+  },
+  {
+    nummer: 57,
+    datum: null,
+    titel: 'Anhänge im Postfach: Dateien gehen jetzt mit der Antwort raus',
+    punkte: [
+      {
+        text: '**Beim Schreiben lassen sich Dateien anhängen** — auswählen, hineinziehen oder einfügen. Was angehängt ist, steht unter dem Textfeld mit Name und Größe und lässt sich einzeln wieder entfernen, solange die Mail noch nicht raus ist.',
+      },
+      {
+        text: '**Bisher ging das gar nicht.** Wer aus dem Büro heraus eine Zeichnung oder eine Rechnung mitschicken wollte, musste dafür ins Mailprogramm wechseln — und die Antwort stand danach im falschen Verlauf. Damit ist der letzte Grund weg, das Postfach zu verlassen.',
+      },
+      {
+        text: '**Zusammen bis 25 MB.** Darüber lehnt so gut wie jeder Mailserver ab, und zwar erst nach dem Hochladen und mit einer Meldung, die niemand versteht. Die Grenze steht deshalb vorher da, mit dem Hinweis, dass bei größeren Dateien ein Abhol-Link der bessere Weg ist — den gibt es an der Werkstattdatei und an der Übergabemappe.',
+      },
+      {
+        text: '**Ohne Anhang ändert sich nichts** — eine Antwort ohne Dateien geht denselben Weg wie bisher. Wie das ganze Postfach braucht auch der Versand mit Anhang Netz: Gelesen wird ohnehin beim Anbieter, ohne Verbindung steht das Postfach still.',
+      },
+    ],
+  },
+  {
     nummer: 56,
     datum: null,
     titel: 'Farbe in den Listen: was drängt, sieht man jetzt im Vorbeigehen',

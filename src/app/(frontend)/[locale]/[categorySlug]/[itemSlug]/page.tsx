@@ -22,6 +22,7 @@ import {
   getTestimonialsForProduct,
   mediaAlt,
   mediaUrl,
+  payloadClient,
 } from "../../../../../lib/data";
 import { isLocale, t } from "../../../../../lib/i18n";
 import {
@@ -32,6 +33,7 @@ import {
   jsonLd,
   versandUndRueckgabe,
 } from "../../../../../lib/seo";
+import { versandzonen } from "../../../../../lib/versand";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +89,13 @@ export default async function ProductPage({ params }: { params: PageParams }) {
 
   const product = await getProductBySlug(itemSlug, locale);
   if (!product) notFound();
+
+  /*
+   * Wohin geliefert wird, kommt aus den Versandzonen — derselben Quelle, aus
+   * der die Kasse rechnet. Stünde hier eine eigene Liste, versprächen die
+   * strukturierten Daten etwas, das an der Kasse nicht gilt.
+   */
+  const zonen = await versandzonen(await payloadClient());
 
   /*
    * Die Adresse, unter der der Artikel wirklich einsortiert ist — siehe die
@@ -232,7 +241,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
            * Konkurrenz „Kostenloser Versand" steht. Begründung und Herkunft
            * der Werte in lib/seo.ts.
            */
-          ...versandUndRueckgabe(product),
+          ...versandUndRueckgabe(product, zonen),
         },
       }),
   });

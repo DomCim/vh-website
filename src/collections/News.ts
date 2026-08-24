@@ -116,6 +116,29 @@ export const News: CollectionConfig = {
       type: 'richText',
       localized: true,
     },
+    /*
+     * Der Weg vom Text zur Ware.
+     *
+     * Ein Ratgeber über Rostschutz bringt Leser, aber keinen Auftrag, solange
+     * am Ende der Seite nichts steht. Die verknüpften Arbeiten erscheinen
+     * unter dem Artikel — nicht als Werbeblock, sondern als das, was der Text
+     * gerade beschrieben hat.
+     *
+     * Bewusst nur in diese Richtung: Auf der Artikelseite jede News zu
+     * listen, die ihn einmal erwähnt hat, wäre in einem Jahr eine Liste, die
+     * niemand liest.
+     */
+    {
+      name: 'relatedProducts',
+      label: 'Passende Arbeiten',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+      admin: {
+        description:
+          'Werden unter dem Beitrag gezeigt. Gedacht für Ratgeber: Wer über Pflege liest, soll sehen, worum es geht.',
+      },
+    },
     {
       name: 'postToFacebook',
       label: 'Beim Veröffentlichen auf Facebook posten',

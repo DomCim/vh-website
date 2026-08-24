@@ -157,6 +157,7 @@ export interface Config {
     'site-settings': SiteSetting;
     legal: Legal;
     integrations: Integration;
+    versand: Versand;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
@@ -164,6 +165,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     legal: LegalSelect<false> | LegalSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
+    versand: VersandSelect<false> | VersandSelect<true>;
   };
   locale: 'de' | 'fr' | 'en';
   widgets: {
@@ -590,6 +592,10 @@ export interface News {
     [k: string]: unknown;
   } | null;
   /**
+   * Werden unter dem Beitrag gezeigt. Gedacht für Ratgeber: Wer über Pflege liest, soll sehen, worum es geht.
+   */
+  relatedProducts?: (number | Product)[] | null;
+  /**
    * Postet Titel, Teaser, Bild und Link auf die Facebook-Seite
    */
   postToFacebook?: boolean | null;
@@ -720,6 +726,24 @@ export interface Order {
   orderNumber: string;
   status: 'pending' | 'paid' | 'inProduction' | 'shipped' | 'cancelled';
   /**
+   * Wird beim Stornieren automatisch angelegt. Für Widerruf und Reklamation von Hand ausfüllen.
+   */
+  rueckgabe?: {
+    grund?: ('storno' | 'widerruf' | 'reklamation') | null;
+    status?: ('offen' | 'wareZurueck' | 'erstattet' | 'abgelehnt') | null;
+    /**
+     * Beim Storno der volle Betrag. Beim Widerruf ohne die Rücksendekosten — die trägt laut Widerrufsbelehrung der Kunde.
+     */
+    betrag?: number | null;
+    angefragtAm?: string | null;
+    wareZurueckAm?: string | null;
+    /**
+     * Von Hand eintragen, nachdem das Geld zurück ist. Das Portal erstattet bewusst nicht selbst — Geld bewegt hier niemand außer dem Menschen davor.
+     */
+    erstattetAm?: string | null;
+    notiz?: string | null;
+  };
+  /**
    * z.B. „Ende April" oder „KW 18" — wird beim Umstellen auf „In Fertigung" an den Kunden gemeldet.
    */
   expectedReady?: string | null;
@@ -768,6 +792,10 @@ export interface Order {
     postalCode?: string | null;
     city?: string | null;
     country?: string | null;
+    /**
+     * ISO-Kürzel, z. B. FR. Bestimmt die Versandzone. Bei Bestellungen von vor der Einführung der Zonen leer.
+     */
+    countryCode?: string | null;
   };
   paymentProvider?: ('paypal' | 'rechnung' | 'stripe') | null;
   stripeSessionId?: string | null;
@@ -809,6 +837,8 @@ export interface Inquiry {
   product?: (number | null) | Product;
   productTitle?: string | null;
   productUrl?: string | null;
+  referenceTitle?: string | null;
+  referenceUrl?: string | null;
   custom?: {
     width?: number | null;
     depth?: number | null;
@@ -2112,6 +2142,7 @@ export interface NewsSelect<T extends boolean = true> {
   coverImage?: T;
   excerpt?: T;
   content?: T;
+  relatedProducts?: T;
   postToFacebook?: T;
   facebookPostId?: T;
   facebookPostError?: T;
@@ -2189,6 +2220,17 @@ export interface PromotionsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
   status?: T;
+  rueckgabe?:
+    | T
+    | {
+        grund?: T;
+        status?: T;
+        betrag?: T;
+        angefragtAm?: T;
+        wareZurueckAm?: T;
+        erstattetAm?: T;
+        notiz?: T;
+      };
   expectedReady?: T;
   trackingNumber?: T;
   trackingUrl?: T;
@@ -2226,6 +2268,7 @@ export interface OrdersSelect<T extends boolean = true> {
         postalCode?: T;
         city?: T;
         country?: T;
+        countryCode?: T;
       };
   paymentProvider?: T;
   stripeSessionId?: T;
@@ -2260,6 +2303,8 @@ export interface InquiriesSelect<T extends boolean = true> {
   product?: T;
   productTitle?: T;
   productUrl?: T;
+  referenceTitle?: T;
+  referenceUrl?: T;
   custom?:
     | T
     | {
@@ -3713,6 +3758,38 @@ export interface Integration {
   createdAt?: string | null;
 }
 /**
+ * Wohin geliefert wird. Ein Land, das in keiner Zone steht, wird in der Kasse nicht angeboten. Ohne Zone gilt: Frankreich, Deutschland, Österreich zum Versandbetrag des Artikels.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "versand".
+ */
+export interface Versand {
+  id: number;
+  /**
+   * Reihenfolge zählt: Steht ein Land in zwei Zonen, gilt die obere. In der Kasse erscheinen die Länder in dieser Reihenfolge.
+   */
+  zonen?:
+    | {
+        /**
+         * Nur zur Orientierung, z. B. „Frankreich und Nachbarn".
+         */
+        name: string;
+        laender: ('FR' | 'DE' | 'AT' | 'BE' | 'LU' | 'NL' | 'IT' | 'ES' | 'CH')[];
+        /**
+         * Kommt zum Versandbetrag des Artikels dazu. 0 = derselbe Betrag wie im Inland. Bewusst ein fester Aufschlag und kein Faktor: Beim Speditionsgut steigt der Preis mit Entfernung und Zollpapier, nicht mit dem Warenwert.
+         */
+        aufschlag?: number | null;
+        /**
+         * Steht unter der Länderauswahl, sobald ein Land dieser Zone gewählt ist — z. B. „zzgl. Zoll und Einfuhrumsatzsteuer".
+         */
+        hinweis?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage_select".
  */
@@ -4017,6 +4094,24 @@ export interface IntegrationsSelect<T extends boolean = true> {
         pageId?: T;
         accessToken?: T;
         instagramAccountId?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "versand_select".
+ */
+export interface VersandSelect<T extends boolean = true> {
+  zonen?:
+    | T
+    | {
+        name?: T;
+        laender?: T;
+        aufschlag?: T;
+        hinweis?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

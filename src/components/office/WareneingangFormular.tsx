@@ -1,12 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 
 import { absenden } from '../../lib/buero/warteschlange'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { Rueckmeldung } from './Rueckmeldung'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 
 export type PostenAuswahl = { id: number; name: string; unit: string }
 export type LieferantAuswahl = { id: number; name: string }
@@ -113,6 +114,20 @@ export function WareneingangFormular({
     }
   }
 
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog (siehe lib/buero/dateiablage.ts).
+   * Am Rechner ist der Lieferschein oft schon als Bildschirmfoto im
+   * Zwischenspeicher; am Telefon bleibt der Kamera-Dialog der schnellere Weg.
+   */
+  const ablageBereich = useRef<HTMLLabelElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d) => {
+      if (d[0]) void hochladen(d[0])
+    },
+    laeuft !== 'upload',
+  )
+
   return (
     <div className="buero-karte">
       <div className="buero-reihe">
@@ -144,7 +159,9 @@ export function WareneingangFormular({
         </label>
       </div>
 
-      <label className="buero-feld">
+      <label
+        ref={ablageBereich}
+        className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}>
         <span>Lieferschein fotografieren oder auswählen</span>
         <input
           type="file"

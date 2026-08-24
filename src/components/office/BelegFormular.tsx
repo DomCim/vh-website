@@ -1,13 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { Rueckmeldung } from './Rueckmeldung'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 
 export type Kategorie = { label: string; value: string }
 
@@ -190,6 +191,20 @@ export function BelegFormular({
     }
   }
 
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog. Am Rechner liegt der Beleg
+   * oft schon als PDF im Zwischenspeicher.
+   * (siehe lib/buero/dateiablage.ts)
+   */
+  const ablageBereich = useRef<HTMLLabelElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d: File[]) => {
+      if (d[0]) void hochladen(d[0])
+    },
+    true,
+  )
+
   return (
     <div className="buero-karte">
       <EntwurfLeiste
@@ -201,7 +216,9 @@ export function BelegFormular({
         aufVerwerfen={entwurf.verwerfen}
       />
       {!w.documentId ? (
-        <label className="buero-feld">
+        <label
+          ref={ablageBereich}
+          className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}>
           <span>Beleg fotografieren oder auswählen</span>
           <input
             type="file"

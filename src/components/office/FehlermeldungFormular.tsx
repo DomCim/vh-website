@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { MAX_FOTOS } from '../../lib/fehlermeldung'
 import { Fussleiste } from './Fussleiste'
 import { Rueckmeldung } from './Rueckmeldung'
+import { alsListe, useDateiablage } from '../../lib/buero/dateiablage'
 
 /**
  * „Das stimmt hier nicht" — der Weg vom Auffallen zum Eintrag.
@@ -78,6 +79,21 @@ export function FehlermeldungFormular() {
     setFotos((bisher) => [...bisher, ...Array.from(neue)].slice(0, MAX_FOTOS))
     setMeldung(null)
   }
+
+  /*
+   * Ziehen und Einfügen zusätzlich zum Knopf (siehe lib/buero/dateiablage.ts).
+   *
+   * Gerade hier zählt das Einfügen: Eine Fehlermeldung entsteht meist direkt
+   * nach einem Bildschirmfoto, und das liegt dann schon im Zwischenspeicher.
+   * Bis eben musste man es erst irgendwohin speichern, um es wieder auswählen
+   * zu können.
+   */
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d) => fotosDazu(alsListe(d)),
+    fotos.length < MAX_FOTOS,
+  )
 
   async function senden() {
     if (!w.titel.trim() && !w.text.trim()) {
@@ -187,7 +203,10 @@ export function FehlermeldungFormular() {
         </span>
       </label>
 
-      <div className="buero-feld">
+      <div
+        ref={ablageBereich}
+        className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+      >
         <span>Fotos</span>
         {/* `capture` fehlt bewusst: Meistens ist es ein Bildschirmfoto aus der
             Mediathek und nicht die Kamera. */}

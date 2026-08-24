@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
-import { BESTELL_STATUS, werteVon } from '../../../../../lib/listen'
+import {
+  BESTELL_STATUS,
+  RUECKGABE_GRUND,
+  RUECKGABE_STATUS,
+  RUECKGABE_UEBERGAENGE,
+  werteVon,
+} from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -48,6 +54,50 @@ export async function POST(req: Request) {
       }
     }
 
+    /*
+     * Die Rückabwicklung kommt aus demselben Formular, wird aber getrennt
+     * geprüft: Ein erfundener Stand liefe sonst genauso durch wie ein
+     * erfundener Status — und aus „erstattet" führt kein Weg zurück, weil das
+     * Geld dann schon geflossen ist.
+     */
+    let rueckgabe: Record<string, unknown> | undefined
+    if (b.rueckgabe) {
+      const r = b.rueckgabe as Record<string, any>
+      if (r.grund && !werteVon(RUECKGABE_GRUND).includes(r.grund)) {
+        return NextResponse.json({ error: 'grund-unbekannt' }, { status: 400 })
+      }
+      if (r.status && !werteVon(RUECKGABE_STATUS).includes(r.status)) {
+        return NextResponse.json({ error: 'stand-unbekannt' }, { status: 400 })
+      }
+      const bisher = await payload.findByID({
+        collection: 'orders',
+        id: b.id,
+        depth: 0,
+        overrideAccess: true,
+      })
+      const vorher = (bisher?.rueckgabe as Record<string, any> | undefined)?.status
+      if (r.status && vorher && r.status !== vorher) {
+        const erlaubt = RUECKGABE_UEBERGAENGE[vorher] ?? []
+        if (!erlaubt.includes(r.status)) {
+          return NextResponse.json({ error: 'stand-nicht-erlaubt' }, { status: 400 })
+        }
+      }
+      const jetzt = new Date().toISOString()
+      const alt = (bisher?.rueckgabe as Record<string, any> | undefined) ?? {}
+      rueckgabe = {
+        ...alt,
+        grund: r.grund || alt.grund,
+        status: r.status || alt.status || 'offen',
+        betrag: typeof r.betrag === 'number' ? r.betrag : alt.betrag,
+        angefragtAm: alt.angefragtAm ?? jetzt,
+        // Die Zeitpunkte setzt der Stand — sonst stünde am Ende „erstattet"
+        // ohne Datum daneben, und niemand weiß mehr, wann
+        ...(r.status === 'wareZurueck' && !alt.wareZurueckAm ? { wareZurueckAm: jetzt } : {}),
+        ...(r.status === 'erstattet' && !alt.erstattetAm ? { erstattetAm: jetzt } : {}),
+        ...(r.notiz !== undefined ? { notiz: r.notiz } : {}),
+      }
+    }
+
     const doc = await payload.update({
       collection: 'orders',
       id: b.id,
@@ -57,6 +107,7 @@ export async function POST(req: Request) {
         trackingNumber: b.trackingNumber || undefined,
         trackingUrl: b.trackingUrl || undefined,
         expectedReady: b.expectedReady || undefined,
+        ...(rueckgabe ? { rueckgabe } : {}),
       },
     })
 

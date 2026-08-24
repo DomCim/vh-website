@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useDateiablage } from '../../lib/buero/dateiablage'
 import { ordnernameGueltig } from '../../lib/ordnerpfad'
 import { EmpfaengerFeld } from './EmpfaengerFeld'
 import { signaturAlsHtml } from '../../lib/signaturHtml'
@@ -179,6 +180,14 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
   const [mehrOffen, setMehrOffen] = useState<number | null>(null)
   /** Dasselbe in der geöffneten Nachricht: Markieren und Verschieben */
   const [detailMehr, setDetailMehr] = useState(false)
+  /** Was an die Mail soll, die gerade geschrieben wird */
+  const [anhaenge, setAnhaenge] = useState<File[]>([])
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  /** Anhängen statt ersetzen: Wer zweimal zieht, meint beides. */
+  const nimmDateien = (neue: File[]) => {
+    if (neue.length) setAnhaenge((v) => [...v, ...neue])
+  }
+  const ablage = useDateiablage(ablageBereich, nimmDateien, Boolean(entwurf))
 
   const laden = useCallback(
     async (fachId?: string | null, ordnerPfad?: string) => {
@@ -362,18 +371,43 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
     setLaeuft(true)
     try {
-      const res = await fetch('/api/office/post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ aktion: 'senden', fach, ...entwurf }),
-      })
-      const daten = (await res.json().catch(() => null)) as { kopie?: boolean } | null
+      /*
+       * Ohne Anhang bleibt es bei JSON — dasselbe wie bisher. Erst wenn
+       * Dateien dabei sind, wird ein Formular daraus: Der Browser hat sie
+       * ohnehin schon, und als base64 in einem JSON wären sie ein Drittel
+       * größer und lägen zusätzlich als Zeichenkette im Speicher, bevor
+       * überhaupt jemand entschieden hat, ob sie durchpassen.
+       */
+      const res = anhaenge.length
+        ? await (() => {
+            const formular = new FormData()
+            formular.append('daten', JSON.stringify({ aktion: 'senden', fach, ...entwurf }))
+            for (const datei of anhaenge) formular.append('dateien', datei)
+            return fetch('/api/office/post', {
+              method: 'POST',
+              credentials: 'include',
+              body: formular,
+            })
+          })()
+        : await fetch('/api/office/post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ aktion: 'senden', fach, ...entwurf }),
+          })
+      const daten = (await res.json().catch(() => null)) as
+        | { kopie?: boolean; error?: string; grenze?: number }
+        | null
       if (!res.ok) {
-        setMeldung('Die Mail ging nicht raus.')
+        setMeldung(
+          daten?.error === 'anhaenge-zu-gross'
+            ? `Die Anhänge sind zusammen zu groß (höchstens ${Math.round((daten.grenze ?? 0) / 1024 / 1024)} MB). Bei größeren Dateien ist ein Link der bessere Weg.`
+            : 'Die Mail ging nicht raus.',
+        )
         return
       }
       setEntwurf(null)
+      setAnhaenge([])
       // Verschickt ist verschickt — aber wenn die Kopie fehlt, sucht man sie
       // später vergeblich im eigenen Ordner und hält die Mail für nie geschrieben
       setMeldung(
@@ -511,6 +545,51 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
             wert={entwurf.html}
             aendern={(html) => setEntwurf((v) => (v ? { ...v, html } : v))}
           />
+        </div>
+        {/*
+          * Anhänge — auswählen, einfügen oder fallen lassen.
+          *
+          * Das Fehlen war die meistgenannte Lücke im Postfach: Wer auf eine
+          * Anfrage mit einer Zeichnung antworten wollte, musste die Mail im
+          * Webmail des Anbieters schreiben und hatte sie danach nicht im
+          * eigenen Ausgang. Der Versand konnte Anhänge längst — es fehlte nur
+          * der Weg von der Oberfläche bis dorthin.
+          */}
+        <div
+          ref={ablageBereich}
+          className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+        >
+          <span>Anhänge</span>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => {
+              nimmDateien([...(e.target.files ?? [])])
+              // Damit dieselbe Datei nach dem Entfernen wieder wählbar ist
+              e.target.value = ''
+            }}
+          />
+          <span className="buero-feld-hinweis">
+            Oder hierher ziehen — am Rechner geht auch Einfügen mit Strg/Cmd+V.
+          </span>
+          {anhaenge.length > 0 && (
+            <div className="buero-anhaenge">
+              {anhaenge.map((d, i) => (
+                <div className="buero-anhang" key={`${d.name}-${i}`}>
+                  <span className="buero-anhang-name">{d.name}</span>
+                  <span className="buero-anhang-groesse">{groesse(d.size)}</span>
+                  <button
+                    type="button"
+                    className="buero-knopf leise schmal"
+                    aria-label={`${d.name} entfernen`}
+                    onClick={() => setAnhaenge((v) => v.filter((_, j) => j !== i))}
+                  >
+                    Entfernen
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
           <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void senden()}>

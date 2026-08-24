@@ -1,4 +1,9 @@
-import type { CollectionAfterChangeHook, Payload } from 'payload'
+import type {
+  CollectionAfterChangeHook,
+  CollectionBeforeChangeHook,
+  Payload,
+  PayloadRequest,
+} from 'payload'
 
 import { bestellungAlsRechnung } from './invoice'
 import { dateienZurBestellung, downloadBis, downloadLink } from './digitaleware'
@@ -351,4 +356,163 @@ export const notifyOnShipped: CollectionAfterChangeHook = async ({
   }
 
   return doc
+}
+
+/**
+ * Ein Storno hat Folgen — bis hierher hatte es keine.
+ *
+ * Wer eine Bestellung auf „storniert" setzte, änderte ein Wort und sonst
+ * nichts: Das verkaufte Werkstattstück blieb ausgeblendet und war für niemanden
+ * mehr zu kaufen, der Auftrag lief weiter durch die Fertigung, und dass Geld
+ * zurückgeht, wusste nur, wer daran dachte. Alle drei Fäden hingen an einem
+ * Menschen, der sich erinnert.
+ *
+ * **Was hier passiert und was ausdrücklich nicht.** Zurückgebucht wird, was im
+ * Haus liegt: Das Stück wird wieder sichtbar, der Auftrag wird abgebrochen,
+ * und die Rückabwicklung steht als offener Vorgang da. **Erstattet wird
+ * nicht.** Geld bewegt hier niemand automatisch — das ist dieselbe Linie wie
+ * bei Rechnungen und Mahnungen: Es entsteht ein Vorgang, ausgeführt wird er
+ * von Hand. Ein Rückruf an PayPal, den ein Klick im Büro auslöst, wäre der
+ * einzige Vorgang im Haus, der unumkehrbar Geld verschiebt.
+ */
+export const stornoFolgen: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
+  const wirdStorniert = doc?.status === 'cancelled' && previousDoc?.status !== 'cancelled'
+  if (!wirdStorniert) return doc
+
+  /*
+   * Beide Aufräumarbeiten laufen mit `req` — also in derselben Transaktion
+   * wie die Änderung, die sie ausgelöst hat.
+   *
+   * Ohne `req` beginnt Payload eine zweite Transaktion, und die wartet auf
+   * Sperren, welche die erste noch hält. Das fällt nicht als Fehler auf,
+   * sondern als Anfrage, die nie zurückkommt: Beim Bauen lief das Stornieren
+   * genau zwei Minuten und endete im Zeitablauf des Prüflaufs.
+   */
+  await werkstattStueckeZurueckbuchen(req.payload, doc, req)
+  await auftragAbbrechen(req.payload, doc, req)
+  return doc
+}
+
+/**
+ * Der Vorgang selbst entsteht schon **vor** dem Speichern.
+ *
+ * Er ließe sich auch danach anlegen — aber nur mit einer zweiten Änderung am
+ * selben Datensatz, aus dessen eigenem Hook heraus. Das ist der Weg in die
+ * Verklemmung (siehe oben) und außerdem ein zweiter Eintrag in der
+ * Änderungshistorie für einen Vorgang, der zu derselben Handlung gehört.
+ * Hier steht er einfach mit im selben Speichervorgang.
+ */
+export const stornoVormerken: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+  if (!data) return data
+  const wirdStorniert = data.status === 'cancelled' && originalDoc?.status !== 'cancelled'
+  if (!wirdStorniert) return data
+
+  /*
+   * Eine schon angelegte Rückabwicklung wird nicht überschrieben.
+   *
+   * Der Fall ist echt: Ein Widerruf kommt herein, jemand legt den Vorgang an
+   * und setzt die Bestellung danach auf „storniert". Würde hier stumpf neu
+   * geschrieben, verlöre man Grund, Betrag und Notiz — also genau das, was
+   * jemand eben eingetragen hat.
+   */
+  const bisher = data.rueckgabe ?? originalDoc?.rueckgabe
+  if (bisher?.status) return data
+
+  return {
+    ...data,
+    rueckgabe: {
+      grund: 'storno',
+      status: 'offen',
+      // Beim Storno ist noch nichts unterwegs gewesen — es geht der volle Betrag zurück
+      betrag: data.total ?? originalDoc?.total ?? undefined,
+      angefragtAm: new Date().toISOString(),
+    },
+  }
+}
+
+/**
+ * Das Gegenstück zu `werkstattStueckeAusbuchen`: Nach einem Storno steht das
+ * Stück wieder in der Werkstatt und gehört wieder in den Laden.
+ *
+ * Betroffen ist nur, was `readyMade` ist — bei Auftragsfertigung wurde nie
+ * etwas ausgebucht, und ein Häkchen zurückzusetzen, das niemand gesetzt hat,
+ * machte aus einem stillgelegten Artikel einen verkäuflichen.
+ */
+async function werkstattStueckeZurueckbuchen(
+  payload: Payload,
+  order: { orderNumber?: string | null; items?: { product?: unknown }[] | null },
+  req: PayloadRequest,
+): Promise<void> {
+  const ids = (order.items ?? [])
+    .map((i) => (typeof i.product === 'object' ? (i.product as { id?: number })?.id : i.product))
+    .filter((id): id is number => typeof id === 'number')
+  if (!ids.length) return
+
+  try {
+    const { docs } = await payload.find({
+      collection: 'products',
+      where: {
+        and: [{ id: { in: ids } }, { readyMade: { equals: true } }, { available: { equals: false } }],
+      },
+      limit: 50,
+      depth: 0,
+      overrideAccess: true,
+      req,
+    })
+    for (const p of docs) {
+      await payload.update({
+        collection: 'products',
+        id: p.id,
+        overrideAccess: true,
+        req,
+        data: { available: true },
+      })
+      payload.logger.info(
+        `Werkstattstück "${p.title}" nach Storno von ${order.orderNumber} wieder sichtbar`,
+      )
+    }
+  } catch (err) {
+    payload.logger.error({ err }, 'Werkstattstücke konnten nicht zurückgebucht werden')
+  }
+}
+
+/**
+ * Der Auftrag zur stornierten Bestellung wird abgebrochen.
+ *
+ * **Ein gelieferter Auftrag bleibt unangetastet.** Ist das Stück draußen,
+ * ist „abgebrochen" schlicht falsch — dann geht es um eine Rückgabe und
+ * nicht mehr um die Fertigung. Ein fertiges Stück wird dagegen abgebrochen:
+ * Es steht in der Werkstatt, und die Zeit dafür ist gebucht; sie soll in der
+ * Nachkalkulation nicht als laufende Arbeit weiterzählen.
+ */
+async function auftragAbbrechen(
+  payload: Payload,
+  order: { id: number | string; orderNumber?: string | null },
+  req: PayloadRequest,
+): Promise<void> {
+  try {
+    const { docs } = await payload.find({
+      collection: 'jobs',
+      where: { order: { equals: order.id } },
+      limit: 10,
+      depth: 0,
+      overrideAccess: true,
+      req,
+    })
+    for (const j of docs) {
+      if (j.status === 'geliefert' || j.status === 'abgebrochen') continue
+      await payload.update({
+        collection: 'jobs',
+        id: j.id,
+        overrideAccess: true,
+        req,
+        data: { status: 'abgebrochen' },
+      })
+      payload.logger.info(
+        `Auftrag ${j.jobNumber} abgebrochen — Bestellung ${order.orderNumber} storniert`,
+      )
+    }
+  } catch (err) {
+    payload.logger.error({ err }, 'Auftrag zur stornierten Bestellung nicht abgebrochen')
+  }
 }

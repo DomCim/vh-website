@@ -174,6 +174,39 @@ test.describe('Kasse Schritt für Schritt', () => {
     await expect(rueckschau).toContainText('Prüf Kundin')
     await expect(rueckschau).toContainText(email)
     await expect(rueckschau).toContainText('Musterweg 1, 95119 Naila')
+    /*
+     * Das Land steht ausgeschrieben da, nicht als Kürzel.
+     *
+     * Seit den Versandzonen ist es eine Auswahl, und das Feld trägt „DE" —
+     * die Rückschau soll aber aussehen wie die Anschrift auf dem Paket.
+     */
+    await expect(rueckschau).toContainText('Deutschland')
+  })
+
+  /**
+   * Wohin nicht geliefert wird, lässt sich auch nicht anwählen.
+   *
+   * Vorher war das Land ein Textfeld: „Schweiz", „CH" und „Suisse" kamen
+   * gleichermaßen an, keines ließ sich verrechnen, und der Versand war
+   * überall derselbe Betrag. Jetzt kommen die Länder aus den Versandzonen —
+   * ohne gepflegte Zone sind das Frankreich, Deutschland und Österreich.
+   *
+   * Geprüft wird am rohen Seitenaufbau und nicht durch das Formular
+   * hindurch: Die Schritte stehen alle im Dokument (nur ausgeblendet), und
+   * der Weg bis zur Anschrift kostet einen Bestätigungscode. Fünf davon pro
+   * Viertelstunde lässt der Server zu — die sind in dieser Datei vergeben.
+   */
+  test('das Land ist eine Auswahl aus den Versandzonen', async ({ page }) => {
+    await zurKasse(page)
+
+    const land = page.locator('select[name=country]')
+    await expect(land).toHaveCount(1)
+    const werte = await land
+      .locator('option')
+      .evaluateAll((o) => o.map((x) => (x as HTMLOptionElement).value))
+    expect(werte).toEqual(['FR', 'DE', 'AT'])
+    // Kein freies Textfeld mehr — genau das war die Ursache
+    await expect(page.locator('input[name=country]')).toHaveCount(0)
   })
 
   /**

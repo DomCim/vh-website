@@ -6,7 +6,7 @@ import React from 'react'
 import { Fragen, gueltigeFragen } from '../../../../components/Fragen'
 import { MassanfertigungForm } from '../../../../components/MassanfertigungForm'
 import { Reveal } from '../../../../components/motion/Reveal'
-import { getSiteSettings } from '../../../../lib/data'
+import { getProjectBySlug, getSiteSettings } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 
@@ -27,13 +27,27 @@ export async function generateMetadata({
 
 export default async function MassanfertigungSeite({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ referenz?: string }>
 }) {
   const { locale } = await params
+  const { referenz } = await searchParams
   if (!isLocale(locale)) notFound()
   const dict = t(locale)
   const settings = await getSiteSettings(locale)
+
+  /*
+   * Kommt jemand über „So etwas anfragen" von einer Referenz, steht sie hier
+   * schon im Formular.
+   *
+   * Der Pfad wird dafür nachgeschlagen und nicht geglaubt: Was in der Adresse
+   * steht, kommt vom Besucher, und ein erfundener Pfad soll keinen erfundenen
+   * Titel in die Anfrage schreiben. Findet sich nichts, ist das Formular
+   * einfach leer wie zuvor.
+   */
+  const bezug = referenz ? await getProjectBySlug(referenz, locale) : null
 
   /*
    * Die häufigen Fragen stehen hier weiterhin — wer gerade das Formular
@@ -62,6 +76,15 @@ export default async function MassanfertigungSeite({
 
       <MassanfertigungForm
         locale={locale}
+        bezug={
+          bezug
+            ? {
+                titel: bezug.title,
+                pfad: `/${locale}/projekte/${bezug.slug}`,
+                vorbelegung: dict.custom.similarTo.replace('{titel}', bezug.title),
+              }
+            : undefined
+        }
         labels={{
           name: dict.contact.name,
           email: dict.contact.email,

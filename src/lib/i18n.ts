@@ -125,6 +125,8 @@ const de = {
     reviewIntro: 'Bitte kurz prüfen — mit den Schritten oben kommen Sie überall zurück.',
     errorNoPayment:
       'Die Bezahlung ist derzeit nicht möglich. Bitte nehmen Sie kurz Kontakt mit uns auf — wir schließen Ihre Bestellung dann persönlich ab.',
+    errorCountry:
+      'In dieses Land liefern wir derzeit nicht. Bitte wählen Sie ein anderes — oder schreiben Sie uns kurz, wir finden einen Weg.',
   },
   thanks: {
     title: 'Vielen Dank für Ihre Bestellung!',
@@ -305,6 +307,13 @@ const de = {
     cta: 'Nichts Passendes dabei? Wir fertigen nach Maß.',
     usedProducts: 'Verwendete Arbeiten',
     seenInProjects: 'So sieht das in echt aus',
+    // Unter einem Ratgeber: was der Text gerade beschrieben hat
+    relatedProducts: 'Passende Arbeiten',
+    // Am Ende einer Referenz — die Anfrage kommt dann mit dem Stück im Betreff
+    askSimilar: 'So etwas anfragen',
+    askSimilarNote: 'Etwas Ähnliches für Ihr Vorhaben? Wir fertigen es nach Maß.',
+    // Vorbelegter Betreff der Maßanfrage, wenn man von einer Referenz kommt
+    similarTo: 'Ähnlich wie: {titel}',
   },
   craft: {
     productionTime: 'Fertigungszeit',
@@ -531,6 +540,8 @@ const fr: Dictionary = {
     reviewIntro: 'Merci de vérifier — les étapes ci-dessus permettent de revenir partout.',
     errorNoPayment:
       "Le paiement n'est pas possible pour le moment. Contactez-nous brièvement — nous finaliserons votre commande personnellement.",
+    errorCountry:
+      "Nous ne livrons pas dans ce pays actuellement. Choisissez-en un autre — ou écrivez-nous, nous trouverons une solution.",
   },
   thanks: {
     title: 'Merci pour votre commande !',
@@ -707,6 +718,10 @@ const fr: Dictionary = {
     error: "Cela n'a pas fonctionné. Merci de réessayer.",
     cta: 'Rien ne correspond ? Nous fabriquons sur mesure.',
     usedProducts: 'Pièces utilisées',
+    relatedProducts: 'Pièces en rapport',
+    askSimilar: 'Demander quelque chose de similaire',
+    askSimilarNote: 'Quelque chose de similaire pour votre projet ? Nous le fabriquons sur mesure.',
+    similarTo: 'Similaire à : {titel}',
     seenInProjects: 'En situation réelle',
   },
   craft: {
@@ -931,6 +946,8 @@ const en: Dictionary = {
     reviewIntro: 'Please check briefly — the steps above take you back anywhere.',
     errorNoPayment:
       'Payment is currently unavailable. Please get in touch — we will complete your order personally.',
+    errorCountry:
+      'We do not currently deliver to this country. Please choose another — or drop us a line and we will find a way.',
   },
   thanks: {
     title: 'Thank you for your order!',
@@ -1106,6 +1123,10 @@ const en: Dictionary = {
     error: 'That did not work. Please try again.',
     cta: 'Nothing quite right? We build to measure.',
     usedProducts: 'Pieces used',
+    relatedProducts: 'Related pieces',
+    askSimilar: 'Ask for something like this',
+    askSimilarNote: 'Something similar for your project? We build it to measure.',
+    similarTo: 'Similar to: {titel}',
     seenInProjects: 'Seen in real life',
   },
   craft: {
