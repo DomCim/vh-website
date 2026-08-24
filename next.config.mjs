@@ -27,6 +27,23 @@ const extraSkript = (process.env.CSP_EXTRA_SCRIPT || '').trim()
  * kein Knopf tut etwas, und in der Konsole steht nur „Refused to evaluate".
  * Im gebauten Stand kommt kein `eval` mehr vor, dort bleibt es also weg.
  */
+/**
+ * Was nicht in eine Suchmaschine gehört — als Kopfzeile, nicht nur als Meta-Tag.
+ *
+ * **Warum zusätzlich.** Ein `<meta name="robots">` steht im HTML und wird nur
+ * gelesen, wenn jemand HTML auswertet. Eine PDF-Antwort, ein Bild, eine
+ * JSON-Auskunft haben keines. Die Kopfzeile gilt unabhängig vom Inhaltstyp
+ * und ist damit die zweite, tragende Absicherung.
+ *
+ * **Warum das nicht in die robots.txt gehört.** Ein `Disallow` verbietet das
+ * Abrufen — und dann liest Google auch das `noindex` nie. Eine Adresse, die
+ * es anderswo aufschnappt (ein weitergeleiteter Übergabelink), könnte danach
+ * als nackte URL im Ergebnis stehen. Erlaubt abrufen **plus** noindex ist der
+ * sichere Weg; genau deshalb steht `/uebergabe/` bewusst nicht in der
+ * robots.txt.
+ */
+const nichtInDenIndex = { key: 'X-Robots-Tag', value: 'noindex, nofollow' }
+
 const entwicklungsSkript = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"
 
 const gemeinsam = [
@@ -227,6 +244,32 @@ const nextConfig = {
         source: '/office/:pfad*',
         headers: [...grundlegend, { key: 'Content-Security-Policy', value: buero }],
       },
+
+      /*
+       * ── Nichts davon gehört in eine Suchmaschine ────────────────────────
+       *
+       * Alle vier tragen bereits ein Meta-Tag; die Kopfzeile deckt zusätzlich
+       * alles ab, was kein HTML ist. `/bestellung/danke` hatte als einzige
+       * Seite in dieser Reihe gar nichts — dort steht nach dem Kauf die
+       * Bestellnummer.
+       */
+      { source: '/office', headers: [nichtInDenIndex] },
+      { source: '/office/:pfad*', headers: [nichtInDenIndex] },
+      { source: '/admin/:pfad*', headers: [nichtInDenIndex] },
+      { source: '/:sprache/uebergabe/:pfad*', headers: [nichtInDenIndex] },
+      { source: '/:sprache/konto/:pfad*', headers: [nichtInDenIndex] },
+      { source: '/:sprache/konto', headers: [nichtInDenIndex] },
+      { source: '/:sprache/bestellung/:pfad*', headers: [nichtInDenIndex] },
+
+      /*
+       * Die Schnittstellen — **außer den Mediendateien**.
+       *
+       * `/api/media/` steht ausdrücklich in der robots.txt als erlaubt: Dort
+       * liegen die Produktbilder, und die sollen in der Bildersuche stehen.
+       * Ein pauschaler Kopf über `/api/` nähme sie aus dem Index, ohne dass
+       * es jemandem auffiele — deshalb die Ausnahme im Pfadmuster.
+       */
+      { source: '/api/:pfad((?!media).*)', headers: [nichtInDenIndex] },
     ]
   },
 }

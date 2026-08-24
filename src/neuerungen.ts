@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 64,
+    datum: null,
+    titel: 'Übergabemappen, Kundenbereich und Büro gehören in keine Suchmaschine',
+    punkte: [
+      {
+        text: '**Sie standen schon nicht drin** — jede dieser Seiten trägt seit jeher ein Kennzeichen im Seitenkopf, und keine steht in der Sitemap. Das Kennzeichen wird aber nur gelesen, wenn eine Suchmaschine HTML auswertet: Eine PDF-Antwort, ein Bild oder eine Datenauskunft haben keines.',
+      },
+      {
+        text: '**Jetzt sagt es zusätzlich der Server selbst** — als Kopfzeile, die unabhängig vom Inhaltstyp gilt. Betroffen sind Übergabemappen, der Kundenbereich, die Seite nach dem Kauf, das Büro, die Website-Verwaltung und die Schnittstellen. Die Seite nach dem Kauf hatte als einzige gar nichts, dabei steht dort die Bestellnummer.',
+      },
+      {
+        text: '**Die Produktbilder bleiben ausdrücklich auffindbar.** Sie liegen technisch unter derselben Adresse wie die Schnittstellen, sollen aber in der Bildersuche stehen — ein pauschales Verbot hätte sie herausgenommen, ohne dass es jemandem aufgefallen wäre. Eine Prüfung wacht jetzt über beide Seiten: was draußen bleibt und was auffindbar bleibt.',
+      },
+      {
+        text: '**Was bewusst nicht gemacht wurde:** die Übergabemappen in der `robots.txt` sperren. Das verbietet der Suchmaschine das Abrufen — und dann liest sie den Hinweis „nicht aufnehmen" nie. Eine Adresse, die sie anderswo aufschnappt, könnte danach als nackter Link im Ergebnis stehen. Abrufen erlauben und dabei „nicht aufnehmen" sagen ist der sichere Weg.',
+      },
+      {
+        text: '**Der eigentliche Schutz bleibt aber das Passwort.** Eine Suchmaschine ist nicht das Risiko bei einem Link, der per Mail geht — Mail-Scanner, Vorschaubilder in Messengern und Firmen-Proxys sehen ihn genauso. Die Mappe gibt ohne Passwort nichts heraus, und eine erfundene Kennung antwortet genau wie eine echte: Man erfährt nicht einmal, ob es sie gibt.',
+      },
+    ],
+  },
+  {
     nummer: 63,
     datum: null,
     titel: 'Die Farben in den Listen gelten jetzt überall gleich',
