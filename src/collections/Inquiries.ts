@@ -97,6 +97,20 @@ export const Inquiries: CollectionConfig = {
         { name: 'productUrl', label: 'Produkt-Link', type: 'text' },
       ],
     },
+    /*
+     * Woher die Anfrage kam, wenn sie von einer Referenz ausging.
+     *
+     * Über „So etwas anfragen" auf einer Referenzseite. Das steht zwar auch
+     * im vorbelegten Text — aber den überschreibt mancher, und dann bleibt
+     * nur noch „ich hätte gern so etwas". Als eigenes Feld überlebt es das.
+     */
+    {
+      type: 'row',
+      fields: [
+        { name: 'referenceTitle', label: 'Referenz (Bezeichnung)', type: 'text' },
+        { name: 'referenceUrl', label: 'Referenz-Link', type: 'text' },
+      ],
+    },
     {
       name: 'custom',
       label: 'Angaben zur Maßanfertigung',

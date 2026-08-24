@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import React, { useMemo, useRef, useState } from 'react'
 
 import { Fussleiste } from '../../../../../components/office/Fussleiste'
+import { useDateiablage } from '../../../../../lib/buero/dateiablage'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 import { datum } from '../../../../../lib/format'
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../../../../lib/hochladen'
@@ -379,6 +380,19 @@ function Ordnerblock({
   const [freigeben, setFreigeben] = useState(true)
   const [umbenennen, setUmbenennen] = useState(false)
   const [neuerName, setNeuerName] = useState(name)
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog (siehe lib/buero/dateiablage.ts).
+   * Hier geht es, weil `Ordnerblock` eine eigene Komponente auf oberster Ebene
+   * ist — anders als das gleichnamige Gegenstück in Werkstattdateien.tsx, das
+   * innerhalb seiner Elternkomponente steht und deshalb bei jedem Rendern neu
+   * eingehängt würde.
+   */
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d: File[]) => void hochladen(d, name, freigeben),
+    !laeuft,
+  )
 
   return (
     <div style={{ marginBottom: '1.1rem' }}>
@@ -510,7 +524,11 @@ function Ordnerblock({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '.6rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '.5rem' }}>
+      <div
+        ref={ablageBereich}
+        className={`buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+        style={{ display: 'flex', gap: '.6rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '.5rem' }}
+      >
         <input
           ref={feld}
           type="file"

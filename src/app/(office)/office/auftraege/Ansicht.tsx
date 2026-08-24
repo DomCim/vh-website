@@ -5,7 +5,7 @@ import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum } from '../../../../lib/format'
-import { AUFTRAG_STATUS, statusKarte } from '../../../../lib/listen'
+import { AUFTRAG_STATUS, statusKarte, balkenKlasse } from '../../../../lib/listen'
 
 /** Fertigungsaufträge — gerechnet aus dem Bestand im Gerät. */
 
@@ -103,7 +103,11 @@ export function AuftraegeAnsicht() {
               j.dueDate &&
               new Date(j.dueDate).getTime() < Date.now()
             return (
-              <Link key={j.id} href={`/office/auftraege/${j.id}`} className="buero-zeile">
+              <Link
+                key={j.id}
+                href={`/office/auftraege/${j.id}`}
+                className={`buero-zeile ${balkenKlasse(STATUS[j.status ?? '']?.art)}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">
                     {j.jobNumber} · {j.title}

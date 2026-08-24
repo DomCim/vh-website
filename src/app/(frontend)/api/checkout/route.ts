@@ -8,6 +8,7 @@ import {
   type CheckoutItemInput,
   type DeliveryMethod,
 } from '../../../../lib/checkout'
+import { landName } from '../../../../lib/versand'
 import { payloadClient } from '../../../../lib/data'
 import { isLocale, type Locale } from '../../../../lib/i18n'
 import {
@@ -178,7 +179,17 @@ export async function POST(req: Request) {
       neueSitzung = sitzungErzeugen(email)
     }
 
-    const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod)
+    /*
+     * Das Land geht mit in die Rechnung — es entscheidet über den Aufschlag.
+     *
+     * Nur beim Versand echter Ware: Bei Abholung und bei reinen Dateien gibt
+     * es keine Anschrift, und `priceCart` fragt dann auch keine Zone ab.
+     * Liegt das Land außerhalb der Zonen, wirft `priceCart` — das fängt der
+     * Rahmen unten ab und die Kasse sagt es dem Kunden.
+     */
+    const lieferland =
+      deliveryMethod === 'shipping' && !nurDigital ? body.shippingAddress?.country : undefined
+    const cart = await priceCart(payload, body.items, body.promoCode, deliveryMethod, lieferland)
     const orderNumber = await nextOrderNumber(payload)
 
     // Bestellung als "offen" anlegen — bezahlt wird sie erst per Webhook
@@ -217,7 +228,15 @@ export async function POST(req: Request) {
                 line2: body.shippingAddress?.line2,
                 postalCode: body.shippingAddress?.postalCode,
                 city: body.shippingAddress?.city,
-                country: body.shippingAddress?.country,
+                /*
+                 * Die Kasse schickt die Kennung; der lesbare Name entsteht
+                 * hier, in der Sprache des Kunden. Kommt doch einmal ein
+                 * ausgeschriebener Name herein — etwa aus einem alten
+                 * Formular im Zwischenspeicher —, bleibt er stehen, statt
+                 * durch ein Kürzel ersetzt zu werden.
+                 */
+                country: lieferland ? landName(lieferland, locale) : body.shippingAddress?.country,
+                countryCode: lieferland?.trim().toUpperCase(),
               }
             : undefined,
         customerNote: body.note,
@@ -269,12 +288,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'zahlung-nicht-eingerichtet' }, { status: 503 })
     }
     // PayPal hängt ?token=<order-id> selbst an die Return-URL an
-    const countryToCode: Record<string, string> = {
-      deutschland: 'DE', germany: 'DE', allemagne: 'DE',
-      frankreich: 'FR', france: 'FR',
-      österreich: 'AT', austria: 'AT', autriche: 'AT',
-      schweiz: 'CH', switzerland: 'CH', suisse: 'CH',
-    }
     const paypalOrder = await createPayPalOrder(cfg, {
       amountEUR: cart.total,
       orderNumber,
@@ -289,8 +302,13 @@ export async function POST(req: Request) {
             line2: body.shippingAddress?.line2,
             postalCode: body.shippingAddress?.postalCode,
             city: body.shippingAddress?.city,
-            countryCode:
-              countryToCode[(body.shippingAddress?.country || '').trim().toLowerCase()] || 'DE',
+            /*
+             * Die Kennung kommt jetzt aus der Kasse und muss nicht mehr aus
+             * dem Ländernamen erraten werden. Die frühere Übersetzungstabelle
+             * fiel bei allem, was sie nicht kannte, auf „DE" zurück — eine
+             * Bestellung nach Belgien meldete PayPal damit als deutsche.
+             */
+            countryCode: (lieferland || 'FR').trim().toUpperCase(),
           }
         : undefined,
     })
@@ -327,6 +345,19 @@ export async function POST(req: Request) {
     const text = err instanceof Error ? err.message : ''
     if (/nicht konfiguriert|not configured/i.test(text)) {
       return NextResponse.json({ error: 'zahlung-nicht-eingerichtet' }, { status: 503 })
+    }
+
+    /*
+     * Ein Land außerhalb der Zonen ist kein Fehler der Anwendung.
+     *
+     * Über die Kasse ist es kaum zu erreichen — sie bietet nur an, wohin
+     * geliefert wird. Erreichbar ist es trotzdem: Wer das Formular offen hat,
+     * während ein Land aus einer Zone genommen wird, schickt beim Abschicken
+     * noch das alte. „Bitte versuchen Sie es erneut" wäre dort die falsche
+     * Auskunft — Wiederholen hilft nicht, ein anderes Land schon.
+     */
+    if (/Dorthin wird nicht geliefert/.test(text)) {
+      return NextResponse.json({ error: 'land-nicht-lieferbar' }, { status: 400 })
     }
 
     return NextResponse.json({ error: 'checkout-failed' }, { status: 500 })

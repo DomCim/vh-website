@@ -122,7 +122,12 @@ export async function getNewsBySlug(slug: string, locale: Locale) {
     },
     locale,
     limit: 1,
-    depth: 1,
+    /*
+     * Zwei Ebenen, seit unter dem Beitrag passende Arbeiten stehen: Die erste
+     * löst die verknüpften Artikel auf, die zweite deren Kategorie — und ohne
+     * die Kategorie gibt es keine Adresse, unter der der Artikel liegt.
+     */
+    depth: 2,
   })
   return docs[0] ?? null
 }

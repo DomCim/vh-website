@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { ArbeitenListe } from '../../../../../components/ArbeitenListe'
+import { arbeitenAus } from '../../../../../lib/arbeiten'
 import { Bild, type BildQuelle } from '../../../../../components/Bild'
 
 import { Reveal } from '../../../../../components/motion/Reveal'
 import { RichText } from '../../../../../components/RichText'
-import { getNewsBySlug, mediaUrl } from '../../../../../lib/data'
+import { getNewsBySlug, mediaAlt, mediaUrl } from '../../../../../lib/data'
 import { formatDate, isLocale, t } from '../../../../../lib/i18n'
 import { absoluteUrl, alternatesFor, BASE_URL, breadcrumbJsonLd, jsonLd } from '../../../../../lib/seo'
 
@@ -98,6 +100,20 @@ export default async function NewsDetailPage({
       <Reveal>
         <RichText data={article.content} />
       </Reveal>
+
+      {/*
+        * Der Weg vom Text zur Ware. Ein Ratgeber über Rostschutz bringt
+        * Leser, aber keinen Auftrag, solange am Ende der Seite nichts steht.
+        */}
+      <ArbeitenListe
+        locale={locale}
+        titel={t(locale).custom.relatedProducts}
+        arbeiten={arbeitenAus(
+          article.relatedProducts,
+          (m) => mediaUrl(m as never, 'card'),
+          (m, fallback) => mediaAlt(m as never, fallback),
+        )}
+      />
     </article>
   )
 }

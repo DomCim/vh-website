@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useRef } from 'react'
 
 import { datum, euro } from '../../../../lib/format'
 import { Rueckmeldung } from '../../../../components/office/Rueckmeldung'
+import { useDateiablage } from '../../../../lib/buero/dateiablage'
 
 /**
  * Zahlungseingänge — der tägliche Blick ins Banking, hier erledigt.
@@ -128,6 +129,16 @@ export function ZahlungenAnsicht() {
   const eingaenge = bewegungen.filter((b) => b.betrag > 0)
   const abbuchungen = bewegungen.filter((b) => b.betrag <= 0)
 
+  /*
+   * Ziehen und Einfügen zusätzlich zum Dialog — der Auszug kommt aus dem
+   * Onlinebanking und liegt beim Herunterladen ohnehin schon im Fenster.
+   * (siehe lib/buero/dateiablage.ts)
+   */
+  const ablageBereich = useRef<HTMLLabelElement>(null)
+  const ablage = useDateiablage(ablageBereich, (d: File[]) => {
+      if (d[0]) void einlesen(d[0])
+    }, true)
+
   return (
     <>
       <h1>Zahlungseingänge</h1>
@@ -137,7 +148,9 @@ export function ZahlungenAnsicht() {
       </p>
 
       <div className="buero-karte">
-        <label className="buero-feld">
+        <label
+          ref={ablageBereich}
+          className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}>
           <span>Kontoauszug aus dem Onlinebanking</span>
           <input
             type="file"
@@ -169,7 +182,19 @@ export function ZahlungenAnsicht() {
           eingaenge.map((b) => {
             const marker = b.vorschlag ? MARKER[b.vorschlag.sicherheit] : null
             return (
-              <div key={b.id} className="buero-karte" style={{ marginBottom: '.6rem' }}>
+              /*
+               * Hier steht jede Karte für EINE Buchung — deshalb der Balken
+               * oben und nicht der Streifen links (siehe office.css,
+               * „Balken oben"). Die Farbe ist die des Zuordnungsvorschlags:
+               * grün heißt „passt", bronze „wahrscheinlich", rot „prüfen".
+               * Ohne Vorschlag bleibt der Balken neutral — dort ist nichts
+               * entschieden, und Grau sagt genau das.
+               */
+              <div
+                key={b.id}
+                className={`buero-karte balken-oben ${marker ? `ist-${marker.klasse}` : ''}`}
+                style={{ marginBottom: '.6rem' }}
+              >
                 <div className="buero-zeile" style={{ padding: 0 }}>
                   <div className="buero-zeile-haupt">
                     <div className="buero-zeile-titel">

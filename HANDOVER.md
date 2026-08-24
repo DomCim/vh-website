@@ -540,19 +540,52 @@ das zurückkommt.
    - **Einkaufs-Bestellwesen.** `reorderedAt` ist nur ein Merker; bestellte
      Menge, Liefertermin und Prüfung des Wareneingangs gegen die Bestellung
      gibt es nicht. Teillieferungen und Überlieferung fallen nicht auf.
-   - **Storno einer Shop-Bestellung ist folgenlos** — keine Rückerstattung
-     (PayPal), keine Rückbuchung der Verfügbarkeit, verknüpfter Auftrag
-     läuft weiter. Heute alles Handarbeit.
+   - ~~**Storno einer Shop-Bestellung ist folgenlos**~~ — **erledigt
+     (08/2026).** Das Stornieren bucht Werkstattstücke zurück in den Laden,
+     bricht den verknüpften Auftrag ab (außer er ist schon geliefert) und
+     legt die **Rückabwicklung** als Vorgang an der Bestellung an
+     (`orders.rueckgabe`: Grund storno/widerruf/reklamation, Stand offen →
+     wareZurueck → erstattet/abgelehnt, Betrag, Zeitpunkte, Notiz). Auch per
+     MCP: `rueckgabe_erfassen`.
+
+     **Bewusst offen bleibt die Erstattung selbst.** Der Weg über PayPal
+     gäbe es, wäre aber der einzige Vorgang im Haus, der auf einen Klick hin
+     unumkehrbar Geld verschiebt — dieselbe Linie wie bei Rechnungen und
+     Mahnungen. Wer das ändern will, ändert damit eine Entscheidung, nicht
+     nur Code.
+   - ~~**Versand ist ein fester Betrag je Stück, ohne Blick auf die
+     Anschrift.**~~ — **erledigt (08/2026).** Versandzonen als Global
+     (`globals/Versand.ts`, Logik in `lib/versand.ts`): Länder je Zone plus
+     ein Aufschlag je Stück. Kasse, Produktfeed und strukturierte Daten lesen
+     dieselbe Quelle — vorher hatten alle drei eine eigene Vorstellung davon,
+     wohin geliefert wird. Ohne gepflegte Zone gilt der Stand von vorher
+     (FR/DE/AT, kein Aufschlag). Offen bleibt die Schweiz im Produktfeed: Der
+     rechnet in Euro, das Merchant Center bräuchte dort Franken.
    - **Zahlungsabgleich für Ausgaben.** Der Kontoauszug-Abgleich schlägt nur
      eigene Rechnungen vor; Belege (`expenses.paid`) müssen weiter von Hand
      abgehakt werden.
-   - **Postfach kann beim Antworten keine Anhänge mitschicken** (lesen ja).
-     `nachrichtSenden` kann es längst — es fehlt nur der Weg durch
-     `api/office/post`.
+   - ~~**Postfach kann beim Antworten keine Anhänge mitschicken**~~ —
+     **erledigt (08/2026).** `api/office/post` nimmt beim Senden zusätzlich
+     `multipart/form-data` an: JSON im Feld `daten`, Dateien in `dateien`.
+     Grenze 25 MB zusammen, geprüft **vor** der Postfachsuche, weil ein
+     Mailserver sonst erst nach dem Hochladen ablehnt.
+   - ~~**Ein Ratgeber führt nirgendwo hin, und eine Referenz endet in einem
+     leeren Maßformular.**~~ — **erledigt (08/2026).** News tragen
+     `relatedProducts` (unter dem Text als Kacheln, auch per MCP setz- und
+     lesbar); der Knopf an einer Referenz heißt „So etwas anfragen" und
+     reicht Titel und Pfad bis in die Anfrage durch — vorbelegter Text,
+     Mail-Betreff und eigene Felder `referenceTitle`/`referenceUrl`.
    - **Bestandsabbuchung beim Shop-Verkauf.** Ein verkauftes Einzelstück
      wird nur auf „nicht verfügbar" gestellt; der Inventarposten
      (`fertigware`) bleibt unberührt und der Inventarwert zu hoch. Ebenso
      gibt es keine Reservierung gegen Doppelverkauf im Zahlfenster.
+   - **Bestehende Werkstattdateien in die Übergabemappe legen.** Heute wird
+     dort hochgeladen; was am Artikel schon liegt, muss man erst
+     herunterladen und wieder hinaufschieben. Gewünscht ist die Auswahl aus
+     den vorhandenen Dateien — und zwar als **Verweis, nicht als Kopie**:
+     Wird die Zeichnung im Haus überarbeitet, soll der Kunde die neue
+     Fassung sehen. Dasselbe Prinzip wie bei der Weitergabe an den
+     Zulieferer (`lib/weitergabe.ts`), nur in die andere Richtung.
    - **MCP-Scopes je Rolle.** Es gibt zwei Stufen (voll/lesend), das Büro
      kennt fünfzehn Rechte. Ein Schlüssel je Rolle wäre der nächste Schritt.
    - **Rest-Risiko DNS-Rebinding** in `bild_hochladen`: Die URL-Prüfung löst

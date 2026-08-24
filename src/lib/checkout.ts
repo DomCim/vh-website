@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import { naechsteBestellnummer } from './nummernkreis'
 
 import { findBestPromotion, type PricedItem } from './promotions'
+import { versandJeStueck, versandzonen, zoneFuer, type Zone } from './versand'
 
 export type CheckoutItemInput = {
   productId: number | string
@@ -39,6 +40,8 @@ export type PricedCart = {
   deliveryMethod: DeliveryMethod
   /** Nur Dateien im Korb — dann braucht es weder Anschrift noch Versandart */
   nurDigital: boolean
+  /** Die Zone, nach der gerechnet wurde — null bei Abholung, digital oder ohne Land */
+  zone: Zone | null
 }
 
 /**
@@ -87,8 +90,24 @@ export async function priceCart(
   items: CheckoutItemInput[],
   promoCode?: string,
   deliveryMethod: DeliveryMethod = 'shipping',
+  land?: string,
 ): Promise<PricedCart> {
   if (items.length === 0) throw new Error('Warenkorb ist leer')
+
+  /*
+   * Die Zone bestimmt den Aufschlag je Stück.
+   *
+   * Bei Abholung wird gar nicht erst gefragt — dort fällt der Versand
+   * ohnehin weg, und ein Land wäre eine Angabe ohne Wirkung. Kommt ein Land
+   * herein, in das nicht geliefert wird, ist das ein Abbruch und keine
+   * stille Null: Sonst zahlte jemand den Inlandssatz nach Neuseeland.
+   */
+  const zonen = deliveryMethod === 'pickup' ? [] : await versandzonen(payload)
+  let zone: Zone | null = null
+  if (deliveryMethod === 'shipping' && land) {
+    zone = zoneFuer(zonen, land)
+    if (!zone) throw new Error(`Dorthin wird nicht geliefert: ${land}`)
+  }
 
   const lines: PricedLine[] = []
   const pricedItems: PricedItem[] = []
@@ -147,7 +166,9 @@ export async function priceCart(
        * steht.
        */
       shippingCost:
-        product.digital || deliveryMethod === 'pickup' ? 0 : (product.shippingCost ?? 0),
+        product.digital || deliveryMethod === 'pickup'
+          ? 0
+          : versandJeStueck(product.shippingCost, zone),
       digital: product.digital || undefined,
     })
     pricedItems.push({
@@ -173,6 +194,7 @@ export async function priceCart(
     promotionTitle: best?.promotion.title,
     deliveryMethod,
     nurDigital: lines.every((l) => l.digital),
+    zone,
   }
 }
 

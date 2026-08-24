@@ -134,7 +134,18 @@ export function WiedervorlagenAnsicht() {
             ),
         }}
       >
-      <div className="buero-zeile">
+      {/*
+        * Der Statusbalken links sagt, was drängt (siehe office.css,
+        * „Der Statusbalken links"): rot heißt über der Zeit, bronze heißt
+        * wartet, grün heißt erledigt. Hier ist „über der Zeit" die
+        * Wiedervorlage, deren Tag erreicht oder vorbei ist — dieselbe
+        * Grenze, nach der die Liste ohnehin in „fällig" und „später" teilt.
+        */}
+      <div
+        className={`buero-zeile ${
+          w.done ? 'ist-gut' : (w.dueDate ?? '').slice(0, 10) <= heute() ? 'ist-warn' : 'ist-offen'
+        }`}
+      >
         <div className="buero-zeile-haupt">
           <div className="buero-zeile-titel">{w.title}</div>
           <div className="buero-zeile-neben">

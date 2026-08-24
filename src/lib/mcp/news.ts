@@ -11,6 +11,7 @@ import {
   type McpServer,
   ohneRueckfall,
   ok,
+  resolveIdsStrikt,
   richTextZuText,
   sprache,
 } from './helpers'
@@ -85,6 +86,11 @@ export function registerNews(server: McpServer) {
         teaser: n.excerpt ?? null,
         inhalt: richTextZuText(n.content),
         bildId: typeof n.coverImage === 'object' ? n.coverImage?.id : (n.coverImage ?? null),
+        // Wie bei den Referenzen: die Pfade, nicht die Kennungen — mit denen
+        // lässt sich weiterarbeiten, ohne noch einmal nachzuschlagen
+        produktSlugs: (n.relatedProducts ?? []).map((r: any) =>
+          typeof r === 'object' ? r.slug : r,
+        ),
         url: `/de/news/${n.slug}`,
       })
     },
@@ -106,6 +112,12 @@ export function registerNews(server: McpServer) {
         aufFacebookPosten: z.boolean().optional(),
         aufInstagramPosten: z.boolean().optional(),
         veroeffentlichen: z.boolean().optional(),
+        produktSlugs: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Passende Arbeiten, die unter dem Beitrag gezeigt werden. Vor allem für Ratgeber gedacht: Wer über Pflege liest, soll sehen, worum es geht.',
+          ),
       },
     },
     async ({
@@ -119,12 +131,22 @@ export function registerNews(server: McpServer) {
       aufFacebookPosten,
       aufInstagramPosten,
       veroeffentlichen,
+      produktSlugs,
     }) => {
       // „nächster Dienstag" landete sonst ungeprüft im Veröffentlichungsdatum
       if (datum !== undefined && !Number.isFinite(Date.parse(datum))) {
         return fehler(`„${datum}" ist kein lesbares Datum — bitte als ISO-Datum (2026-09-01) angeben.`)
       }
       const payload = await db()
+      /*
+       * Ein Pfad, den es nicht gibt, ist ein Tippfehler und keine leere
+       * Auswahl. Still zu verschlucken hieße: Der Beitrag steht ohne die
+       * Arbeiten da, und niemand sucht danach.
+       */
+      const produkte = await resolveIdsStrikt(payload, 'products', produktSlugs)
+      if (produkte.fehlend.length) {
+        return fehler(`Diese Artikel gibt es nicht: ${produkte.fehlend.join(', ')}`)
+      }
       const publish = veroeffentlichen ?? false
       const doc = await payload.create({
         collection: 'news',
@@ -140,6 +162,7 @@ export function registerNews(server: McpServer) {
           publishedDate: datum ?? new Date().toISOString(),
           postToFacebook: aufFacebookPosten ?? false,
           postToInstagram: aufInstagramPosten ?? false,
+          ...(produkte.ids.length ? { relatedProducts: produkte.ids } : {}),
           _status: publish ? 'published' : 'draft',
         },
       })
@@ -181,6 +204,12 @@ export function registerNews(server: McpServer) {
           .boolean()
           .optional()
           .describe('true = veröffentlichen, false = zurück in den Entwurf'),
+        produktSlugs: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Ersetzt die passenden Arbeiten unter dem Beitrag. Leere Liste = alle entfernen; weglassen = unverändert.',
+          ),
       },
     },
     async ({
@@ -195,6 +224,7 @@ export function registerNews(server: McpServer) {
       aufFacebookPosten,
       aufInstagramPosten,
       veroeffentlichen,
+      produktSlugs,
     }) => {
       if (datum !== undefined && !Number.isFinite(Date.parse(datum))) {
         return fehler(`„${datum}" ist kein lesbares Datum — bitte als ISO-Datum (2026-09-01) angeben.`)
@@ -202,6 +232,10 @@ export function registerNews(server: McpServer) {
       const payload = await db()
       const n = await findeNachSlug<{ id: number }>(payload, 'news', slug, { draft: true })
       if (!n) return fehler(`News-Beitrag "${slug}" nicht gefunden`)
+      const produkte = await resolveIdsStrikt(payload, 'products', produktSlugs)
+      if (produkte.fehlend.length) {
+        return fehler(`Diese Artikel gibt es nicht: ${produkte.fehlend.join(', ')}`)
+      }
       const updated = await payload.update({
         collection: 'news',
         id: n.id,
@@ -216,6 +250,8 @@ export function registerNews(server: McpServer) {
           ...(datum !== undefined && { publishedDate: datum }),
           ...(aufFacebookPosten !== undefined && { postToFacebook: aufFacebookPosten }),
           ...(aufInstagramPosten !== undefined && { postToInstagram: aufInstagramPosten }),
+          // Leere Liste heißt „alle weg" — weggelassen heißt „unverändert"
+          ...(produktSlugs !== undefined && { relatedProducts: produkte.ids }),
           ...(veroeffentlichen !== undefined && {
             _status: veroeffentlichen ? ('published' as const) : ('draft' as const),
           }),

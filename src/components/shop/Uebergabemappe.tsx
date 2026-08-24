@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 import type { Dictionary } from '../../lib/i18n'
 
 /**
@@ -100,8 +101,23 @@ function Ordnerblock({
   hochladen: (dateien: File[], ordner: string) => void
 }) {
   const feld = useRef<HTMLInputElement>(null)
+
+  /*
+   * Ziehen und Einfügen zusätzlich zum Knopf (siehe lib/buero/dateiablage.ts).
+   * Der ganze Abschnitt nimmt an, nicht nur der Knopf: Wer eine Zeichnung auf
+   * „Freigaben" zieht, meint diesen Ordner — und genau das passiert dann auch,
+   * weil jeder Ordnerblock seine eigene Ablage ist.
+   */
+  const ablageBereich = useRef<HTMLElement>(null)
+  const ablage = useDateiablage(ablageBereich, (d) => hochladen(d, name), offen && !laeuft)
+
   return (
-    <section className="mt-10">
+    <section
+      ref={ablageBereich}
+      className={`mt-10 border border-dashed p-3 transition-colors ${
+        ablage.drueber ? 'border-bronze bg-bronze/5' : 'border-transparent'
+      }`}
+    >
       <h2 className="tracking-nav text-ink rule-bronze-sm mb-4 text-sm font-semibold uppercase">
         {name || labels.noFolder}
       </h2>

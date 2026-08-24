@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { ArbeitenListe } from '../../../../../components/ArbeitenListe'
+import { arbeitenAus } from '../../../../../lib/arbeiten'
 import { Bild, type BildQuelle } from '../../../../../components/Bild'
 
 import { MassanfertigungHinweis } from '../../../../../components/MassanfertigungHinweis'
@@ -47,17 +49,11 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
   const images = project.images ?? []
 
   // Verknüpfte Produkte für den Abschnitt „Verwendete Arbeiten"
-  const verknuepfteProdukte = (project.relatedProducts ?? [])
-    .filter((p): p is Exclude<typeof p, number> => typeof p === 'object' && p !== null)
-    .map((p) => ({
-      id: p.id,
-      titel: p.title,
-      slug: p.slug ?? '',
-      kategorieSlug: typeof p.category === 'object' ? (p.category?.slug ?? '') : '',
-      bild: mediaUrl(p.images?.[0], 'card'),
-      bildAlt: mediaAlt(p.images?.[0], p.title),
-    }))
-    .filter((p) => p.slug && p.kategorieSlug)
+  const verknuepfteProdukte = arbeitenAus(
+    project.relatedProducts,
+    (m) => mediaUrl(m as never, 'card'),
+    (m, fallback) => mediaAlt(m as never, fallback),
+  )
 
   // Strukturierte Daten: eine Referenz ist ein Werkstück, kein Produktangebot
   const projektJsonLd = jsonLd({
@@ -144,39 +140,26 @@ export default async function ProjectDetailPage({ params }: { params: PageParams
         </div>
       )}
 
-      {verknuepfteProdukte.length > 0 && (
-        <div className="mt-16">
-          <h2 className="tracking-nav text-ink heading-rule text-lg font-semibold uppercase">
-            {dict.custom.usedProducts}
-          </h2>
-          <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {verknuepfteProdukte.map((p) => (
-              <li key={p.id}>
-                <Link href={`/${locale}/${p.kategorieSlug}/${p.slug}`} className="group block">
-                  {p.bild && (
-                    <div className="bg-paper-soft overflow-hidden">
-                      <img
-                        src={p.bild}
-                        alt={p.bildAlt}
-                        className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  <p className="group-hover:text-bronze mt-3 text-sm font-semibold transition-colors">
-                    {p.titel}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <ArbeitenListe
+        locale={locale}
+        titel={dict.custom.usedProducts}
+        arbeiten={verknuepfteProdukte}
+      />
 
+      {/*
+        * „So etwas anfragen" statt eines allgemeinen Hinweises.
+        *
+        * Der Knopf führte bis hierher auf ein leeres Maßformular — wer eben
+        * ein Geländer angesehen hatte, musste dort von vorn erklären, was er
+        * meint. Mit dem Verweis auf die Referenz kommt die Anfrage mit dem
+        * Stück im Betreff an, und im Büro steht, welche Arbeit sie ausgelöst
+        * hat.
+        */}
       <MassanfertigungHinweis
         locale={locale}
-        text={dict.custom.cta}
-        label={dict.custom.title}
+        text={dict.custom.askSimilarNote}
+        label={dict.custom.askSimilar}
+        referenz={project.slug ?? undefined}
       />
     </div>
   )

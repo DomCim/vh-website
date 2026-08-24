@@ -5,6 +5,10 @@ import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
 import { BestellungFormular } from '../../../../../components/office/BestellungFormular'
+import {
+  RueckgabeFormular,
+  type RueckgabeWerte,
+} from '../../../../../components/office/RueckgabeFormular'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 import { bedarfFuerBestellung, type Artikel, type Posten } from '../../../../../lib/buero/material'
 import { datum, euro } from '../../../../../lib/format'
@@ -157,6 +161,13 @@ export function BestellungAnsicht() {
           </div>
         </>
       )}
+
+      <h2>Rückabwicklung</h2>
+      <RueckgabeFormular
+        id={o.id as number}
+        gesamt={o.total as number}
+        werte={(o.rueckgabe ?? {}) as RueckgabeWerte}
+      />
 
       <h2>Stand</h2>
       <BestellungFormular

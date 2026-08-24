@@ -15,6 +15,9 @@ type Eingang = {
   message?: string
   productTitle?: string
   productUrl?: string
+  /** Gesetzt, wenn über „So etwas anfragen" von einer Referenz aus gefragt wurde */
+  referenceTitle?: string
+  referenceUrl?: string
   locale?: string
   /** Honigtopf: für Menschen unsichtbar, Bots füllen ihn aus */
   website?: string
@@ -69,6 +72,8 @@ export async function POST(req: Request) {
           message,
           productTitle: body.productTitle?.trim().slice(0, 200),
           productUrl: body.productUrl?.trim().slice(0, 500),
+          referenceTitle: body.referenceTitle?.trim().slice(0, 200),
+          referenceUrl: body.referenceUrl?.trim().slice(0, 500),
           locale: body.locale?.slice(0, 5),
           ...(istMassanfertigung ? { custom: body.custom } : {}),
           ...(body.attachmentIds?.length ? { attachments: body.attachmentIds } : {}),
@@ -100,6 +105,8 @@ export async function POST(req: Request) {
             message: istMassanfertigung ? `${message}\n\n${massText(body)}` : message,
             productTitle: body.productTitle?.trim().slice(0, 200),
             productUrl: body.productUrl?.trim().slice(0, 500),
+            referenceTitle: body.referenceTitle?.trim().slice(0, 200),
+            referenceUrl: body.referenceUrl?.trim().slice(0, 500),
           },
           to,
         ),

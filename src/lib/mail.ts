@@ -476,16 +476,29 @@ export function contactEmail(
     message: string
     productTitle?: string
     productUrl?: string
+    /** Gesetzt bei „So etwas anfragen" auf einer Referenz */
+    referenceTitle?: string
+    referenceUrl?: string
   },
   to: string,
 ) {
   const isProductInquiry = Boolean(data.productTitle)
+  /*
+   * Die Referenz gehört in den Betreff, nicht nur in den Text.
+   *
+   * „Kontaktanfrage von Herrn Meier" sagt nichts; „Ähnlich wie: Geländer
+   * Bahnhofstraße" sagt schon vor dem Öffnen, worum es geht — und beim
+   * Zurückschreiben weiß man, welche Bilder man zur Hand nehmen muss.
+   */
+  const bezugstitel = data.referenceTitle
   return {
     to,
     replyTo: data.email,
     subject: isProductInquiry
       ? `Produktanfrage: ${data.productTitle} (von ${data.name})`
-      : `Kontaktanfrage von ${data.name}`,
+      : bezugstitel
+        ? `Anfrage ähnlich „${bezugstitel}" (von ${data.name})`
+        : `Kontaktanfrage von ${data.name}`,
     html: briefbogen(
       `${ueberschrift(
         isProductInquiry ? 'Neue Produktanfrage über die Website' : 'Neue Kontaktanfrage über die Website',
@@ -494,6 +507,11 @@ export function contactEmail(
         ${
           isProductInquiry
             ? `<p><strong>Produkt:</strong> ${data.productTitle}${data.productUrl ? ` — <a href="${data.productUrl}">${data.productUrl}</a>` : ''}</p>`
+            : ''
+        }
+        ${
+          bezugstitel
+            ? `<p><strong>Ausgelöst von der Referenz:</strong> ${bezugstitel}${data.referenceUrl ? ` — <a href="${data.referenceUrl}">${data.referenceUrl}</a>` : ''}</p>`
             : ''
         }
         <p><strong>Name:</strong> ${data.name}<br>

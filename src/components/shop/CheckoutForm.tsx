@@ -41,6 +41,7 @@ type CheckoutDict = {
   backToCart: string
   error: string
   errorNoPayment: string
+  errorCountry: string
   verifyTitle: string
   verifyIntro: string
   verifyCode: string
@@ -112,6 +113,7 @@ export function CheckoutForm({
   initialCode,
   paypalAvailable = false,
   vatRate = 20,
+  laender,
 }: {
   locale: Locale
   dict: CheckoutDict
@@ -121,14 +123,37 @@ export function CheckoutForm({
   initialCode?: string
   paypalAvailable?: boolean
   vatRate?: number
+  /**
+   * Wohin geliefert wird — aus den Versandzonen, in deren Reihenfolge.
+   *
+   * Kommt vom Server, weil die Zonen dort gepflegt werden und die Kasse den
+   * Aufschlag schon beim Tippen zeigen soll. Gerechnet wird trotzdem noch
+   * einmal serverseitig: Was hier steht, ist eine Anzeige, keine Zusage.
+   */
+  laender: { code: string; name: string; aufschlag: number; hinweis?: string }[]
 }) {
   const { items, subtotal, clear } = useCart()
+  /*
+   * Das Land ist eine Auswahl und kein Textfeld mehr.
+   *
+   * Als freier Text kam „Schweiz", „CH" und „Suisse" gleichermaßen an, und
+   * keines davon ließ sich verrechnen — der Versand war deshalb überall
+   * derselbe Betrag, auch dorthin, wo die Spedition ein Vielfaches kostet.
+   * Vorbelegt ist das erste Land der ersten Zone, sonst das der Sprache.
+   */
+  const [land, setLand] = useState(
+    () =>
+      laender.find((l) => l.code === (locale === 'fr' ? 'FR' : 'DE'))?.code ??
+      laender[0]?.code ??
+      '',
+  )
   const formular = useRef<HTMLFormElement>(null)
   const [submitting, setSubmitting] = useState(false)
-  // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an"
-  const [error, setError] = useState<null | 'allgemein' | 'keine-zahlung' | 'digital-ohne-paypal'>(
-    null,
-  )
+  // 'allgemein' heißt „nochmal versuchen", 'keine-zahlung' heißt „ruf uns an",
+  // 'land' heißt „nochmal versuchen hilft nicht, ein anderes Land schon"
+  const [error, setError] = useState<
+    null | 'allgemein' | 'keine-zahlung' | 'digital-ohne-paypal' | 'land'
+  >(null)
   /*
    * Zwei Zahlarten: PayPal (nur wenn eingerichtet) und Rechnung (immer).
    * Ohne PayPal-Zugangsdaten ist Rechnung vorgewählt — die Kasse funktioniert
@@ -200,10 +225,21 @@ export function CheckoutForm({
   const einzelanfertigung = items.some((i) => i.madeToOrder === true)
 
 
+  /*
+   * Der Aufschlag der Zone hängt am gewählten Land und gilt je Stück —
+   * genauso rechnet `lib/versand.ts` auf dem Server. Stünde hier etwas
+   * anderes, sähe der Kunde vor dem Bezahlen einen anderen Betrag als
+   * danach auf der Rechnung.
+   */
+  const gewaehltesLand = laender.find((l) => l.code === land)
+  const aufschlag = deliveryMethod === 'pickup' ? 0 : (gewaehltesLand?.aufschlag ?? 0)
   const shipping =
     deliveryMethod === 'pickup'
       ? 0
-      : items.reduce((s, i) => s + (i.shippingCost ?? 0) * i.quantity, 0)
+      : items.reduce(
+          (s, i) => s + (i.digital ? 0 : (i.shippingCost ?? 0) + aufschlag) * i.quantity,
+          0,
+        )
 
   if (items.length === 0) {
     return (
@@ -222,7 +258,15 @@ export function CheckoutForm({
   /** Der Wert eines Feldes im Formular, ohne Umweg über den Zustand */
   function feldwert(name: string): string {
     const feld = formular.current?.elements.namedItem(name)
-    return feld instanceof HTMLInputElement || feld instanceof HTMLTextAreaElement
+    /*
+     * `HTMLSelectElement` steht bewusst dabei: Seit das Land eine Auswahl ist
+     * und kein Textfeld, fiel es sonst aus der Rückschau heraus — die
+     * Anschrift stand dort ohne Land, und beim Prüfen vor dem Bestellen fällt
+     * genau das niemandem auf.
+     */
+    return feld instanceof HTMLInputElement ||
+      feld instanceof HTMLTextAreaElement ||
+      feld instanceof HTMLSelectElement
       ? feld.value.trim()
       : ''
   }
@@ -335,7 +379,9 @@ export function CheckoutForm({
         feldwert('line1'),
         feldwert('line2'),
         [feldwert('postalCode'), feldwert('city')].filter(Boolean).join(' '),
-        feldwert('country'),
+        // Das Feld trägt die Kennung; hier gehört der Name hin — die
+        // Rückschau soll aussehen wie die Anschrift auf dem Paket.
+        laender.find((l) => l.code === feldwert('country'))?.name ?? feldwert('country'),
       ]
         .filter(Boolean)
         .join(', ')
@@ -430,9 +476,20 @@ export function CheckoutForm({
           setSubmitting(false)
           return
         }
-        // 503 heißt: Die Bezahlung ist gar nicht eingerichtet. Ein zweiter
-        // Versuch scheitert genauso — das muss dranstehen.
-        setError(res.status === 503 ? 'keine-zahlung' : 'allgemein')
+        /*
+         * Zwei Fälle, bei denen ein zweiter Versuch nichts ändert, und die
+         * deshalb nicht „bitte erneut versuchen" heißen dürfen: Die Bezahlung
+         * ist gar nicht eingerichtet (503), oder es wird dorthin nicht
+         * geliefert (400) — Letzteres, wenn das Formular offen stand, während
+         * ein Land aus einer Zone genommen wurde.
+         */
+        setError(
+          res.status === 503
+            ? 'keine-zahlung'
+            : result?.error === 'land-nicht-lieferbar'
+              ? 'land'
+              : 'allgemein',
+        )
         setSubmitting(false)
         return
       }
@@ -665,13 +722,23 @@ export function CheckoutForm({
                         />
                         <input name="city" required placeholder={dict.city} className={inputClass} />
                       </div>
-                      <input
+                      <select
                         name="country"
                         required
-                        placeholder={dict.country}
-                        defaultValue={locale === 'fr' ? 'France' : 'Deutschland'}
+                        aria-label={dict.country}
+                        value={land}
+                        onChange={(e) => setLand(e.target.value)}
                         className={inputClass}
-                      />
+                      >
+                        {laender.map((l) => (
+                          <option key={l.code} value={l.code}>
+                            {l.name}
+                          </option>
+                        ))}
+                      </select>
+                      {gewaehltesLand?.hinweis && (
+                        <p className="text-ink-soft text-xs">{gewaehltesLand.hinweis}</p>
+                      )}
                     </div>
                   </>
                 ),
@@ -704,7 +771,9 @@ export function CheckoutForm({
                           ? dict.errorNoPayment
                           : error === 'digital-ohne-paypal'
                             ? downloadDict.keineZahlung
-                            : dict.error}
+                            : error === 'land'
+                              ? dict.errorCountry
+                              : dict.error}
                       </p>
                     )}
 

@@ -49,19 +49,15 @@ export function absoluteUrl(pathOrUrl?: string): string | undefined {
   return pathOrUrl.startsWith('http') ? pathOrUrl : `${BASE_URL}${pathOrUrl}`
 }
 
-/**
- * Die Länder, in die geliefert wird.
+/*
+ * Wohin geliefert wird, steht seit 08/2026 in den Versandzonen
+ * (`lib/versand.ts`) und wird hier hereingereicht.
  *
- * Bis hierher stand das nirgends im Code: Das Länderfeld in der Kasse ist
- * freier Text mit einem Vorschlag je nach Sprache. Für Google muss es
- * konkret sein — „wir liefern schon irgendwohin" ist keine Angabe, die sich
- * unter einem Suchergebnis anzeigen lässt.
- *
- * Entscheidung Dominik (08/2026). Die Schweiz ist dabei, obwohl dort Zoll
- * und Einfuhrumsatzsteuer anfallen — das trifft den Kunden, nicht die
- * Lieferfähigkeit.
+ * Vorher stand die Liste an dieser Stelle fest verdrahtet — und eine zweite,
+ * andere im Produktfeed. Die eine nannte die Schweiz, die andere nicht, und
+ * die Kasse wusste von keiner der beiden. Was unter einem Suchergebnis steht,
+ * ist aber eine Zusage: Es muss dasselbe sein, was die Kasse rechnet.
  */
-export const LIEFERLAENDER = ['FR', 'DE', 'AT', 'CH'] as const
 
 /** Widerrufsfrist in Tagen — der gesetzliche Regelfall im Verkauf an Verbraucher. */
 export const WIDERRUFSTAGE = 14
@@ -93,26 +89,62 @@ export const WIDERRUFSTAGE = 14
  * auch in der Widerrufsbelehrung stehen — sonst gilt es nicht, gleich was
  * hier ausgezeichnet ist.
  */
-export function versandUndRueckgabe(artikel: { shippingCost?: number | null; digital?: boolean | null }) {
-  const laender = [...LIEFERLAENDER]
-  return {
-    shippingDetails: {
-      '@type': 'OfferShippingDetails',
-      shippingRate: {
-        '@type': 'MonetaryAmount',
-        value: artikel.digital ? 0 : (artikel.shippingCost ?? 0),
-        currency: 'EUR',
-      },
-      shippingDestination: laender.map((land) => ({
-        '@type': 'DefinedRegion',
-        addressCountry: land,
-      })),
+export type Versandangabe = {
+  '@type': 'OfferShippingDetails'
+  shippingRate: { '@type': 'MonetaryAmount'; value: number; currency: 'EUR' }
+  shippingDestination: { '@type': 'DefinedRegion'; addressCountry: string }[]
+}
+
+export type Angebotsdaten = {
+  /** Eine Angabe je Zone; bei nur einer Zone steht sie einzeln statt in einer Liste */
+  shippingDetails?: Versandangabe | Versandangabe[]
+  hasMerchantReturnPolicy?: {
+    '@type': 'MerchantReturnPolicy'
+    applicableCountry: string[]
+    returnPolicyCategory: string
+    merchantReturnDays: number
+    returnMethod: string
+    returnFees: string
+  }
+}
+
+export function versandUndRueckgabe(
+  artikel: { shippingCost?: number | null; digital?: boolean | null },
+  zonen: { laender: string[]; aufschlag: number }[],
+): Angebotsdaten {
+  const laender = zonen.flatMap((z) => z.laender)
+  if (!laender.length) return {}
+
+  /*
+   * Je Zone eine eigene Angabe, nicht eine für alle.
+   *
+   * Schema.org erlaubt mehrere `OfferShippingDetails` nebeneinander, und
+   * genau dafür sind sie da: Wenn die Lieferung in die Schweiz achtzig Euro
+   * mehr kostet, ist eine gemeinsame Zahl für alle Länder entweder für die
+   * einen zu hoch oder für die anderen eine falsche Zusage. Bei nur einer
+   * Zone bleibt es eine einzige Angabe — dann fällt der Unterschied nicht an.
+   */
+  const grund = artikel.digital ? 0 : (artikel.shippingCost ?? 0)
+  const versand: Versandangabe[] = zonen.map((z) => ({
+    '@type': 'OfferShippingDetails' as const,
+    shippingRate: {
+      '@type': 'MonetaryAmount' as const,
+      value: artikel.digital ? 0 : Math.round((grund + z.aufschlag) * 100) / 100,
+      currency: 'EUR' as const,
     },
+    shippingDestination: z.laender.map((land) => ({
+      '@type': 'DefinedRegion' as const,
+      addressCountry: land,
+    })),
+  }))
+
+  return {
+    shippingDetails: versand.length === 1 ? versand[0] : versand,
     ...(artikel.digital
       ? {}
       : {
           hasMerchantReturnPolicy: {
-            '@type': 'MerchantReturnPolicy',
+            '@type': 'MerchantReturnPolicy' as const,
             applicableCountry: laender,
             returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
             merchantReturnDays: WIDERRUFSTAGE,

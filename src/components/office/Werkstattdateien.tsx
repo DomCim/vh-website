@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef } from 'react'
 
 import { useBestand } from '../../lib/buero/bestand'
 import { useDarf } from '../../lib/buero/rechte'
 import { absenden } from '../../lib/buero/warteschlange'
 import { Rueckmeldung } from './Rueckmeldung'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 
 /**
  * Die Bauunterlagen einer Artikelvariante — in Ordnern.
@@ -64,6 +65,231 @@ const groesse = (bytes?: number | null) => {
 
 const bezug = (wert: unknown) =>
   typeof wert === 'object' && wert ? String((wert as { id?: number }).id ?? '') : String(wert ?? '')
+
+/**
+ * Was Zeile und Ordnerblock von der Ansicht brauchen.
+ *
+ * Gebündelt, weil beide dieselben sechs Angaben durchreichen und eine
+ * Aufzählung an drei Stellen sonst dreimal gepflegt werden müsste.
+ */
+type Werkzeug = {
+  darfAendern: boolean
+  laeuft: string | null
+  rufen: (schluessel: string, koerper: Record<string, unknown>, fehler?: string) => Promise<boolean>
+  auswaehlbar: (d: Werkstattdatei) => boolean
+  auswahl: string[]
+  setAuswahl: React.Dispatch<React.SetStateAction<string[]>>
+}
+
+function Zeile({
+  d,
+  geerbt,
+  werk,
+}: {
+  d: Werkstattdatei
+  geerbt?: boolean
+  werk: Werkzeug
+}) {
+  const { darfAendern, laeuft, rufen, auswaehlbar, auswahl, setAuswahl } = werk
+  return (
+    <div className="buero-zeile">
+      {auswaehlbar(d) && (
+        <input
+          type="checkbox"
+          aria-label={`${d.label || d.filename || 'Datei'} weitergeben`}
+          checked={auswahl.includes(String(d.id))}
+          onChange={(e) =>
+            setAuswahl((bisher) =>
+              e.target.checked
+                ? [...bisher, String(d.id)]
+                : bisher.filter((k) => k !== String(d.id)),
+            )
+          }
+          style={{ marginRight: '.6rem' }}
+        />
+      )}
+      <div className="buero-zeile-haupt">
+        <div className="buero-zeile-titel">{d.label || d.filename || 'Datei'}</div>
+        <div className="buero-zeile-neben">
+          {groesse(d.filesize)}
+          {d.note ? ` · ${d.note}` : ''}
+          {geerbt ? ' · von der Grundlage' : ''}
+          {/* Ohne Kennung ist die Datei noch in der Warteschlange */}
+          {typeof d.id === 'string' && d.id.startsWith('warte') ? ' · geht raus, sobald Netz da ist' : ''}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center' }}>
+        <a className="buero-knopf leise schmal" href={`/api/office/werkstattdatei/${d.id}`}>
+          Laden
+        </a>
+        {darfAendern && !geerbt && (
+          <button
+            type="button"
+            className="buero-knopf stumm schmal"
+            disabled={laeuft !== null}
+            onClick={() => {
+              if (confirm(`„${d.label || d.filename}“ löschen?`)) {
+                void rufen(`del-${d.id}`, { aktion: 'datei-loeschen', id: d.id })
+              }
+            }}
+          >
+            Entfernen
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Ordnerblock({
+  name,
+  dateien,
+  umbenennen,
+  setUmbenennen,
+  neuerName,
+  setNeuerName,
+  hochladen,
+  werk,
+}: {
+  name: string
+  dateien: Werkstattdatei[]
+  umbenennen: string | null
+  setUmbenennen: (n: string | null) => void
+  neuerName: string
+  setNeuerName: (n: string) => void
+  hochladen: (datei: File, inOrdner: string) => void
+  werk: Werkzeug
+}) {
+  const { darfAendern, laeuft, rufen } = werk
+    const drin = dateien.filter((d) => d.folder === name)
+
+  /*
+   * Jeder Ordner nimmt selbst an — wer eine DXF auf „Laser" zieht, meint
+   * diesen Ordner. Deshalb steht der Block hier oben und nicht mehr im Rumpf
+   * der Ansicht: Eine Komponente, die dort entsteht, ist bei jedem Zeichnen
+   * eine neue, und ein laufendes Ziehen ginge dabei jedes Mal verloren.
+   */
+  const ablageBereich = useRef<HTMLLabelElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d) => {
+      if (d[0]) hochladen(d[0], name)
+    },
+    darfAendern && laeuft === null,
+  )
+    return (
+      <div style={{ marginBottom: '1.1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '.6rem',
+            marginBottom: '.4rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          {umbenennen === name ? (
+            <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                className="buero-fach-wahl"
+                value={neuerName}
+                autoFocus
+                onChange={(e) => setNeuerName(e.target.value)}
+              />
+              <button
+                type="button"
+                className="buero-knopf leise schmal"
+                disabled={laeuft !== null}
+                onClick={async () => {
+                  if (
+                    await rufen(`ren-${name}`, {
+                      aktion: 'ordner-umbenennen',
+                      name,
+                      neuerName,
+                    })
+                  )
+                    setUmbenennen(null)
+                }}
+              >
+                Übernehmen
+              </button>
+              <button
+                type="button"
+                className="buero-knopf stumm schmal"
+                onClick={() => setUmbenennen(null)}
+              >
+                Abbrechen
+              </button>
+            </div>
+          ) : (
+            <h3 style={{ margin: 0, fontSize: '.95rem', fontWeight: 650 }}>
+              {name}{' '}
+              <span style={{ fontWeight: 400, color: 'var(--buero-tinte-leise)', fontSize: '.8rem' }}>
+                · {drin.length} {drin.length === 1 ? 'Datei' : 'Dateien'}
+              </span>
+            </h3>
+          )}
+
+          {darfAendern && umbenennen !== name && (
+            <div style={{ display: 'flex', gap: '.3rem' }}>
+              <button
+                type="button"
+                className="buero-knopf stumm schmal"
+                onClick={() => {
+                  setUmbenennen(name)
+                  setNeuerName(name)
+                }}
+              >
+                Umbenennen
+              </button>
+              {drin.length === 0 && (
+                <button
+                  type="button"
+                  className="buero-knopf stumm schmal"
+                  disabled={laeuft !== null}
+                  onClick={() => void rufen(`del-${name}`, { aktion: 'ordner-loeschen', name })}
+                >
+                  Ordner löschen
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {drin.length > 0 ? (
+          <div className="buero-liste">
+            {drin.map((d) => (
+              <Zeile key={d.id} d={d} werk={werk} />
+            ))}
+          </div>
+        ) : (
+          <div className="buero-leer" style={{ padding: '1rem' }}>
+            Noch nichts abgelegt.
+          </div>
+        )}
+
+        {darfAendern && (
+          <label
+            ref={ablageBereich}
+            className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+            style={{ marginTop: '.5rem' }}
+          >
+            <span>Datei in „{name}“ ablegen</span>
+            <input
+              type="file"
+              disabled={laeuft !== null}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) void hochladen(f, name)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        )}
+      </div>
+    )
+}
 
 export function Werkstattdateien({
   produktId,
@@ -194,6 +420,9 @@ export function Werkstattdateien({
   const auswaehlbar = (d: Werkstattdatei) =>
     darfWeitergeben && !(typeof d.id === 'string' && d.id.startsWith('warte'))
 
+  /* Was die beiden Bausteine oben brauchen — an einer Stelle zusammengestellt */
+  const werk: Werkzeug = { darfAendern, laeuft, rufen, auswaehlbar, auswahl, setAuswahl }
+
   async function weitergeben() {
     if (auswahl.length === 0) return
     setLaeuft('weitergabe')
@@ -230,166 +459,19 @@ export function Werkstattdateien({
     }
   }
 
-  const Zeile = ({ d, geerbt }: { d: Werkstattdatei; geerbt?: boolean }) => (
-    <div className="buero-zeile">
-      {auswaehlbar(d) && (
-        <input
-          type="checkbox"
-          aria-label={`${d.label || d.filename || 'Datei'} weitergeben`}
-          checked={auswahl.includes(String(d.id))}
-          onChange={(e) =>
-            setAuswahl((bisher) =>
-              e.target.checked
-                ? [...bisher, String(d.id)]
-                : bisher.filter((k) => k !== String(d.id)),
-            )
-          }
-          style={{ marginRight: '.6rem' }}
-        />
-      )}
-      <div className="buero-zeile-haupt">
-        <div className="buero-zeile-titel">{d.label || d.filename || 'Datei'}</div>
-        <div className="buero-zeile-neben">
-          {groesse(d.filesize)}
-          {d.note ? ` · ${d.note}` : ''}
-          {geerbt ? ' · von der Grundlage' : ''}
-          {/* Ohne Kennung ist die Datei noch in der Warteschlange */}
-          {typeof d.id === 'string' && d.id.startsWith('warte') ? ' · geht raus, sobald Netz da ist' : ''}
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center' }}>
-        <a className="buero-knopf leise schmal" href={`/api/office/werkstattdatei/${d.id}`}>
-          Laden
-        </a>
-        {darfAendern && !geerbt && (
-          <button
-            type="button"
-            className="buero-knopf stumm schmal"
-            disabled={laeuft !== null}
-            onClick={() => {
-              if (confirm(`„${d.label || d.filename}“ löschen?`)) {
-                void rufen(`del-${d.id}`, { aktion: 'datei-loeschen', id: d.id })
-              }
-            }}
-          >
-            Entfernen
-          </button>
-        )}
-      </div>
-    </div>
+  /*
+   * Ziehen und Einfügen für die Ablage ohne Ordner (siehe
+   * lib/buero/dateiablage.ts). Die Ordner haben je eine eigene — welche etwas
+   * bekommt, entscheidet dort, wo die Maus steht.
+   */
+  const ablageBereich = useRef<HTMLLabelElement>(null)
+  const ablage = useDateiablage(
+    ablageBereich,
+    (d: File[]) => {
+      if (d[0]) void hochladen(d[0], '')
+    },
+    laeuft === null,
   )
-
-  const Ordnerblock = ({ name }: { name: string }) => {
-    const drin = dateien.filter((d) => d.folder === name)
-    return (
-      <div style={{ marginBottom: '1.1rem' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '.6rem',
-            marginBottom: '.4rem',
-            flexWrap: 'wrap',
-          }}
-        >
-          {umbenennen === name ? (
-            <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                className="buero-fach-wahl"
-                value={neuerName}
-                autoFocus
-                onChange={(e) => setNeuerName(e.target.value)}
-              />
-              <button
-                type="button"
-                className="buero-knopf leise schmal"
-                disabled={laeuft !== null}
-                onClick={async () => {
-                  if (
-                    await rufen(`ren-${name}`, {
-                      aktion: 'ordner-umbenennen',
-                      name,
-                      neuerName,
-                    })
-                  )
-                    setUmbenennen(null)
-                }}
-              >
-                Übernehmen
-              </button>
-              <button
-                type="button"
-                className="buero-knopf stumm schmal"
-                onClick={() => setUmbenennen(null)}
-              >
-                Abbrechen
-              </button>
-            </div>
-          ) : (
-            <h3 style={{ margin: 0, fontSize: '.95rem', fontWeight: 650 }}>
-              {name}{' '}
-              <span style={{ fontWeight: 400, color: 'var(--buero-tinte-leise)', fontSize: '.8rem' }}>
-                · {drin.length} {drin.length === 1 ? 'Datei' : 'Dateien'}
-              </span>
-            </h3>
-          )}
-
-          {darfAendern && umbenennen !== name && (
-            <div style={{ display: 'flex', gap: '.3rem' }}>
-              <button
-                type="button"
-                className="buero-knopf stumm schmal"
-                onClick={() => {
-                  setUmbenennen(name)
-                  setNeuerName(name)
-                }}
-              >
-                Umbenennen
-              </button>
-              {drin.length === 0 && (
-                <button
-                  type="button"
-                  className="buero-knopf stumm schmal"
-                  disabled={laeuft !== null}
-                  onClick={() => void rufen(`del-${name}`, { aktion: 'ordner-loeschen', name })}
-                >
-                  Ordner löschen
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {drin.length > 0 ? (
-          <div className="buero-liste">
-            {drin.map((d) => (
-              <Zeile key={d.id} d={d} />
-            ))}
-          </div>
-        ) : (
-          <div className="buero-leer" style={{ padding: '1rem' }}>
-            Noch nichts abgelegt.
-          </div>
-        )}
-
-        {darfAendern && (
-          <label className="buero-feld" style={{ marginTop: '.5rem' }}>
-            <span>Datei in „{name}“ ablegen</span>
-            <input
-              type="file"
-              disabled={laeuft !== null}
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) void hochladen(f, name)
-                e.target.value = ''
-              }}
-            />
-          </label>
-        )}
-      </div>
-    )
-  }
 
   return (
     <>
@@ -409,14 +491,24 @@ export function Werkstattdateien({
           </p>
           <div className="buero-liste" style={{ marginBottom: '1.1rem' }}>
             {vonDerGrundlage.map((d) => (
-              <Zeile key={d.id} d={d} geerbt />
+              <Zeile key={d.id} d={d} geerbt werk={werk} />
             ))}
           </div>
         </>
       )}
 
       {ordner.map((name) => (
-        <Ordnerblock key={name} name={name} />
+        <Ordnerblock
+          key={name}
+          name={name}
+          dateien={dateien}
+          umbenennen={umbenennen}
+          setUmbenennen={setUmbenennen}
+          neuerName={neuerName}
+          setNeuerName={setNeuerName}
+          hochladen={(f, o) => void hochladen(f, o)}
+          werk={werk}
+        />
       ))}
 
       {ohneOrdner.length > 0 && (
@@ -424,7 +516,7 @@ export function Werkstattdateien({
           <h3 style={{ margin: '0 0 .4rem', fontSize: '.95rem', fontWeight: 650 }}>Ohne Ordner</h3>
           <div className="buero-liste">
             {ohneOrdner.map((d) => (
-              <Zeile key={d.id} d={d} />
+              <Zeile key={d.id} d={d} werk={werk} />
             ))}
           </div>
         </div>
@@ -564,7 +656,11 @@ export function Werkstattdateien({
             </div>
           )}
 
-          <label className="buero-feld" style={{ marginTop: '1rem', marginBottom: 0 }}>
+          <label
+            ref={ablageBereich}
+            className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
+            style={{ marginTop: '1rem', marginBottom: 0 }}
+          >
             <span>Datei ohne Ordner ablegen</span>
             <input
               type="file"

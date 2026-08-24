@@ -129,6 +129,15 @@ export function NachbestellenAnsicht() {
 
             <div className="buero-liste">
               {block.zeilen.map((z) => (
+                /*
+                 * Bewusst ohne Statusbalken.
+                 *
+                 * Diese Liste enthält ausschließlich Material unter dem
+                 * Mindestbestand — jede Zeile ist gleich dringlich. Ein roter
+                 * Balken an allen sagt nichts mehr; er würde nur die Farbe
+                 * abnutzen, mit der anderswo das Eilige gekennzeichnet ist
+                 * (siehe office.css, „Der Statusbalken links").
+                 */
                 <div key={z.id} className="buero-zeile">
                   <div className="buero-zeile-haupt">
                     <div className="buero-zeile-titel">

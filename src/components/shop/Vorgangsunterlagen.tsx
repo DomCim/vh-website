@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
+import { useDateiablage } from '../../lib/buero/dateiablage'
 import type { Dictionary } from '../../lib/i18n'
 
 /**
@@ -60,6 +61,14 @@ export function Vorgangsunterlagen({
   useEffect(() => {
     if (offen && dateien === null) void holen()
   }, [offen, dateien, holen])
+
+  /*
+   * Ziehen und Einfügen zusätzlich zum Knopf (siehe lib/buero/dateiablage.ts).
+   * Erst ab dem Aufklappen — vorher gibt es den Bereich gar nicht, und ein
+   * eingefügtes Bild soll nicht in einem zugeklappten Kasten verschwinden.
+   */
+  const ablageBereich = useRef<HTMLDivElement>(null)
+  const ablage = useDateiablage(ablageBereich, (d) => void hochladen(d), offen && !laeuft)
 
   if (!bezug) return null
 
@@ -139,7 +148,12 @@ export function Vorgangsunterlagen({
             </ul>
           )}
 
-          <div className="mt-4">
+          <div
+            ref={ablageBereich}
+            className={`mt-4 border border-dashed p-3 transition-colors ${
+              ablage.drueber ? 'border-bronze bg-bronze/5' : 'border-transparent'
+            }`}
+          >
             <input
               ref={feld}
               type="file"
