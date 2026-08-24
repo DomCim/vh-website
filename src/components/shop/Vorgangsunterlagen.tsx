@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
+import { Dateiknopf } from '../office/Dateiknopf'
 import { useDateiablage } from '../../lib/buero/dateiablage'
 import type { Dictionary } from '../../lib/i18n'
 
@@ -44,7 +45,6 @@ export function Vorgangsunterlagen({
   const [dateien, setDateien] = useState<Datei[] | null>(null)
   const [laeuft, setLaeuft] = useState(false)
   const [staende, setStaende] = useState<Uploadstand[]>([])
-  const feld = useRef<HTMLInputElement>(null)
 
   const bezug = auftrag ? `auftrag=${auftrag}` : angebot ? `angebot=${angebot}` : ''
 
@@ -154,25 +154,13 @@ export function Vorgangsunterlagen({
               ablage.drueber ? 'border-bronze bg-bronze/5' : 'border-transparent'
             }`}
           >
-            <input
-              ref={feld}
-              type="file"
-              multiple
-              hidden
-              onChange={(e) => {
-                const auswahl = Array.from(e.target.files ?? [])
-                e.target.value = ''
-                void hochladen(auswahl)
-              }}
+            <Dateiknopf
+              text={labels.choose}
+              klasse={knopfLeise}
+              mehrere
+              gesperrt={laeuft}
+              nimm={(dateien) => void hochladen([...dateien])}
             />
-            <button
-              type="button"
-              disabled={laeuft}
-              className={knopfLeise}
-              onClick={() => feld.current?.click()}
-            >
-              {labels.choose}
-            </button>
             <p className="text-ink-soft mt-3 text-xs leading-relaxed">
               {labels.chooseHint} {labels.kinds}
             </p>

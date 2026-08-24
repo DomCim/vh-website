@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
+import { Dateiknopf } from '../office/Dateiknopf'
 import { useDateiablage } from '../../lib/buero/dateiablage'
 import type { Dictionary } from '../../lib/i18n'
 
@@ -100,7 +101,6 @@ function Ordnerblock({
   laeuft: boolean
   hochladen: (dateien: File[], ordner: string) => void
 }) {
-  const feld = useRef<HTMLInputElement>(null)
 
   /*
    * Ziehen und Einfügen zusätzlich zum Knopf (siehe lib/buero/dateiablage.ts).
@@ -134,25 +134,13 @@ function Ordnerblock({
         <div className="mt-4">
           {/* `multiple`: Wer zehn Zeichnungen hat, wählt sie einmal aus und
               nicht zehnmal. Hinausgeschickt werden sie danach nacheinander. */}
-          <input
-            ref={feld}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => {
-              const auswahl = Array.from(e.target.files ?? [])
-              e.target.value = ''
-              hochladen(auswahl, name)
-            }}
+          <Dateiknopf
+            text={labels.choose}
+            klasse={knopfLeise}
+            mehrere
+            gesperrt={laeuft}
+            nimm={(dateien) => hochladen([...dateien], name)}
           />
-          <button
-            type="button"
-            disabled={laeuft}
-            className={knopfLeise}
-            onClick={() => feld.current?.click()}
-          >
-            {labels.choose}
-          </button>
         </div>
       )}
     </section>

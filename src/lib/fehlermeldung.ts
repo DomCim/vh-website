@@ -32,6 +32,55 @@ import { createHmac, timingSafeEqual } from 'crypto'
  * nur andersherum entschieden, weil der Zweck ein anderer ist.
  */
 
+/**
+ * Was für eine Meldung es ist — und was daraus für ein Kennzeichen wird.
+ *
+ * **Warum das dazugekommen ist.** Nach fünf Meldungen an einem Morgen stand
+ * die Liste im Repository ungeordnet da: kein Kennzeichen, keine Dringlichkeit,
+ * alles gleich. Bei fünf geht das im Kopf, bei fünfzig nicht. Und zwei
+ * Meldungen betrafen dieselbe Sache aus zwei Fassungen — das fiel nur auf,
+ * weil jemand es zufällig noch wusste.
+ *
+ * **Ein Tipp, mehr nicht.** Die Art ist vorbelegt und lässt sich in einer
+ * Zeile umstellen. Eine Pflichtangabe wäre hier falsch: Eine Hürde vor „hier
+ * stimmt was nicht" bekommt man nie wieder weg, dann wird gar nicht mehr
+ * gemeldet.
+ *
+ * `bug` und `enhancement` heißen englisch, weil GitHub sie in jedem
+ * Repository von selbst anlegt; `design`, `büro` und die Fassung sind eigene.
+ * Ob GitHub fehlende Kennzeichen beim Anlegen mit erzeugt, ist nicht die
+ * Frage, an der eine Meldung scheitern darf — deshalb werden sie in einem
+ * zweiten Schritt angehängt (siehe die Route). Geht der schief, steht der
+ * Eintrag trotzdem.
+ */
+export const MELDUNGSARTEN = [
+  { wert: 'fehler', text: 'Fehler', kennzeichen: 'bug' },
+  { wert: 'gestaltung', text: 'Gestaltung', kennzeichen: 'design' },
+  { wert: 'idee', text: 'Idee', kennzeichen: 'enhancement' },
+] as const
+
+export type Meldungsart = (typeof MELDUNGSARTEN)[number]['wert']
+
+/**
+ * Die Kennzeichen für einen Eintrag: die Art und die laufende Fassung.
+ *
+ * Die Fassung als Kennzeichen ist der eigentliche Gewinn. An ihr sieht man in
+ * der Liste sofort, ob zwei Meldungen aus demselben Stand kommen — und ob
+ * eine ältere sich mit dem letzten Ausrollen schon erledigt hat. Genau das
+ * war am 24.08.2026 der Fall und kostete eine halbe Fehlersuche.
+ *
+ * `büro` steht immer dabei: Was von Hand angelegt wurde, soll sich davon
+ * unterscheiden lassen.
+ */
+export function meldungsKennzeichen(art?: string | null, fassung?: string | null): string[] {
+  const gefunden = MELDUNGSARTEN.find((a) => a.wert === art)
+  const raus = ['büro', gefunden?.kennzeichen ?? 'bug']
+  const stand = String(fassung ?? '').trim()
+  // Nur ein plausibler Kurz-Hash, kein „Entwicklungs-Version" o. ä.
+  if (/^[0-9a-f]{7,40}$/i.test(stand)) raus.push(`Fassung ${stand.slice(0, 7)}`)
+  return raus
+}
+
 /** Der Ordner, in dem die Fotos einer Meldung liegen */
 export const FEHLERMELDUNGS_ORDNER = 'Fehlermeldungen'
 

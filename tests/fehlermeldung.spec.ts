@@ -6,6 +6,8 @@ import {
   bildSignatur,
   fehlermeldungsKoerper,
   fehlermeldungsTitel,
+  MELDUNGSARTEN,
+  meldungsKennzeichen,
   istBild,
   repoZerlegen,
 } from '../src/lib/fehlermeldung'
@@ -119,4 +121,44 @@ test('der Titel fällt auf den Ort zurück', () => {
   expect(fehlermeldungsTitel('', '/office/inventar')).toBe('Meldung aus /office/inventar')
   expect(fehlermeldungsTitel('', null)).toBe('Meldung aus dem Büro')
   expect(fehlermeldungsTitel('x'.repeat(200)).length).toBe(120)
+})
+
+/**
+ * Die Kennzeichen — damit eine Liste aus fünfzig Meldungen sortierbar bleibt.
+ *
+ * Angefangen hat es mit fünf Meldungen an einem Morgen, alle gleich aussehend.
+ * Zwei davon betrafen dieselbe Sache aus zwei Fassungen, und das fiel nur auf,
+ * weil es jemand zufällig noch wusste.
+ */
+test('die Art wird zum Kennzeichen, die Fassung auch', () => {
+  const k = meldungsKennzeichen('idee', 'ded8415')
+  expect(k).toContain('enhancement')
+  expect(k).toContain('büro')
+  // Der eigentliche Gewinn: Man sieht in der Liste, aus welchem Stand es kommt
+  expect(k).toContain('Fassung ded8415')
+})
+
+test('ohne Art gilt „Fehler" — das ist der häufige Fall', () => {
+  expect(meldungsKennzeichen(null, null)).toContain('bug')
+  expect(meldungsKennzeichen('unfug', null)).toContain('bug')
+})
+
+test('nur eine plausible Fassung wird zum Kennzeichen', () => {
+  /*
+   * Lokal steht dort „Entwicklungs-Version"; daraus ein Kennzeichen zu machen
+   * hieße, die Liste mit Müll zu füllen, den niemand wieder wegbekommt.
+   */
+  expect(meldungsKennzeichen('fehler', 'Entwicklungs-Version')).toEqual(['büro', 'bug'])
+  expect(meldungsKennzeichen('fehler', '')).toEqual(['büro', 'bug'])
+  // Ein langer Hash wird auf die gewohnten sieben Zeichen gekürzt
+  expect(meldungsKennzeichen('fehler', 'ded8415f340c489bd42a')).toContain('Fassung ded8415')
+})
+
+test('jede Art im Formular hat ein Kennzeichen', () => {
+  // Eine Art ohne Kennzeichen fiele stumm auf „bug" zurück
+  for (const a of MELDUNGSARTEN) {
+    expect(meldungsKennzeichen(a.wert, null), `„${a.text}" fehlt das Kennzeichen`).toContain(
+      a.kennzeichen,
+    )
+  }
 })

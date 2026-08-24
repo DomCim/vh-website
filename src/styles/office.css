@@ -902,9 +902,57 @@ html.tastatur-offen .buero-inhalt {
 }
 
 @media (max-width: 719px) {
+  /*
+   * Beim Tippen wird aus der Leiste ein Knopf, der über der Tastatur schwebt.
+   *
+   * Gemeldet in #42: „Ich komme nicht an den Senden-Knopf, solange die
+   * Tastatur offen ist" — und dasselbe beim Melden eines Fehlers. Vorher fiel
+   * die Leiste bei offener Tastatur aus dem Kleben zurück in den Fluss. Das
+   * war als Ausweichen gedacht und hieß in Wahrheit: Der einzige Knopf, der
+   * zählt, lag irgendwo weiter unten in der Seite.
+   *
+   * Der Vorschlag kam von Dominik und ist der bessere: ein Knopf unten
+   * rechts, der mitschwebt. Er steht nie im Weg, weil er nur so breit ist wie
+   * seine Beschriftung, und er ist immer da, weil er nicht mitscrollt.
+   *
+   * **Zwei gemessene Werte, und beide braucht es.** `--tastatur-hoehe` hebt
+   * ihn über die Tastatur. `--sicht-oben` schiebt ihn zurück ins Bild: Beim
+   * Öffnen der Tastatur schrumpft die Seite auf iOS nicht, es verschiebt sich
+   * nur, was man von ihr sieht — ein festgenagelter Knopf hängt aber an der
+   * Seite und wandert sonst nach unten heraus. Gesetzt werden beide von der
+   * `Tastaturwache`; fehlen sie, steht dort 0 und alles bleibt beim Alten.
+   */
   html.tastatur-offen .buero-fussleiste {
-    position: static;
+    position: fixed;
+    left: auto;
+    right: 0.9rem;
+    bottom: calc(var(--tastatur-hoehe, 0px) + 0.9rem);
+    transform: translateY(var(--sicht-oben, 0px));
+    width: auto;
+    max-width: 70vw;
+    padding: 0;
+    border: none;
+    background: none;
     box-shadow: none;
+    /* Über der Fußzeile des Inhalts, aber unter einem offenen Blatt */
+    z-index: 31;
+  }
+
+  /*
+   * Beim Tippen zählt die eine Handlung. Der Stand daneben und die
+   * Nebensachen hinter „⋯" haben Zeit, bis die Tastatur wieder zu ist —
+   * sie hier stehen zu lassen hieße, den Knopf wieder breit zu machen.
+   */
+  html.tastatur-offen .buero-fussleiste-hinweis,
+  html.tastatur-offen .buero-mehr-knopf {
+    display: none;
+  }
+
+  /* Nur so breit wie seine Beschriftung — sonst deckte er das Feld zu */
+  html.tastatur-offen .buero-fussleiste > .buero-knopf:not(.buero-mehr-knopf) {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    box-shadow: 0 6px 22px rgb(0 0 0 / 24%);
   }
 }
 
@@ -3164,7 +3212,19 @@ html.tastatur-offen .buero-inhalt {
    * Am Rechner bleibt die Karte. Dort wäre die volle Breite das andere
    * Extrem: Fließtext über 1600 px liest niemand gern.
    */
-  .buero-mail-offen {
+  /*
+   * Das Schreibfenster nimmt dieselbe Breite wie die geöffnete Mail.
+   *
+   * Gewünscht in #42: „Könnten wir es beim Verfassen vom Layout die komplette
+   * Breite genauso machen wie beim Ansehen der Mail?" Der Grund ist derselbe
+   * wie dort — auf einem üblichen Telefon blieben in der gepolsterten Karte
+   * keine 340 Pixel, und das Schreibfeld ist das, worin man arbeitet.
+   *
+   * Bewusst **kein** App-Bildschirm mit gerechneter Höhe: Ein Formular soll
+   * scrollen dürfen. Nur die Ränder fallen weg.
+   */
+  .buero-mail-offen,
+  .buero-mail-schreiben {
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     width: 100vw;

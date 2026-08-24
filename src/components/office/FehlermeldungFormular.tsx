@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 
-import { MAX_FOTOS } from '../../lib/fehlermeldung'
+import { MAX_FOTOS, MELDUNGSARTEN, type Meldungsart } from '../../lib/fehlermeldung'
 import { Fussleiste } from './Fussleiste'
+import { Dateiknopf } from './Dateiknopf'
 import { Rueckmeldung } from './Rueckmeldung'
 import { alsListe, useDateiablage } from '../../lib/buero/dateiablage'
 
@@ -43,8 +44,15 @@ export function FehlermeldungFormular() {
   const [fotos, setFotos] = useState<File[]>([])
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+  /*
+   * Die Art ist vorbelegt und kostet einen Tipp, wenn sie nicht stimmt.
+   *
+   * Eine Pflichtangabe wäre hier falsch: Eine Hürde vor „hier stimmt was
+   * nicht" bekommt man nie wieder weg. „Fehler" ist der häufige Fall — wer
+   * eine Idee hat, hat auch die Ruhe umzustellen.
+   */
+  const [art, setArt] = useState<Meldungsart>('fehler')
   const [fertig, setFertig] = useState<{ nummer?: number; url?: string } | null>(null)
-  const dateiwahl = useRef<HTMLInputElement>(null)
 
   /*
    * Woher die Meldung kommt: die Seite davor.
@@ -106,6 +114,7 @@ export function FehlermeldungFormular() {
       const formular = new FormData()
       formular.append('titel', w.titel)
       formular.append('text', w.text)
+      formular.append('art', art)
       formular.append(
         'umgebung',
         JSON.stringify({ seite, geraet: navigator.userAgent }),
@@ -136,6 +145,7 @@ export function FehlermeldungFormular() {
 
       setFertig({ nummer: daten.nummer as number, url: daten.url as string })
       setW(LEER)
+      setArt('fehler')
       setFotos([])
     } catch {
       setMeldung('Das hat nicht geklappt — dafür braucht es Netz.')
@@ -196,6 +206,20 @@ export function FehlermeldungFormular() {
       </label>
 
       <label className="buero-feld">
+        <span>Was ist es?</span>
+        <select value={art} onChange={(e) => setArt(e.target.value as Meldungsart)}>
+          {MELDUNGSARTEN.map((a) => (
+            <option key={a.wert} value={a.wert}>
+              {a.text}
+            </option>
+          ))}
+        </select>
+        <span style={{ marginTop: '.4rem' }}>
+          Ordnet die Meldung im Repository ein. Die laufende Fassung kommt von selbst dazu.
+        </span>
+      </label>
+
+      <label className="buero-feld">
         <span>Wo war das?</span>
         <input value={seite} onChange={(e) => setSeite(e.target.value)} placeholder="z.B. /office/inventar/neu" />
         <span style={{ marginTop: '.4rem' }}>
@@ -210,26 +234,14 @@ export function FehlermeldungFormular() {
         <span>Fotos</span>
         {/* `capture` fehlt bewusst: Meistens ist es ein Bildschirmfoto aus der
             Mediathek und nicht die Kamera. */}
-        <input
-          ref={dateiwahl}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={(e) => {
-            fotosDazu(e.target.files)
-            e.target.value = ''
-          }}
-        />
         <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            type="button"
-            className="buero-knopf leise"
-            disabled={fotos.length >= MAX_FOTOS}
-            onClick={() => dateiwahl.current?.click()}
-          >
-            {fotos.length ? 'Noch ein Foto' : 'Foto anhängen'}
-          </button>
+          <Dateiknopf
+            text={fotos.length ? 'Noch ein Foto' : 'Foto anhängen'}
+            accept="image/*"
+            mehrere
+            gesperrt={fotos.length >= MAX_FOTOS}
+            nimm={fotosDazu}
+          />
           <span className="buero-unterzeile">
             {fotos.length
               ? `${fotos.length} von ${MAX_FOTOS}`

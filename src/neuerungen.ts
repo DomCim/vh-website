@@ -26,6 +26,40 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 62,
+    datum: null,
+    titel: 'Fünf Meldungen vom Handy — und Ordnung in der Meldeliste',
+    punkte: [
+      {
+        text: '**Die Navigationsleiste blieb manchmal weg.** In der installierten App auf dem iPhone war nach dem Zurückkehren aus dem Hintergrund keine Navigation mehr da. Die Leiste blendet sich aus, solange die Bildschirmtastatur offen ist — und ob sie offen ist, wurde allein daran gemessen, dass unten etwas fehlt. Beim Aufwachen meldet iOS für einen Moment die alte, kleine Höhe: Das sah aus wie eine Tastatur, und weil danach kein weiteres Ereignis mehr kam, blieb die Leiste weg, bis man die Seite wechselte.',
+      },
+      {
+        text: '**Jetzt zählt zusätzlich, ob überhaupt jemand tippt.** Eine Tastatur ohne Feld, in das sie tippt, gibt es nicht — mit dieser zweiten Bedingung kann eine falsch gemessene Höhe die Leiste nicht mehr verschlucken. Dazu wird beim Zurückkommen mehrfach nachgemessen, weil iOS die richtige Höhe erst nach seiner eigenen Animation herausgibt.',
+      },
+      {
+        text: '**Beim Melden lässt sich jetzt sagen, was es ist** — Fehler, Gestaltung oder Idee. Daraus wird im Repository ein Kennzeichen, und die laufende Fassung kommt von selbst dazu. Der Grund: Fünf Meldungen an einem Morgen standen dort ungeordnet nebeneinander, und dass zwei davon dieselbe Sache aus zwei Fassungen betrafen, fiel nur zufällig auf. Vorbelegt ist „Fehler"; wer nichts umstellt, meldet wie bisher in einem Zug.',
+      },
+      {
+        text: '**Die Rechtstexte hatten als einziger Punkt kein Zeichen.** Nachgetragen (eine Waage). Der eigentliche Fehler war, dass es niemandem auffiel: Ein Punkt ohne hinterlegtes Zeichen zeigt stumm keines. Eine Prüfung wacht jetzt darüber, dass jeder Punkt eines hat — der nächste neue Bereich kann nicht mehr ohne herauskommen.',
+      },
+      {
+        text: '**Ein Auftrag lief in Fertigung und stand im Kalender nirgends.** Der Kalender zeigt, was ein Datum hat — und verschwieg damit alles ohne. Ein Auftrag aus einer Shop-Bestellung entsteht ohne Termin, weil den die Werkstatt setzt und nicht der Shop.',
+      },
+      {
+        text: '**Der Senden-Knopf war bei offener Tastatur nicht zu erreichen** — beim Schreiben einer Mail wie beim Melden eines Fehlers. Die Leiste mit der Hauptaktion rutschte dabei zurück in den Seitenfluss; das war als Ausweichen gedacht und hieß in Wahrheit, dass der einzige Knopf, der zählt, irgendwo weiter unten lag. Jetzt schwebt er beim Tippen unten rechts über der Tastatur mit — nur so breit wie seine Beschriftung, damit er nie im Weg steht.',
+      },
+      {
+        text: '**Das Anhängen eines Fotos klappte mal, mal nicht.** Das Dateifeld war versteckt und wurde vom Knopf aus über ein Skript ausgelöst. Auf dem iPhone zählt so ein Aufruf nur, solange er unmittelbar in der Berührung steckt — kommt ein Neuzeichnen dazwischen, verwirft iOS ihn stillschweigend. Jetzt liegt das Feld selbst unter dem Knopf: Wer ihn berührt, berührt das Feld, und das verwirft kein Browser. Gilt für alle fünf Stellen, an denen Dateien gewählt werden.',
+      },
+      {
+        text: '**Das Schreibfenster im Postfach nimmt am Handy die volle Breite** — wie die geöffnete Mail schon vorher. In der gepolsterten Karte blieben auf einem üblichen Telefon keine 340 Pixel für das, worin man gerade schreibt.',
+      },
+      {
+        text: '**Unter dem Kalenderblatt steht jetzt „Ohne Termin".** Dort liegen die laufenden Aufträge ohne Datum, mit dem Weg zum Auftrag — dort trägt man ihn ein, wenn man ihn weiß. Bewusst unabhängig vom gewählten Monat: Etwas ohne Datum gehört in keinen. Und bewusst ohne geschätztes Datum: Ein gesetzter Termin wandert beim Wechsel in die Fertigung als Zusage in die Mail an die Kundschaft — den gibt kein Automat ab.',
+      },
+    ],
+  },
+  {
     nummer: 61,
     datum: null,
     titel: 'Ein Storno hat jetzt Folgen — und eine Rückgabe ist ein Vorgang',

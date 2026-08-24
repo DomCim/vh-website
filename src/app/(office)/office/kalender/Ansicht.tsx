@@ -142,6 +142,34 @@ export function KalenderAnsicht() {
     [auftraege, bestellungen, angebote, belege, monat],
   )
 
+  /*
+   * Was laufend ist, aber keinen Termin trägt.
+   *
+   * Der Kalender zeigt, was ein Datum hat — und verschwieg damit alles ohne.
+   * Ein Auftrag aus einer Shop-Bestellung entsteht ohne Termin (die Werkstatt
+   * setzt ihn, nicht der Shop), stand also in Fertigung und im Kalender
+   * nirgends. Genau so gemeldet in #41.
+   *
+   * Erfunden wird hier kein Datum: Ein gesetzter Termin wandert als Zusage an
+   * die Kundschaft (`Jobs.ts` schreibt ihn beim Wechsel in die Fertigung in
+   * die Bestellung). Stattdessen stehen die Terminlosen unter dem Blatt, mit
+   * dem Weg zum Auftrag — dort trägt man den Termin ein, wenn man ihn weiß.
+   *
+   * Bewusst unabhängig vom gewählten Monat: Etwas ohne Datum gehört in keinen
+   * Monat, und wer im März blättert, soll es trotzdem sehen.
+   */
+  const ohneTermin = useMemo(
+    () =>
+      auftraege
+        .filter((a) => ['geplant', 'inFertigung', 'fertig'].includes(a.status ?? '') && !a.dueDate)
+        .map((a) => ({
+          id: a.id,
+          titel: a.title ?? a.jobNumber ?? 'Auftrag',
+          neben: a.customerName ?? undefined,
+        })),
+    [auftraege],
+  )
+
   const nachTag = new Map<string, Eintrag[]>()
   for (const e of eintraege) {
     nachTag.set(e.tag, [...(nachTag.get(e.tag) ?? []), e])
@@ -220,6 +248,28 @@ export function KalenderAnsicht() {
         {Object.values(ART_TEXT).join(' · ')} — Fertigstellungen, zugesagte Liefertermine,
         ablaufende Angebote und fällige Belege.
       </p>
+
+      {ohneTermin.length > 0 && (
+        <>
+          <h2>Ohne Termin</h2>
+          <p className="buero-unterzeile">
+            {ohneTermin.length === 1 ? 'Ein Auftrag läuft' : `${ohneTermin.length} Aufträge laufen`},
+            ohne dass ein Fertigstellungstermin eingetragen ist — deshalb stehen sie in keinem
+            Monat. Aufträge aus dem Shop entstehen so; den Termin setzt die Werkstatt.
+          </p>
+          <div className="buero-liste">
+            {ohneTermin.map((a) => (
+              <Link key={a.id} href={`/office/auftraege/${a.id}`} className="buero-zeile ist-offen">
+                <div className="buero-zeile-haupt">
+                  <div className="buero-zeile-titel">{a.titel}</div>
+                  {a.neben ? <div className="buero-zeile-neben">{a.neben}</div> : null}
+                </div>
+                <span className="buero-marker offen">Termin fehlt</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
     </>
   )
 }
