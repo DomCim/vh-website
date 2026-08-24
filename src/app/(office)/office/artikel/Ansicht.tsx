@@ -5,6 +5,7 @@ import React, { useMemo } from 'react'
 
 import { bildUrl } from '../../../../components/office/ArtikelBezug'
 import { useBestand } from '../../../../lib/buero/bestand'
+import { balkenKlasse } from '../../../../lib/listen'
 
 /** Artikel — hier hängen Stückliste und Dienstleister dran. */
 
@@ -93,7 +94,13 @@ export function ArtikelAnsicht() {
             const zeilen = (p.billOfMaterials ?? []).length
             const dienste = (p.serviceProviders ?? []).length
             return (
-              <Link key={p.id} href={`/office/artikel/${p.id}`} className="buero-zeile">
+              // Bronze heißt „wartet auf uns": Ohne Stückliste lässt sich weder
+              // Material planen noch nachkalkulieren.
+              <Link
+                key={p.id}
+                href={`/office/artikel/${p.id}`}
+                className={`buero-zeile ${balkenKlasse(zeilen === 0 ? 'offen' : '')}`}
+              >
                 <Vorschau artikel={p} medien={medien} />
                 <div className="buero-zeile-haupt" style={{ flex: 1 }}>
                   <div className="buero-zeile-titel">{p.title}</div>

@@ -8,6 +8,7 @@ import { useBestand } from '../../lib/buero/bestand'
 import { datum } from '../../lib/format'
 import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochladen'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Dateiknopf } from './Dateiknopf'
 import { useDateiablage } from '../../lib/buero/dateiablage'
 
 /**
@@ -75,7 +76,6 @@ export function Vorgangsdateien({
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [staende, setStaende] = useState<Uploadstand[]>([])
-  const feld = useRef<HTMLInputElement>(null)
 
   /*
    * Der eine Anker dieses Blocks. In einem `useMemo`, weil sonst bei jedem
@@ -292,25 +292,12 @@ export function Vorgangsdateien({
           ref={ablageBereich}
           className={`buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
           style={{ marginTop: '.6rem', display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
-          <input
-            ref={feld}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => {
-              const auswahl = Array.from(e.target.files ?? [])
-              e.target.value = ''
-              void hochladen(auswahl)
-            }}
+          <Dateiknopf
+            text="Dateien ablegen"
+            mehrere
+            gesperrt={laeuft}
+            nimm={(dateien) => void hochladen([...dateien])}
           />
-          <button
-            type="button"
-            className="buero-knopf leise"
-            disabled={laeuft}
-            onClick={() => feld.current?.click()}
-          >
-            Dateien ablegen
-          </button>
           {beteiligteMappen.length === 0 && (
             <button
               type="button"

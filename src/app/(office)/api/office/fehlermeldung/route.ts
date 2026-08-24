@@ -15,6 +15,7 @@ import {
   FEHLERMELDUNGS_ORDNER,
   fehlermeldungsKoerper,
   fehlermeldungsTitel,
+  meldungsKennzeichen,
   repoZerlegen,
   type Umgebung,
 } from '../../../../../lib/fehlermeldung'
@@ -61,6 +62,7 @@ export async function POST(req: Request) {
     const formular = await req.formData()
     const titel = String(formular.get('titel') ?? '')
     const text = String(formular.get('text') ?? '')
+    const art = String(formular.get('art') ?? '')
 
     let umgebung: Umgebung = {}
     try {
@@ -139,6 +141,38 @@ export async function POST(req: Request) {
     }
 
     const eintrag = (await antwort.json()) as { number?: number; html_url?: string }
+
+    /*
+     * ── Die Kennzeichen, und zwar erst jetzt ─────────────────────────────────
+     *
+     * Sie gehören ausdrücklich **nicht** in den Aufruf oben. Ein Kennzeichen,
+     * das es im Repository noch nicht gibt, ist ein Fall, der beim Anlegen
+     * schiefgehen könnte — und dann wäre die Meldung weg, obwohl an ihr
+     * nichts fehlte. Hier kostet ein Fehlschlag nur die Sortierhilfe: Der
+     * Eintrag steht schon, mit Text, Umgebung und Fotos.
+     *
+     * Vermerkt wird er trotzdem im Protokoll. Fehlen die Kennzeichen dauerhaft,
+     * will man das wissen — sie sind der Grund, warum die Liste sortierbar ist.
+     */
+    if (eintrag.number) {
+      await fetch(
+        `https://api.github.com/repos/${repo.besitzer}/${repo.name}/issues/${eintrag.number}/labels`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${github.token}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ labels: meldungsKennzeichen(art, umgebung.fassung) }),
+        },
+      )
+        .then((r) => {
+          if (!r.ok) console.warn('Kennzeichen der Meldung nicht gesetzt:', r.status)
+        })
+        .catch((err) => console.warn('Kennzeichen der Meldung nicht gesetzt:', err))
+    }
 
     // ── Zuletzt die Nummer an die Fotos ──────────────────────────────────────
     for (const [i, id] of dateien.entries()) {

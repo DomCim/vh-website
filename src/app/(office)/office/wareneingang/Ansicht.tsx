@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React, { useMemo } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
+import { balkenKlasse } from '../../../../lib/listen'
 import { datum } from '../../../../lib/format'
 
 /**
@@ -52,7 +53,20 @@ export function WareneingangListe() {
           <div className="buero-leer">Noch nichts gebucht.</div>
         ) : (
           sortiert.map((e) => (
-            <Link key={e.id} href={`/office/wareneingang/${e.id}`} className="buero-zeile">
+            /*
+             * Balken nur, wo etwas fehlt.
+             *
+             * Ein Eingang mit Lieferschein ist Ablage — grün auf fast jeder
+             * Zeile sagt nichts mehr (dieselbe Überlegung wie bei den
+             * Belegen). Bronze steht deshalb allein bei „ohne Papier": Das
+             * ist der Zettel, der in zwei Wochen fehlt, wenn die Rechnung
+             * kommt und die Mengen nicht stimmen.
+             */
+            <Link
+              key={e.id}
+              href={`/office/wareneingang/${e.id}`}
+              className={`buero-zeile ${balkenKlasse(e.document ? '' : 'offen')}`}
+            >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">
                   {e.receiptNumber ?? 'Wareneingang'} · {e.supplierName || 'ohne Lieferant'}

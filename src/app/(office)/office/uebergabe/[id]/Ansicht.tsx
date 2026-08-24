@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import React, { useMemo, useRef, useState } from 'react'
 
+import { Dateiknopf } from '../../../../../components/office/Dateiknopf'
 import { Fussleiste } from '../../../../../components/office/Fussleiste'
 import { useDateiablage } from '../../../../../lib/buero/dateiablage'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
@@ -376,7 +377,6 @@ function Ordnerblock({
   rufen: (koerper: Record<string, unknown>) => Promise<Record<string, any> | null>
   hochladen: (auswahl: File[], ordner: string, freigeben: boolean) => Promise<void>
 }) {
-  const feld = useRef<HTMLInputElement>(null)
   const [freigeben, setFreigeben] = useState(true)
   const [umbenennen, setUmbenennen] = useState(false)
   const [neuerName, setNeuerName] = useState(name)
@@ -529,25 +529,13 @@ function Ordnerblock({
         className={`buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}
         style={{ display: 'flex', gap: '.6rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '.5rem' }}
       >
-        <input
-          ref={feld}
-          type="file"
-          multiple
-          hidden
-          onChange={(e) => {
-            const auswahl = Array.from(e.target.files ?? [])
-            e.target.value = ''
-            void hochladen(auswahl, name, freigeben)
-          }}
+        <Dateiknopf
+          text="Dateien ablegen"
+          klasse="buero-knopf leise schmal"
+          mehrere
+          gesperrt={laeuft}
+          nimm={(dateien) => void hochladen([...dateien], name, freigeben)}
         />
-        <button
-          type="button"
-          className="buero-knopf leise schmal"
-          disabled={laeuft}
-          onClick={() => feld.current?.click()}
-        >
-          Dateien ablegen
-        </button>
         <label style={{ display: 'flex', gap: '.35rem', alignItems: 'center', fontSize: '.85rem' }}>
           <input
             type="checkbox"

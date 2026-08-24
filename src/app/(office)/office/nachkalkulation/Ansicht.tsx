@@ -6,6 +6,7 @@ import React, { useMemo } from 'react'
 
 import { useBestand, useRahmen } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
+import { balkenKlasse } from '../../../../lib/listen'
 import { nachkalkulation, type KalkAuftrag, type Lagerposten } from '../../../../lib/nachkalkulation'
 
 /**
@@ -138,7 +139,18 @@ export function NachkalkulationAnsicht() {
             const drueber = z.zeitAbweichung > 0
             const deutlich = z.zeitGeplant > 0 && z.zeitAbweichung / z.zeitGeplant >= 0.2
             return (
-              <div key={z.name} className="buero-zeile">
+              /*
+               * Balken nur bei Überschreitung. Ein Artikel, der in der
+               * geschätzten Zeit bleibt, ist der Normalfall — grün auf
+               * neunzig Prozent der Zeilen macht die Farbe wertlos. Rot ab
+               * deutlich darüber, bronze knapp darüber.
+               */
+              <div
+                key={z.name}
+                className={`buero-zeile ${balkenKlasse(
+                  drueber && deutlich ? 'warn' : drueber ? 'offen' : '',
+                )}`}
+              >
                 <div className="buero-zeile-haupt">
                   <div className="buero-zeile-titel">{z.name || 'ohne Bezeichnung'}</div>
                   <div className="buero-zeile-neben">

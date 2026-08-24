@@ -902,9 +902,57 @@ html.tastatur-offen .buero-inhalt {
 }
 
 @media (max-width: 719px) {
+  /*
+   * Beim Tippen wird aus der Leiste ein Knopf, der über der Tastatur schwebt.
+   *
+   * Gemeldet in #42: „Ich komme nicht an den Senden-Knopf, solange die
+   * Tastatur offen ist" — und dasselbe beim Melden eines Fehlers. Vorher fiel
+   * die Leiste bei offener Tastatur aus dem Kleben zurück in den Fluss. Das
+   * war als Ausweichen gedacht und hieß in Wahrheit: Der einzige Knopf, der
+   * zählt, lag irgendwo weiter unten in der Seite.
+   *
+   * Der Vorschlag kam von Dominik und ist der bessere: ein Knopf unten
+   * rechts, der mitschwebt. Er steht nie im Weg, weil er nur so breit ist wie
+   * seine Beschriftung, und er ist immer da, weil er nicht mitscrollt.
+   *
+   * **Zwei gemessene Werte, und beide braucht es.** `--tastatur-hoehe` hebt
+   * ihn über die Tastatur. `--sicht-oben` schiebt ihn zurück ins Bild: Beim
+   * Öffnen der Tastatur schrumpft die Seite auf iOS nicht, es verschiebt sich
+   * nur, was man von ihr sieht — ein festgenagelter Knopf hängt aber an der
+   * Seite und wandert sonst nach unten heraus. Gesetzt werden beide von der
+   * `Tastaturwache`; fehlen sie, steht dort 0 und alles bleibt beim Alten.
+   */
   html.tastatur-offen .buero-fussleiste {
-    position: static;
+    position: fixed;
+    left: auto;
+    right: 0.9rem;
+    bottom: calc(var(--tastatur-hoehe, 0px) + 0.9rem);
+    transform: translateY(var(--sicht-oben, 0px));
+    width: auto;
+    max-width: 70vw;
+    padding: 0;
+    border: none;
+    background: none;
     box-shadow: none;
+    /* Über der Fußzeile des Inhalts, aber unter einem offenen Blatt */
+    z-index: 31;
+  }
+
+  /*
+   * Beim Tippen zählt die eine Handlung. Der Stand daneben und die
+   * Nebensachen hinter „⋯" haben Zeit, bis die Tastatur wieder zu ist —
+   * sie hier stehen zu lassen hieße, den Knopf wieder breit zu machen.
+   */
+  html.tastatur-offen .buero-fussleiste-hinweis,
+  html.tastatur-offen .buero-mehr-knopf {
+    display: none;
+  }
+
+  /* Nur so breit wie seine Beschriftung — sonst deckte er das Feld zu */
+  html.tastatur-offen .buero-fussleiste > .buero-knopf:not(.buero-mehr-knopf) {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    box-shadow: 0 6px 22px rgb(0 0 0 / 24%);
   }
 }
 
@@ -1607,6 +1655,46 @@ html.tastatur-offen .buero-inhalt {
   .buero-liste > .buero-zeile:last-child,
   .buero-liste > * > .buero-zeile:last-child {
     border-bottom: 1px solid var(--buero-linie);
+  }
+
+  /*
+   * Am Handy darf die Zeile umbrechen — und zwar nur, wenn sie muss.
+   *
+   * Bis hierher stand alles nebeneinander, egal wie schmal es wurde. Was
+   * rechts steht, nahm sich seinen Platz, und der Titel bekam den Rest: In
+   * der Auslastung waren das gut hundert Pixel für „KW 39 · 22.09.–28.09."
+   * — übrig blieb „KW 39 · 2…". Gemeldet von Dominik mit drei Bildschirmfotos
+   * (08/2026), und es traf jede Liste mit mehr als einer Marke rechts.
+   *
+   * `flex: 1 1 13rem` heißt: Der Hauptteil versucht 13 rem zu bekommen. Passt
+   * daneben noch, was rechts steht, bleibt alles in einer Zeile — eine kurze
+   * Marke wie „OFFEN" stört nicht. Passt es nicht, rutscht der rechte Teil
+   * eine Zeile tiefer, statt den Titel zu zerquetschen. Die Entscheidung
+   * trifft damit der Inhalt und nicht eine Zahl im Stylesheet.
+   */
+  .buero-zeile {
+    flex-wrap: wrap;
+    row-gap: 0.6rem;
+  }
+
+  .buero-zeile-haupt {
+    flex: 1 1 13rem;
+  }
+
+  /*
+   * Und der Titel darf zweizeilig werden.
+   *
+   * Am Rechner ist eine Zeile richtig: Dort liest man die Liste als Tabelle,
+   * und gleich hohe Zeilen lesen sich schneller. Am Handy ist derselbe
+   * Abschnitt eine Karte, und „Outdoor - Möbel - Sessel…" hilft niemandem
+   * weiter — es gibt drei Artikel, die so anfangen.
+   */
+  .buero-zeile-titel {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 }
 
@@ -3164,7 +3252,19 @@ html.tastatur-offen .buero-inhalt {
    * Am Rechner bleibt die Karte. Dort wäre die volle Breite das andere
    * Extrem: Fließtext über 1600 px liest niemand gern.
    */
-  .buero-mail-offen {
+  /*
+   * Das Schreibfenster nimmt dieselbe Breite wie die geöffnete Mail.
+   *
+   * Gewünscht in #42: „Könnten wir es beim Verfassen vom Layout die komplette
+   * Breite genauso machen wie beim Ansehen der Mail?" Der Grund ist derselbe
+   * wie dort — auf einem üblichen Telefon blieben in der gepolsterten Karte
+   * keine 340 Pixel, und das Schreibfeld ist das, worin man arbeitet.
+   *
+   * Bewusst **kein** App-Bildschirm mit gerechneter Höhe: Ein Formular soll
+   * scrollen dürfen. Nur die Ränder fallen weg.
+   */
+  .buero-mail-offen,
+  .buero-mail-schreiben {
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     width: 100vw;

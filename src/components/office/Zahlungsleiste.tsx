@@ -144,7 +144,18 @@ export function Zahlungsleiste({
           const spaet =
             istOffenerPosten(r) && r.dueDate && new Date(r.dueDate).getTime() < Date.now()
           return (
-            <Link key={r.id} href={`/office/rechnungen/${r.id}`} className="buero-zeile">
+            /*
+             * Rot bei überfällig, bronze bei offen. Eine bezahlte Rechnung
+             * bleibt farblos: Am Zahlplan eines Auftrags sind am Ende alle
+             * bezahlt, und grün auf allen sagt dann nichts mehr.
+             */
+            <Link
+              key={r.id}
+              href={`/office/rechnungen/${r.id}`}
+              className={`buero-zeile ${
+                spaet ? 'ist-warn' : istOffenerPosten(r) ? 'ist-offen' : ''
+              }`}
+            >
               <div className="buero-zeile-haupt">
                 <div className="buero-zeile-titel">
                   {bezeichnung[r.stufe ?? ''] ?? 'Rechnung'}

@@ -150,7 +150,9 @@ export function Bestandskorrektur({
                     {typeof b.rest === 'number' ? ` · danach ${b.rest} ${einheit}` : ''}
                   </div>
                 </div>
-                <span className={`buero-marker ${(b.delta ?? 0) > 0 ? 'gut' : 'offen'}`}>
+                {/* Neutral: Zu- und Abgang sind Richtungen, keine Zustände. Grün
+                    für „mehr" hieße im Büro sonst zweierlei. */}
+                <span className="buero-marker">
                   {(b.delta ?? 0) > 0 ? 'Zugang' : 'Abgang'}
                 </span>
               </div>

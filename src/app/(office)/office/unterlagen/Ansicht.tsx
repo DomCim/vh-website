@@ -92,7 +92,9 @@ export function UnterlagenAnsicht() {
                 {a.variants?.length ? ` · ${a.variants.length} Varianten` : ''}
               </div>
             </div>
-            <span className="buero-marker offen">{String(a.id) === offen ? 'offen' : 'ansehen'}</span>
+            {/* Neutral: „offen" heißt hier aufgeklappt und nicht unerledigt —
+                die Zustandsfarbe würde eine Arbeit anzeigen, die es nicht gibt. */}
+            <span className="buero-marker">{String(a.id) === offen ? 'offen' : 'ansehen'}</span>
           </button>
         ))}
       </div>
