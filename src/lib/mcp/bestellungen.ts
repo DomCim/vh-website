@@ -1,12 +1,21 @@
 import { z } from 'zod'
 
 import { db, fehler, type McpServer, ok } from './helpers'
-import { BESTELL_STATUS, BESTELL_UEBERGAENGE, textKarte, werteVon } from '../listen'
+import {
+  BESTELL_STATUS,
+  BESTELL_UEBERGAENGE,
+  RUECKGABE_GRUND,
+  RUECKGABE_STATUS,
+  RUECKGABE_UEBERGAENGE,
+  textKarte,
+  werteVon,
+} from '../listen'
 
 type BestellStatus = (typeof BESTELL_STATUS)[number]['value']
 const statusEnum = z.enum(werteVon(BESTELL_STATUS) as [BestellStatus, ...BestellStatus[]])
 
 const STATUS_TEXT = textKarte(BESTELL_STATUS)
+const STAND_TEXT = textKarte(RUECKGABE_STATUS)
 
 async function findeBestellung(payload: Awaited<ReturnType<typeof db>>, bestellnummer: string) {
   const { docs } = await payload.find({
@@ -104,6 +113,109 @@ export function registerBestellungen(server: McpServer) {
         voraussichtlichFertig: o.expectedReady ?? null,
         sendungsnummer: o.trackingNumber ?? null,
         trackingLink: o.trackingUrl ?? null,
+        // Ohne Grund gibt es keinen Vorgang — dann steht hier bewusst null
+        // und nicht ein leeres Gerüst, das nach „läuft schon" aussieht
+        rueckgabe: o.rueckgabe?.grund
+          ? {
+              grund: o.rueckgabe.grund,
+              stand: o.rueckgabe.status ?? null,
+              zuErstatten: o.rueckgabe.betrag ?? null,
+              angefragtAm: o.rueckgabe.angefragtAm ?? null,
+              wareZurueckAm: o.rueckgabe.wareZurueckAm ?? null,
+              erstattetAm: o.rueckgabe.erstattetAm ?? null,
+              notiz: o.rueckgabe.notiz ?? null,
+            }
+          : null,
+      })
+    },
+  )
+
+
+  server.registerTool(
+    'rueckgabe_erfassen',
+    {
+      description:
+        'Legt zu einer Bestellung eine Rückabwicklung an oder bringt sie weiter: Storno, Widerruf (14 Tage) oder Reklamation. Erstattet wird dabei NICHTS — es entsteht ein Vorgang, das Geld schickt ein Mensch zurück und trägt danach erstattetAm ein. Beim Stornieren einer Bestellung entsteht der Vorgang von selbst.',
+      inputSchema: {
+        bestellnummer: z.string().describe('z.B. VH-2026-0001'),
+        grund: z
+          .enum(werteVon(RUECKGABE_GRUND) as [string, ...string[]])
+          .optional()
+          .describe('Nur beim Anlegen nötig; später bleibt er, wie er ist.'),
+        stand: z
+          .enum(werteVon(RUECKGABE_STATUS) as [string, ...string[]])
+          .optional()
+          .describe('offen → wareZurueck → erstattet; abgelehnt geht von beiden aus.'),
+        betrag: z
+          .number()
+          .optional()
+          .describe(
+            'Zu erstatten. Beim Storno der volle Betrag (wird ohne Angabe übernommen). Beim Widerruf ohne die Rücksendekosten — die trägt laut Widerrufsbelehrung der Kunde.',
+          ),
+        notiz: z.string().optional(),
+      },
+    },
+    async ({ bestellnummer, grund, stand, betrag, notiz }) => {
+      const payload = await db()
+      const o = await findeBestellung(payload, bestellnummer)
+      if (!o) return fehler(`Bestellung ${bestellnummer} nicht gefunden`)
+
+      const bisher = (o.rueckgabe ?? {}) as Record<string, any>
+      const neuerGrund = grund ?? bisher.grund
+      if (!neuerGrund) {
+        return fehler(
+          'Zum Anlegen fehlt der Grund: storno, widerruf oder reklamation. Es wurde nichts geändert.',
+        )
+      }
+
+      /*
+       * Aus „erstattet" oder „abgelehnt" führt kein Weg zurück: Beides ist
+       * nach außen geschehen — Geld ist geflossen oder der Kundschaft wurde
+       * abgesagt. Wer korrigieren muss, tut das in der Verwaltung und sieht
+       * dabei, was er tut.
+       */
+      const vorher = bisher.status as string | undefined
+      if (stand && vorher && stand !== vorher) {
+        const erlaubt = RUECKGABE_UEBERGAENGE[vorher] ?? []
+        if (!erlaubt.includes(stand)) {
+          return fehler(
+            `Von „${STAND_TEXT[vorher] ?? vorher}" geht es nicht nach „${STAND_TEXT[stand] ?? stand}". ` +
+              'Es wurde nichts geändert.',
+          )
+        }
+      }
+
+      const jetzt = new Date().toISOString()
+      await payload.update({
+        collection: 'orders',
+        id: o.id,
+        overrideAccess: true,
+        data: {
+          rueckgabe: {
+            ...bisher,
+            grund: neuerGrund,
+            status: stand ?? bisher.status ?? 'offen',
+            betrag: betrag ?? bisher.betrag ?? o.total ?? undefined,
+            angefragtAm: bisher.angefragtAm ?? jetzt,
+            // Die Zeitpunkte setzt der Stand, nicht der Aufrufer — sonst
+            // stünde am Ende „erstattet" ohne Datum daneben
+            ...(stand === 'wareZurueck' && !bisher.wareZurueckAm ? { wareZurueckAm: jetzt } : {}),
+            ...(stand === 'erstattet' && !bisher.erstattetAm ? { erstattetAm: jetzt } : {}),
+            ...(notiz !== undefined && { notiz }),
+          },
+        },
+      })
+
+      return ok({
+        ok: true,
+        bestellnummer,
+        grund: neuerGrund,
+        stand: stand ?? bisher.status ?? 'offen',
+        zuErstatten: betrag ?? bisher.betrag ?? o.total ?? null,
+        hinweis:
+          stand === 'erstattet'
+            ? 'Als erstattet vermerkt. Das Geld schickt das Portal nicht zurück — das geschieht beim Zahlungsdienst.'
+            : 'Vorgang festgehalten. Erstattet wird von Hand.',
       })
     },
   )

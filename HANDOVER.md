@@ -540,9 +540,19 @@ das zurückkommt.
    - **Einkaufs-Bestellwesen.** `reorderedAt` ist nur ein Merker; bestellte
      Menge, Liefertermin und Prüfung des Wareneingangs gegen die Bestellung
      gibt es nicht. Teillieferungen und Überlieferung fallen nicht auf.
-   - **Storno einer Shop-Bestellung ist folgenlos** — keine Rückerstattung
-     (PayPal), keine Rückbuchung der Verfügbarkeit, verknüpfter Auftrag
-     läuft weiter. Heute alles Handarbeit.
+   - ~~**Storno einer Shop-Bestellung ist folgenlos**~~ — **erledigt
+     (08/2026).** Das Stornieren bucht Werkstattstücke zurück in den Laden,
+     bricht den verknüpften Auftrag ab (außer er ist schon geliefert) und
+     legt die **Rückabwicklung** als Vorgang an der Bestellung an
+     (`orders.rueckgabe`: Grund storno/widerruf/reklamation, Stand offen →
+     wareZurueck → erstattet/abgelehnt, Betrag, Zeitpunkte, Notiz). Auch per
+     MCP: `rueckgabe_erfassen`.
+
+     **Bewusst offen bleibt die Erstattung selbst.** Der Weg über PayPal
+     gäbe es, wäre aber der einzige Vorgang im Haus, der auf einen Klick hin
+     unumkehrbar Geld verschiebt — dieselbe Linie wie bei Rechnungen und
+     Mahnungen. Wer das ändern will, ändert damit eine Entscheidung, nicht
+     nur Code.
    - ~~**Versand ist ein fester Betrag je Stück, ohne Blick auf die
      Anschrift.**~~ — **erledigt (08/2026).** Versandzonen als Global
      (`globals/Versand.ts`, Logik in `lib/versand.ts`): Länder je Zone plus

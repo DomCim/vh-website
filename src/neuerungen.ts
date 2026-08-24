@@ -26,6 +26,31 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 61,
+    datum: null,
+    titel: 'Ein Storno hat jetzt Folgen — und eine Rückgabe ist ein Vorgang',
+    punkte: [
+      {
+        text: '**Bisher änderte ein Storno ein Wort und sonst nichts.** Das verkaufte Werkstattstück blieb ausgeblendet und war für niemanden mehr zu kaufen, der Auftrag lief weiter durch die Fertigung, und dass Geld zurückgeht, wusste nur, wer daran dachte. Alle drei Fäden hingen an einem Menschen, der sich erinnert.',
+      },
+      {
+        text: '**Jetzt räumt das Stornieren auf:** Das Stück steht wieder im Laden, der zugehörige Auftrag wird abgebrochen, und die Rückabwicklung steht als offener Vorgang an der Bestellung. Ein bereits geliefertes Stück wird dabei ausdrücklich nicht angefasst — ist es draußen, geht es um eine Rückgabe und nicht mehr um die Fertigung.',
+      },
+      {
+        text: '**Erstattet wird nichts von selbst.** Der Weg gäbe es — der Zahlungsdienst kann auf Zuruf zurückzahlen. Das wäre aber der einzige Vorgang im Haus, der auf einen Klick hin unumkehrbar Geld verschiebt; dieselbe Linie wie bei Rechnungen und Mahnungen gilt auch hier: Es entsteht ein Vorgang, ausgeführt wird er von Hand. Das Portal merkt sich, was zu erstatten ist, und wartet.',
+      },
+      {
+        text: '**Drei Gründe, weil an ihnen Verschiedenes hängt:** Beim **Storno** ist noch keine Ware unterwegs, es geht nur ums Geld. Beim **Widerruf** kommt sie zurück, und die Rücksendung zahlt der Kunde — so steht es in der Widerrufsbelehrung, deshalb wird der Betrag dort gekürzt eingetragen. Bei der **Reklamation** zahlt sie das Haus.',
+      },
+      {
+        text: '**Der Stand geht vorwärts, nicht zurück:** offen → Ware zurück → erstattet, dazu „abgelehnt". Aus „erstattet" und „abgelehnt" führt kein Weg heraus — beides ist nach außen geschehen. Wer wirklich korrigieren muss, tut das in der Verwaltung und sieht dabei, was er tut.',
+      },
+      {
+        text: '**In der Bestellliste steht, was zurückläuft** — als Zeichen an der Zeile und als Zahl in der Kopfzeile. Eine Erstattung, an die niemand erinnert wird, bleibt sonst liegen, bis der Kunde nachfragt. Über den Fernzugriff lässt sich der Vorgang ebenfalls anlegen und weiterbringen.',
+      },
+    ],
+  },
+  {
     nummer: 60,
     datum: null,
     titel: 'Vom Ratgeber zur Ware — und von der Referenz zur Anfrage',

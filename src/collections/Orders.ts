@@ -1,8 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { admins } from '../access'
-import { BESTELL_STATUS } from '../lib/listen'
-import { notifyOnProduction, notifyOnShipped } from '../lib/orderHooks'
+import { BESTELL_STATUS, RUECKGABE_GRUND, RUECKGABE_STATUS } from '../lib/listen'
+import {
+  notifyOnProduction,
+  notifyOnShipped,
+  stornoFolgen,
+  stornoVormerken,
+} from '../lib/orderHooks'
 import { liveHooks } from '../lib/liveHooks'
 
 export const Orders: CollectionConfig = {
@@ -22,8 +27,14 @@ export const Orders: CollectionConfig = {
     hidden: true,
   },
   hooks: {
+    beforeChange: [stornoVormerken],
     afterDelete: liveHooks('bestellungen').afterDelete,
-    afterChange: [notifyOnProduction, notifyOnShipped, ...liveHooks('bestellungen').afterChange],
+    afterChange: [
+      notifyOnProduction,
+      notifyOnShipped,
+      stornoFolgen,
+      ...liveHooks('bestellungen').afterChange,
+    ],
   },
   access: {
     // Bestellungen sind nur im Backend sichtbar; angelegt werden sie server-seitig (Local API)
@@ -54,6 +65,93 @@ export const Orders: CollectionConfig = {
       admin: {
         position: 'sidebar',
       },
+    },
+    /*
+     * Die Rückabwicklung — was zurückkommt und was noch offen ist.
+     *
+     * **Warum am Auftrag und nicht in einer eigenen Sammlung.** Eine
+     * Rückgabe gehört immer zu genau einer Bestellung; als eigene Sammlung
+     * bräuchte sie einen Verweis dorthin, eine eigene Rechteprüfung und
+     * einen eigenen Abgleich ins Gerät — für eine Beziehung, die es
+     * ausschließlich eins zu eins gibt. Hier hängt sie an dem Datensatz, den
+     * das Büro ohnehin schon hat.
+     *
+     * Angelegt wird sie beim Stornieren von selbst (siehe `orderHooks.ts`),
+     * beim Widerruf und bei einer Reklamation von Hand.
+     */
+    {
+      name: 'rueckgabe',
+      label: 'Rückabwicklung',
+      type: 'group',
+      admin: {
+        description:
+          'Wird beim Stornieren automatisch angelegt. Für Widerruf und Reklamation von Hand ausfüllen.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'grund',
+              label: 'Grund',
+              type: 'select',
+              options: [...RUECKGABE_GRUND],
+            },
+            {
+              name: 'status',
+              label: 'Stand',
+              type: 'select',
+              options: [...RUECKGABE_STATUS],
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'betrag',
+              label: 'Zu erstatten (€)',
+              type: 'number',
+              admin: {
+                description:
+                  'Beim Storno der volle Betrag. Beim Widerruf ohne die Rücksendekosten — die trägt laut Widerrufsbelehrung der Kunde.',
+              },
+            },
+            {
+              name: 'angefragtAm',
+              label: 'Angefragt am',
+              type: 'date',
+              admin: { date: { displayFormat: 'dd.MM.yyyy' } },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'wareZurueckAm',
+              label: 'Ware zurück am',
+              type: 'date',
+              admin: { date: { displayFormat: 'dd.MM.yyyy' } },
+            },
+            {
+              name: 'erstattetAm',
+              label: 'Erstattet am',
+              type: 'date',
+              admin: {
+                date: { displayFormat: 'dd.MM.yyyy' },
+                description:
+                  'Von Hand eintragen, nachdem das Geld zurück ist. Das Portal erstattet bewusst nicht selbst — Geld bewegt hier niemand außer dem Menschen davor.',
+              },
+            },
+          ],
+        },
+        {
+          name: 'notiz',
+          label: 'Notiz',
+          type: 'textarea',
+        },
+      ],
     },
     {
       name: 'expectedReady',

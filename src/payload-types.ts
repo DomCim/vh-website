@@ -726,6 +726,24 @@ export interface Order {
   orderNumber: string;
   status: 'pending' | 'paid' | 'inProduction' | 'shipped' | 'cancelled';
   /**
+   * Wird beim Stornieren automatisch angelegt. Für Widerruf und Reklamation von Hand ausfüllen.
+   */
+  rueckgabe?: {
+    grund?: ('storno' | 'widerruf' | 'reklamation') | null;
+    status?: ('offen' | 'wareZurueck' | 'erstattet' | 'abgelehnt') | null;
+    /**
+     * Beim Storno der volle Betrag. Beim Widerruf ohne die Rücksendekosten — die trägt laut Widerrufsbelehrung der Kunde.
+     */
+    betrag?: number | null;
+    angefragtAm?: string | null;
+    wareZurueckAm?: string | null;
+    /**
+     * Von Hand eintragen, nachdem das Geld zurück ist. Das Portal erstattet bewusst nicht selbst — Geld bewegt hier niemand außer dem Menschen davor.
+     */
+    erstattetAm?: string | null;
+    notiz?: string | null;
+  };
+  /**
    * z.B. „Ende April" oder „KW 18" — wird beim Umstellen auf „In Fertigung" an den Kunden gemeldet.
    */
   expectedReady?: string | null;
@@ -2202,6 +2220,17 @@ export interface PromotionsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
   status?: T;
+  rueckgabe?:
+    | T
+    | {
+        grund?: T;
+        status?: T;
+        betrag?: T;
+        angefragtAm?: T;
+        wareZurueckAm?: T;
+        erstattetAm?: T;
+        notiz?: T;
+      };
   expectedReady?: T;
   trackingNumber?: T;
   trackingUrl?: T;
