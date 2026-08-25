@@ -94,6 +94,17 @@ test.describe('Einstellungen im Büro', () => {
    * Geprüft wird deshalb genau der Ablauf von Hand: hinzufügen, tippen, und
    * der Eintrag muss stehen bleiben — mit dem, was schon getippt war.
    */
+  /*
+   * Diese Prüfung schlägt fehl, wenn die Datenbank ein echtes Postfach namens
+   * „Info" enthält — etwa nach dem Zurückspielen einer Sicherung aus dem
+   * Betrieb. Sie räumt ihr eigenes Prüfpostfach am Ende weg und sieht dann
+   * nach, dass keines mehr da ist; das echte zählt dabei mit.
+   *
+   * Kein Fehler im Büro und nichts, was sich hier sinnvoll abfangen ließe:
+   * Ein eindeutiger Name würde die Prüfung entschärfen, aber genau die Frage
+   * „steht der Name in der Liste?" ist ihr Zweck. In der CI, wo die Datenbank
+   * je Lauf frisch ist, läuft sie durch.
+   */
   test('ein Postfach anlegen: der Eintrag bleibt beim Tippen stehen', async ({ page }) => {
     await page.goto('/office/login')
     await page.waitForLoadState('networkidle')
