@@ -105,13 +105,24 @@ export function Uebergabefotos({
     }
   }
 
+  /*
+   * Ein Abschnitt mit Überschrift, keine eigene Karte.
+   *
+   * Als Karte sah es am Handy aus, als gehörten die Fotos zur Zeiterfassung
+   * darüber: Beides waren randlose Kästen in derselben Grauabstufung, und
+   * unter „2 h 00 min · Löschen" folgte gleich „Zustand bei der Übergabe" —
+   * ein Block, zwei Themen. Die Nachbarn hier (Arbeitszeit, Unterlagen zum
+   * Vorgang) sind ebenfalls Abschnitte mit einer `h2` auf der Seite; eine
+   * Karte dazwischen liest sich als Anhängsel des Vorigen statt als eigener
+   * Punkt.
+   */
   return (
-    <div className="buero-karte">
-      <h2>Zustand bei der Übergabe</h2>
+    <>
+      <h2 style={{ marginTop: '1.5rem' }}>Zustand bei der Übergabe</h2>
       <p className="buero-unterzeile">
         {bilder.length
-          ? `${bilder.length} ${bilder.length === 1 ? 'Foto' : 'Fotos'} — sie stehen auf dem Lieferschein.`
-          : 'Noch keine Fotos. Ware und Verpackung vor dem Verladen aufnehmen — das ist der Nachweis, wenn später etwas beschädigt ankommt.'}
+          ? `${bilder.length} ${bilder.length === 1 ? 'Foto' : 'Fotos'} auf dem Lieferschein — sie belegen, wie die Ware das Haus verlassen hat.`
+          : 'Ware und Verpackung vor dem Verladen aufnehmen. Die Fotos stehen auf dem Lieferschein und sind der Nachweis, wenn später etwas beschädigt ankommt.'}
       </p>
 
       {bilder.length > 0 && (
@@ -120,7 +131,10 @@ export function Uebergabefotos({
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
             gap: '.6rem',
-            margin: '.8rem 0',
+            // Unten mehr Luft: Sonst klebt die Bildunterschrift der letzten
+            // Reihe an der Beschriftung des Eingabefelds darunter, und beide
+            // sind kleine graue Schrift — man liest es als eine Zeile.
+            margin: '.8rem 0 1.4rem',
           }}
         >
           {bilder.map((f, i) => (
@@ -153,33 +167,62 @@ export function Uebergabefotos({
         </div>
       )}
 
-      <label className="buero-feld">
-        <span>Bemerkung zum nächsten Foto</span>
-        <input
-          value={bemerkung}
-          disabled={laeuft}
-          onChange={(e) => setBemerkung(e.target.value)}
-          placeholder='z.B. „auf Palette, Kanten mit Filz"'
-        />
-      </label>
+      {/*
+       * Bemerkung und Knopf gehören zusammen: Die Bemerkung gilt für das Foto,
+       * das als nächstes aufgenommen wird. Weit auseinander sah sie aus wie
+       * eine Angabe für sich, und wer gleich auf „Foto aufnehmen" tippte, ließ
+       * sie leer.
+       *
+       * Nicht in `buero-reihe`, obwohl das naheliegt: Die Klasse ist ein Grid
+       * mit gleich breiten Spalten ab 7,5rem — am Handy stünden Feld und Knopf
+       * dann nebeneinander gequetscht. Hier soll das Feld die Breite nehmen
+       * und der Knopf nur, was er braucht; passt beides nicht, rutscht der
+       * Knopf darunter.
+       */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '.6rem',
+          alignItems: 'flex-end',
+          marginTop: '.2rem',
+        }}
+      >
+        <label className="buero-feld" style={{ flex: '1 1 14rem', marginBottom: 0 }}>
+          <span>Bemerkung zum nächsten Foto</span>
+          <input
+            value={bemerkung}
+            disabled={laeuft}
+            onChange={(e) => setBemerkung(e.target.value)}
+            placeholder='z.B. „auf Palette, Kanten mit Filz"'
+          />
+        </label>
 
-      <label className="buero-knopf leise" style={{ display: 'inline-block', cursor: 'pointer' }}>
-        {laeuft ? 'wird hochgeladen …' : 'Foto aufnehmen'}
-        <input
-          ref={feld}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          disabled={laeuft}
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const d = e.target.files?.[0]
-            if (d) void hochladen(d)
+        <label
+          className="buero-knopf leise"
+          style={{
+            cursor: laeuft ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            flex: '0 0 auto',
           }}
-        />
-      </label>
+        >
+          {laeuft ? 'wird hochgeladen …' : 'Foto aufnehmen'}
+          <input
+            ref={feld}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            disabled={laeuft}
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const d = e.target.files?.[0]
+              if (d) void hochladen(d)
+            }}
+          />
+        </label>
+      </div>
 
       <Rueckmeldung text={meldung} />
-    </div>
+    </>
   )
 }
