@@ -541,6 +541,50 @@ export const Jobs: CollectionConfig = {
       ],
     },
     {
+      /*
+       * Fotos vom Zustand bei der Übergabe.
+       *
+       * Ein Lieferschein sagt, **was** mitgefahren ist. Er sagt nicht, in
+       * welchem Zustand — und genau darum wird gestritten, wenn eine Kante
+       * verbogen ankommt: War sie das vorher, oder ist es beim Transport
+       * passiert? Ein Foto von der verpackten Ware beantwortet das, und zwar
+       * zu einem Zeitpunkt, an dem noch niemand streitet.
+       *
+       * Die Fotos liegen in der Mediathek und nicht bei den
+       * Werkstattdateien. Der Grund ist das PDF: Die Mediathek rechnet beim
+       * Hochladen kleine Fassungen aus, und nur die gehören auf ein Blatt
+       * Papier. Ein 4000-Pixel-Foto macht den Lieferschein um Megabyte
+       * schwerer, ohne dass man mehr erkennt (siehe lib/artikelbild.ts).
+       *
+       * Die Bemerkung steht neben dem Bild, nicht darunter im Fließtext: „auf
+       * Palette, Kanten mit Filz" ist die halbe Aussage des Fotos, und wer
+       * später sucht, sucht nach dem Wort und nicht nach dem Bild.
+       */
+      name: 'uebergabefotos',
+      label: 'Fotos zur Übergabe',
+      type: 'array',
+      admin: {
+        description:
+          'Zustand und Verpackung, bevor das Stück das Haus verlässt. Erscheinen auf dem ' +
+          'Lieferschein — und bleiben der Nachweis, wenn später etwas beschädigt ankommt.',
+      },
+      fields: [
+        {
+          name: 'bild',
+          label: 'Foto',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+        {
+          name: 'bemerkung',
+          label: 'Bemerkung',
+          type: 'text',
+          admin: { description: 'z.B. „auf Palette, Kanten mit Filz" — steht neben dem Foto.' },
+        },
+      ],
+    },
+    {
       name: 'gemeldet',
       label: 'Benachrichtigt am',
       type: 'group',

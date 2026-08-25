@@ -166,11 +166,37 @@ export async function abhaken(payload: Payload, tag: string): Promise<number> {
   }
 }
 
+/*
+ * Meldungen, die nicht aus dem Betrieb kommen, sagen das im Titel.
+ *
+ * Der Anlass (Dominik, 08/2026): Auf dem Handy standen abends zwei Meldungen
+ * „Neue Datei in der Übergabemappe", und keine davon war echt — beide kamen
+ * aus einem Prüflauf auf dem Entwicklungsrechner. Von außen war das nicht zu
+ * erkennen: Dasselbe Symbol, derselbe Absender, derselbe Wortlaut. Wer beide
+ * Umgebungen am selben Gerät abonniert hat, rätselt bei jeder Meldung.
+ *
+ * Der unangenehmere Fall ist der umgekehrte: Eine echte Meldung, die in der
+ * Menge der Prüfmeldungen untergeht, weil man sich angewöhnt hat, sie
+ * wegzuwischen.
+ *
+ * `APP_VERSION` steht in Produktion auf dem Git-Stand und in der Entwicklung
+ * auf „entwicklung" (siehe `docker-compose.entwicklung.yml`). Dieselbe Angabe
+ * beantwortet schon `/api/healthz` die Frage, welcher Stand läuft — hier
+ * beantwortet sie, woher eine Meldung kommt.
+ */
+function mitHerkunft(titel: string): string {
+  const version = process.env.APP_VERSION
+  if (!version || version === 'entwicklung') return `[Entwicklung] ${titel}`
+  return titel
+}
+
 export async function benachrichtige(
   payload: Payload,
-  nachricht: PushNachricht,
+  roheNachricht: PushNachricht,
   optionen: PushOptionen = {},
 ): Promise<number> {
+  const nachricht: PushNachricht = { ...roheNachricht, titel: mitHerkunft(roheNachricht.titel) }
+
   /*
    * Erst ablegen, dann verschicken — und zwar in dieser Reihenfolge.
    *

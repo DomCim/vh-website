@@ -48,6 +48,42 @@ const MAX_BYTES = 12 * 1024 * 1024
 const fehler = (grund: string, status: number) =>
   NextResponse.json({ error: grund }, { status })
 
+/** Woran ein Kamerafoto vom iPhone zu erkennen ist — am Typ oder am Namen. */
+const IST_HEIC = /^image\/hei[cf]$/i
+const HEIC_ENDUNG = /\.hei[cf]$/i
+
+/**
+ * Ein Foto, das sich überall anzeigen lässt.
+ *
+ * HEIC/HEIF kommt aus jeder iPhone-Kamera, und außerhalb von Apple kann es
+ * kaum jemand darstellen — GitHub nicht, und genau dort steht das Foto
+ * hinterher. Deshalb wird es hier zu JPEG. Alles andere geht unverändert
+ * durch: Eine zweite verlustbehaftete Umwandlung verschlechtert nur, was
+ * ohnehin schon anzeigbar ist.
+ *
+ * Scheitert die Umwandlung — eine kaputte Datei, ein Format, das `sharp` in
+ * dieser Fassung nicht kennt —, geht das Foto weiter wie es ist. Dann greift
+ * die Prüfung danach und weist es sauber ab, statt die ganze Meldung an
+ * einem Anhang scheitern zu lassen: Der geschriebene Text ist das Wertvolle.
+ */
+async function alsAnzeigbaresBild(foto: File): Promise<File> {
+  if (!IST_HEIC.test(foto.type) && !HEIC_ENDUNG.test(foto.name)) return foto
+
+  try {
+    const { default: sharp } = await import('sharp')
+    const jpeg = await sharp(Buffer.from(await foto.arrayBuffer()))
+      .rotate() // die Aufnahmerichtung aus den Exif-Daten übernehmen
+      .jpeg({ quality: 86 })
+      .toBuffer()
+
+    const name = foto.name.replace(HEIC_ENDUNG, '') + '.jpg'
+    return new File([new Uint8Array(jpeg)], name, { type: 'image/jpeg' })
+  } catch (err) {
+    console.error('HEIC konnte nicht umgewandelt werden:', err)
+    return foto
+  }
+}
+
 export async function POST(req: Request) {
   let abgelegt: string[] = []
   try {
@@ -86,7 +122,21 @@ export async function POST(req: Request) {
 
     const links: string[] = []
     const dateien: (number | string)[] = []
-    for (const foto of fotos) {
+    for (const rohesFoto of fotos) {
+      /*
+       * Ein Kamerafoto vom iPhone wird zu JPEG.
+       *
+       * Das Format heißt HEIC und ist das, was aus der Kamera kommt, solange
+       * niemand die Einstellung umstellt. Anzeigen kann es außer Apple fast
+       * niemand — GitHub schon gar nicht, und dort landet das Foto ja. Ein
+       * angenommenes Foto, das im Eintrag als kaputtes Bild steht, hilft
+       * niemandem; also wird hier umgewandelt.
+       *
+       * Bildschirmfotos (PNG) und alles andere gehen unverändert durch: Eine
+       * verlustbehaftete Umwandlung ohne Not verschlechtert nur die Vorlage.
+       */
+      const foto = await alsAnzeigbaresBild(rohesFoto)
+
       /*
        * Geprüft wird die Endung und **nicht** der gemeldete Typ — genau den
        * setzt `dateiEintragen` später auch. Nähme man hier den gemeldeten,

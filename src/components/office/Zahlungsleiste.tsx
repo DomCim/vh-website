@@ -101,8 +101,6 @@ export function Zahlungsleiste({
     [rechnungen, platzFreigebenNachTagen],
   )
 
-  if (!rechnungen.length) return null
-
   const stufen = stufenBerechnen(auftragswert, zahlplan ?? {})
   const da = eingegangen(
     rechnungen.map((r) => ({ status: r.status, netto: r.netTotal })),
@@ -130,6 +128,81 @@ export function Zahlungsleiste({
     } finally {
       setLaeuft(false)
     }
+  }
+
+  /**
+   * Rechnung aus diesem Auftrag anlegen.
+   *
+   * Der Knopf hängt an der Rechnung, nicht am Klick: Er ist da, solange es
+   * keine Rechnung gibt, und verschwindet erst, wenn eine im Bestand steht.
+   * Das ist der Unterschied, der zählt — verschwände er schon beim Drücken,
+   * stünde der Auftrag ohne Weg da, sobald das Anlegen scheitert. Und ohne
+   * Netz scheitert es nicht einmal, es dauert nur: `absenden` legt die Sache
+   * in die Warteschlange, die Rechnung entsteht später am Server, und bis
+   * dahin muss der Knopf erreichbar bleiben.
+   */
+  async function rechnungAnlegen() {
+    setLaeuft(true)
+    setMeldung(null)
+    try {
+      const { sofort } = await absenden({
+        pfad: '/api/office/auftrag',
+        bereich: 'auftraege',
+        koerper: { aktion: 'rechnung', id: auftragId },
+      })
+      setMeldung(
+        sofort
+          ? 'Rechnungsentwurf liegt bereit — er steht gleich in der Liste. Verschickt wird von Hand.'
+          : 'Gemerkt — der Entwurf entsteht, sobald wieder Netz da ist.',
+      )
+    } catch {
+      setMeldung('Das hat nicht geklappt.')
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  /*
+   * Noch keine Rechnung — und genau hier fehlte bisher alles.
+   *
+   * Die Karte verschwand vollständig, solange es keine Rechnung gab. Damit
+   * war der Ort, an dem man eine anlegt, ausgerechnet in dem Moment
+   * unsichtbar, in dem man ihn braucht: Am Auftrag stand alles beisammen,
+   * aber der Weg zur Rechnung führte übers Abtippen im Rechnungsformular.
+   *
+   * Statt der Zahlen steht hier deshalb der Knopf. Alles darunter —
+   * eingegangen, ausstehend, überfällig, Terminverschiebung — hätte ohne eine
+   * einzige Rechnung nichts zu sagen.
+   */
+  if (!rechnungen.length) {
+    return (
+      <div className="buero-karte">
+        <h2>Zahlung</h2>
+        <p className="buero-unterzeile">
+          Für diesen Auftrag gibt es noch keine Rechnung.
+          {auftragswert > 0 ? ` Der Auftrag steht bei ${euro(auftragswert)} netto.` : ''}
+        </p>
+        {auftragswert > 0 ? (
+          <button
+            type="button"
+            className="buero-knopf"
+            onClick={rechnungAnlegen}
+            disabled={laeuft}
+          >
+            Rechnung aus dem Auftrag erstellen
+          </button>
+        ) : (
+          /* Ohne Positionen mit Preis gibt es nichts zu berechnen — dann ist
+             am Auftrag noch etwas zu tun, und ein Knopf, der nur scheitern
+             kann, hilft dabei nicht. */
+          <p className="buero-hinweis">
+            Sobald die Positionen mit Preisen am Auftrag stehen, lässt sich die Rechnung von hier
+            aus anlegen.
+          </p>
+        )}
+        <Rueckmeldung text={meldung} />
+      </div>
+    )
   }
 
   return (

@@ -26,6 +26,64 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 69,
+    datum: null,
+    titel: 'Fotos zur Übergabe — und sie stehen auf dem Lieferschein',
+    punkte: [
+      {
+        text: '**Am Auftrag lassen sich jetzt Fotos zur Übergabe aufnehmen.** Unter „Zustand bei der Übergabe" ganz unten am Auftrag: Bemerkung eintippen, „Foto aufnehmen" antippen, die Kamera geht auf. Gedacht für den Moment vor dem Verladen — wie die Ware aussieht, wie sie verpackt ist, wie sie auf dem Fahrzeug steht.',
+      },
+      {
+        text: '**Der Grund ist ein Streit, der sonst nicht zu gewinnen ist.** Der Lieferschein sagt, **was** mitgefahren ist, nicht in welchem Zustand. Kommt eine Kante verbogen an, steht Aussage gegen Aussage: War sie das vorher, oder ist es beim Transport passiert? Ein Foto von der verpackten Ware beantwortet das — und zwar zu einem Zeitpunkt, an dem noch niemand streitet.',
+      },
+      {
+        text: '**Die Fotos stehen auf dem Lieferschein**, unter der Überschrift „Zustand bei der Übergabe", zwei je Reihe und mit der Bemerkung unter dem Bild. Damit sind sie auf demselben Blatt, das der Empfänger unterschreibt. Bis zu vier Fotos passen auf eine Seite; danach geht es auf der nächsten weiter — dort steht die Überschrift erneut, mit dem Zusatz „Fortsetzung", damit ein einzeln herausgezogenes Blatt sich selbst erklärt. Die Zeilen zum Unterschreiben stehen immer auf der Seite, auf der die Fotos enden, und nie allein auf einem leeren Blatt danach.',
+      },
+      {
+        text: '**Das Blatt bleibt trotzdem leicht.** Aufs Papier kommt eine kleine Fassung des Fotos, nicht das Kamerabild: Sechs Fotos machen den Lieferschein um wenige Kilobyte schwerer statt um zwanzig Megabyte. Sonst ließe er sich nicht mehr mailen. Fotos vom iPhone werden angenommen, auch im Format HEIC.',
+      },
+    ],
+  },
+  {
+    nummer: 68,
+    datum: null,
+    titel: 'Die Rechnung entsteht aus dem Auftrag — und ist danach zu',
+    punkte: [
+      {
+        text: '**Die Rechnung lässt sich jetzt direkt aus dem Auftrag erstellen.** Am Auftrag stand längst alles, was auf die Rechnung gehört: Positionen, Mengen, Preise, Kundschaft. Einen Weg dorthin gab es trotzdem nur, wenn eine Bestellung aus dem Laden dahinterstand oder ein Zahlplan mit Anzahlung vereinbart war. Beim gewöhnlichen Auftrag blieb Abtippen — jede Position von Hand, mit der Gefahr, dass eine Zahl abweicht und es keiner merkt. In der Karte „Zahlung" am Auftrag steht nun der Knopf **Rechnung aus dem Auftrag erstellen**; er übernimmt die Positionen unverändert und legt einen Entwurf an. Verschickt wird weiter von Hand: Ein Klick soll eine Rechnung vorbereiten, nicht eine hinausschicken.',
+      },
+      {
+        text: '**Die Karte „Zahlung" verschwand ausgerechnet dann, wenn man sie brauchte.** Solange es zu einem Auftrag keine Rechnung gab, war sie gar nicht zu sehen — und damit war der Ort, an dem man eine anlegt, unsichtbar. Jetzt steht sie immer da: mit dem Auftragswert und dem Knopf, solange keine Rechnung existiert, und mit den Zahlen, sobald eine da ist. Der Knopf verschwindet erst, wenn wirklich eine Rechnung liegt — nicht schon, weil er gedrückt wurde. Scheitert es oder ist kein Netz da, ist er wieder da.',
+      },
+      {
+        text: '**Eine gestellte Rechnung lässt sich nicht mehr ändern.** Bisher stand dort nur die Bitte, Positionen und Beträge jetzt besser nicht mehr anzufassen — die Felder blieben offen, und ein Klick auf „Speichern" schrieb die Rechnung um. Das ist gefährlich: Sie liegt beim Kunden, steht in dessen Buchhaltung und trägt eine Nummer aus der laufenden Reihe. Wer sie danach ändert, hat zwei verschiedene Papiere unter derselben Nummer. Jetzt sind die Felder zu, „Speichern" ist weg, und der Server weist eine Änderung ohnehin ab. Für eine Korrektur gibt es **Stornieren** — das legt die Gegenrechnung mit Verweis auf das Original an.',
+      },
+      {
+        text: '**Was an einer gestellten Rechnung weiter geht:** als bezahlt markieren, verschicken, erinnern und mahnen, stornieren. Eine eingegangene Zahlung ändert die Rechnung nämlich nicht — sie stellt nur fest, dass das Geld da ist.',
+      },
+    ],
+  },
+
+  {
+    nummer: 67,
+    datum: null,
+    titel: 'Die richtige Vorschrift auf der Rechnung — und Fotos vom Handy gehen wieder',
+    punkte: [
+      {
+        text: '**Auf steuerfreien Rechnungen stand die falsche Vorschrift.** Dort hieß es „Steuerschuldnerschaft des Leistungsempfängers — Autoliquidation, art. 283-2 du CGI". Das ist die französische Regel für **Dienstleistungen**. Was hier hinausgeht, sind Waren: eine innergemeinschaftliche Lieferung, und dafür gilt die deutsche Vorschrift. Jetzt steht der richtige Satz auf dem Blatt und wortgleich in der eingebetteten Rechnungsdatei: „Innergemeinschaftliche steuerfreie Lieferungen erfolgen nach § 4 Nr. 1 b in Verbindung mit § 6 a UStG." Beide Wege führen zu null Prozent — angreifbar wäre die Rechnung trotzdem gewesen.',
+      },
+      {
+        text: '**Fotos aus der iPhone-Kamera ließen sich nicht an eine Meldung hängen.** Es sah nach Zufall aus: Bildschirmfotos gingen durch, Kamerafotos nicht. Der Grund war das Format — ein iPhone nimmt in HEIC auf, und das kannte die Meldung nicht. Jetzt wird es angenommen und beim Ablegen in ein gewöhnliches JPEG umgewandelt, denn im Repository anzeigen kann HEIC ohnehin niemand.',
+      },
+      {
+        text: '**Beim Lesen der Meldungen lag der Knopf im Weg.** Auf Seiten mit einer Hauptaktion — etwa „Neue Mappe" in den Übergabemappen — stand deren Knopf am Handy mitten im aufgeklappten Meldungsblatt. Er tritt jetzt zur Seite, solange gelesen wird. Wer die Meldungen durchsieht, will in dem Moment ohnehin nichts anlegen.',
+      },
+      {
+        text: '**Das Kollektion-Menü auf der Website war leer.** Über einem dunklen Hero-Bild klappte ein weißer Kasten auf, in dem nichts stand. Die Einträge waren da — nur eben in weißer Schrift auf weißem Grund. Die Kopfleiste färbt ihren Inhalt nach dem Bild um, über dem sie liegt, und das Menü nahm diese Farbe mit, obwohl es auf eigenem Grund steht. Jetzt folgt es dem Thema statt dem Bild.',
+      },
+    ],
+  },
+  {
     nummer: 66,
     datum: null,
     titel: 'Die Listen sehen am Rechner wieder aus wie Listen',

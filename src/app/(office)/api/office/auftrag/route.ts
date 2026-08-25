@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { payloadClient } from '../../../../../lib/data'
 import { AUFTRAG_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
+import { rechnungAusAuftrag } from '../../../../../lib/rechnungsstufen'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +39,51 @@ export async function POST(req: Request) {
         data: { dueDate: b.dueDate },
       })
       return NextResponse.json({ ok: true, id: doc.id })
+    }
+
+    /*
+     * Rechnung aus dem Auftrag — ebenfalls ein enger Weg.
+     *
+     * Am Auftrag steht alles, was auf die Rechnung gehört: Positionen,
+     * Mengen, Preise, Kundschaft. Trotzdem gab es keinen Weg, daraus eine
+     * Rechnung zu machen, solange keine Bestellung dahinterstand: Die
+     * Auslöser in `collections/Jobs.ts` legen nur Stufenentwürfe an, und die
+     * greifen nur bei einem Auftrag mit Zahlplan. Beim gewöhnlichen Auftrag
+     * blieb Abtippen — jede Position von Hand, mit der Gefahr, dass eine Zahl
+     * abweicht.
+     *
+     * Angelegt wird ein Entwurf, nicht eine gestellte Rechnung. Verschickt
+     * wird von Hand, wie bei den Stufen: Ein Klick soll eine Rechnung
+     * vorbereiten und nicht eine hinausschicken.
+     */
+    if (b.aktion === 'rechnung') {
+      if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      if (!(await darf(payload, user, 'rechnungen.schreiben'))) {
+        return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
+      }
+
+      /*
+       * Zwei Rechnungen zum selben Auftrag entstehen hier nicht aus
+       * Versehen. Der Knopf im Büro verschwindet, sobald eine liegt — aber
+       * ohne Netz steht die Anfrage in der Warteschlange, und zweimal
+       * getippt käme sie zweimal an.
+       */
+      const { totalDocs } = await payload.count({
+        collection: 'outgoing-invoices',
+        where: { auftrag: { equals: b.id } },
+        overrideAccess: true,
+      })
+      if (totalDocs > 0) {
+        return NextResponse.json({ error: 'schon-vorhanden' }, { status: 409 })
+      }
+
+      const id = await rechnungAusAuftrag(payload, b.id)
+      if (!id) {
+        // Ohne Positionen gibt es nichts zu berechnen — das ist kein Fehler
+        // des Servers, sondern eine unfertige Vorbereitung am Auftrag.
+        return NextResponse.json({ error: 'keine-positionen' }, { status: 400 })
+      }
+      return NextResponse.json({ ok: true, rechnung: id })
     }
 
     // Pflicht nur beim Anlegen: Eine Änderung, die den Titel nicht anfasst,

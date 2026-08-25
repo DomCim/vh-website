@@ -108,6 +108,22 @@
 }
 
 /* ── Kopfleiste ─────────────────────────────────────────────────────────── */
+
+/*
+ * Die Ebenen im Büro, von unten nach oben:
+ *
+ *   20  die Kopfleiste
+ *   25  die Fußleiste am Handy: die Hauptaktion über der Tableiste
+ *   30  der abdunkelnde Grund unter einem Blatt
+ *   31  das Blatt selbst
+ *   32  die Tableiste am unteren Rand, über dem Blatt
+ *   33  das Blatt der Meldungsglocke — über allem, siehe dort
+ *
+ * Wer hier eine Zahl ändert und keine Wirkung sieht, prüft zuerst die
+ * Verschachtelung: `position: sticky` oder `fixed` mit `z-index` macht ein
+ * Element zum eigenen Stapel, und was darin liegt, kommt nie darüber hinaus.
+ * Genau daran scheiterte der erste Anlauf zu #43.
+ */
 .buero-kopf {
   position: sticky;
   top: 0;
@@ -249,11 +265,29 @@
   stroke-linejoin: round;
 }
 
+/*
+ * Das Blatt hängt **nicht** an der Glocke, sondern am Fenster.
+ *
+ * Vorher stand hier `position: absolute` und damit an der Hülle der Glocke —
+ * die sitzt in der Kopfleiste, und die ist `position: sticky` mit `z-index`.
+ * Das erzeugt einen eigenen Stapel: Was darin liegt, kann nie über etwas
+ * hinausragen, das außerhalb höher liegt, ganz gleich welche Zahl innen
+ * steht. Auf Seiten mit einer Hauptaktion lag der Knopf der Fußleiste deshalb
+ * mitten im aufgeklappten Blatt (#43, gemeldet aus der Übergabemappe).
+ *
+ * Der erste Versuch war, die Kopfleiste über die Fußleiste zu heben. Das
+ * änderte nichts — genau daran zeigt sich, dass es kein Zahlenproblem war,
+ * sondern eins der Verschachtelung.
+ *
+ * `fixed` löst das Blatt aus dem Stapel der Kopfleiste. Es steht dann am
+ * Fenster statt an der Glocke, deshalb die feste Position: `top` so hoch wie
+ * die Kopfleiste, `right` mit demselben Rand wie ihr Innenabstand.
+ */
 .buero-glocke-blatt {
-  position: absolute;
-  top: calc(100% + 0.4rem);
-  right: 0;
-  z-index: 21;
+  position: fixed;
+  top: calc(3.4rem + env(safe-area-inset-top));
+  right: 1.25rem;
+  z-index: 33;
   width: min(22rem, calc(100vw - 1.5rem));
   max-height: min(70vh, 32rem);
   overflow-y: auto;
@@ -841,6 +875,22 @@
     background: var(--buero-flaeche);
     border-top: 1px solid var(--buero-linie);
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /*
+   * Beim Lesen der Meldungen tritt die Hauptaktion zur Seite.
+   *
+   * Sie lag sonst mitten im aufgeklappten Blatt (#43). Über die Ebenen war
+   * das nicht zu lösen: Die Fußleiste bildet einen eigenen Stapel, und aus
+   * einem fremden Stapel kommt kein `z-index` heraus — beide Anläufe darüber
+   * blieben wirkungslos, das Blatt lag weiter darunter.
+   *
+   * Ausgeblendet statt durchsichtig: Ein Knopf, den man sieht und nicht
+   * trifft, ist ärgerlicher als einer, der für einen Moment weg ist. Die
+   * Klasse setzt die Glocke, solange ihr Blatt offen steht.
+   */
+  html.meldungen-offen .buero-fussleiste {
+    display: none;
   }
 
   /* Die Hauptaktion klebt über der Tableiste, dort wo der Daumen liegt.
@@ -1466,6 +1516,25 @@ html.tastatur-offen .buero-inhalt {
 .buero-feld textarea:focus {
   outline: 2px solid var(--buero-bronze);
   outline-offset: 1px;
+}
+
+/*
+ * Ein zugesperrtes Feld — etwa an einer gestellten Rechnung.
+ *
+ * Es soll nach „festgeschrieben" aussehen und nicht nach „kaputt": Der Wert
+ * bleibt lesbar, der Rahmen tritt zurück, und der Zeiger sagt beim Darüberfahren,
+ * dass hier nichts zu holen ist. Die volle Deckkraft ist Absicht — die Voreinstellung
+ * der Browser blasst gesperrte Felder so weit ab, dass gerade die Zahlen, auf die
+ * es ankommt, kaum noch zu lesen sind.
+ */
+.buero-feld input:disabled,
+.buero-feld select:disabled,
+.buero-feld textarea:disabled {
+  background: var(--buero-papier);
+  border-color: var(--buero-linie);
+  color: var(--buero-tinte);
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .buero-reihe {

@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit'
 
-import { facturXml, type FacturXDaten } from './facturx'
+import { facturXml, STEUERFREI_HINWEIS, type FacturXDaten } from './facturx'
 import { giroBild } from './girocode'
 import type { CompanyInfo } from './mail'
 import { briefkopf, fusszeile, LINKS, RECHTS, schriftenDa, schriftenSetzen } from './pdfkopf'
@@ -371,12 +371,7 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   doc.moveDown(1.2)
   doc.fontSize(9).fillColor('#444')
   if (daten.reverseCharge) {
-    doc.text(
-      'Steuerschuldnerschaft des Leistungsempfängers — Autoliquidation, art. 283-2 du CGI.',
-      links,
-      doc.y,
-      { width: rechts - links },
-    )
+    doc.text(STEUERFREI_HINWEIS, links, doc.y, { width: rechts - links })
     doc.moveDown(0.4)
   }
   if (daten.hinweis) {

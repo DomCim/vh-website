@@ -193,11 +193,21 @@ export function Header({
                 </svg>
               </button>
 
+              {/*
+               * `site-menue` holt die Schriftfarben des Themas zurück.
+               *
+               * Die Kopfleiste färbt ihren Inhalt nach dem Hero-Bild um (siehe
+               * `globals.css`) — über einem dunklen Bild wird die Schrift weiß.
+               * Dieses Menü klappt zwar aus der Leiste heraus, liegt aber auf
+               * eigenem hellem Grund: Dort stand die weiße Schrift auf Weiß,
+               * und das Menü war ein leerer Kasten (#44, gemeldet von Vincent
+               * mit einem Bildschirmfoto).
+               */}
               {kollektionOffen && (
                 <div
                   role="menu"
                   aria-label={dict.nav.collection}
-                  className="border-line bg-paper absolute top-full left-1/2 min-w-52 -translate-x-1/2 border py-2 shadow-lg"
+                  className="site-menue border-line bg-paper absolute top-full left-1/2 min-w-52 -translate-x-1/2 border py-2 shadow-lg"
                 >
                   {kategorien.map((k) => (
                     <Link
