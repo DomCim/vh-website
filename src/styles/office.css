@@ -1518,6 +1518,25 @@ html.tastatur-offen .buero-inhalt {
   outline-offset: 1px;
 }
 
+/*
+ * Ein zugesperrtes Feld — etwa an einer gestellten Rechnung.
+ *
+ * Es soll nach „festgeschrieben" aussehen und nicht nach „kaputt": Der Wert
+ * bleibt lesbar, der Rahmen tritt zurück, und der Zeiger sagt beim Darüberfahren,
+ * dass hier nichts zu holen ist. Die volle Deckkraft ist Absicht — die Voreinstellung
+ * der Browser blasst gesperrte Felder so weit ab, dass gerade die Zahlen, auf die
+ * es ankommt, kaum noch zu lesen sind.
+ */
+.buero-feld input:disabled,
+.buero-feld select:disabled,
+.buero-feld textarea:disabled {
+  background: var(--buero-papier);
+  border-color: var(--buero-linie);
+  color: var(--buero-tinte);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .buero-reihe {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));

@@ -286,3 +286,100 @@ export async function entwurfFuerStufe(
 
   return rechnung.id
 }
+
+/**
+ * Eine vollständige Rechnung aus einem Auftrag — von Hand angestoßen.
+ *
+ * Der Weg, der bislang fehlte. Alles darüber entsteht an Auslösern und nur
+ * für Aufträge mit Zahlplan: Anzahlung bei der Bestätigung, Zwischenrechnung
+ * am Meilenstein, Schlussrechnung bei „fertig". Ein ganz gewöhnlicher
+ * Auftrag ohne Zahlplan bekam damit nie eine Rechnung — `geplanteStufen`
+ * gibt für ihn eine leere Liste zurück, und `entwurfFuerStufe` steigt still
+ * aus.
+ *
+ * Im Büro sah das so aus: Am Auftrag stand alles, was auf die Rechnung
+ * gehört, aber es gab keinen Knopf, der sie anlegt. Wer trotzdem eine
+ * brauchte, tippte sie im Rechnungsformular von Hand ab — mit jeder
+ * Position, jeder Menge und jedem Preis, und mit der Gefahr, dass eine Zahl
+ * abweicht und niemand es merkt.
+ *
+ * Deshalb `stufe: 'vollstaendig'` und nicht eine der drei Stufen: Das ist
+ * keine Rate eines Zahlplans, sondern die ganze Leistung auf einem Blatt.
+ * Dieselbe Kennzeichnung benutzt das Storno, und die Zahlungsleiste zeigt
+ * sie schlicht als „Rechnung".
+ *
+ * Angelegt wird ein **Entwurf** — ohne Nummer und ohne Rechnungsdatum, wie
+ * bei den Stufen auch. Beides entsteht erst beim Festschreiben, sonst rissen
+ * verworfene Entwürfe Lücken in die Reihe.
+ */
+export async function rechnungAusAuftrag(
+  payload: Payload,
+  auftragId: number | string,
+  req?: PayloadRequest,
+): Promise<number | string | null> {
+  const auftrag = (await payload
+    .findByID({ collection: 'jobs', id: auftragId, depth: 0, overrideAccess: true, req })
+    .catch(() => null)) as Auftrag | null
+  if (!auftrag) return null
+
+  const posten = (auftrag.positions ?? []).filter((p) => p.description?.trim())
+  if (!posten.length) return null
+
+  const satz = await steuersatz(payload, req)
+  const kontakt =
+    typeof auftrag.contact === 'object' ? (auftrag.contact as { id?: number })?.id : auftrag.contact
+
+  const rechnung = await payload.create({
+    collection: 'outgoing-invoices',
+    overrideAccess: true,
+    req,
+    data: {
+      status: 'entwurf',
+      stufe: 'vollstaendig',
+      auftrag: Number(auftrag.id),
+      customer: typeof kontakt === 'number' ? kontakt : undefined,
+      customerName: auftrag.customerName ?? undefined,
+      items: posten.map((p) => ({
+        description: p.description as string,
+        quantity: Number(p.quantity) || 0,
+        unit: 'Stück',
+        unitPrice: Number(p.price) || 0,
+        vatRate: satz,
+      })),
+    },
+  })
+
+  payload.logger.info(
+    `Rechnungsentwurf zu ${auftrag.jobNumber ?? auftrag.id} von Hand angelegt (${posten.length} Positionen)`,
+  )
+
+  /*
+   * Gemeldet wird wie bei den Stufen — erst nach dem Festschreiben, sonst
+   * kennt die Rechnungsliste den Entwurf noch nicht, wenn die Meldung
+   * ankommt (siehe lib/nachCommit.ts).
+   *
+   * Anders als dort ist hier jemand am Gerät, der gerade selbst getippt hat:
+   * Die Meldung ist deshalb keine Nachricht an einen Abwesenden, sondern die
+   * Bestätigung für den, der es angestoßen hat — und für jeden anderen im
+   * Büro der Hinweis, dass da ein Entwurf liegt.
+   */
+  const wer = auftrag.customerName?.trim()
+  const worum = auftrag.title?.trim()
+  const bezug = auftrag.jobNumber ? `Auftrag ${auftrag.jobNumber}` : 'Auftrag'
+  const betragText = new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(Number((rechnung as { netTotal?: number | null }).netTotal) || 0)
+
+  nachCommit(payload, 'outgoing-invoices', rechnung.id, async () => {
+    liveMelden(payload, 'rechnungen', 'neu', rechnung.id)
+    await benachrichtige(payload, {
+      titel: wer ? `Entwurf: Rechnung für ${wer}` : `Entwurf: Rechnung ${bezug}`,
+      text: `${bezug}${worum ? ` — ${worum}` : ''}: ${betragText} netto. Bitte prüfen und verschicken — von allein geht sie nicht raus.`,
+      url: `/office/rechnungen/${rechnung.id}`,
+      tag: `rechnung-${auftrag.id}`,
+    }).catch(() => undefined)
+  })
+
+  return rechnung.id
+}

@@ -72,6 +72,23 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
   const [meldung, setMeldung] = useState<string | null>(null)
 
   const festgeschrieben = Boolean(w.invoiceNumber)
+
+  /*
+   * Ist die Nummer vergeben, sind die Felder zu.
+   *
+   * Vorher stand hier nur eine Bitte im Hinweis, und jedes Feld blieb offen —
+   * ein Klick auf „Speichern" schrieb die gestellte Rechnung um. Das durfte
+   * nicht bleiben: Was der Kunde im Ordner hat, muss dem entsprechen, was
+   * hier liegt, sonst gibt es zwei Papiere unter einer Nummer.
+   *
+   * Gesperrt wird alles, was auf dem Blatt steht — Beträge und Positionen
+   * ebenso wie der Hinweis, denn der wird mitgedruckt. Was danach noch geht,
+   * geht über eigene Wege: „Als bezahlt markieren", Verschicken und
+   * Stornieren. Der Server weist eine Änderung zusätzlich ab
+   * (api/office/rechnung), damit die Sperre nicht bloß Anzeige ist.
+   */
+  const gesperrt = festgeschrieben
+
   const setzen = (teil: Partial<RechnungWerte>) => setW((v) => ({ ...v, ...teil }))
 
   /*
@@ -136,6 +153,33 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
     }
   }
 
+  /**
+   * Bezahlt melden — auf dem schmalen Weg.
+   *
+   * Der volle Datensatz darf hier nicht mehr durch: Eine gestellte Rechnung
+   * weist der Server ab, und das ist richtig so. Eine eingegangene Zahlung
+   * ändert die Rechnung aber nicht — sie stellt nur fest, dass das Geld da
+   * ist. Deshalb dieselbe Aktion, die auch die Zahlungsliste benutzt: Es wird
+   * genau das gesetzt, worum es geht.
+   */
+  async function bezahltMelden() {
+    setLaeuft(true)
+    setMeldung(null)
+    try {
+      await absenden({
+        pfad: '/api/office/rechnung',
+        bereich: 'rechnungen',
+        koerper: { aktion: 'bezahlt', id: w.id, paidDate: new Date().toISOString() },
+      })
+      setzen({ status: 'bezahlt' })
+      setMeldung('Als bezahlt vermerkt.')
+    } catch {
+      setMeldung('Das hat nicht geklappt.')
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
   return (
     <div className="buero-karte">
       <EntwurfLeiste
@@ -151,9 +195,9 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           einen Knopf, den es nicht gibt, schickt Leute suchen. */}
       {festgeschrieben && w.status !== 'storniert' && (
         <p className="buero-hinweis">
-          Rechnung <strong>{w.invoiceNumber}</strong> ist gestellt. Positionen und Beträge sollten
-          jetzt nicht mehr geändert werden — für Korrekturen oben auf „Stornieren“ tippen; das legt
-          die Gegenrechnung mit Verweis auf diese hier an.
+          Rechnung <strong>{w.invoiceNumber}</strong> ist gestellt und liegt beim Kunden — die
+          Felder sind deshalb zu. Für eine Korrektur oben auf „Stornieren“ tippen; das legt die
+          Gegenrechnung mit Verweis auf diese hier an.
         </p>
       )}
       <Rueckmeldung text={meldung} />
@@ -161,6 +205,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       <div className="buero-reihe">
         <PartnerBezug
           wert={w.customer}
+          gesperrt={gesperrt}
           aendern={(id, partner) => {
             // Auswählen heißt übernehmen — wer abweichen will, tippt danach
             setzen({
@@ -181,6 +226,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <span>Kunde</span>
           <input
             value={w.customerName ?? ''}
+            disabled={gesperrt}
             onChange={(e) => setzen({ customerName: e.target.value })}
             placeholder="z.B. Stadt Naila"
           />
@@ -190,6 +236,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <input
             type="date"
             value={nurTag(w.issueDate)}
+            disabled={gesperrt}
             onChange={(e) => setzen({ issueDate: e.target.value })}
           />
         </label>
@@ -198,6 +245,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <input
             type="date"
             value={nurTag(w.dueDate)}
+            disabled={gesperrt}
             onChange={(e) => setzen({ dueDate: e.target.value })}
           />
         </label>
@@ -208,6 +256,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         <textarea
           rows={3}
           value={w.customerAddress ?? ''}
+          disabled={gesperrt}
           onChange={(e) => setzen({ customerAddress: e.target.value })}
           placeholder={'Straße 1\n12345 Ort\nFrankreich'}
         />
@@ -239,6 +288,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <span>SIRET/SIREN des Kunden</span>
           <input
             value={w.customerSiret ?? ''}
+            disabled={gesperrt}
             onChange={(e) => setzen({ customerSiret: e.target.value })}
             placeholder="14-stellig"
           />
@@ -247,6 +297,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <span>TVA-Nummer des Kunden</span>
           <input
             value={w.customerVatId ?? ''}
+            disabled={gesperrt}
             onChange={(e) => setzen({ customerVatId: e.target.value })}
             placeholder="FR…"
           />
@@ -257,6 +308,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <span>Bestellnummer des Kunden</span>
           <input
             value={w.buyerReference ?? ''}
+            disabled={gesperrt}
             onChange={(e) => setzen({ buyerReference: e.target.value })}
             placeholder="Aktenzeichen, Vergabenummer …"
           />
@@ -266,6 +318,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <input
             type="date"
             value={nurTag(w.deliveryDate)}
+            disabled={gesperrt}
             onChange={(e) => setzen({ deliveryDate: e.target.value })}
           />
         </label>
@@ -273,6 +326,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
           <span>Art des Geschäfts</span>
           <select
             value={w.businessType ?? 'lieferung'}
+            disabled={gesperrt}
             onChange={(e) => setzen({ businessType: e.target.value })}
           >
             <option value="lieferung">Lieferung von Waren</option>
@@ -286,6 +340,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         <textarea
           rows={2}
           value={w.deliveryAddress ?? ''}
+          disabled={gesperrt}
           onChange={(e) => setzen({ deliveryAddress: e.target.value })}
           placeholder="nur wenn woandershin geliefert wurde"
         />
@@ -308,12 +363,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
             <span>Beschreibung</span>
             <input
               value={p.description}
+              disabled={gesperrt}
               onChange={(e) => setzePosition(i, { description: e.target.value })}
               placeholder="z.B. Sitzbank Cortenstahl, 2,00 m, nach Zeichnung"
             />
           </label>
           <ArtikelBezug
             wert={p.product ?? ''}
+            gesperrt={gesperrt}
             aendern={(id) => setzePosition(i, { product: id || undefined })}
           />
           <div className="buero-reihe">
@@ -322,18 +379,24 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
               <Zahleingabe
                 wert={p.quantity}
                 beiLeer={0}
+                disabled={gesperrt}
                 aendern={(v) => setzePosition(i, { quantity: v ?? 0 })}
               />
             </label>
             <label className="buero-feld">
               <span>Einheit</span>
-              <input value={p.unit} onChange={(e) => setzePosition(i, { unit: e.target.value })} />
+              <input
+                value={p.unit}
+                disabled={gesperrt}
+                onChange={(e) => setzePosition(i, { unit: e.target.value })}
+              />
             </label>
             <label className="buero-feld">
               <span>Einzelpreis netto</span>
               <Zahleingabe
                 wert={p.unitPrice}
                 beiLeer={0}
+                disabled={gesperrt}
                 aendern={(v) => setzePosition(i, { unitPrice: v ?? 0 })}
               />
             </label>
@@ -342,11 +405,12 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
               <Zahleingabe
                 wert={p.vatRate}
                 beiLeer={0}
+                disabled={gesperrt}
                 aendern={(v) => setzePosition(i, { vatRate: v ?? 0 })}
               />
             </label>
           </div>
-          {(w.items ?? []).length > 1 && (
+          {!gesperrt && (w.items ?? []).length > 1 && (
             <button
               type="button"
               className="buero-knopf stumm"
@@ -358,20 +422,22 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </div>
       ))}
 
-      <button
-        type="button"
-        className="buero-knopf leise"
-        onClick={() =>
-          setzen({
-            items: [
-              ...(w.items ?? []),
-              { description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 },
-            ],
-          })
-        }
-      >
-        Position hinzufügen
-      </button>
+      {!gesperrt && (
+        <button
+          type="button"
+          className="buero-knopf leise"
+          onClick={() =>
+            setzen({
+              items: [
+                ...(w.items ?? []),
+                { description: '', quantity: 1, unit: 'Stück', unitPrice: 0, vatRate: 20 },
+              ],
+            })
+          }
+        >
+          Position hinzufügen
+        </button>
+      )}
 
       <div
         style={{
@@ -402,6 +468,7 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         <input
           type="checkbox"
           checked={Boolean(w.reverseCharge)}
+          disabled={gesperrt}
           onChange={(e) => setzen({ reverseCharge: e.target.checked })}
         />
         Reverse Charge (Geschäftskunde im EU-Ausland, ohne Steuer)
@@ -409,7 +476,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
 
       <label className="buero-feld">
         <span>Hinweis auf der Rechnung</span>
-        <textarea rows={2} value={w.note ?? ''} onChange={(e) => setzen({ note: e.target.value })} />
+        {/* Mitgesperrt, weil er auf dem Blatt steht: Was der Kunde liest,
+            gehört zum festgeschriebenen Dokument. */}
+        <textarea
+          rows={2}
+          value={w.note ?? ''}
+          disabled={gesperrt}
+          onChange={(e) => setzen({ note: e.target.value })}
+        />
       </label>
 
       {/*
@@ -420,14 +494,20 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
        * Reihe, auch wenn es dann der nächste Schritt ist.
        */}
       <Fussleiste>
-        <button
-          type="button"
-          className="buero-knopf leise"
-          disabled={laeuft}
-          onClick={() => void speichern()}
-        >
-          Speichern
-        </button>
+        {/* „Speichern" war der Weg, über den eine gestellte Rechnung doch noch
+            geändert werden konnte — ein Klick, und das Papier beim Kunden
+            stimmte nicht mehr mit dem hier überein. Danach gibt es nur noch
+            Storno, Verschicken und „bezahlt". */}
+        {!gesperrt && (
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft}
+            onClick={() => void speichern()}
+          >
+            Speichern
+          </button>
+        )}
         {festgeschrieben && (
           <a
             className="buero-knopf leise"
@@ -438,12 +518,12 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
             PDF ansehen
           </a>
         )}
-        {festgeschrieben && w.status !== 'bezahlt' && (
+        {festgeschrieben && w.status !== 'bezahlt' && w.status !== 'storniert' && (
           <button
             type="button"
             className="buero-knopf leise"
             disabled={laeuft}
-            onClick={() => void speichern('bezahlt')}
+            onClick={() => void bezahltMelden()}
           >
             Als bezahlt markieren
           </button>

@@ -48,11 +48,14 @@ export function PartnerBezug({
   wert,
   aendern,
   beschriftung = 'Geschäftspartner',
+  gesperrt = false,
 }: {
   wert: number | '' | null | undefined
   /** Bekommt neben der Kennung den ganzen Datensatz — für die Übernahme. */
   aendern: (id: number | '', partner: Partner | null) => void
   beschriftung?: string
+  /** Zu, wenn der Datensatz festgeschrieben ist — etwa eine gestellte Rechnung. */
+  gesperrt?: boolean
 }) {
   const partner = useBestand<Partner>('partner')
 
@@ -68,6 +71,7 @@ export function PartnerBezug({
       <span>{beschriftung}</span>
       <select
         value={wert ?? ''}
+        disabled={gesperrt}
         onChange={(e) => {
           const id = Number(e.target.value) || ''
           const satz = id ? (sortiert.find((p) => String(p.id) === String(id)) ?? null) : null

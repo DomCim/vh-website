@@ -41,9 +41,12 @@ export function bildUrl(artikel: Artikel | undefined, medien: Medium[]): string 
 export function ArtikelBezug({
   wert,
   aendern,
+  gesperrt = false,
 }: {
   wert: number | '' | null | undefined
   aendern: (id: number | '') => void
+  /** Zu, wenn der Datensatz festgeschrieben ist — etwa eine gestellte Rechnung. */
+  gesperrt?: boolean
 }) {
   const artikel = useBestand<Artikel>('artikel')
   const medien = useBestand<Medium>('medien')
@@ -86,6 +89,7 @@ export function ArtikelBezug({
         </span>
         <select
           value={wert ?? ''}
+          disabled={gesperrt}
           onChange={(e) => aendern(Number(e.target.value) || '')}
           style={{ minWidth: 0 }}
         >
