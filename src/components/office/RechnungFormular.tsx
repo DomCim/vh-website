@@ -5,7 +5,7 @@ import React, { useMemo, useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
 import { useEntwurf } from '../../lib/buero/entwurf'
-import { absenden } from '../../lib/buero/warteschlange'
+import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
@@ -146,7 +146,33 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       entwurf.erledigt()
       if (sofort) router.push(`/office/rechnungen/${id}`)
       else setMeldung('Gemerkt — geht raus, sobald wieder Netz da ist.')
-    } catch {
+    } catch (err) {
+      /*
+       * „Speichern fehlgeschlagen" war hier zu wenig, und das hat sich
+       * sofort gerächt.
+       *
+       * Vincent hat eine gestellte Rechnung geöffnet, den Kunden geändert und
+       * gespeichert. Der Server wies das ab — richtig so, sie liegt beim
+       * Kunden. Am Bildschirm stand aber nur, es sei fehlgeschlagen, also
+       * klang es wie ein Fehler der Anwendung: „hatte nochmal den Kunden
+       * angepasst aber das wurde nicht übernommen, ich leg den nochmal neu an
+       * dann oder?"
+       *
+       * Genau das darf nicht passieren. Eine zweite Rechnung für dieselbe
+       * Leistung bekommt eine zweite Nummer, und die erste bleibt gültig im
+       * Raum stehen — aus einer sauberen Sperre wird so ein doppeltes Papier.
+       * Deshalb sagt die Meldung jetzt, was los ist **und** welcher Weg zum
+       * Ziel führt.
+       */
+      if (err instanceof AbsendeFehler && err.daten?.error === 'schon-gestellt') {
+        setMeldung(
+          'Diese Rechnung ist gestellt und liegt beim Kunden — sie lässt sich nicht mehr ändern. ' +
+            'Für eine Korrektur oben auf „Stornieren“ tippen: Das legt die Gegenrechnung an, ' +
+            'danach eine neue mit den richtigen Angaben. Bitte keine zweite von Hand anlegen — ' +
+            'sonst stehen zwei gültige Rechnungen für dieselbe Leistung im Raum.',
+        )
+        return
+      }
       setMeldung('Speichern fehlgeschlagen.')
     } finally {
       setLaeuft(false)
