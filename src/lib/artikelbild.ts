@@ -57,6 +57,40 @@ function ausMedium(medium: Bild | null | undefined): string | null {
 }
 
 /**
+ * Der Pfad zu einem Bild aus der Mediathek — für ein Foto, das aufs Papier soll.
+ *
+ * Dasselbe wie `artikelBildPfad`, nur einen Schritt kürzer: Dort steckt das
+ * Bild in einem Artikel, hier ist der Verweis schon das Bild. Gebraucht wird
+ * das für die Übergabefotos am Lieferschein.
+ *
+ * Die Fassungswahl bleibt dieselbe und ist der eigentliche Grund, das hier
+ * nicht selbst zu schreiben: kleine Fassung vor Original, und nur PNG oder
+ * JPEG, weil PDFKit sonst wirft und das Bild stillschweigend fehlt.
+ */
+export async function medienBildPfad(payload: Payload, bezug: unknown): Promise<string | null> {
+  try {
+    if (!bezug) return null
+    if (typeof bezug === 'object') {
+      const medium = bezug as Bild & { id?: number | string }
+      // Ein Verweis ohne Tiefe bringt nur die Kennung mit
+      if (medium.filename || medium.sizes) return ausMedium(medium)
+      if (!medium.id) return null
+      bezug = medium.id
+    }
+    const geladen = (await payload.findByID({
+      collection: 'media',
+      id: bezug as number,
+      depth: 0,
+      overrideAccess: true,
+    })) as Bild
+    return ausMedium(geladen)
+  } catch (err) {
+    payload.logger.warn({ err }, 'Bild für ein Dokument nicht gefunden')
+    return null
+  }
+}
+
+/**
  * Der Bildpfad zu einem Artikelverweis.
  *
  * `bezug` ist, was in einer Position steht: eine Kennung, der geladene

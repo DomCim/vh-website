@@ -7,6 +7,7 @@ import React, { useMemo } from 'react'
 import { AbnahmeKnopf } from '../../../../../components/office/AbnahmeKnopf'
 import { AuftragFormular } from '../../../../../components/office/AuftragFormular'
 import { VersandKnopf } from '../../../../../components/office/VersandKnopf'
+import { Uebergabefotos } from '../../../../../components/office/Uebergabefotos'
 import { Vorgangsdateien } from '../../../../../components/office/Vorgangsdateien'
 import { Zahlungsleiste } from '../../../../../components/office/Zahlungsleiste'
 import { Wiedervorlagen } from '../../../../../components/office/Wiedervorlagen'
@@ -190,6 +191,14 @@ export function AuftragAnsicht() {
         stundensatz={stundensatz}
         auftragswert={auftragswert}
         materialkosten={materialkosten}
+      />
+
+      {/* Die Fotos stehen bei den Dateien und nicht oben bei der Abnahme:
+          Aufgenommen wird beim Verladen, und da ist der Auftrag schon
+          durchgearbeitet — wer bis hierher scrollt, ist im richtigen Moment. */}
+      <Uebergabefotos
+        id={j.id}
+        fotos={(j.uebergabefotos ?? []) as { bild?: unknown; bemerkung?: string | null }[]}
       />
 
       <Vorgangsdateien

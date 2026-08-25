@@ -1114,6 +1114,19 @@ export interface Job {
     name?: string | null;
     ort?: string | null;
   };
+  /**
+   * Zustand und Verpackung, bevor das Stück das Haus verlässt. Erscheinen auf dem Lieferschein — und bleiben der Nachweis, wenn später etwas beschädigt ankommt.
+   */
+  uebergabefotos?:
+    | {
+        bild: number | Media;
+        /**
+         * z.B. „auf Palette, Kanten mit Filz" — steht neben dem Foto.
+         */
+        bemerkung?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   gemeldet?: {
     inFertigung?: string | null;
     fertig?: string | null;
@@ -2507,6 +2520,13 @@ export interface JobsSelect<T extends boolean = true> {
         am?: T;
         name?: T;
         ort?: T;
+      };
+  uebergabefotos?:
+    | T
+    | {
+        bild?: T;
+        bemerkung?: T;
+        id?: T;
       };
   gemeldet?:
     | T
