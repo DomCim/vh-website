@@ -39,6 +39,9 @@ export const NEUERUNGEN: Neuerung[] = [
       {
         text: '**Beim Lesen der Meldungen lag der Knopf im Weg.** Auf Seiten mit einer Hauptaktion — etwa „Neue Mappe" in den Übergabemappen — stand deren Knopf am Handy mitten im aufgeklappten Meldungsblatt. Er tritt jetzt zur Seite, solange gelesen wird. Wer die Meldungen durchsieht, will in dem Moment ohnehin nichts anlegen.',
       },
+      {
+        text: '**Das Kollektion-Menü auf der Website war leer.** Über einem dunklen Hero-Bild klappte ein weißer Kasten auf, in dem nichts stand. Die Einträge waren da — nur eben in weißer Schrift auf weißem Grund. Die Kopfleiste färbt ihren Inhalt nach dem Bild um, über dem sie liegt, und das Menü nahm diese Farbe mit, obwohl es auf eigenem Grund steht. Jetzt folgt es dem Thema statt dem Bild.',
+      },
     ],
   },
   {

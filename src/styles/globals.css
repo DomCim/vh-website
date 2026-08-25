@@ -179,6 +179,40 @@ body {
   background-color: rgba(0, 0, 0, 0.45);
 }
 
+/*
+ * Aufklappmenüs folgen dem Thema, nicht dem Hero-Bild.
+ *
+ * Die beiden Blöcke darüber färben alles in der Kopfleiste nach dem Bild um,
+ * über das sie gerade liegt — richtig für Schriftzug und Navigation, die
+ * wirklich auf dem Bild stehen. Ein Aufklappmenü steht aber auf **eigenem**
+ * Grund: Über einem dunklen Hero wurde seine Schrift weiß und stand damit
+ * weiß auf weiß. Sichtbar blieb ein leerer Kasten (#44, gemeldet von Vincent
+ * mit einem Bildschirmfoto der Kollektion).
+ *
+ * Die Werte sind dieselben wie in `:root` — hier noch einmal genannt, weil
+ * eine Variable sich nicht auf ihren geerbten Wert zurücksetzen lässt. Der
+ * Block für das dunkle Thema steht direkt darunter, damit das Menü dem Gerät
+ * folgt und nicht einer festen Farbe.
+ */
+.site-menue {
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #4b4b4d;
+  --color-line: #e4e4e2;
+  --color-accent: #b32428;
+  --color-bronze: #a5622d;
+  color: var(--color-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-menue {
+    --color-ink: #ececed;
+    --color-ink-soft: #a9a9b0;
+    --color-line: #2e2e33;
+    --color-accent: #e8615f;
+    --color-bronze: #c98a52;
+  }
+}
+
 /* Ausstrahlung des Hero-Farbtons auf die Seite: Verlauf unterhalb des Heros,
    der über den Aktions-Banner hinweg weich ins Weiß ausläuft. Als
    registrierte Property, damit der Farbwechsel beim Folienwechsel
