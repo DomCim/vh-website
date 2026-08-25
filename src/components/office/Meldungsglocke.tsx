@@ -41,6 +41,28 @@ export function Meldungsglocke() {
   // Beim Seitenwechsel schließen — sonst bliebe das Blatt über der neuen Seite
   useEffect(() => setOffen(false), [pfad])
 
+  /*
+   * Solange das Blatt offen ist, weiß die Seite davon.
+   *
+   * Der Grund ist ein handfester: Auf Seiten mit einer Hauptaktion lag deren
+   * Knopf mitten im aufgeklappten Blatt (#43, gemeldet aus der
+   * Übergabemappe). Über `z-index` war das nicht zu lösen — die Fußleiste
+   * steht in einem eigenen Stapel, und aus einem fremden Stapel kommt man
+   * mit keiner Zahl heraus. Zwei Anläufe gingen dafür drauf.
+   *
+   * Die Fußleiste tritt deshalb zur Seite, solange gelesen wird (siehe
+   * `office.css`). Das ist auch das richtige Verhalten: Wer die Meldungen
+   * durchsieht, will in diesem Moment keine neue Mappe anlegen.
+   *
+   * Dieselbe Technik wie bei `tastatur-offen` — eine Klasse am `<html>`,
+   * die das Stylesheet abfragt.
+   */
+  useEffect(() => {
+    const wurzel = document.documentElement
+    wurzel.classList.toggle('meldungen-offen', offen)
+    return () => wurzel.classList.remove('meldungen-offen')
+  }, [offen])
+
   // Klick daneben und Escape schließen; dieselben zwei Griffe wie in der Navigation
   useEffect(() => {
     if (!offen) return

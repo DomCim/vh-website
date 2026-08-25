@@ -87,8 +87,25 @@ export const FEHLERMELDUNGS_ORDNER = 'Fehlermeldungen'
 /** Wie viele Fotos an eine Meldung dürfen — mehr sieht sich niemand an */
 export const MAX_FOTOS = 5
 
-/** Was als Foto durchgeht. Eine Fräsdatei ist kein Bildschirmfoto. */
-export const BILDARTEN = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+/**
+ * Was als Foto durchgeht. Eine Fräsdatei ist kein Bildschirmfoto.
+ *
+ * **HEIC und HEIF gehören dazu, auch wenn sie ungewohnt aussehen.** Ein iPhone
+ * nimmt seit Jahren in diesem Format auf; es ist das, was aus der Kamera
+ * kommt, wenn niemand die Einstellung umgestellt hat. Ohne die beiden wurde
+ * jedes Kamerafoto mit „Angehängt werden können nur Bilder" abgewiesen —
+ * Bildschirmfotos (PNG) gingen dagegen durch. Daher las es sich als „mal
+ * klappt es, mal nicht" (#40, #42 und noch einmal #43): Es hing nicht am
+ * Zufall, sondern daran, woher das Bild kam.
+ */
+export const BILDARTEN = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+]
 
 export function istBild(mimeType: string | null | undefined): boolean {
   return BILDARTEN.includes(String(mimeType ?? '').toLowerCase())

@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 67,
+    datum: null,
+    titel: 'Die richtige Vorschrift auf der Rechnung — und Fotos vom Handy gehen wieder',
+    punkte: [
+      {
+        text: '**Auf steuerfreien Rechnungen stand die falsche Vorschrift.** Dort hieß es „Steuerschuldnerschaft des Leistungsempfängers — Autoliquidation, art. 283-2 du CGI". Das ist die französische Regel für **Dienstleistungen**. Was hier hinausgeht, sind Waren: eine innergemeinschaftliche Lieferung, und dafür gilt die deutsche Vorschrift. Jetzt steht der richtige Satz auf dem Blatt und wortgleich in der eingebetteten Rechnungsdatei: „Innergemeinschaftliche steuerfreie Lieferungen erfolgen nach § 4 Nr. 1 b in Verbindung mit § 6 a UStG." Beide Wege führen zu null Prozent — angreifbar wäre die Rechnung trotzdem gewesen.',
+      },
+      {
+        text: '**Fotos aus der iPhone-Kamera ließen sich nicht an eine Meldung hängen.** Es sah nach Zufall aus: Bildschirmfotos gingen durch, Kamerafotos nicht. Der Grund war das Format — ein iPhone nimmt in HEIC auf, und das kannte die Meldung nicht. Jetzt wird es angenommen und beim Ablegen in ein gewöhnliches JPEG umgewandelt, denn im Repository anzeigen kann HEIC ohnehin niemand.',
+      },
+      {
+        text: '**Beim Lesen der Meldungen lag der Knopf im Weg.** Auf Seiten mit einer Hauptaktion — etwa „Neue Mappe" in den Übergabemappen — stand deren Knopf am Handy mitten im aufgeklappten Meldungsblatt. Er tritt jetzt zur Seite, solange gelesen wird. Wer die Meldungen durchsieht, will in dem Moment ohnehin nichts anlegen.',
+      },
+      {
+        text: '**Das Kollektion-Menü auf der Website war leer.** Über einem dunklen Hero-Bild klappte ein weißer Kasten auf, in dem nichts stand. Die Einträge waren da — nur eben in weißer Schrift auf weißem Grund. Die Kopfleiste färbt ihren Inhalt nach dem Bild um, über dem sie liegt, und das Menü nahm diese Farbe mit, obwohl es auf eigenem Grund steht. Jetzt folgt es dem Thema statt dem Bild.',
+      },
+    ],
+  },
+  {
     nummer: 66,
     datum: null,
     titel: 'Die Listen sehen am Rechner wieder aus wie Listen',
