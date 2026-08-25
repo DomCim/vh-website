@@ -18,6 +18,33 @@ import type { CompanyInfo } from './mail'
  * korrekt, den Versandweg dorthin muss der Betrieb noch wählen.
  */
 
+/**
+ * Der Satz, der auf einer steuerfreien Rechnung stehen muss.
+ *
+ * Ohne ihn ist die Rechnung formal unvollständig, und die Steuerfreiheit
+ * lässt sich bei einer Prüfung angreifen — dann wird die Steuer nachgefordert,
+ * die man beim Kunden nicht mehr holen kann.
+ *
+ * **Warum dieser und nicht der bisherige.** Hier stand „Steuerschuldnerschaft
+ * des Leistungsempfängers — Autoliquidation, art. 283-2 du CGI". Das ist der
+ * französische Reverse-Charge für **Dienstleistungen**. Was hier hinausgeht,
+ * sind aber Waren: eine innergemeinschaftliche Lieferung, und für die gilt
+ * die deutsche Vorschrift. Beide Wege führen zu null Prozent, aber auf dem
+ * Blatt muss die richtige Grundlage stehen (gemeldet als #45, Entscheidung
+ * Dominik 08/2026, mit einer Musterrechnung von Next-Concept an einen
+ * deutschen Kunden mit USt-IdNr.).
+ *
+ * **Was das heißt, wenn sich das Geschäft ändert:** Der Satz gilt hier für
+ * jede steuerfreie Rechnung. Werden einmal Dienstleistungen ins EU-Ausland
+ * abgerechnet, braucht es eine Unterscheidung — dann gehört hier ein zweiter
+ * Satz her und an die Rechnung die Angabe, was sie abrechnet.
+ */
+export const STEUERFREI_HINWEIS =
+  'Innergemeinschaftliche steuerfreie Lieferungen erfolgen nach § 4 Nr. 1 b in Verbindung mit § 6 a UStG.'
+
+/** Dieselbe Aussage kurz — für das Feld `ExemptionReason` im XML. */
+export const STEUERFREI_GRUND = 'Innergemeinschaftliche Lieferung, § 4 Nr. 1 b UStG'
+
 export type FacturXPosition = {
   bezeichnung: string
   menge: number
@@ -284,7 +311,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
   if (daten.reverseCharge) {
     zeilen.push(
       '    <ram:IncludedNote>',
-      '      <ram:Content>Autoliquidation — Steuerschuldnerschaft des Leistungsempfängers</ram:Content>',
+      `      <ram:Content>${x(STEUERFREI_HINWEIS)}</ram:Content>`,
       '    </ram:IncludedNote>',
     )
   }
@@ -440,7 +467,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
       '      <ram:ApplicableTradeTax>',
       `        <ram:CalculatedAmount>0.00</ram:CalculatedAmount>`,
       '        <ram:TypeCode>VAT</ram:TypeCode>',
-      '        <ram:ExemptionReason>Autoliquidation</ram:ExemptionReason>',
+      `        <ram:ExemptionReason>${x(STEUERFREI_GRUND)}</ram:ExemptionReason>`,
       `        <ram:BasisAmount>${zwei(s.netto)}</ram:BasisAmount>`,
       '        <ram:CategoryCode>AE</ram:CategoryCode>',
       '        <ram:RateApplicablePercent>0.00</ram:RateApplicablePercent>',

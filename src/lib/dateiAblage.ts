@@ -70,6 +70,9 @@ export function typVonEndung(name: string, gemeldet?: string | null): string {
     jpeg: 'image/jpeg',
     webp: 'image/webp',
     gif: 'image/gif',
+    // Was aus der iPhone-Kamera kommt, solange niemand die Einstellung ändert
+    heic: 'image/heic',
+    heif: 'image/heif',
     txt: 'text/plain',
     csv: 'text/csv',
   }
