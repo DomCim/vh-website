@@ -1,0 +1,29 @@
+# Was nicht ins Abbild gehört.
+#
+# Ohne diese Datei kopiert `COPY . .` im Dockerfile alles mit — auch ein
+# node_modules, das auf diesem Rechner entstanden ist. Das kostet einen Bau:
+# `pnpm install` im Abbild legt die Abhängigkeiten für Linux an, und der
+# anschließende `COPY . .` überschreibt sie mit den Windows-Pfaden von hier.
+# Der Bau bricht dann mit „Cannot find module next/dist/bin/next" ab — ein
+# Fehler, der nach einem kaputten Projekt aussieht und keiner ist.
+#
+# In der CI fällt das nicht auf: Dort holt `actions/checkout` einen frischen
+# Baum ohne node_modules. Es trifft nur den, der örtlich prüft — und genau das
+# verlangt CLAUDE.md seit 08/2026 für develop.
+node_modules
+.next
+.git
+.env
+.env.*
+media
+backups
+
+# Prüfergebnisse
+test-results
+playwright-report
+blob-report
+
+# Nur für diesen Rechner
+*.log
+zertifikate
+UEBERGABE-SITZUNG.md
