@@ -161,6 +161,33 @@ export async function POST(req: Request) {
       })
     }
 
+    /*
+     * Eine gestellte Rechnung wird über diesen Weg nicht mehr geändert.
+     *
+     * Sie liegt beim Kunden, steht in dessen Buchhaltung und trägt eine
+     * Nummer aus der laufenden Reihe. Wer sie danach noch anfasst, hat zwei
+     * verschiedene Papiere unter derselben Nummer — das eine beim Kunden, das
+     * andere hier. Korrigiert wird deshalb über ein Storno mit Gegenrechnung.
+     *
+     * Bisher stand das nur als Bitte im Formular („sollten jetzt nicht mehr
+     * geändert werden"), und die Felder blieben offen. Ein Appell ist kein
+     * Riegel: Ein einziger Klick auf „Speichern" schrieb die festgeschriebene
+     * Rechnung um, ohne Nachfrage und ohne Spur.
+     *
+     * Die engen Wege oben sind davon nicht betroffen — sie stehen vor dieser
+     * Stelle: `bezahlt` setzt nur das Zahldatum, `stornieren` legt die
+     * Gegenrechnung an, `verwerfen` trifft ohnehin nur Entwürfe. Genau das
+     * bleibt an einer gestellten Rechnung erlaubt.
+     */
+    if (b.id) {
+      const vorhanden = await payload
+        .findByID({ collection: 'outgoing-invoices', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (vorhanden?.invoiceNumber) {
+        return NextResponse.json({ error: 'schon-gestellt' }, { status: 409 })
+      }
+    }
+
     const daten = {
       status: b.status || 'entwurf',
       // Verknüpfter Partner — daran hängen Versand-Empfänger, Portal und

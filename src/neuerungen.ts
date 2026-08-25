@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 67,
+    datum: null,
+    titel: 'Die Rechnung entsteht aus dem Auftrag — und ist danach zu',
+    punkte: [
+      {
+        text: '**Die Rechnung lässt sich jetzt direkt aus dem Auftrag erstellen.** Am Auftrag stand längst alles, was auf die Rechnung gehört: Positionen, Mengen, Preise, Kundschaft. Einen Weg dorthin gab es trotzdem nur, wenn eine Bestellung aus dem Laden dahinterstand oder ein Zahlplan mit Anzahlung vereinbart war. Beim gewöhnlichen Auftrag blieb Abtippen — jede Position von Hand, mit der Gefahr, dass eine Zahl abweicht und es keiner merkt. In der Karte „Zahlung" am Auftrag steht nun der Knopf **Rechnung aus dem Auftrag erstellen**; er übernimmt die Positionen unverändert und legt einen Entwurf an. Verschickt wird weiter von Hand: Ein Klick soll eine Rechnung vorbereiten, nicht eine hinausschicken.',
+      },
+      {
+        text: '**Die Karte „Zahlung" verschwand ausgerechnet dann, wenn man sie brauchte.** Solange es zu einem Auftrag keine Rechnung gab, war sie gar nicht zu sehen — und damit war der Ort, an dem man eine anlegt, unsichtbar. Jetzt steht sie immer da: mit dem Auftragswert und dem Knopf, solange keine Rechnung existiert, und mit den Zahlen, sobald eine da ist. Der Knopf verschwindet erst, wenn wirklich eine Rechnung liegt — nicht schon, weil er gedrückt wurde. Scheitert es oder ist kein Netz da, ist er wieder da.',
+      },
+      {
+        text: '**Eine gestellte Rechnung lässt sich nicht mehr ändern.** Bisher stand dort nur die Bitte, Positionen und Beträge jetzt besser nicht mehr anzufassen — die Felder blieben offen, und ein Klick auf „Speichern" schrieb die Rechnung um. Das ist gefährlich: Sie liegt beim Kunden, steht in dessen Buchhaltung und trägt eine Nummer aus der laufenden Reihe. Wer sie danach ändert, hat zwei verschiedene Papiere unter derselben Nummer. Jetzt sind die Felder zu, „Speichern" ist weg, und der Server weist eine Änderung ohnehin ab. Für eine Korrektur gibt es **Stornieren** — das legt die Gegenrechnung mit Verweis auf das Original an.',
+      },
+      {
+        text: '**Was an einer gestellten Rechnung weiter geht:** als bezahlt markieren, verschicken, erinnern und mahnen, stornieren. Eine eingegangene Zahlung ändert die Rechnung nämlich nicht — sie stellt nur fest, dass das Geld da ist.',
+      },
+    ],
+  },
+  {
     nummer: 66,
     datum: null,
     titel: 'Die Listen sehen am Rechner wieder aus wie Listen',
