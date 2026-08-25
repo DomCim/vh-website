@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 69,
+    datum: null,
+    titel: 'Fotos zur Übergabe — und sie stehen auf dem Lieferschein',
+    punkte: [
+      {
+        text: '**Am Auftrag lassen sich jetzt Fotos zur Übergabe aufnehmen.** Unter „Zustand bei der Übergabe" ganz unten am Auftrag: Bemerkung eintippen, „Foto aufnehmen" antippen, die Kamera geht auf. Gedacht für den Moment vor dem Verladen — wie die Ware aussieht, wie sie verpackt ist, wie sie auf dem Fahrzeug steht.',
+      },
+      {
+        text: '**Der Grund ist ein Streit, der sonst nicht zu gewinnen ist.** Der Lieferschein sagt, **was** mitgefahren ist, nicht in welchem Zustand. Kommt eine Kante verbogen an, steht Aussage gegen Aussage: War sie das vorher, oder ist es beim Transport passiert? Ein Foto von der verpackten Ware beantwortet das — und zwar zu einem Zeitpunkt, an dem noch niemand streitet.',
+      },
+      {
+        text: '**Die Fotos stehen auf dem Lieferschein**, unter der Überschrift „Zustand bei der Übergabe", zwei je Reihe und mit der Bemerkung unter dem Bild. Damit sind sie auf demselben Blatt, das der Empfänger unterschreibt. Bis zu vier Fotos passen auf eine Seite; danach geht es auf der nächsten weiter — dort steht die Überschrift erneut, mit dem Zusatz „Fortsetzung", damit ein einzeln herausgezogenes Blatt sich selbst erklärt. Die Zeilen zum Unterschreiben stehen immer auf der Seite, auf der die Fotos enden, und nie allein auf einem leeren Blatt danach.',
+      },
+      {
+        text: '**Das Blatt bleibt trotzdem leicht.** Aufs Papier kommt eine kleine Fassung des Fotos, nicht das Kamerabild: Sechs Fotos machen den Lieferschein um wenige Kilobyte schwerer statt um zwanzig Megabyte. Sonst ließe er sich nicht mehr mailen. Fotos vom iPhone werden angenommen, auch im Format HEIC.',
+      },
+    ],
+  },
+  {
     nummer: 68,
     datum: null,
     titel: 'Die Rechnung entsteht aus dem Auftrag — und ist danach zu',

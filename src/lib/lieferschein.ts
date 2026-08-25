@@ -48,10 +48,38 @@ export type LieferscheinDaten = {
    * Zeitpunkt ausgeschrieben darunter.
    */
   abnahme?: { bild: Buffer; name?: string | null; ort?: string | null; datum: Date }
+  /**
+   * Fotos vom Zustand bei der Übergabe.
+   *
+   * Der Lieferschein sagt, **was** mitgefahren ist — nicht, in welchem
+   * Zustand. Genau darum wird gestritten, wenn eine Kante verbogen ankommt:
+   * War sie das vorher, oder ist es beim Transport passiert? Die Fotos
+   * beantworten das auf demselben Blatt, das der Empfänger unterschreibt.
+   *
+   * Als Pfad und nicht als Buffer: Es sind Dateien auf der Platte, und
+   * PDFKit liest sie selbst — so wandern nicht vier Fotos zugleich durch den
+   * Arbeitsspeicher.
+   */
+  uebergabefotos?: { pfad: string; bemerkung?: string | null }[]
 }
 
 const tag = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')
+
+/**
+ * Die unterste Kante, die noch bedruckt wird.
+ *
+ * Nicht geschätzt, sondern nachgerechnet: Die Fußzeile steht bei
+ * `Seitenhöhe − 38`, bei A4 also auf 804 Punkten (siehe `fusszeile` in
+ * `pdfkopf.ts`). Ein Sicherheitsabstand von zehn Punkten darüber, und die
+ * Zahl steht.
+ *
+ * Eine Zahl für alle, die sie brauchen — Fotoblock und Unterschriften. Beim
+ * ersten Anlauf standen hier zwei getrennte Werte, und weil einer davon 780
+ * war und damit fünfzehn Punkte zu vorsichtig, rutschten die beiden
+ * Unterschriftslinien auf ein sonst leeres Folgeblatt.
+ */
+const UNTERKANTE = 794
 
 export async function lieferscheinPdf(
   daten: LieferscheinDaten,
@@ -145,6 +173,121 @@ export async function lieferscheinPdf(
     doc.fillColor('#000')
   }
 
+  // ── Zustand bei der Übergabe ──────────────────────────────────────────────
+  if (daten.uebergabefotos?.length) {
+    /*
+     * Zwei Fotos je Reihe, und damit gut sichtbar.
+     *
+     * Vier winzige Bilder auf einer Zeile beweisen nichts — auf einem
+     * daumennagelgroßen Ausschnitt ist kein Kratzer zu erkennen, und um
+     * Kratzer geht es hier. Lieber zwei ordentliche und dafür eine Reihe
+     * mehr; das Blatt ist ohnehin für den Ordner und nicht für die Wand.
+     */
+    const SPALTEN = 2
+    const LUECKE = 12
+    const BREITE = (RECHTS - LINKS - LUECKE * (SPALTEN - 1)) / SPALTEN
+    const HOEHE = BREITE * 0.75
+    /** Wie hoch eine Reihe baut: Bild plus Zeile für die Bemerkung. */
+    const REIHE = HOEHE + 22
+
+    doc.moveDown(1.2)
+
+    /**
+     * Die Überschrift — sie steht über jeder Seite mit Fotos.
+     *
+     * Auf der Folgeseite wiederholt sie sich, weil das Blatt einzeln in die
+     * Hand genommen wird: Vier Fotos ohne eine Zeile darüber sind im Ordner
+     * ein Rätsel, und im Streitfall zählt, dass jemand ohne Vorwissen erkennt,
+     * was er da sieht.
+     */
+    const ueberschrift = (fortsetzung: boolean) => {
+      doc
+        .fontSize(10)
+        .fillColor('#000')
+        .text(`Zustand bei der Übergabe${fortsetzung ? ' (Fortsetzung)' : ''}`, LINKS, doc.y)
+      doc.moveDown(0.15)
+      doc
+        .fontSize(8)
+        .fillColor('#666')
+        .text(
+          `Aufgenommen vor dem Verladen am ${tag(daten.datum)} — sie dokumentieren Ware und Verpackung.`,
+          LINKS,
+          doc.y,
+          { width: RECHTS - LINKS },
+        )
+      doc.fillColor('#000')
+      doc.moveDown(0.5)
+    }
+
+    /*
+     * Eine einzelne Reihe am Blattende wird vermieden, mehr nicht.
+     *
+     * Der erste Anlauf verlangte Platz für zwei Reihen und schob den ganzen
+     * Block dadurch viel zu früh auf eine neue Seite: Bei sechs Fotos blieb
+     * die halbe erste Seite leer, und am Ende stand eine dritte Seite, auf der
+     * nur noch die beiden Unterschriftslinien hingen. Gefordert wird deshalb
+     * nur, was gegen den hässlichen Fall nötig ist — eine Reihe plus die
+     * Überschrift. Was danach nicht mehr passt, wandert ohnehin sauber weiter,
+     * und auf der Folgeseite steht die Überschrift erneut.
+     */
+    if (doc.y + 40 + REIHE > UNTERKANTE) doc.addPage()
+
+    ueberschrift(false)
+
+    for (let i = 0; i < daten.uebergabefotos.length; i += SPALTEN) {
+      const reihe = daten.uebergabefotos.slice(i, i + SPALTEN)
+
+      // Braucht die Reihe samt Bemerkung mehr Platz, als die Seite noch hat?
+      if (doc.y + REIHE > UNTERKANTE) {
+        doc.addPage()
+        ueberschrift(true)
+      }
+      const oben = doc.y
+
+      reihe.forEach((foto, spalte) => {
+        const x = LINKS + spalte * (BREITE + LUECKE)
+        try {
+          doc.image(foto.pfad, x, oben, { fit: [BREITE, HOEHE], align: 'center' })
+        } catch (err) {
+          /*
+           * Ein fehlendes Foto hält keinen Lieferschein auf — aber es soll im
+           * Protokoll stehen. Dieselbe Regel wie beim Artikelbild: Das Stück
+           * fährt los, ob das Bild ins PDF passte oder nicht.
+           */
+          console.warn('Übergabefoto nicht eingebettet:', err)
+          doc
+            .fontSize(8)
+            .fillColor('#999')
+            .text('(Foto nicht verfügbar)', x, oben + HOEHE / 2, { width: BREITE, align: 'center' })
+          doc.fillColor('#000')
+        }
+        if (foto.bemerkung) {
+          doc
+            .fontSize(8)
+            .fillColor('#444')
+            .text(foto.bemerkung, x, oben + HOEHE + 3, { width: BREITE })
+          doc.fillColor('#000')
+        }
+      })
+
+      /*
+       * Wo die nächste Reihe anfängt, entscheidet die längste Bemerkung.
+       *
+       * Gemessen und nicht geschätzt: „Ladung gesichert, Zurrgurte über der
+       * Palette" bricht in einer Spalte von 120 Punkten auf zwei Zeilen um.
+       * Mit einem festen Wert liefe die zweite Zeile ins nächste Bild.
+       */
+      doc.fontSize(8)
+      const textHoehe = Math.max(
+        0,
+        ...reihe.map((f) =>
+          f.bemerkung ? doc.heightOfString(f.bemerkung, { width: BREITE }) : 0,
+        ),
+      )
+      doc.y = oben + HOEHE + (textHoehe ? textHoehe + 6 : 0) + 8
+    }
+  }
+
   doc.moveDown(1)
   doc.fontSize(9).fillColor('#444')
   doc.text(
@@ -158,10 +301,34 @@ export async function lieferscheinPdf(
   doc.fillColor('#000')
 
   // ── Unterschriften ────────────────────────────────────────────────────────
-  doc.moveDown(4)
-  // Der Block bleibt beisammen: Eine Unterschrift, deren Linie auf der
-  // nächsten Seite steht, wäre kein Protokoll, sondern ein Rätsel.
-  if (doc.y > 660) doc.addPage()
+  /*
+   * Der Block bleibt beisammen: Eine Unterschrift, deren Linie auf der
+   * nächsten Seite steht, wäre kein Protokoll, sondern ein Rätsel.
+   *
+   * Wie viel Platz er braucht, hängt daran, ob unterschrieben wurde: Das Bild
+   * der Unterschrift sitzt 52 Punkte **über** der Linie, dazu die Zeilen
+   * darunter. Ohne Abnahme sind es nur Linie und Beschriftung.
+   *
+   * **Der Abstand davor gibt nach, bevor die Seite es tut.** Vier Leerzeilen
+   * sind auf einem halbleeren Blatt richtig — auf einem, das schon Fotos
+   * trägt, schoben sie genau die zwei Linien auf ein sonst leeres Folgeblatt.
+   * Also erst schauen, was noch da ist: Ist es knapp, rückt der Block näher
+   * heran, statt umzubrechen. Umgebrochen wird nur, wenn er auch dicht
+   * darüber nicht mehr passt.
+   *
+   * Der frühere Festwert von 660 galt für beide Fälle und war für den
+   * häufigeren zu streng.
+   */
+  /*
+   * Gemessen, nicht geschätzt: Die Linie sitzt auf `y`, die Beschriftung in
+   * 8 Punkt bei `y + 4`. Ohne Abnahme sind das rund zwanzig Punkte. Mit
+   * Abnahme kommt das Unterschriftsbild dazu, das 52 Punkte **über** der
+   * Linie beginnt — dann braucht der Block das Doppelte und etwas mehr.
+   */
+  const braucht = daten.abnahme ? 90 : 22
+  const luft = Math.max(0, Math.min(4, (UNTERKANTE - braucht - doc.y) / 12))
+  doc.moveDown(luft)
+  if (doc.y + braucht > UNTERKANTE) doc.addPage()
   const y = doc.y
   const breite = 210
 

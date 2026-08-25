@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 
-import { artikelBildPfad } from './artikelbild'
+import { artikelBildPfad, medienBildPfad } from './artikelbild'
 import { facturXml, type FacturXDaten } from './facturx'
 import { rechnungPdf } from './invoice'
 import { lieferscheinPdf } from './lieferschein'
@@ -560,6 +560,22 @@ export async function lieferscheinDokument(
       beistellung: await beigestelltesMaterial(payload, auftrag.material),
       hinweis: auftrag.notes,
       abnahme,
+      /*
+       * Die Übergabefotos — Zustand und Verpackung, bevor das Stück wegfährt.
+       *
+       * Ein Foto, dessen Datei fehlt oder das die Mediathek nur als WebP
+       * hergibt, fällt hier heraus statt das Dokument aufzuhalten
+       * (`medienBildPfad` gibt dann `null`). Der Lieferschein muss entstehen,
+       * auch wenn ein Bild kaputt ist.
+       */
+      uebergabefotos: (
+        await Promise.all(
+          (auftrag.uebergabefotos ?? []).map(async (f) => ({
+            pfad: await medienBildPfad(payload, f.bild),
+            bemerkung: f.bemerkung ?? null,
+          })),
+        )
+      ).flatMap((f) => (f.pfad ? [{ pfad: f.pfad, bemerkung: f.bemerkung }] : [])),
     },
     await firma(payload),
   )
