@@ -61,6 +61,7 @@ import * as migration_20260823_231711_versandzonen from './20260823_231711_versa
 import * as migration_20260823_235127_newsprodukte from './20260823_235127_newsprodukte';
 import * as migration_20260824_000625_rueckgabe from './20260824_000625_rueckgabe';
 import * as migration_20260825_075655_uebergabefotos from './20260825_075655_uebergabefotos';
+import * as migration_20260826_074038_datev_nummern from './20260826_074038_datev_nummern';
 
 export const migrations = [
   {
@@ -376,6 +377,11 @@ export const migrations = [
   {
     up: migration_20260825_075655_uebergabefotos.up,
     down: migration_20260825_075655_uebergabefotos.down,
-    name: '20260825_075655_uebergabefotos'
+    name: '20260825_075655_uebergabefotos',
+  },
+  {
+    up: migration_20260826_074038_datev_nummern.up,
+    down: migration_20260826_074038_datev_nummern.down,
+    name: '20260826_074038_datev_nummern'
   },
 ];

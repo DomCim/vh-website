@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { alsDatev, alsWindows1252, datevDateiname } from '../../../../../../lib/datev'
 import { payloadClient } from '../../../../../../lib/data'
 import { sendMail } from '../../../../../../lib/sendMail'
 import { getIntegrations } from '../../../../../../lib/settings'
@@ -98,6 +99,44 @@ export async function POST(req: Request) {
       : ''
     const mm = String(zeitraum.monat).padStart(2, '0')
 
+    /*
+     * Der Buchungsstapel fährt mit — wenn die zwei Nummern da sind.
+     *
+     * Er wiegt ein paar Kilobyte und erspart der Kanzlei das Abtippen: Die
+     * Buchungsliste kann dort nur ein Mensch lesen, diese Datei liest DATEV
+     * selbst ein. Beides mitzuschicken kostet nichts und lässt der Kanzlei
+     * die Wahl.
+     *
+     * Fehlen Berater- oder Mandantennummer, bleibt die Datei weg statt
+     * unbrauchbar mitzufahren — eine abgewiesene Importdatei schickt nur
+     * jemanden auf Fehlersuche. Im Büro steht dann auf /office/steuer, was zu
+     * tun ist.
+     */
+    const jetzt = new Date()
+    const zwei = (n: number) => String(n).padStart(2, '0')
+    const datevAnhang =
+      email.datevBerater && email.datevMandant
+        ? [
+            {
+              filename: datevDateiname(zeitraum.jahr, zeitraum.monat),
+              content: alsWindows1252(
+                alsDatev(
+                  paket.bericht,
+                  {
+                    berater: email.datevBerater,
+                    mandant: email.datevMandant,
+                    bezeichnung: `Buchungen ${mm}/${zeitraum.jahr}`,
+                  },
+                  `${jetzt.getFullYear()}${zwei(jetzt.getMonth() + 1)}${zwei(jetzt.getDate())}` +
+                    `${zwei(jetzt.getHours())}${zwei(jetzt.getMinutes())}${zwei(jetzt.getSeconds())}` +
+                    String(jetzt.getMilliseconds()).padStart(3, '0'),
+                ),
+              ),
+              contentType: 'text/csv',
+            },
+          ]
+        : []
+
     let rumpf: string
     let anhaenge: { filename: string; content: Buffer; contentType?: string }[]
     if (alsLink) {
@@ -115,12 +154,30 @@ export async function POST(req: Request) {
           content: Buffer.from(alsCsv(paket.bericht), 'utf8'),
           contentType: 'text/csv',
         },
+        ...datevAnhang,
       ]
     } else {
       rumpf =
         `<p>anbei die Unterlagen für ${monatsname}: die Buchungsliste als CSV, ` +
         `die Scans der Ausgabenbelege und die Ausgangsrechnungen als PDF.</p>`
-      anhaenge = [{ filename: paket.dateiname, content: paket.zip, contentType: 'application/zip' }]
+      anhaenge = [
+        { filename: paket.dateiname, content: paket.zip, contentType: 'application/zip' },
+        ...datevAnhang,
+      ]
+    }
+
+    /*
+     * Und die Kanzlei soll wissen, dass die Datei dabei ist.
+     *
+     * Ein Anhang, den niemand erwartet, wird übersehen — und dann tippt dort
+     * doch jemand ab, was gleich daneben zum Einlesen liegt.
+     */
+    if (datevAnhang.length) {
+      rumpf +=
+        `<p>Neu dabei: <strong>${datevAnhang[0]!.filename}</strong> — ein Buchungsstapel im ` +
+        `DATEV-Format (EXTF), der sich direkt importieren lässt. Die Konten sind nach SKR03 ` +
+        `vorbelegt; bitte prüfen Sie die Zuordnung einmal gegen Ihren Kontenrahmen und sagen Sie ` +
+        `uns Bescheid, wenn etwas anders laufen soll.</p>`
     }
 
     await sendMail(payload, {
