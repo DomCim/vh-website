@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import React, { useMemo, useState } from "react";
 
 import { type Preisaktion } from "../../lib/aktionspreis";
-import { bildStelle, stelleFuer } from "../../lib/artikelbilder";
+import { bildStelleAnfang, stelleFuer } from "../../lib/artikelbilder";
 import { formatPrice, type Locale } from "../../lib/i18n";
 import { Preis } from "../Preis";
 import { useCart } from "./CartProvider";
@@ -97,15 +97,17 @@ export function ProductDetail({
   /*
    * Womit die Galerie anfängt.
    *
-   * Die erste Farbe ist vorgewählt und farblich hervorgehoben — hat sie ein
-   * eigenes Bild, muss es von Anfang an stehen. Sonst widerspräche der
-   * hervorgehobene Farbfleck dem Bild schon beim Laden.
+   * Beim Laden ist die erste Variante hervorgehoben, und **ihr** Bild muss
+   * stehen — nicht das der ersten Farbe. Beim Dubbe-Stehtisch heißt Variante 0
+   * „Cortenstahl" (rostfarben), die erste Farbe „Anthrazitgrau" (dunkel);
+   * nahm die Farbe den Vortritt, stand oben der dunkle Tisch, während unten
+   * „Cortenstahl" hervorgehoben war (siehe `bildStelleAnfang`).
    *
    * Als Anfangswert und nicht als Effekt: Ein Effekt zeigte zuerst das falsche
    * Bild und tauschte es danach — auf dem Handy sichtbar als Zucken.
    */
   const [imageIndex, setImageIndex] = useState(() => {
-    const stelle = bildStelle(
+    const stelle = bildStelleAnfang(
       product.colorOptions[0],
       product.variants[0],
       product.images,
@@ -129,10 +131,15 @@ export function ProductDetail({
    * keines, bleibt das Bild stehen: Wer eine Größe wählt, will deswegen nicht
    * die Ansicht verlieren, die er sich gerade ausgesucht hat.
    *
-   * Bringen Farbe und Variante beide ein Bild mit, gewinnt die Farbe — sie ist
-   * die feinere Angabe (siehe `lib/artikelbilder.ts`). Beim Wechsel der
-   * Variante zählt deshalb erst die Farbe, und nur wenn die keines hat, das
-   * der Variante.
+   * Maßgeblich ist immer das, was **gerade angetippt** wurde — nicht eine
+   * feste Rangfolge zwischen Farbe und Variante. Wer auf „Cortenstahl" tippt,
+   * will den Cortenstahl sehen, auch wenn die erste Farbe ein eigenes Bild
+   * mitbringt; wer auf einen Farbpunkt tippt, will die Farbe sehen. Erst wenn
+   * die angetippte Angabe kein Bild hat, zählt die andere.
+   *
+   * Vorher gewann hier immer die Farbe, und beim Dubbe-Stehtisch führte das
+   * dazu, dass ein Klick auf „Cortenstahl" weiter den anthrazitfarbenen Tisch
+   * zeigte.
    */
   function bildZeigen(bildId?: number | string) {
     const stelle = stelleFuer(bildId ?? null, product.images);
@@ -143,14 +150,16 @@ export function ProductDetail({
 
   function farbeWaehlen(i: number) {
     setColorIndex(i);
-    bildZeigen(product.colorOptions[i]?.bildId);
+    // Die angetippte Farbe zuerst; hat sie kein Bild, hilft die Variante
+    if (bildZeigen(product.colorOptions[i]?.bildId)) return;
+    bildZeigen(product.variants[variantIndex]?.bildId);
   }
 
   function varianteWaehlen(i: number) {
     setVariantIndex(i);
-    // Die gewählte Farbe behält den Vortritt, wenn sie ein Bild hat
-    if (bildZeigen(product.colorOptions[colorIndex]?.bildId)) return;
-    bildZeigen(product.variants[i]?.bildId);
+    // Die angetippte Variante zuerst; hat sie kein Bild, hilft die Farbe
+    if (bildZeigen(product.variants[i]?.bildId)) return;
+    bildZeigen(product.colorOptions[colorIndex]?.bildId);
   }
 
   const canBuy =

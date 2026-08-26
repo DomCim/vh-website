@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import {
   bildKennung,
-  bildStelle,
+  bildStelleAnfang,
   type Galeriebild,
   galerieErgaenzen,
   stelleFuer,
@@ -59,19 +59,34 @@ test('Ein Bild, das die Galerie nicht führt, lässt sie ebenfalls stehen', () =
   expect(stelleFuer(99, BILDER)).toBeNull()
 })
 
-test('Die Farbe gewinnt gegen die Variante', () => {
-  const stelle = bildStelle({ bildId: 26 }, { bildId: 27 }, BILDER)
-  expect(stelle).toBe(1)
+/*
+ * Beim Laden entscheidet die Variante — und das ist die Umkehrung dessen, was
+ * hier zuerst stand.
+ *
+ * Der Fall aus dem Betrieb: Beim Dubbe-Stehtisch heißt Variante 0
+ * „Cortenstahl" (rostfarbener Tisch), die erste Farbe „Anthrazitgrau"
+ * (dunkler Tisch). Solange die Farbe den Vortritt hatte, stand oben der
+ * dunkle Tisch, während unten „Cortenstahl" hervorgehoben war. Sichtbar
+ * hervorgehoben ist beim Laden die Variante, also muss sie das Bild bestimmen.
+ */
+test('Beim Laden gewinnt die Variante gegen die Farbe', () => {
+  const stelle = bildStelleAnfang({ bildId: 26 }, { bildId: 27 }, BILDER)
+  expect(stelle).toBe(2)
 })
 
-test('Ohne Farbbild zählt das der Variante', () => {
-  expect(bildStelle({ bildId: undefined }, { bildId: 27 }, BILDER)).toBe(2)
-  expect(bildStelle(null, { bildId: 27 }, BILDER)).toBe(2)
+test('Ohne Variantenbild zählt beim Laden das der Farbe', () => {
+  expect(bildStelleAnfang({ bildId: 26 }, { bildId: undefined }, BILDER)).toBe(1)
+  expect(bildStelleAnfang({ bildId: 26 }, null, BILDER)).toBe(1)
 })
 
 test('Hat keine der beiden ein Bild, bleibt es offen', () => {
-  expect(bildStelle(null, null, BILDER)).toBeNull()
-  expect(bildStelle({}, {}, BILDER)).toBeNull()
+  expect(bildStelleAnfang(null, null, BILDER)).toBeNull()
+  expect(bildStelleAnfang({}, {}, BILDER)).toBeNull()
+})
+
+test('Ein Artikel ohne Varianten fängt bei der Farbe an', () => {
+  // Der Normalfall beim Herz: Varianten sind Größen ohne eigenes Bild
+  expect(bildStelleAnfang({ bildId: 26 }, undefined, BILDER)).toBe(1)
 })
 
 test('Ein Farbbild, das nicht oben steht, kommt hinten dazu', () => {

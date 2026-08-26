@@ -73,24 +73,36 @@ export function stelleFuer(
 export type MitBildId = { bildId?: number | string | null }
 
 /**
- * Welche Stelle die Galerie nach einer Auswahl zeigen soll.
+ * Womit die Galerie **anfängt**.
  *
- * Bringen Farbe und Variante beide ein Bild mit, **gewinnt die Farbe**: Sie
- * ist die feinere Angabe, und wer zuletzt auf einen Farbfleck getippt hat,
- * erwartet genau diese Farbe zu sehen. Die Variante entscheidet über Maß oder
- * Werkstoff, die Farbe über das, was man sieht.
+ * Beim Laden hat niemand etwas gewählt: Variante und Farbe stehen beide nur
+ * zufällig auf der ersten. Sichtbar hervorgehoben ist aber die Variante, weil
+ * sie als beschrifteter Knopf über den Farbpunkten steht — und **sie** muss
+ * daher das Bild bestimmen.
  *
- * `null` heißt: keine der beiden hat ein Bild, das die Galerie kennt — die
- * Anzeige bleibt, wo sie ist.
+ * Der Fall, der es gezeigt hat: Beim Dubbe-Stehtisch heißt Variante 0
+ * „Cortenstahl" und zeigt den rostfarbenen Tisch, die erste Farbe ist
+ * „Anthrazitgrau" und zeigt den dunklen. Solange die Farbe den Vortritt hatte,
+ * stand oben der anthrazitfarbene Tisch, während unten „Cortenstahl"
+ * hervorgehoben war. Zwei Angaben auf einer Seite, die sich widersprechen —
+ * und der Besucher glaubt die falsche.
+ *
+ * Beim Klick gilt dasselbe Prinzip, nur ohne feste Rangfolge: Dort bestimmt,
+ * was **gerade angetippt** wurde (siehe `ProductDetail.tsx`). Eine
+ * Rangfolge „Farbe gewinnt immer" gab es hier einmal — sie war die Ursache
+ * dieses Fehlers und ist bewusst wieder weg.
+ *
+ * `null` heißt: keine der beiden hat ein Bild, das die Galerie kennt — dann
+ * bleibt es beim ersten Bild.
  */
-export function bildStelle(
+export function bildStelleAnfang(
   farbe: MitBildId | null | undefined,
   variante: MitBildId | null | undefined,
   bilder: Pick<Galeriebild, 'id'>[],
 ): number | null {
-  const ausFarbe = stelleFuer(farbe?.bildId ?? null, bilder)
-  if (ausFarbe !== null) return ausFarbe
-  return stelleFuer(variante?.bildId ?? null, bilder)
+  const ausVariante = stelleFuer(variante?.bildId ?? null, bilder)
+  if (ausVariante !== null) return ausVariante
+  return stelleFuer(farbe?.bildId ?? null, bilder)
 }
 
 /**
