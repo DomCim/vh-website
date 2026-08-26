@@ -3591,6 +3591,30 @@ export interface Integration {
       }[]
     | null;
   /**
+   * Die Texte der automatischen Mails. Gepflegt wird das im Büro unter Einstellungen → Mail-Vorlagen — dort gibt es das Schreibfeld, die Platzhalter-Hilfe und eine Vorschau.
+   */
+  mailvorlagen?:
+    | {
+        /**
+         * Schlüssel aus lib/mailvorlagen.ts, z.B. „bestellbestaetigung".
+         */
+        art: string;
+        /**
+         * Platzhalter sind erlaubt. Leer = der eingebaute Betreff.
+         */
+        betreff?: string | null;
+        /**
+         * Der Rumpf als HTML, mit Platzhaltern wie {{bestellnummer}}. Briefkopf, Corten-Strich und Pflichtangaben kommen automatisch dazu.
+         */
+        inhalt?: string | null;
+        /**
+         * Aus: Die eingebaute Fassung geht hinaus. So lässt sich eine Änderung zurücknehmen, ohne den Text zu verlieren.
+         */
+        aktiv?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Zugang zur eigenen Statistik. Eingeschaltet wird die Zählung in den Website-Einstellungen unter „Besucherstatistik"; hier steht nur, wo sie läuft und womit das Büro sie abfragen darf.
    */
   plausible?: {
@@ -4032,6 +4056,15 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         titel?: T;
         inhalt?: T;
+        id?: T;
+      };
+  mailvorlagen?:
+    | T
+    | {
+        art?: T;
+        betreff?: T;
+        inhalt?: T;
+        aktiv?: T;
         id?: T;
       };
   plausible?:

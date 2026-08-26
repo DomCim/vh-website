@@ -220,6 +220,30 @@ export function ueberschrift(text: string, gross = false): string {
  *    bleibt der Schriftzug auch dort lesbar, wo Punkt 1 und 2 überfahren
  *    werden. Auf weißem Grund ist das Feld unsichtbar, auf dunklem wird es
  *    zur Karte.
+ *
+ * **Warum der Brief in einer Tabelle steht.** Vorher war es ein einzelnes
+ * `div` mit `max-width:560px` — ohne Innenabstand und ohne Zentrierung. Der
+ * Text klebte damit am linken Rand des Fensters: am Handy fing das erste
+ * Zeichen an der Glaskante an, am Rechner stand die halbe Seite leer daneben.
+ *
+ * Eine Tabelle ist hier kein Rückschritt, sondern der einzige Weg, der
+ * überall trägt: `margin:auto` zum Mittigstellen kennt Outlook auf Windows
+ * nicht, `max-width` ebenso wenig. Ein `align="center"` mit fester Breite
+ * versteht jedes Mailprogramm, das es gibt.
+ *
+ * Deshalb zwei Ebenen: außen die volle Breite im Papierton, innen der Brief
+ * mit 600 Punkten und Luft ringsum. 600 und nicht 560, weil das die Breite
+ * ist, auf die Mailvorlagen seit Jahren gebaut werden — Outlooks
+ * Vorschaufenster kommt dort noch ohne Querbalken aus.
+ *
+ * **Warum das Logo seine Breite zweimal bekommt.** Die Datei ist 2062 Pixel
+ * breit (`logo-mail.png`), und angegeben war nur `height:26px`. Ein Programm,
+ * das den Stil ignoriert — auf dem Handy sind das viele —, nimmt die
+ * Originalbreite: Der Schriftzug reichte von Kante zu Kante und sprengte den
+ * Brief. Deshalb `width`/`height` als **Attribut** für die alten Programme,
+ * derselbe Wert im Stil für die neuen, und `max-width:60%` für den Fall, dass
+ * doch etwas anderes gewinnt. 215 × 20 hält das Seitenverhältnis der Datei —
+ * ein verzerrter Schriftzug wäre auch nicht besser.
  */
 export function briefbogen(inhalt: string, company?: CompanyInfo, mitFuss = true): string {
   return `<!doctype html>
@@ -231,13 +255,25 @@ export function briefbogen(inhalt: string, company?: CompanyInfo, mitFuss = true
 <meta name="supported-color-schemes" content="light" />
 <style>:root{color-scheme:light;supported-color-schemes:light}</style>
 </head>
-<body style="margin:0;padding:0;background-color:#ffffff">
-<div style="font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;background-color:#ffffff;max-width:560px;font-size:14px;line-height:1.55">
-  <img src="cid:vh-logo" alt="Vincent Hellmann" style="height:26px;display:block;border:0" />
-  ${cortenStrich(true)}
-  ${inhalt}
-  ${mitFuss ? companyFooter(company) : ''}
-</div>
+<body style="margin:0;padding:0;background-color:#f4f2ef">
+<!-- Zwei Ebenen: aussen der Papierton, innen der Brief. Warum als Tabelle, steht am Code. -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f2ef;margin:0;padding:0">
+  <tr>
+    <td align="center" style="padding:24px 12px">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:10px">
+        <tr>
+          <td style="padding:28px 32px;font-family:Helvetica,Arial,sans-serif;color:#1d1d1f;font-size:14px;line-height:1.55">
+            <!-- Breite als Attribut UND im Stil, sonst reicht das Logo von Kante zu Kante -->
+            <img src="cid:vh-logo" alt="Vincent Hellmann" width="215" height="20" style="width:215px;height:20px;max-width:60%;display:block;border:0" />
+            ${cortenStrich(true)}
+            ${inhalt}
+            ${mitFuss ? companyFooter(company) : ''}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>`
 }
@@ -358,6 +394,43 @@ function downloadBlock(dateien: { name: string; url: string }[]): string {
         <p style="margin-top:8px;font-size:13px;color:#666">Die Links gelten ein Jahr. Danach stehen die Dateien in Ihrem Kundenkonto neu bereit.</p>`
 }
 
+/**
+ * Die Werte, mit denen eine Vorlage gefüllt wird.
+ *
+ * Jede Mail-Funktion gibt neben ihrem eingebauten HTML mit, was ihre
+ * Platzhalter bedeuten. Liegt in den Einstellungen eine Vorlage, setzt
+ * `sendMail` sie damit ein; liegt keine, bleibt es beim eingebauten Text
+ * (siehe lib/mailvorlagen.ts).
+ *
+ * **Warum die Werte hier entstehen und nicht beim Verschicken.** Nur hier ist
+ * bekannt, was ein Platzhalter heißt: `{{positionen}}` ist die fertige
+ * Tabelle, `{{anschrift}}` der Adressblock, `{{sendung}}` die Zeile mit der
+ * Sendungsnummer. Das noch einmal in `sendMail` zusammenzusetzen hieße, die
+ * halbe Datei dort zu wiederholen — und beim nächsten Feld liefe es
+ * auseinander.
+ *
+ * Der Gruß ist ein Block und keine feste Zeile: Wer ihn in der Vorlage
+ * weglässt, will ihn selbst schreiben.
+ */
+const gruss = (sprache: Locale = 'de') =>
+  `<p style="margin-top:24px">${WORTE[sprache].gruss}<br>Vincent Hellmann</p>`
+
+/** Werte, die jede Bestellmail kennt. */
+function bestellWerte(
+  order: OrderLike,
+  company?: CompanyInfo,
+  sprache: Locale = 'de',
+): Record<string, string> {
+  return {
+    kunde: order.customer?.name ?? '',
+    bestellnummer: order.orderNumber ?? '',
+    positionen: orderTable(order, company, sprache),
+    anschrift: addressBlock(order, sprache),
+    statuslink: statusLink(order, sprache),
+    gruss: gruss(sprache),
+  }
+}
+
 export function orderConfirmationEmail(
   order: OrderLike,
   company?: CompanyInfo,
@@ -379,9 +452,17 @@ export function orderConfirmationEmail(
         ${ueberschrift(order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse')}
         <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
       company,
     ),
+    vorlage: {
+      art: 'bestellbestaetigung',
+      werte: {
+        ...bestellWerte(order, company),
+        fertigungshinweis: fertigungsHinweis(order, craftNotice),
+        dateien: downloadBlock(dateien),
+      },
+    },
   }
 }
 
@@ -399,6 +480,15 @@ export function orderNotificationEmail(order: OrderLike, to: string, company?: C
       company,
       false,
     ),
+    vorlage: {
+      art: 'neueBestellung',
+      werte: {
+        bestellnummer: order.orderNumber ?? '',
+        kunde: `${order.customer?.name ?? ''} (${order.customer?.email ?? ''})`,
+        positionen: orderTable(order, company),
+        anschrift: addressBlock(order),
+      },
+    },
   }
 }
 
@@ -412,8 +502,15 @@ export function orderInProductionEmail(order: OrderLike, craftNotice?: string | 
         gefertigt. Sobald sie unterwegs ist, bekommen Sie die Sendungsnummer von uns.</p>
         ${fertigungsHinweis(order, craftNotice)}
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
     ),
+    vorlage: {
+      art: 'inFertigung',
+      werte: {
+        ...bestellWerte(order),
+        fertigungshinweis: fertigungsHinweis(order, craftNotice),
+      },
+    },
   }
 }
 
@@ -435,8 +532,14 @@ export function orderShippedEmail(order: OrderLike) {
         ${ueberschrift('Lieferadresse')}
         <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
     ),
+    vorlage: {
+      art: 'versandt',
+      // `sendung` ist Pflicht: Eine Versandmail ohne Sendungsnummer wäre ein
+      // Rückruf. Fehlt der Platzhalter in der Vorlage, weist sie der Server ab.
+      werte: { ...bestellWerte(order), sendung: tracking },
+    },
   }
 }
 
@@ -462,9 +565,18 @@ export function reviewRequestEmail(order: OrderLike, link: string, company?: Com
           <a href="${link}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">Ein paar Sätze schreiben</a>
         </p>
         <p style="color:#666;font-size:12px">Keine Lust? Dann ignorieren Sie diese Mail einfach — wir fragen kein zweites Mal.</p>
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
       company,
     ),
+    vorlage: {
+      art: 'bewertung',
+      werte: {
+        kunde: order.customer?.name ?? '',
+        bestellnummer: order.orderNumber ?? '',
+        knopf: `<p style="margin:24px 0"><a href="${link}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">Ein paar Sätze schreiben</a></p>`,
+        gruss: gruss(),
+      },
+    },
   }
 }
 
@@ -521,6 +633,15 @@ export function contactEmail(
       undefined,
       false,
     ),
+    vorlage: {
+      art: 'kontaktanfrage',
+      werte: {
+        name: data.name,
+        email: data.email,
+        telefon: data.phone ?? '',
+        nachricht: `<p style="white-space:pre-line;border-left:3px solid ${BRONZE};padding-left:12px">${data.message}</p>`,
+      },
+    },
   }
 }
 
@@ -649,6 +770,10 @@ export function rechnungskaufEmail(
         <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
       company,
     ),
+    vorlage: {
+      art: 'rechnungskauf',
+      werte: bestellWerte(order, company, sprache),
+    },
   }
 }
 
@@ -763,6 +888,10 @@ function auftragsMail(
   betreff: string,
   rumpf: string,
   firma?: CompanyInfo,
+  /* Welche Vorlage gilt — die drei Meldungen teilen diesen Rahmen, aber nicht
+     ihren Text: „in Fertigung" und „geliefert" sagen Verschiedenes. */
+  vorlagenArt?: string,
+  weitereWerte: Record<string, string> = {},
 ) {
   const w = AUFTRAGSWORTE[sprache]
   const bezeichnung = auftrag.title?.trim()
@@ -778,6 +907,20 @@ function auftragsMail(
         <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
       firma,
     ),
+    ...(vorlagenArt
+      ? {
+          vorlage: {
+            art: vorlagenArt,
+            werte: {
+              kunde: kundeName,
+              auftragsnummer: auftrag.jobNumber ?? '',
+              titel: bezeichnung ?? '',
+              gruss: `<p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
+              ...weitereWerte,
+            },
+          },
+        }
+      : {}),
   }
 }
 
@@ -800,6 +943,14 @@ export function auftragInFertigungEmail(
     w.inFertigung(auftrag.jobNumber ?? ''),
     `<p>${w.inFertigungText}</p>${termin}`,
     firma,
+    'auftragInFertigung',
+    {
+      fertigBis: auftrag.dueDate
+        ? new Date(auftrag.dueDate).toLocaleDateString(
+            sprache === 'de' ? 'de-DE' : sprache === 'fr' ? 'fr-FR' : 'en-GB',
+          )
+        : '',
+    },
   )
 }
 
@@ -818,6 +969,7 @@ export function auftragFertigEmail(
     w.fertig(auftrag.jobNumber ?? ''),
     `<p>${text}</p>`,
     firma,
+    'auftragFertig',
   )
 }
 
@@ -844,5 +996,7 @@ export function auftragGeliefertEmail(
     w.geliefert(auftrag.jobNumber ?? ''),
     `<p>${w.geliefertText}</p>${sendung}`,
     firma,
+    'auftragGeliefert',
+    { sendung },
   )
 }

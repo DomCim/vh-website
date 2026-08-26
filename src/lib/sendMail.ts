@@ -2,7 +2,8 @@ import nodemailer from 'nodemailer'
 import type { Payload, PayloadRequest } from 'payload'
 
 import { dkimFuer } from './dkim'
-import { logoAnhang } from './mail'
+import { briefbogen, logoAnhang } from './mail'
+import { einsetzen, gueltigeVorlage } from './mailvorlagen'
 import { benachrichtige } from './push'
 import { getIntegrations } from './settings'
 
@@ -26,6 +27,23 @@ export type MailInput = {
   attachments?: { filename: string; content: Buffer; contentType?: string }[]
   /** Wofür die Mail steht — landet im Ausgangsprotokoll */
   art?: MailArt
+  /**
+   * Welche Vorlage gilt, und womit sie gefüllt wird.
+   *
+   * Ist eine hinterlegt und vollständig, geht ihr Text hinaus statt `html`.
+   * Sonst bleibt es bei dem, was der Aufrufer mitgebracht hat — dem Stand aus
+   * dem Code.
+   *
+   * Warum hier und nicht in `lib/mail.ts`: Dort entstehen die Mails, ohne die
+   * Datenbank zu kennen — sechzehn Funktionen, alle rein und synchron. Das
+   * soll so bleiben. `sendMail` hat `payload` ohnehin und lädt die
+   * Einstellungen schon; eine Stelle für alle Mails statt sechzehn einzelne.
+   */
+  vorlage?: {
+    art: string
+    /** Was die Platzhalter einsetzen — Werte und fertige HTML-Blöcke */
+    werte: Record<string, string>
+  }
   /** Bezug für die Nachverfolgung */
   bezug?: { order?: number | string; inquiry?: number | string; job?: number | string }
   /*
@@ -92,14 +110,70 @@ async function protokollieren(
 }
 
 /**
+ * Die hinterlegte Vorlage einsetzen — oder die Mail lassen, wie sie kam.
+ *
+ * Der Rückfall ist der Normalfall und kein Ausnahmezustand: Solange niemand
+ * eine Vorlage geschrieben hat, gilt die Fassung aus dem Code, und der
+ * Betrieb merkt von der ganzen Einrichtung nichts.
+ *
+ * Abgewiesen wird eine Vorlage, in der ein Pflicht-Platzhalter fehlt (siehe
+ * `gueltigeVorlage`). Eine Versandmail ohne Sendungsnummer wäre kein Text,
+ * sondern ein Rückruf.
+ *
+ * Scheitert hier etwas — kaputte Einstellungen, unerwartete Daten —, geht die
+ * ursprüngliche Mail hinaus. Eine Bestellbestätigung, die wegen einer Vorlage
+ * gar nicht ankommt, wäre der schlechteste Tausch von allen.
+ */
+async function vorlageAnwenden(payload: Payload, mail: MailInput): Promise<MailInput> {
+  if (!mail.vorlage) return mail
+  try {
+    const { mailvorlagen } = (await payload.findGlobal({
+      slug: 'integrations',
+      depth: 0,
+    })) as { mailvorlagen?: { art?: string | null; aktiv?: boolean | null; inhalt?: string | null; betreff?: string | null }[] }
+
+    const inhalt = gueltigeVorlage(mail.vorlage.art, mailvorlagen, (text) =>
+      payload.logger.warn({ art: mail.vorlage?.art }, text),
+    )
+    if (!inhalt) return mail
+
+    const eintrag = (mailvorlagen ?? []).find((v) => v.art === mail.vorlage!.art)
+    const betreff = eintrag?.betreff?.trim()
+
+    return {
+      ...mail,
+      subject: betreff ? einsetzen(betreff, mail.vorlage.werte) : mail.subject,
+      // Der Briefbogen kommt immer von hier: Eine Vorlage soll den Text
+      // bestimmen, nicht die Pflichtangaben unter dem Strich.
+      html: briefbogen(einsetzen(inhalt, mail.vorlage.werte)),
+    }
+  } catch (err) {
+    payload.logger.warn({ err, art: mail.vorlage.art }, 'Mail-Vorlage nicht angewandt')
+    return mail
+  }
+}
+
+/**
  * Versendet E-Mails über die im Admin hinterlegten SMTP-Einstellungen
  * (Fallback: Umgebungsvariablen). Ohne SMTP-Server wird die Mail nur geloggt.
  *
  * Jeder Versuch steht danach im Ausgangsprotokoll — auch der gescheiterte.
  */
-export async function sendMail(payload: Payload, mail: MailInput): Promise<void> {
+export async function sendMail(payload: Payload, mailRoh: MailInput): Promise<void> {
   const { email } = await getIntegrations(payload)
   const absender = `${email.fromName} <${email.fromAddress}>`
+
+  /*
+   * Die Vorlage aus den Einstellungen, falls eine gilt.
+   *
+   * Sie ersetzt Betreff und Rumpf — Briefkopf, Corten-Strich und
+   * Pflichtangaben kommen weiter aus `briefbogen`, sonst könnte eine Vorlage
+   * die Angaben verlieren, die auf jede Geschäftsmail gehören.
+   *
+   * Vor der Weiche „kein SMTP-Server": Auch die nur protokollierte Mail soll
+   * zeigen, was hinausgegangen wäre.
+   */
+  const mail = await vorlageAnwenden(payload, mailRoh)
 
   if (!email.smtpHost) {
     payload.logger.info(

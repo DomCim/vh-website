@@ -62,6 +62,7 @@ import * as migration_20260823_235127_newsprodukte from './20260823_235127_newsp
 import * as migration_20260824_000625_rueckgabe from './20260824_000625_rueckgabe';
 import * as migration_20260825_075655_uebergabefotos from './20260825_075655_uebergabefotos';
 import * as migration_20260826_074038_datev_nummern from './20260826_074038_datev_nummern';
+import * as migration_20260826_105448_mailvorlagen from './20260826_105448_mailvorlagen';
 
 export const migrations = [
   {
@@ -382,6 +383,11 @@ export const migrations = [
   {
     up: migration_20260826_074038_datev_nummern.up,
     down: migration_20260826_074038_datev_nummern.down,
-    name: '20260826_074038_datev_nummern'
+    name: '20260826_074038_datev_nummern',
+  },
+  {
+    up: migration_20260826_105448_mailvorlagen.up,
+    down: migration_20260826_105448_mailvorlagen.down,
+    name: '20260826_105448_mailvorlagen'
   },
 ];

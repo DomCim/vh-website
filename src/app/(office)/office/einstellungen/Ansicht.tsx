@@ -9,6 +9,7 @@ import { BestandNeuHolen } from '../../../../components/office/BestandNeuHolen'
 import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwaltung'
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
 import { Haengengebliebenes } from '../../../../components/office/Haengengebliebenes'
+import { MailVorlagen } from '../../../../components/office/MailVorlagen'
 import { MeinKonto } from '../../../../components/office/MeinKonto'
 import { RollenVerwaltung } from '../../../../components/office/RollenVerwaltung'
 import { useRahmen } from '../../../../lib/buero/bestand'
@@ -31,6 +32,7 @@ const TEILE = [
   { schluessel: 'konto', label: 'Mein Konto' },
   { schluessel: 'benutzer', label: 'Benutzer' },
   { schluessel: 'betrieb', label: 'Betrieb' },
+  { schluessel: 'mailvorlagen', label: 'Mail-Vorlagen' },
   { schluessel: 'integrationen', label: 'Integrationen' },
 ] as const
 
@@ -79,6 +81,11 @@ export function EinstellungenAnsicht() {
       {teil === 'betrieb' && (
         <EinstellungenFormular bereich="betrieb" titel="Betrieb und Website" />
       )}
+
+      {/* Eigener Reiter und nicht in „Integrationen" mitten zwischen den
+          Zugangsdaten: Das sind Texte, die der Betrieb schreibt, und sie
+          brauchen ein Schreibfeld samt Vorschau — kein Formularfeld. */}
+      {teil === 'mailvorlagen' && <MailVorlagen />}
 
       {teil === 'integrationen' && (
         <EinstellungenFormular bereich="integrationen" titel="Integrationen" />

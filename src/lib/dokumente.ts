@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import { artikelBildPfad, medienBildPfad } from './artikelbild'
 import { facturXml, type FacturXDaten } from './facturx'
+import { euro } from './format'
 import { rechnungPdf } from './invoice'
 import { lieferscheinPdf } from './lieferschein'
 import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
@@ -26,6 +27,14 @@ export type Dokument = {
   an?: string | null
   /** Vorschlag für den Mailtext */
   text: string
+  /**
+   * Welche Mail-Vorlage für die Begleitmail gilt, und womit sie gefüllt wird.
+   *
+   * Die Reihenfolge beim Verschicken (siehe api/office/versand): Ein im Büro
+   * getippter Text hat Vorrang — wer die Mail von Hand schreibt, will genau
+   * die. Sonst die Vorlage aus den Einstellungen, sonst `text` von hier.
+   */
+  vorlage?: { art: string; werte: Record<string, string> }
   /**
    * Was nach dem erfolgreichen Verschicken festzuhalten ist — etwa die
    * verschickte Mahnstufe. Bewusst erst danach: Beim Ansehen im Browser wird
@@ -127,6 +136,14 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
       (a.validUntil ? `Es gilt bis zum ${datum(a.validUntil)}.\n` : '') +
       (a.productionTime ? `Fertigungszeit: ${a.productionTime}.\n` : '') +
       `\nFür Rückfragen stehe ich gern zur Verfügung.`,
+    vorlage: {
+      art: 'angebot',
+      werte: {
+        kunde: a.customerName ?? '',
+        nummer: `${a.quoteNumber ?? ''}${fassung}`,
+        gueltigBis: a.validUntil ? datum(a.validUntil) : '',
+      },
+    },
   }
 }
 
@@ -272,6 +289,15 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
       `anbei die Rechnung ${r.invoiceNumber} vom ${datum(r.issueDate)}.\n` +
       (r.dueDate ? `Zahlbar bis zum ${datum(r.dueDate)}.\n` : '') +
       `\nVielen Dank für die Zusammenarbeit.`,
+    vorlage: {
+      art: 'rechnung',
+      werte: {
+        kunde: r.customerName ?? '',
+        nummer: r.invoiceNumber ?? '',
+        betrag: euro(r.total ?? 0),
+        faelligAm: r.dueDate ? datum(r.dueDate) : '',
+      },
+    },
   }
 }
 
@@ -363,6 +389,26 @@ export async function mahnungDokument(
       (stufe === 1
         ? `\nSollte sich die Zahlung überschnitten haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.`
         : `\nBitte melden Sie sich, falls es Gründe für die Verzögerung gibt — eine Ratenzahlung lässt sich vereinbaren.`),
+    vorlage: {
+      art: 'mahnung',
+      werte: {
+        kunde: r.customerName ?? '',
+        // Eine Vorlage für alle drei Stufen: Der Titel kommt als Wert, damit
+        // nicht drei fast gleiche Texte gepflegt werden müssen.
+        stufe: titel,
+        nummer: r.invoiceNumber ?? '',
+        betrag: euro(r.total ?? 0),
+        faelligWar: r.dueDate ? datum(r.dueDate) : '',
+        tage: r.dueDate
+          ? String(
+              Math.max(
+                0,
+                Math.floor((Date.now() - new Date(r.dueDate).getTime()) / 86_400_000),
+              ),
+            )
+          : '',
+      },
+    },
     nachSenden: async () => {
       await payload.update({
         collection: 'outgoing-invoices',
@@ -471,6 +517,13 @@ export async function bestaetigungDokument(
       `vielen Dank für Ihren Auftrag. Anbei die Auftragsbestätigung ${auftrag.jobNumber}.\n` +
       (auftrag.dueDate ? `Voraussichtlich fertig: ${datum(auftrag.dueDate)}.\n` : '') +
       `\nJedes Stück entsteht einzeln in unserer Werkstatt — ich melde mich, sobald es losgeht.`,
+    vorlage: {
+      art: 'bestaetigung',
+      werte: {
+        kunde: auftrag.customerName ?? '',
+        auftragsnummer: auftrag.jobNumber ?? '',
+      },
+    },
   }
 }
 
@@ -589,6 +642,13 @@ export async function lieferscheinDokument(
       `Guten Tag${auftrag.customerName ? ` ${auftrag.customerName}` : ''},\n\n` +
       `anbei der Lieferschein zu ${auftrag.jobNumber}.\n` +
       `\nBitte prüfen Sie die Lieferung auf sichtbare Schäden und bestätigen Sie den Empfang.`,
+    vorlage: {
+      art: 'lieferschein',
+      werte: {
+        kunde: auftrag.customerName ?? '',
+        auftragsnummer: auftrag.jobNumber ?? '',
+      },
+    },
   }
 }
 
