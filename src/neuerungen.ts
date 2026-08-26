@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 70,
+    datum: null,
+    titel: 'Der Steuerberater bekommt die Buchungen jetzt so, wie DATEV sie liest',
+    punkte: [
+      {
+        text: '**Auf `/office/steuer` gibt es jetzt zwei Knöpfe.** „Buchungsstapel" liefert eine Datei im DATEV-Format, die die Kanzlei direkt einliest — mit Konten, Soll und Haben, Steuerschlüssel und Belegnummer. „Buchungen als CSV" bleibt daneben stehen: dieselben Zahlen, aber zum Ansehen. Weil meist monatlich gebucht wird, gibt es zusätzlich einen Knopf für den laufenden Monat allein.',
+      },
+      {
+        text: '**Der Sinn dahinter:** Die Tabelle konnte in der Kanzlei nur ein Mensch lesen. Eingelesen werden musste sie trotzdem, also hat dort jemand abgetippt, was hier längst sauber steht — und jede Zeile war eine Gelegenheit für einen Zahlendreher, den hinterher niemand findet. Es ist keine zusätzliche Arbeit, sondern dieselbe Arbeit in einem Format, das die Gegenseite versteht.',
+      },
+      {
+        text: '**Zwei Nummern müssen einmal eingetragen werden:** Berater- und Mandantennummer, beide von der Kanzlei, unter Einstellungen → Integrationen → E-Mail. Ohne sie nimmt DATEV keinen Stapel an, deshalb steht an der Stelle des Knopfs so lange der Hinweis, was fehlt — eine Datei anzubieten, die beim Import abgewiesen wird, schickt nur jemanden auf Fehlersuche.',
+      },
+      {
+        text: '**Das Monatspaket an die Kanzlei nimmt die Datei automatisch mit**, sobald die Nummern da sind, und sagt es in der Mail auch. Die Konten sind nach SKR03 vorbelegt — Material auf 3400, Fahrzeug auf 4530, Erlöse auf 8400 und so weiter. Das ist ein begründeter Vorschlag und keine Auskunft: Bitte einmal von der Kanzlei gegen ihren Kontenrahmen prüfen lassen. Die Beträge stimmen in jedem Fall, die Zuordnung hängt am Kontenrahmen.',
+      },
+      {
+        text: '**Dabei ist ein Rechenfehler aufgefallen, der Geld betraf.** Bei einer Rechnung mit Reverse Charge (Geschäftskunde im EU-Ausland, ohne Steuer) rechneten das Formular, das PDF und die elektronische Rechnung richtig ohne Steuer — der Wert, der in der Datenbank landete, aber nicht. Dort stand eine Umsatzsteuer, die auf keinem Papier auftauchte, und genau von dort nahm der Steuer-Export seine Zahlen. Eine Rechnung war betroffen: 298,50 € Steuer, die es nicht gab. Gerechnet wird das jetzt an einer Stelle, und der Fall ist durch zwei Prüfungen abgesichert. **Wichtig:** Bestehende Rechnungen behalten ihren alten Wert, bis sie einmal gespeichert werden — bei betroffenen Rechnungen bitte kurz Bescheid geben.',
+      },
+    ],
+  },
+  {
     nummer: 69,
     datum: null,
     titel: 'Fotos zur Übergabe — und sie stehen auf dem Lieferschein',

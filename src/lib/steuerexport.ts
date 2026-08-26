@@ -20,6 +20,18 @@ export type Steuerzeile = {
   partner: string
   bezeichnung: string
   kategorie: string
+  /**
+   * Der Schlüssel der Kategorie, nicht ihr Text — für die Kontenzuordnung.
+   *
+   * `kategorie` ist die Beschriftung fürs Auge („Material & Rohstoffe"), und
+   * die darf sich ändern, ohne dass eine Buchung auf einem anderen Konto
+   * landet. Der DATEV-Export schlägt deshalb hierüber nach (lib/datev.ts).
+   * Bei Einnahmen bleibt das Feld leer — dort gibt es keine Kategorie,
+   * sondern nur Erlöse.
+   */
+  schluessel?: string | null
+  /** Ist bei dieser Rechnung Reverse Charge im Spiel? Entscheidet das Erlöskonto. */
+  reverseCharge?: boolean
   netto: number | null
   steuersatz: number | null
   steuer: number | null
@@ -142,6 +154,7 @@ export async function steuerbericht(
       partner: r.customerName ?? '',
       bezeichnung: (r.items ?? []).map((p) => p.description).join(', '),
       kategorie: (r.reverseCharge ? 'Leistung (Reverse Charge)' : 'Leistung') + stornoHinweis,
+      reverseCharge: Boolean(r.reverseCharge),
       netto: r.subtotal ?? null,
       steuersatz: r.reverseCharge ? 0 : null,
       steuer: r.vatTotal ?? null,
@@ -160,6 +173,7 @@ export async function steuerbericht(
       partner: a.supplierName ?? '',
       bezeichnung: a.title ?? '',
       kategorie: KATEGORIE_TEXT[a.category] ?? a.category,
+      schluessel: a.category ?? null,
       netto: a.netAmount ?? null,
       steuersatz: a.vatRate ?? null,
       steuer: a.vatAmount ?? null,

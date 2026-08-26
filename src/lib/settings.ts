@@ -40,6 +40,10 @@ export type ResolvedIntegrations = {
     notificationEmail?: string
     /** Kanzlei-Adresse fürs Monatspaket aus dem Steuer-Export */
     steuerberaterEmail?: string
+    /** Beraternummer der Kanzlei — Pflicht im Kopf des DATEV-Stapels */
+    datevBerater?: number
+    /** Mandantennummer dieses Betriebs bei der Kanzlei */
+    datevMandant?: number
     /** Nur gesetzt, wenn alle drei Angaben da sind — halb signiert gibt es nicht */
     dkim?: DkimAngaben
   }
@@ -115,6 +119,9 @@ export async function getIntegrations(payload: Payload): Promise<ResolvedIntegra
       fromName: val(doc?.email?.fromName, process.env.EMAIL_FROM_NAME) || 'Vincent Hellmann',
       notificationEmail: val(doc?.email?.notificationEmail, process.env.NOTIFICATION_EMAIL),
       steuerberaterEmail: val(doc?.email?.steuerberaterEmail, process.env.STEUERBERATER_EMAIL),
+      // Zahlen, nicht Text: `Number('')` wäre 0, und 0 ist keine Beraternummer
+      datevBerater: Number(doc?.email?.datevBerater) || undefined,
+      datevMandant: Number(doc?.email?.datevMandant) || undefined,
       dkim,
     },
     mailboxes: ((doc?.mailboxes ?? []) as Record<string, any>[])

@@ -3490,6 +3490,14 @@ export interface Integration {
      * Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.
      */
     steuerberaterEmail?: string | null;
+    /**
+     * Von der Kanzlei erfragen (meist 5–7 Ziffern). Ohne Berater- und Mandantennummer weist DATEV den Import ab.
+     */
+    datevBerater?: number | null;
+    /**
+     * Die Nummer dieses Betriebs bei der Kanzlei (meist 1–5 Ziffern).
+     */
+    datevMandant?: number | null;
   };
   /**
    * Schlüssel für die Push-Benachrichtigungen der Büro-App. Wird beim ersten Mal automatisch erzeugt — hier ist nichts einzutragen. Wer den Schlüssel austauscht, muss alle Geräte neu anmelden.
@@ -3982,6 +3990,8 @@ export interface IntegrationsSelect<T extends boolean = true> {
             };
         notificationEmail?: T;
         steuerberaterEmail?: T;
+        datevBerater?: T;
+        datevMandant?: T;
       };
   push?:
     | T

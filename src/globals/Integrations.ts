@@ -146,6 +146,38 @@ export const Integrations: GlobalConfig = {
               'Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.',
           },
         },
+        {
+          /*
+           * Die zwei Nummern, ohne die kein DATEV-Import läuft.
+           *
+           * Sie stehen im Kopf der Datei und sagen DATEV, zu welcher Kanzlei
+           * und welchem Mandanten der Stapel gehört. Erfinden kann man sie
+           * nicht — beide kommen von der Kanzlei, und mit falschen Nummern
+           * wird der Import abgewiesen.
+           *
+           * Deshalb hier und nicht am Export-Knopf: Einmal eingetragen, gilt
+           * es für jede Datei. Solange sie fehlen, bleibt der DATEV-Knopf im
+           * Büro gesperrt und sagt, was zu tun ist — eine Datei, die
+           * unbrauchbar ist, gehört nicht zum Herunterladen angeboten.
+           */
+          name: 'datevBerater',
+          label: 'DATEV: Beraternummer',
+          type: 'number',
+          admin: {
+            description:
+              'Von der Kanzlei erfragen (meist 5–7 Ziffern). Ohne Berater- und Mandantennummer weist DATEV den Import ab.',
+            step: 1,
+          },
+        },
+        {
+          name: 'datevMandant',
+          label: 'DATEV: Mandantennummer',
+          type: 'number',
+          admin: {
+            description: 'Die Nummer dieses Betriebs bei der Kanzlei (meist 1–5 Ziffern).',
+            step: 1,
+          },
+        },
       ],
     },
     {
