@@ -429,6 +429,68 @@ export const Integrations: GlobalConfig = {
     },
     {
       /*
+       * Die automatischen Mails als Vorlagen.
+       *
+       * Bisher stand jeder Satz im Code: „Guten Tag" statt „Hallo" war ein
+       * Commit und ein Ausrollen. Für Text, den der Betrieb schreibt, ist das
+       * der falsche Weg.
+       *
+       * Bearbeitet wird im Büro unter Einstellungen → Mail-Vorlagen, mit
+       * demselben Schreibfeld wie im Postfach. Hier liegt nur, was
+       * gespeichert wird — welche Mails es gibt und welche Platzhalter sie
+       * kennen, steht in `lib/mailvorlagen.ts`.
+       *
+       * **Leer heißt: die eingebaute Fassung gilt.** Ein Betrieb, der nichts
+       * ändert, merkt von der Umstellung nichts — und wer eine Vorlage
+       * verwirft, bekommt wieder den Stand aus dem Code statt einer leeren
+       * Mail.
+       */
+      name: 'mailvorlagen',
+      label: 'Mail-Vorlagen',
+      labels: { singular: 'Mail-Vorlage', plural: 'Mail-Vorlagen' },
+      type: 'array',
+      admin: {
+        description:
+          'Die Texte der automatischen Mails. Gepflegt wird das im Büro unter Einstellungen → Mail-Vorlagen — dort gibt es das Schreibfeld, die Platzhalter-Hilfe und eine Vorschau.',
+      },
+      fields: [
+        {
+          name: 'art',
+          label: 'Welche Mail',
+          type: 'text',
+          required: true,
+          admin: { description: 'Schlüssel aus lib/mailvorlagen.ts, z.B. „bestellbestaetigung".' },
+        },
+        {
+          name: 'betreff',
+          label: 'Betreff',
+          type: 'text',
+          admin: { description: 'Platzhalter sind erlaubt. Leer = der eingebaute Betreff.' },
+        },
+        {
+          name: 'inhalt',
+          label: 'Text der Mail',
+          type: 'textarea',
+          custom: { gestaltet: true },
+          admin: {
+            description:
+              'Der Rumpf als HTML, mit Platzhaltern wie {{bestellnummer}}. Briefkopf, Corten-Strich und Pflichtangaben kommen automatisch dazu.',
+          },
+        },
+        {
+          name: 'aktiv',
+          label: 'Diese Vorlage benutzen',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Aus: Die eingebaute Fassung geht hinaus. So lässt sich eine Änderung zurücknehmen, ohne den Text zu verlieren.',
+          },
+        },
+      ],
+    },
+    {
+      /*
        * Die eigene Besucherzählung.
        *
        * Plausible läuft im internen Netz und ist von außen nicht erreichbar —

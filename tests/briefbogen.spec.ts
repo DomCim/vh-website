@@ -24,7 +24,7 @@ import { briefbogen } from '../src/lib/mail'
 
 const FIRMA = {
   legalName: 'Next-Concept SAS',
-  shareCapital: '1 000 €',
+  shareCapital: 1000,
   siret: '98755015900014',
   vatId: 'FR53987550159',
   rcsNumber: '987550159',

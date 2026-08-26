@@ -192,6 +192,25 @@ export async function POST(req: Request) {
         `<p>Diese Mail kommt direkt aus dem Bürosystem — Rückfragen bitte an die gewohnte Adresse.</p>`,
       attachments: anhaenge,
       art: 'sonstiges',
+      vorlage: {
+        art: 'monatspaket',
+        werte: {
+          monat: monatsname,
+          einnahmen: euro(paket.bericht.einnahmen),
+          ausgaben: euro(paket.bericht.ausgaben),
+          dateien: String(paket.dateien),
+          /*
+           * Was je Monat verschieden ist, kommt als ein Block — der ganze
+           * `rumpf` samt Scan-Hinweis.
+           *
+           * Er trägt den Abhol-Link bei großen Paketen und die Zeile zur
+           * DATEV-Datei; beides gehört in die Mail, auch wenn die Vorlage den
+           * Rest umschreibt. Deshalb ein Platzhalter statt drei: Wer ihn
+           * stehen lässt, verliert nichts Wichtiges.
+           */
+          hinweise: rumpf + hinweisScans,
+        },
+      },
     })
 
     return NextResponse.json({

@@ -26,6 +26,31 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 71,
+    datum: null,
+    titel: 'Die Texte der automatischen Mails stehen jetzt im Büro — und die Mails sehen besser aus',
+    punkte: [
+      {
+        text: '**Unter Einstellungen → Mail-Vorlagen lassen sich die automatischen Mails selbst schreiben.** Sechzehn Mails stehen dort zur Wahl: Bestellbestätigung, „in Fertigung", „versandt", die Bitte um eine Bewertung, Kauf auf Rechnung, die drei Auftragsmeldungen, die Begleitmails zu Rechnung, Mahnung, Lieferschein, Angebot und Auftragsbestätigung, dazu die internen Meldungen und das Monatspaket an die Kanzlei. Geschrieben wird mit demselben Schreibfeld wie im Postfach — fett, Farben, Listen, Links.',
+      },
+      {
+        text: '**Der Grund:** Bisher stand jeder Satz im Programm. „Guten Tag" statt „Hallo" hieß: melden, warten, ausrollen. Für Text, den der Betrieb selbst schreibt, ist das der falsche Weg.',
+      },
+      {
+        text: '**Platzhalter setzen die Daten ein.** `{{bestellnummer}}`, `{{kunde}}`, `{{betrag}}` und so weiter — beim Verschicken steht dort die echte Angabe. Auch ganze Blöcke gibt es: `{{positionen}}` ist die Tabelle mit den Beträgen, `{{anschrift}}` der Adressblock, `{{sendung}}` die Zeile mit der Sendungsnummer. Welche Platzhalter eine Mail kennt, steht unter dem Schreibfeld; Antippen kopiert sie. Eine Vorschau mit Beispieldaten zeigt, wie es beim Empfänger ankommt.',
+      },
+      {
+        text: '**Wer nichts ändert, merkt nichts.** Solange keine Vorlage hinterlegt ist, geht die Mail wie bisher hinaus. Und wer eine Änderung zurücknehmen will, nimmt den Haken „Diese Vorlage benutzen" heraus — der Text bleibt liegen, falls er doch wieder gebraucht wird.',
+      },
+      {
+        text: '**Ein Riegel ist eingebaut.** Manche Platzhalter darf man nicht weglassen: eine Versandmail ohne Sendungsnummer oder eine Rechnungsmail ohne Betrag wäre kein Text, sondern ein Rückruf. Fehlt so ein Platzhalter, sagt es das Büro schon beim Schreiben — und die Mail geht in der eingebauten Fassung hinaus statt unvollständig.',
+      },
+      {
+        text: '**Die Mails sehen außerdem besser aus.** Der Text klebte am linken Rand: am Handy fing das erste Zeichen an der Glaskante an, am Rechner stand die halbe Seite leer daneben. Und das Logo reichte von Kante zu Kante, weil nur seine Höhe angegeben war. Jetzt steht der Brief als weiße Karte mit Luft ringsum, mittig, und das Logo hat seine richtige Größe.',
+      },
+    ],
+  },
+  {
     nummer: 70,
     datum: null,
     titel: 'Der Steuerberater bekommt die Buchungen jetzt so, wie DATEV sie liest',

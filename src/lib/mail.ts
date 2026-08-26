@@ -394,6 +394,43 @@ function downloadBlock(dateien: { name: string; url: string }[]): string {
         <p style="margin-top:8px;font-size:13px;color:#666">Die Links gelten ein Jahr. Danach stehen die Dateien in Ihrem Kundenkonto neu bereit.</p>`
 }
 
+/**
+ * Die Werte, mit denen eine Vorlage gefüllt wird.
+ *
+ * Jede Mail-Funktion gibt neben ihrem eingebauten HTML mit, was ihre
+ * Platzhalter bedeuten. Liegt in den Einstellungen eine Vorlage, setzt
+ * `sendMail` sie damit ein; liegt keine, bleibt es beim eingebauten Text
+ * (siehe lib/mailvorlagen.ts).
+ *
+ * **Warum die Werte hier entstehen und nicht beim Verschicken.** Nur hier ist
+ * bekannt, was ein Platzhalter heißt: `{{positionen}}` ist die fertige
+ * Tabelle, `{{anschrift}}` der Adressblock, `{{sendung}}` die Zeile mit der
+ * Sendungsnummer. Das noch einmal in `sendMail` zusammenzusetzen hieße, die
+ * halbe Datei dort zu wiederholen — und beim nächsten Feld liefe es
+ * auseinander.
+ *
+ * Der Gruß ist ein Block und keine feste Zeile: Wer ihn in der Vorlage
+ * weglässt, will ihn selbst schreiben.
+ */
+const gruss = (sprache: Locale = 'de') =>
+  `<p style="margin-top:24px">${WORTE[sprache].gruss}<br>Vincent Hellmann</p>`
+
+/** Werte, die jede Bestellmail kennt. */
+function bestellWerte(
+  order: OrderLike,
+  company?: CompanyInfo,
+  sprache: Locale = 'de',
+): Record<string, string> {
+  return {
+    kunde: order.customer?.name ?? '',
+    bestellnummer: order.orderNumber ?? '',
+    positionen: orderTable(order, company, sprache),
+    anschrift: addressBlock(order, sprache),
+    statuslink: statusLink(order, sprache),
+    gruss: gruss(sprache),
+  }
+}
+
 export function orderConfirmationEmail(
   order: OrderLike,
   company?: CompanyInfo,
@@ -415,9 +452,17 @@ export function orderConfirmationEmail(
         ${ueberschrift(order.deliveryMethod === 'pickup' ? 'Abholung' : 'Lieferadresse')}
         <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
       company,
     ),
+    vorlage: {
+      art: 'bestellbestaetigung',
+      werte: {
+        ...bestellWerte(order, company),
+        fertigungshinweis: fertigungsHinweis(order, craftNotice),
+        dateien: downloadBlock(dateien),
+      },
+    },
   }
 }
 
@@ -435,6 +480,15 @@ export function orderNotificationEmail(order: OrderLike, to: string, company?: C
       company,
       false,
     ),
+    vorlage: {
+      art: 'neueBestellung',
+      werte: {
+        bestellnummer: order.orderNumber ?? '',
+        kunde: `${order.customer?.name ?? ''} (${order.customer?.email ?? ''})`,
+        positionen: orderTable(order, company),
+        anschrift: addressBlock(order),
+      },
+    },
   }
 }
 
@@ -448,8 +502,15 @@ export function orderInProductionEmail(order: OrderLike, craftNotice?: string | 
         gefertigt. Sobald sie unterwegs ist, bekommen Sie die Sendungsnummer von uns.</p>
         ${fertigungsHinweis(order, craftNotice)}
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
     ),
+    vorlage: {
+      art: 'inFertigung',
+      werte: {
+        ...bestellWerte(order),
+        fertigungshinweis: fertigungsHinweis(order, craftNotice),
+      },
+    },
   }
 }
 
@@ -471,8 +532,14 @@ export function orderShippedEmail(order: OrderLike) {
         ${ueberschrift('Lieferadresse')}
         <p>${addressBlock(order)}</p>
         ${statusLink(order)}
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
     ),
+    vorlage: {
+      art: 'versandt',
+      // `sendung` ist Pflicht: Eine Versandmail ohne Sendungsnummer wäre ein
+      // Rückruf. Fehlt der Platzhalter in der Vorlage, weist sie der Server ab.
+      werte: { ...bestellWerte(order), sendung: tracking },
+    },
   }
 }
 
@@ -498,9 +565,18 @@ export function reviewRequestEmail(order: OrderLike, link: string, company?: Com
           <a href="${link}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">Ein paar Sätze schreiben</a>
         </p>
         <p style="color:#666;font-size:12px">Keine Lust? Dann ignorieren Sie diese Mail einfach — wir fragen kein zweites Mal.</p>
-        <p style="margin-top:24px">Mit freundlichen Grüßen<br>Vincent Hellmann</p>`,
+        ${gruss()}`,
       company,
     ),
+    vorlage: {
+      art: 'bewertung',
+      werte: {
+        kunde: order.customer?.name ?? '',
+        bestellnummer: order.orderNumber ?? '',
+        knopf: `<p style="margin:24px 0"><a href="${link}" style="background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 22px;display:inline-block;font-size:13px">Ein paar Sätze schreiben</a></p>`,
+        gruss: gruss(),
+      },
+    },
   }
 }
 
@@ -557,6 +633,15 @@ export function contactEmail(
       undefined,
       false,
     ),
+    vorlage: {
+      art: 'kontaktanfrage',
+      werte: {
+        name: data.name,
+        email: data.email,
+        telefon: data.phone ?? '',
+        nachricht: `<p style="white-space:pre-line;border-left:3px solid ${BRONZE};padding-left:12px">${data.message}</p>`,
+      },
+    },
   }
 }
 
@@ -685,6 +770,10 @@ export function rechnungskaufEmail(
         <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
       company,
     ),
+    vorlage: {
+      art: 'rechnungskauf',
+      werte: bestellWerte(order, company, sprache),
+    },
   }
 }
 
@@ -799,6 +888,10 @@ function auftragsMail(
   betreff: string,
   rumpf: string,
   firma?: CompanyInfo,
+  /* Welche Vorlage gilt — die drei Meldungen teilen diesen Rahmen, aber nicht
+     ihren Text: „in Fertigung" und „geliefert" sagen Verschiedenes. */
+  vorlagenArt?: string,
+  weitereWerte: Record<string, string> = {},
 ) {
   const w = AUFTRAGSWORTE[sprache]
   const bezeichnung = auftrag.title?.trim()
@@ -814,6 +907,20 @@ function auftragsMail(
         <p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
       firma,
     ),
+    ...(vorlagenArt
+      ? {
+          vorlage: {
+            art: vorlagenArt,
+            werte: {
+              kunde: kundeName,
+              auftragsnummer: auftrag.jobNumber ?? '',
+              titel: bezeichnung ?? '',
+              gruss: `<p style="margin-top:24px">${w.gruss}<br>Vincent Hellmann</p>`,
+              ...weitereWerte,
+            },
+          },
+        }
+      : {}),
   }
 }
 
@@ -836,6 +943,14 @@ export function auftragInFertigungEmail(
     w.inFertigung(auftrag.jobNumber ?? ''),
     `<p>${w.inFertigungText}</p>${termin}`,
     firma,
+    'auftragInFertigung',
+    {
+      fertigBis: auftrag.dueDate
+        ? new Date(auftrag.dueDate).toLocaleDateString(
+            sprache === 'de' ? 'de-DE' : sprache === 'fr' ? 'fr-FR' : 'en-GB',
+          )
+        : '',
+    },
   )
 }
 
@@ -854,6 +969,7 @@ export function auftragFertigEmail(
     w.fertig(auftrag.jobNumber ?? ''),
     `<p>${text}</p>`,
     firma,
+    'auftragFertig',
   )
 }
 
@@ -880,5 +996,7 @@ export function auftragGeliefertEmail(
     w.geliefert(auftrag.jobNumber ?? ''),
     `<p>${w.geliefertText}</p>${sendung}`,
     firma,
+    'auftragGeliefert',
+    { sendung },
   )
 }
