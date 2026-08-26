@@ -17,6 +17,22 @@ export type Posten = {
 export type RabattEingabe = {
   discountKind?: string | null
   discountValue?: number | null
+  /**
+   * Reverse Charge — dann fällt keine Steuer an, egal was an den Positionen steht.
+   *
+   * Das gehört hierher und nicht in die Anzeige, und der Grund ist ein Fehler,
+   * der genau daran lag: Formular, PDF und Factur-X rechneten bei Reverse
+   * Charge längst mit null Steuer, der Haken am Datenmodell aber nicht — er
+   * rief diese Funktion ohne den Hinweis. In der Datenbank stand deshalb eine
+   * Steuer, die auf keinem Papier auftauchte, und der Steuer-Export nahm sie
+   * von dort. Aufgefallen beim Bauen des DATEV-Exports: Eine Rechnung mit
+   * `reverseCharge` trug 298,50 € Umsatzsteuer.
+   *
+   * Der Steuersatz bleibt trotzdem an den Positionen stehen, statt auf null
+   * gesetzt zu werden: Wird der Haken wieder entfernt — falscher Kunde,
+   * falsches Land —, sind die Sätze noch da und die Rechnung stimmt wieder.
+   */
+  reverseCharge?: boolean | null
 }
 
 export type Betraege = {
@@ -64,7 +80,9 @@ export function betraege(posten: Posten[], rabatt: RabattEingabe = {}): Betraege
   nachlass = vorzeichen * Math.min(Math.max(nachlass * vorzeichen, 0), Math.abs(subtotal))
 
   const anteil = subtotal !== 0 ? (subtotal - nachlass) / subtotal : 1
-  const vatTotal = zeilen.reduce((s, z) => s + z.netto * anteil * (z.satz / 100), 0)
+  const vatTotal = rabatt.reverseCharge
+    ? 0
+    : zeilen.reduce((s, z) => s + z.netto * anteil * (z.satz / 100), 0)
   const netTotal = subtotal - nachlass
 
   return {

@@ -105,4 +105,40 @@ test.describe('Negative Beträge — die Stornorechnung', () => {
     expect(storno.discountTotal).toBe(-100)
     expect(storno.netTotal).toBe(0)
   })
+
+  /**
+   * Reverse Charge: keine Steuer, obwohl an den Positionen ein Satz steht.
+   *
+   * Der Fall, an dem es auseinanderlief: Formular, PDF und Factur-X rechneten
+   * die Steuer längst heraus, der Haken am Datenmodell nicht — er rief
+   * `betraege` ohne den Hinweis. In der Datenbank stand deshalb eine Steuer,
+   * die auf keinem Papier auftauchte, und der Steuer-Export nahm sie von dort
+   * mit zum Steuerberater. Aufgefallen beim Bauen des DATEV-Exports.
+   *
+   * Der Steuersatz bleibt an den Positionen stehen: Wird der Haken wieder
+   * entfernt, stimmt die Rechnung ohne Nacharbeit.
+   */
+  test('bei Reverse Charge fällt keine Steuer an', () => {
+    const posten = [{ quantity: 1, unitPrice: 1658.33, vatRate: 20 }]
+    const normal = betraege(posten)
+    const rc = betraege(posten, { reverseCharge: true })
+
+    expect(normal.vatTotal).toBeGreaterThan(0)
+    expect(rc.vatTotal).toBe(0)
+    // Netto bleibt gleich, und der Bruttobetrag ist genau das Netto
+    expect(rc.netTotal).toBe(normal.netTotal)
+    expect(rc.total).toBe(rc.netTotal)
+  })
+
+  test('Reverse Charge und Nachlass zusammen', () => {
+    const r = betraege([{ quantity: 1, unitPrice: 1000, vatRate: 20 }], {
+      discountKind: 'prozent',
+      discountValue: 10,
+      reverseCharge: true,
+    })
+    expect(r.discountTotal).toBe(100)
+    expect(r.netTotal).toBe(900)
+    expect(r.vatTotal).toBe(0)
+    expect(r.total).toBe(900)
+  })
 })

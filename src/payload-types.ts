@@ -266,6 +266,10 @@ export interface Product {
     | {
         title: string;
         price: number;
+        /**
+         * Nur nötig, wenn die Variante anders aussieht (z.B. anderer Werkstoff). Leer = das Bild bleibt, wie es ist.
+         */
+        image?: (number | null) | Media;
         billOfMaterials?:
           | {
               item: number | InventoryItem;
@@ -319,6 +323,10 @@ export interface Product {
          * z.B. #b32428 — für die Farbvorschau
          */
         hex?: string | null;
+        /**
+         * Wird gezeigt, sobald die Farbe gewählt wird. Leer = das Bild bleibt, wie es ist.
+         */
+        image?: (number | null) | Media;
         id?: string | null;
       }[]
     | null;
@@ -2058,6 +2066,7 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         title?: T;
         price?: T;
+        image?: T;
         billOfMaterials?:
           | T
           | {
@@ -2096,6 +2105,7 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         name?: T;
         hex?: T;
+        image?: T;
         id?: T;
       };
   billOfMaterials?:
@@ -3490,6 +3500,14 @@ export interface Integration {
      * Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.
      */
     steuerberaterEmail?: string | null;
+    /**
+     * Von der Kanzlei erfragen (meist 5–7 Ziffern). Ohne Berater- und Mandantennummer weist DATEV den Import ab.
+     */
+    datevBerater?: number | null;
+    /**
+     * Die Nummer dieses Betriebs bei der Kanzlei (meist 1–5 Ziffern).
+     */
+    datevMandant?: number | null;
   };
   /**
    * Schlüssel für die Push-Benachrichtigungen der Büro-App. Wird beim ersten Mal automatisch erzeugt — hier ist nichts einzutragen. Wer den Schlüssel austauscht, muss alle Geräte neu anmelden.
@@ -3579,6 +3597,30 @@ export interface Integration {
          * Der Text, der eingefügt wird — mit Gestaltung, wenn gewünscht.
          */
         inhalt: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Die Texte der automatischen Mails. Gepflegt wird das im Büro unter Einstellungen → Mail-Vorlagen — dort gibt es das Schreibfeld, die Platzhalter-Hilfe und eine Vorschau.
+   */
+  mailvorlagen?:
+    | {
+        /**
+         * Schlüssel aus lib/mailvorlagen.ts, z.B. „bestellbestaetigung".
+         */
+        art: string;
+        /**
+         * Platzhalter sind erlaubt. Leer = der eingebaute Betreff.
+         */
+        betreff?: string | null;
+        /**
+         * Der Rumpf als HTML, mit Platzhaltern wie {{bestellnummer}}. Briefkopf, Corten-Strich und Pflichtangaben kommen automatisch dazu.
+         */
+        inhalt?: string | null;
+        /**
+         * Aus: Die eingebaute Fassung geht hinaus. So lässt sich eine Änderung zurücknehmen, ohne den Text zu verlieren.
+         */
+        aktiv?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -3982,6 +4024,8 @@ export interface IntegrationsSelect<T extends boolean = true> {
             };
         notificationEmail?: T;
         steuerberaterEmail?: T;
+        datevBerater?: T;
+        datevMandant?: T;
       };
   push?:
     | T
@@ -4022,6 +4066,15 @@ export interface IntegrationsSelect<T extends boolean = true> {
     | {
         titel?: T;
         inhalt?: T;
+        id?: T;
+      };
+  mailvorlagen?:
+    | T
+    | {
+        art?: T;
+        betreff?: T;
+        inhalt?: T;
+        aktiv?: T;
         id?: T;
       };
   plausible?:

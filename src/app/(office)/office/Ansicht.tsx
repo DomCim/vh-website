@@ -7,7 +7,11 @@ import { useBestand, useRahmen } from '../../../lib/buero/bestand'
 import { useDarf } from '../../../lib/buero/rechte'
 import { datum, euro } from '../../../lib/format'
 import { istFaellig, istKnapp, istNeueAnfrage, istUeberfaellig, istZuZahlen } from '../../../lib/zuErledigen'
-import { istOffenerPosten, zaehltZumUmsatz } from '../../../lib/zahlungsstand'
+import {
+  bestellungZaehltZumUmsatz,
+  istOffenerPosten,
+  zaehltZumUmsatz,
+} from '../../../lib/zahlungsstand'
 
 /**
  * Übersicht: was dieses Jahr rein- und rausging, was offen ist und woran
@@ -20,7 +24,13 @@ import { istOffenerPosten, zaehltZumUmsatz } from '../../../lib/zahlungsstand'
 
 const runden = (n: number) => Math.round(n * 100) / 100
 
-type Bestellung = { total?: number | null; status?: string | null; createdAt?: string | null }
+type Bestellung = {
+  total?: number | null
+  status?: string | null
+  createdAt?: string | null
+  /** Entscheidet, ob die Bestellung selbst der Beleg ist oder ihre Rechnung */
+  paymentProvider?: string | null
+}
 type Rechnung = {
   id: number | string
   total?: number | null
@@ -71,8 +81,17 @@ export function UebersichtAnsicht() {
   const imJahr = (wert: string | null | undefined) => (wert ?? '').startsWith(String(jahr))
 
   const zahlen = useMemo(() => {
+    /*
+     * Ein Kauf auf Rechnung zählt hier nicht mit — er steht als Rechnung in
+     * `projektUmsatz`. Sonst steht derselbe Umsatz zweimal in der Kachel:
+     * einmal als Bestellung, einmal als die Rechnung, die daraus entstand.
+     * Siehe `bestellungZaehltZumUmsatz` in lib/zahlungsstand.ts.
+     */
     const shop = bestellungen.filter(
-      (o) => ['paid', 'inProduction', 'shipped'].includes(o.status ?? '') && imJahr(o.createdAt),
+      (o) =>
+        ['paid', 'inProduction', 'shipped'].includes(o.status ?? '') &&
+        bestellungZaehltZumUmsatz(o) &&
+        imJahr(o.createdAt),
     )
     const gestellt = rechnungen.filter((r) => zaehltZumUmsatz(r) && imJahr(r.issueDate))
     const ausgaben = belege.filter((a) => a.deductible !== false && imJahr(a.invoiceDate))

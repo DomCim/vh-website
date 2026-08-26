@@ -203,6 +203,13 @@ export const OutgoingInvoices: CollectionConfig = {
         const summen = betraege(data.items ?? [], {
           discountKind: data.discountKind,
           discountValue: data.discountValue,
+          /*
+           * Reverse Charge muss mit, sonst steht hier eine Steuer, die auf
+           * keinem Papier auftaucht: PDF und Factur-X rechnen sie längst
+           * heraus, dieser Haken tat es nicht — und der Steuer-Export nimmt
+           * seine Zahlen von hier.
+           */
+          reverseCharge: data.reverseCharge ?? originalDoc?.reverseCharge,
         })
         data.subtotal = summen.subtotal
         data.discountTotal = summen.discountTotal

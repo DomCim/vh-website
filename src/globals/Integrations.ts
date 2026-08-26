@@ -146,6 +146,38 @@ export const Integrations: GlobalConfig = {
               'Empfängt auf Knopfdruck das Monatspaket aus dem Steuer-Export: Buchungsliste, Beleg-Scans und Rechnungs-PDFs des Monats.',
           },
         },
+        {
+          /*
+           * Die zwei Nummern, ohne die kein DATEV-Import läuft.
+           *
+           * Sie stehen im Kopf der Datei und sagen DATEV, zu welcher Kanzlei
+           * und welchem Mandanten der Stapel gehört. Erfinden kann man sie
+           * nicht — beide kommen von der Kanzlei, und mit falschen Nummern
+           * wird der Import abgewiesen.
+           *
+           * Deshalb hier und nicht am Export-Knopf: Einmal eingetragen, gilt
+           * es für jede Datei. Solange sie fehlen, bleibt der DATEV-Knopf im
+           * Büro gesperrt und sagt, was zu tun ist — eine Datei, die
+           * unbrauchbar ist, gehört nicht zum Herunterladen angeboten.
+           */
+          name: 'datevBerater',
+          label: 'DATEV: Beraternummer',
+          type: 'number',
+          admin: {
+            description:
+              'Von der Kanzlei erfragen (meist 5–7 Ziffern). Ohne Berater- und Mandantennummer weist DATEV den Import ab.',
+            step: 1,
+          },
+        },
+        {
+          name: 'datevMandant',
+          label: 'DATEV: Mandantennummer',
+          type: 'number',
+          admin: {
+            description: 'Die Nummer dieses Betriebs bei der Kanzlei (meist 1–5 Ziffern).',
+            step: 1,
+          },
+        },
       ],
     },
     {
@@ -391,6 +423,68 @@ export const Integrations: GlobalConfig = {
           custom: { gestaltet: true },
           admin: {
             description: 'Der Text, der eingefügt wird — mit Gestaltung, wenn gewünscht.',
+          },
+        },
+      ],
+    },
+    {
+      /*
+       * Die automatischen Mails als Vorlagen.
+       *
+       * Bisher stand jeder Satz im Code: „Guten Tag" statt „Hallo" war ein
+       * Commit und ein Ausrollen. Für Text, den der Betrieb schreibt, ist das
+       * der falsche Weg.
+       *
+       * Bearbeitet wird im Büro unter Einstellungen → Mail-Vorlagen, mit
+       * demselben Schreibfeld wie im Postfach. Hier liegt nur, was
+       * gespeichert wird — welche Mails es gibt und welche Platzhalter sie
+       * kennen, steht in `lib/mailvorlagen.ts`.
+       *
+       * **Leer heißt: die eingebaute Fassung gilt.** Ein Betrieb, der nichts
+       * ändert, merkt von der Umstellung nichts — und wer eine Vorlage
+       * verwirft, bekommt wieder den Stand aus dem Code statt einer leeren
+       * Mail.
+       */
+      name: 'mailvorlagen',
+      label: 'Mail-Vorlagen',
+      labels: { singular: 'Mail-Vorlage', plural: 'Mail-Vorlagen' },
+      type: 'array',
+      admin: {
+        description:
+          'Die Texte der automatischen Mails. Gepflegt wird das im Büro unter Einstellungen → Mail-Vorlagen — dort gibt es das Schreibfeld, die Platzhalter-Hilfe und eine Vorschau.',
+      },
+      fields: [
+        {
+          name: 'art',
+          label: 'Welche Mail',
+          type: 'text',
+          required: true,
+          admin: { description: 'Schlüssel aus lib/mailvorlagen.ts, z.B. „bestellbestaetigung".' },
+        },
+        {
+          name: 'betreff',
+          label: 'Betreff',
+          type: 'text',
+          admin: { description: 'Platzhalter sind erlaubt. Leer = der eingebaute Betreff.' },
+        },
+        {
+          name: 'inhalt',
+          label: 'Text der Mail',
+          type: 'textarea',
+          custom: { gestaltet: true },
+          admin: {
+            description:
+              'Der Rumpf als HTML, mit Platzhaltern wie {{bestellnummer}}. Briefkopf, Corten-Strich und Pflichtangaben kommen automatisch dazu.',
+          },
+        },
+        {
+          name: 'aktiv',
+          label: 'Diese Vorlage benutzen',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Aus: Die eingebaute Fassung geht hinaus. So lässt sich eine Änderung zurücknehmen, ohne den Text zu verlieren.',
           },
         },
       ],

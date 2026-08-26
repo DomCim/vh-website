@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import {
+  farbenZuordnen,
   varianteFinden,
   variantenDienstleister,
   variantenMinuten,
@@ -183,5 +184,85 @@ test.describe('Varianten wiederfinden', () => {
 
   test('ohne bestehende Varianten bleibt alles neu', () => {
     expect(variantenZuordnen([], [{ titel: 'Einzige' }])[0].id).toBeUndefined()
+  })
+})
+
+/**
+ * Farben behalten ihre Kennung — und damit ihr Bild.
+ *
+ * Der Anlass war ein gemessener Datenverlust: `produkt_varianten_setzen`
+ * schrieb die Farben mit nur Name und Farbwert, Payload legte neue Zeilen an,
+ * und das hinterlegte Farbbild war weg — beim bloßen Berichtigen eines
+ * Farbnamens, ohne Fehlermeldung. Am laufenden Stand nachgemessen (08/2026):
+ * Mit Kennung bleibt das Bild stehen, ohne Kennung ist es fort.
+ *
+ * Die Varianten hatten das Problem nie, weil sie die Kennung schon immer
+ * mitgaben. Genau dieser Unterschied ist hier festgenagelt.
+ */
+test.describe('Farben einem bestehenden Artikel zuordnen', () => {
+  const bisher = [
+    { id: 'f1', name: 'Anthrazitgrau (RAL 7016)', image: 10 },
+    { id: 'f2', name: 'Rubinrot (RAL 3003)', image: 26 },
+  ]
+
+  test('das Bild bleibt, wenn niemand eines mitgibt', () => {
+    // Der Fall, der vorher Daten verlor: nur ein Name wird berichtigt
+    const raus = farbenZuordnen(bisher, [
+      { name: 'Anthrazitgrau (RAL 7016)' },
+      { name: 'Rubinrot (RAL 3003)' },
+    ])
+    expect(raus.map((c) => c.image)).toEqual([10, 26])
+    expect(raus.map((c) => c.id)).toEqual(['f1', 'f2'])
+  })
+
+  test('ein mitgegebenes Bild gewinnt', () => {
+    const raus = farbenZuordnen(bisher, [
+      { name: 'Anthrazitgrau (RAL 7016)', bild: 99 },
+      { name: 'Rubinrot (RAL 3003)' },
+    ])
+    expect(raus.map((c) => c.image)).toEqual([99, 26])
+  })
+
+  test('null entfernt das Bild ausdrücklich', () => {
+    // Der Unterschied zu „weggelassen": Ohne ihn könnte niemand ein Bild
+    // wieder loswerden, ohne die ganze Farbe zu löschen
+    const raus = farbenZuordnen(bisher, [{ name: 'Rubinrot (RAL 3003)', bild: null }])
+    expect(raus[0].image).toBeNull()
+  })
+
+  test('die mitgegebene Kennung gewinnt — auch bei neuem Namen', () => {
+    const raus = farbenZuordnen(bisher, [
+      { kennung: 'f2', name: 'Rouge rubis (RAL 3003)' },
+      { kennung: 'f1', name: 'Gris anthracite (RAL 7016)' },
+    ])
+    expect(raus.map((c) => c.id)).toEqual(['f2', 'f1'])
+    // Und das Bild reist mit der Kennung, nicht mit der Position
+    expect(raus.map((c) => c.image)).toEqual([26, 10])
+  })
+
+  test('beim Übersetzen zählt die Reihenfolge, solange die Anzahl stimmt', () => {
+    // Ohne Kennung, alle Namen anders — genau der Fall einer Sprachfassung
+    const raus = farbenZuordnen(bisher, [
+      { name: 'Gris anthracite' },
+      { name: 'Rouge rubis' },
+    ])
+    expect(raus.map((c) => c.id)).toEqual(['f1', 'f2'])
+    expect(raus.map((c) => c.image)).toEqual([10, 26])
+  })
+
+  test('eine hinzugekommene Farbe bekommt keine fremde Kennung und kein fremdes Bild', () => {
+    const raus = farbenZuordnen(bisher, [
+      { name: 'Anthrazitgrau (RAL 7016)' },
+      { name: 'Rubinrot (RAL 3003)' },
+      { name: 'Moosgrün (RAL 6005)' },
+    ])
+    expect(raus.map((c) => c.id)).toEqual(['f1', 'f2', undefined])
+    expect(raus[2].image).toBeUndefined()
+  })
+
+  test('ohne bestehende Farben bleibt alles neu', () => {
+    const raus = farbenZuordnen([], [{ name: 'Einzige', bild: 5 }])
+    expect(raus[0].id).toBeUndefined()
+    expect(raus[0].image).toBe(5)
   })
 })

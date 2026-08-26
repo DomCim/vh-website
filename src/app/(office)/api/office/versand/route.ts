@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { DOKUMENT_RECHT, dokument, type DokumentArt } from '../../../../../lib/dokumente'
+import { briefbogen } from '../../../../../lib/mail'
 import { htmlHatInhalt, mailHtmlSaeubern } from '../../../../../lib/mailhtml'
+import { einsetzen, gueltigeVorlage } from '../../../../../lib/mailvorlagen'
 import { nachrichtSenden, postfachFinden } from '../../../../../lib/postfach'
 import { sendMail } from '../../../../../lib/sendMail'
 import { getIntegrations } from '../../../../../lib/settings'
@@ -77,11 +79,47 @@ export async function POST(req: Request) {
     const an = (b.an || unterlage.an || '').trim()
     if (!an) return NextResponse.json({ error: 'empfaenger-fehlt' }, { status: 400 })
 
-    const betreff = b.betreff?.trim() || unterlage.betreff
-    const text = b.text?.trim() || unterlage.text
     // Gestalteter Rumpf aus dem Schreibfeld — Signatur steht dann schon drin
-    const gestaltet =
+    const getippt =
       typeof b.html === 'string' && htmlHatInhalt(b.html) ? mailHtmlSaeubern(b.html) : null
+
+    /*
+     * Die Vorlage wird hier aufgelöst, bevor sich die Wege trennen.
+     *
+     * Zwei Wege gehen von hier weiter: über ein hinterlegtes Postfach
+     * (`nachrichtSenden`) oder über den Systemabsender (`sendMail`). Nur der
+     * zweite kommt an `sendMail` vorbei, wo die Vorlage sonst greift — und im
+     * Betrieb ist ein Postfach hinterlegt, also wäre das der seltenere Fall.
+     * Beim ersten Probelauf ging die Mail deshalb mit dem eingebauten Betreff
+     * hinaus, obwohl eine Vorlage lag.
+     *
+     * Die Reihenfolge bleibt: ein im Büro getippter Text hat Vorrang, dann die
+     * Vorlage, dann der Vorschlag aus dem Dokument.
+     */
+    let vorlageHtml: string | null = null
+    let vorlageBetreff: string | null = null
+    if (!getippt && unterlage.vorlage) {
+      const alleEinstellungen = (await payload.findGlobal({
+        slug: 'integrations',
+        depth: 0,
+      })) as {
+        mailvorlagen?: { art?: string | null; aktiv?: boolean | null; inhalt?: string | null; betreff?: string | null }[]
+      }
+      const inhalt = gueltigeVorlage(unterlage.vorlage.art, alleEinstellungen.mailvorlagen, (t) =>
+        payload.logger.warn({ art: unterlage.vorlage?.art }, t),
+      )
+      if (inhalt) {
+        vorlageHtml = briefbogen(einsetzen(inhalt, unterlage.vorlage.werte))
+        const eigenerBetreff = (alleEinstellungen.mailvorlagen ?? [])
+          .find((v) => v.art === unterlage.vorlage!.art)
+          ?.betreff?.trim()
+        if (eigenerBetreff) vorlageBetreff = einsetzen(eigenerBetreff, unterlage.vorlage.werte)
+      }
+    }
+
+    const betreff = b.betreff?.trim() || vorlageBetreff || unterlage.betreff
+    const text = b.text?.trim() || unterlage.text
+    const gestaltet = getippt ?? vorlageHtml
 
     if (fach) {
       await nachrichtSenden(payload, fach, {
@@ -103,6 +141,7 @@ export async function POST(req: Request) {
             .split('\n')
             .map((zeile) => zeile || '&nbsp;')
             .join('<br>'),
+        // Die Vorlage steckt schon in `gestaltet` — hier nichts mehr zu tun
         attachments: [
           { filename: unterlage.dateiname, content: unterlage.datei, contentType: 'application/pdf' },
         ],

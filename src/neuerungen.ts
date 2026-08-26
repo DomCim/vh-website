@@ -26,6 +26,81 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 72,
+    datum: null,
+    titel: 'Wer eine Farbe wählt, sieht das Stück auch in dieser Farbe',
+    punkte: [
+      {
+        text: '**In der Verwaltung kann jeder Farbe jetzt ein Bild zugeordnet werden.** Beim Artikel steht unter jeder Farbe ein Feld „Bild dieser Farbe" — wird dort eine Aufnahme aus der Mediathek gewählt, springt die Artikelseite darauf, sobald der Besucher den Farbpunkt antippt. Bisher blieb dort das Bild stehen, das zufällig oben lag: Wer auf „Rubinrot" tippte, sah weiter das anthrazitfarbene Stück. Ein Farbfleck neben einem Bild in einer anderen Farbe ist keine Vorschau, sondern ein Widerspruch.',
+      },
+      {
+        text: '**Dasselbe gibt es an der Variante**, für den Fall, dass nicht die Farbe über das Aussehen entscheidet, sondern der Werkstoff. Beim Brasero heißen die Varianten „Edelstahl 80x80" und „Corten-Stahl 80x80" — da gehört das Bild an die Variante. Wählt jemand beides, hat die Farbe Vorrang: Wer zuletzt einen Farbpunkt angetippt hat, erwartet genau diese Farbe zu sehen.',
+      },
+      {
+        text: '**Leer bleiben ist der Normalfall und kostet nichts.** Ohne hinterlegtes Bild verhält sich die Seite wie bisher, und wer eine Größe wählt, verliert dadurch nicht die Ansicht, die er sich gerade ausgesucht hat. Es muss also nicht überall etwas eingetragen werden — nur dort, wo es einen Unterschied macht.',
+      },
+      {
+        text: '**Das Bild muss nicht zweimal eingetragen werden.** Eine Aufnahme, die nur an einer Farbe hängt und nicht oben unter „Bilder" steht, hängt die Seite von allein hinten an die Galerie — sonst müsste jemand daran denken, jedes Farbbild doppelt zu pflegen, und genau das würde vergessen. Das erste Bild bleibt dabei das erste: Es ist das Aushängeschild in Listen und Vorschauen.',
+      },
+      {
+        text: '**Der Warenkorb übernimmt jetzt das Bild, das der Kunde beim Hineinlegen ansah** — nicht mehr immer das erste. Wer ein rotes Herz bestellt, sah im Korb bisher ein anthrazitfarbenes.',
+      },
+      {
+        text: '**Der Assistent kann die Farbbilder mitpflegen.** Er zeigt beim Lesen eines Artikels, welche Aufnahme an welcher Farbe hängt, und kann sie setzen oder entfernen. Wer nichts dazu sagt, ändert daran nichts.',
+      },
+      {
+        text: '**Beim Einbauen fiel auf, dass die Farben dabei stillschweigend Daten verloren hätten.** Ließ man den Assistenten Farben ändern — und sei es nur, um einen Namen zu berichtigen —, legte er sie neu an statt sie wiederzuerkennen; das Bild wäre damit weg gewesen, und zwar ohne Fehlermeldung. Bei den Varianten war das seit je richtig gelöst, weil dort Stückliste und Werkstattdateien daran hängen — bei den Farben gab es bis jetzt nichts zu verlieren. Behoben, bevor es jemanden treffen konnte, und mit Prüfungen festgenagelt.',
+      },
+    ],
+  },
+  {
+    nummer: 71,
+    datum: null,
+    titel: 'Die Texte der automatischen Mails stehen jetzt im Büro — und die Mails sehen besser aus',
+    punkte: [
+      {
+        text: '**Unter Einstellungen → Mail-Vorlagen lassen sich die automatischen Mails selbst schreiben.** Sechzehn Mails stehen dort zur Wahl: Bestellbestätigung, „in Fertigung", „versandt", die Bitte um eine Bewertung, Kauf auf Rechnung, die drei Auftragsmeldungen, die Begleitmails zu Rechnung, Mahnung, Lieferschein, Angebot und Auftragsbestätigung, dazu die internen Meldungen und das Monatspaket an die Kanzlei. Geschrieben wird mit demselben Schreibfeld wie im Postfach — fett, Farben, Listen, Links.',
+      },
+      {
+        text: '**Der Grund:** Bisher stand jeder Satz im Programm. „Guten Tag" statt „Hallo" hieß: melden, warten, ausrollen. Für Text, den der Betrieb selbst schreibt, ist das der falsche Weg.',
+      },
+      {
+        text: '**Platzhalter setzen die Daten ein.** `{{bestellnummer}}`, `{{kunde}}`, `{{betrag}}` und so weiter — beim Verschicken steht dort die echte Angabe. Auch ganze Blöcke gibt es: `{{positionen}}` ist die Tabelle mit den Beträgen, `{{anschrift}}` der Adressblock, `{{sendung}}` die Zeile mit der Sendungsnummer. Welche Platzhalter eine Mail kennt, steht unter dem Schreibfeld; Antippen kopiert sie. Eine Vorschau mit Beispieldaten zeigt, wie es beim Empfänger ankommt.',
+      },
+      {
+        text: '**Wer nichts ändert, merkt nichts.** Solange keine Vorlage hinterlegt ist, geht die Mail wie bisher hinaus. Und wer eine Änderung zurücknehmen will, nimmt den Haken „Diese Vorlage benutzen" heraus — der Text bleibt liegen, falls er doch wieder gebraucht wird.',
+      },
+      {
+        text: '**Ein Riegel ist eingebaut.** Manche Platzhalter darf man nicht weglassen: eine Versandmail ohne Sendungsnummer oder eine Rechnungsmail ohne Betrag wäre kein Text, sondern ein Rückruf. Fehlt so ein Platzhalter, sagt es das Büro schon beim Schreiben — und die Mail geht in der eingebauten Fassung hinaus statt unvollständig.',
+      },
+      {
+        text: '**Die Mails sehen außerdem besser aus.** Der Text klebte am linken Rand: am Handy fing das erste Zeichen an der Glaskante an, am Rechner stand die halbe Seite leer daneben. Und das Logo reichte von Kante zu Kante, weil nur seine Höhe angegeben war. Jetzt steht der Brief als weiße Karte mit Luft ringsum, mittig, und das Logo hat seine richtige Größe.',
+      },
+    ],
+  },
+  {
+    nummer: 70,
+    datum: null,
+    titel: 'Der Steuerberater bekommt die Buchungen jetzt so, wie DATEV sie liest',
+    punkte: [
+      {
+        text: '**Auf `/office/steuer` gibt es jetzt zwei Knöpfe.** „Buchungsstapel" liefert eine Datei im DATEV-Format, die die Kanzlei direkt einliest — mit Konten, Soll und Haben, Steuerschlüssel und Belegnummer. „Buchungen als CSV" bleibt daneben stehen: dieselben Zahlen, aber zum Ansehen. Weil meist monatlich gebucht wird, gibt es zusätzlich einen Knopf für den laufenden Monat allein.',
+      },
+      {
+        text: '**Der Sinn dahinter:** Die Tabelle konnte in der Kanzlei nur ein Mensch lesen. Eingelesen werden musste sie trotzdem, also hat dort jemand abgetippt, was hier längst sauber steht — und jede Zeile war eine Gelegenheit für einen Zahlendreher, den hinterher niemand findet. Es ist keine zusätzliche Arbeit, sondern dieselbe Arbeit in einem Format, das die Gegenseite versteht.',
+      },
+      {
+        text: '**Zwei Nummern müssen einmal eingetragen werden:** Berater- und Mandantennummer, beide von der Kanzlei, unter Einstellungen → Integrationen → E-Mail. Ohne sie nimmt DATEV keinen Stapel an, deshalb steht an der Stelle des Knopfs so lange der Hinweis, was fehlt — eine Datei anzubieten, die beim Import abgewiesen wird, schickt nur jemanden auf Fehlersuche.',
+      },
+      {
+        text: '**Das Monatspaket an die Kanzlei nimmt die Datei automatisch mit**, sobald die Nummern da sind, und sagt es in der Mail auch. Die Konten sind nach SKR03 vorbelegt — Material auf 3400, Fahrzeug auf 4530, Erlöse auf 8400 und so weiter. Das ist ein begründeter Vorschlag und keine Auskunft: Bitte einmal von der Kanzlei gegen ihren Kontenrahmen prüfen lassen. Die Beträge stimmen in jedem Fall, die Zuordnung hängt am Kontenrahmen.',
+      },
+      {
+        text: '**Dabei ist ein Rechenfehler aufgefallen, der Geld betraf.** Bei einer Rechnung mit Reverse Charge (Geschäftskunde im EU-Ausland, ohne Steuer) rechneten das Formular, das PDF und die elektronische Rechnung richtig ohne Steuer — der Wert, der in der Datenbank landete, aber nicht. Dort stand eine Umsatzsteuer, die auf keinem Papier auftauchte, und genau von dort nahm der Steuer-Export seine Zahlen. Eine Rechnung war betroffen: 298,50 € Steuer, die es nicht gab. Gerechnet wird das jetzt an einer Stelle, und der Fall ist durch zwei Prüfungen abgesichert. **Wichtig:** Bestehende Rechnungen behalten ihren alten Wert, bis sie einmal gespeichert werden — bei betroffenen Rechnungen bitte kurz Bescheid geben.',
+      },
+    ],
+  },
+  {
     nummer: 69,
     datum: null,
     titel: 'Fotos zur Übergabe — und sie stehen auf dem Lieferschein',
