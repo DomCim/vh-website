@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 71,
+    datum: null,
+    titel: 'Wer eine Farbe wählt, sieht das Stück auch in dieser Farbe',
+    punkte: [
+      {
+        text: '**In der Verwaltung kann jeder Farbe jetzt ein Bild zugeordnet werden.** Beim Artikel steht unter jeder Farbe ein Feld „Bild dieser Farbe" — wird dort eine Aufnahme aus der Mediathek gewählt, springt die Artikelseite darauf, sobald der Besucher den Farbpunkt antippt. Bisher blieb dort das Bild stehen, das zufällig oben lag: Wer auf „Rubinrot" tippte, sah weiter das anthrazitfarbene Stück. Ein Farbfleck neben einem Bild in einer anderen Farbe ist keine Vorschau, sondern ein Widerspruch.',
+      },
+      {
+        text: '**Dasselbe gibt es an der Variante**, für den Fall, dass nicht die Farbe über das Aussehen entscheidet, sondern der Werkstoff. Beim Brasero heißen die Varianten „Edelstahl 80x80" und „Corten-Stahl 80x80" — da gehört das Bild an die Variante. Wählt jemand beides, hat die Farbe Vorrang: Wer zuletzt einen Farbpunkt angetippt hat, erwartet genau diese Farbe zu sehen.',
+      },
+      {
+        text: '**Leer bleiben ist der Normalfall und kostet nichts.** Ohne hinterlegtes Bild verhält sich die Seite wie bisher, und wer eine Größe wählt, verliert dadurch nicht die Ansicht, die er sich gerade ausgesucht hat. Es muss also nicht überall etwas eingetragen werden — nur dort, wo es einen Unterschied macht.',
+      },
+      {
+        text: '**Das Bild muss nicht zweimal eingetragen werden.** Eine Aufnahme, die nur an einer Farbe hängt und nicht oben unter „Bilder" steht, hängt die Seite von allein hinten an die Galerie — sonst müsste jemand daran denken, jedes Farbbild doppelt zu pflegen, und genau das würde vergessen. Das erste Bild bleibt dabei das erste: Es ist das Aushängeschild in Listen und Vorschauen.',
+      },
+      {
+        text: '**Der Warenkorb übernimmt jetzt das Bild, das der Kunde beim Hineinlegen ansah** — nicht mehr immer das erste. Wer ein rotes Herz bestellt, sah im Korb bisher ein anthrazitfarbenes.',
+      },
+    ],
+  },
+  {
     nummer: 70,
     datum: null,
     titel: 'Der Steuerberater bekommt die Buchungen jetzt so, wie DATEV sie liest',

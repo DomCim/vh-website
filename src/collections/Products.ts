@@ -222,6 +222,31 @@ export const Products: CollectionConfig = {
         },
         {
           /*
+           * Das Bild dieser Variante — für den Fall, dass die Variante das
+           * Aussehen bestimmt und nicht nur das Maß.
+           *
+           * Beim Brasero heißen die Varianten „Edelstahl 80x80" und
+           * „Corten-Stahl 80x80": Da entscheidet die Variante über den
+           * Werkstoff, und Corten sieht nun einmal anders aus als Edelstahl.
+           * Beim Herz dagegen sind die Varianten Größen, und das Aussehen
+           * hängt an der Farbe — dort bleibt dieses Feld leer.
+           *
+           * Beides zusammen gewählt: Die Farbe gewinnt. Sie ist die feinere
+           * Angabe, und wer zuletzt auf einen Farbfleck getippt hat, erwartet
+           * genau diese Farbe zu sehen.
+           */
+          name: 'image',
+          label: 'Bild dieser Variante',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            description:
+              'Nur nötig, wenn die Variante anders aussieht (z.B. anderer Werkstoff). ' +
+              'Leer = das Bild bleibt, wie es ist.',
+          },
+        },
+        {
+          /*
            * Was diese Variante an Material braucht.
            *
            * Der Punkt, an dem eine gemeinsame Stückliste falsch wird: Ein
@@ -338,6 +363,33 @@ export const Products: CollectionConfig = {
           type: 'text',
           admin: {
             description: 'z.B. #b32428 — für die Farbvorschau',
+          },
+        },
+        {
+          /*
+           * Das Bild, das diese Farbe zeigt.
+           *
+           * Der Punkt kam aus der Werkstatt: Wer auf „Rubinrot" tippt, sieht
+           * bisher weiter das Bild, das zufällig oben lag — meistens das
+           * anthrazitfarbene. Ein Farbfleck neben einem Bild in einer anderen
+           * Farbe ist keine Vorschau, sondern ein Widerspruch.
+           *
+           * Ein Verweis und keine eigene Aufnahme: Die Bilder liegen schon in
+           * der Mediathek und meistens auch schon oben in `images`. Läge hier
+           * eine zweite Datei, gäbe es dasselbe Foto zweimal — und beim
+           * Austauschen würde eines davon vergessen.
+           *
+           * Leer heißt wie überall hier: Es bleibt bei dem Bild, das der
+           * Besucher gerade ansieht. Eine Farbe ohne eigene Aufnahme soll die
+           * Galerie nicht auf das erste Bild zurückwerfen.
+           */
+          name: 'image',
+          label: 'Bild dieser Farbe',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            description:
+              'Wird gezeigt, sobald die Farbe gewählt wird. Leer = das Bild bleibt, wie es ist.',
           },
         },
       ],

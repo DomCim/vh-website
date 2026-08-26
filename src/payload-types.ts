@@ -266,6 +266,10 @@ export interface Product {
     | {
         title: string;
         price: number;
+        /**
+         * Nur nötig, wenn die Variante anders aussieht (z.B. anderer Werkstoff). Leer = das Bild bleibt, wie es ist.
+         */
+        image?: (number | null) | Media;
         billOfMaterials?:
           | {
               item: number | InventoryItem;
@@ -319,6 +323,10 @@ export interface Product {
          * z.B. #b32428 — für die Farbvorschau
          */
         hex?: string | null;
+        /**
+         * Wird gezeigt, sobald die Farbe gewählt wird. Leer = das Bild bleibt, wie es ist.
+         */
+        image?: (number | null) | Media;
         id?: string | null;
       }[]
     | null;
@@ -2058,6 +2066,7 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         title?: T;
         price?: T;
+        image?: T;
         billOfMaterials?:
           | T
           | {
@@ -2096,6 +2105,7 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         name?: T;
         hex?: T;
+        image?: T;
         id?: T;
       };
   billOfMaterials?:
