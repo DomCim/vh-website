@@ -61,6 +61,39 @@ const TAG = 24 * 60 * 60 * 1000
 export const zaehltZumUmsatz = (r: { status?: string | null }) =>
   ['gestellt', 'bezahlt', 'storniert'].includes(r.status ?? '')
 
+/**
+ * Zählt diese Shop-Bestellung zum Umsatz — oder tut das ihre Rechnung?
+ *
+ * Der Fehler, um den es geht: Ein **Kauf auf Rechnung** erzeugt beides. Erst
+ * die Bestellung, dann über den Fertigungsauftrag die Rechnung, und beide
+ * tragen denselben Betrag. Gezählt wurden bisher auch beide — derselbe Umsatz
+ * stand zweimal in der Summe.
+ *
+ * Aufgefallen ist es an einem Storno, und zwar von der falschen Seite: Nach
+ * dem Stornieren von `RE-2026-0001` (1.791 €) hoben sich Original und
+ * Gegenrechnung richtig auf, die Bestellung `VH-2026-0003` blieb aber mit
+ * 1.791 € stehen. Die Übersicht zeigte weiter Einnahmen, die es nicht mehr
+ * gab. Vorher standen dort 3.582 € statt 1.791 € — nur merkt man das
+ * Doppelte nicht, solange keiner der beiden Belege wegfällt.
+ *
+ * **Welcher Beleg gilt, hängt an der Zahlart:**
+ *
+ * - **PayPal** zieht das Geld sofort ein, eine Rechnung entsteht gar nicht.
+ *   Die Bestellung ist der Beleg.
+ * - **Kauf auf Rechnung** läuft wie das Projektgeschäft: Der Auftrag ist der
+ *   Träger der Rechnung, das Geld kommt über sie herein (siehe
+ *   `lib/rechnungskauf.ts`). Dann ist die **Rechnung** der Beleg, und die
+ *   Bestellung ist nur ihr Anlass.
+ *
+ * Warum nicht umgekehrt — Bestellung zählen, Rechnung nicht? Weil die
+ * Rechnung das Papier ist, das beim Kunden liegt und in dessen Buchhaltung
+ * steht. Sie trägt die Nummer aus der laufenden Reihe, sie wird storniert,
+ * und ihre Steuer ist ausgewiesen. Eine Bestellung ist ein Vorgang im Laden;
+ * eine Rechnung ist ein Beleg.
+ */
+export const bestellungZaehltZumUmsatz = (o: { paymentProvider?: string | null }) =>
+  o.paymentProvider !== 'rechnung'
+
 /** Wartet aus dieser Rechnung noch Geld? Gegenrechnungen eines Stornos nie. */
 export const istOffenerPosten = (r: { status?: string | null; stornoVon?: unknown }) =>
   r.status === 'gestellt' && !r.stornoVon
