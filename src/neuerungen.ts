@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 73,
+    datum: null,
+    titel: 'Das Bild passt jetzt schon beim Öffnen zur gewählten Ausführung',
+    punkte: [
+      {
+        text: '**Beim Dubbe-Stehtisch stand unten „Cortenstahl" und oben der anthrazitfarbene Tisch.** Beim Öffnen einer Artikelseite nahm die Galerie das Bild der ersten **Farbe**, obwohl die erste **Ausführung** hervorgehoben ist. Wo beide ein eigenes Bild haben, widersprachen sich dadurch zwei Angaben auf derselben Seite — und der Besucher glaubt die falsche.',
+      },
+      {
+        text: '**Maßgeblich ist jetzt, was hervorgehoben ist.** Beim Öffnen bestimmt die Ausführung das Bild, weil sie als beschrifteter Knopf über den Farbpunkten steht. Hat sie keines, gilt weiter das der Farbe.',
+      },
+      {
+        text: '**Auch beim Antippen gilt das Naheliegende:** Wer auf eine Ausführung tippt, sieht diese Ausführung; wer auf einen Farbpunkt tippt, sieht die Farbe. Bisher hatte die Farbe immer den Vortritt — ein Klick auf „Cortenstahl" ließ deshalb den anthrazitfarbenen Tisch stehen. Hat die angetippte Angabe kein eigenes Bild, hilft die andere aus.',
+      },
+    ],
+  },
+  {
     nummer: 72,
     datum: null,
     titel: 'Wer eine Farbe wählt, sieht das Stück auch in dieser Farbe',
