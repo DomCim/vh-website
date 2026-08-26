@@ -45,6 +45,12 @@ export const NEUERUNGEN: Neuerung[] = [
       {
         text: '**Der Warenkorb übernimmt jetzt das Bild, das der Kunde beim Hineinlegen ansah** — nicht mehr immer das erste. Wer ein rotes Herz bestellt, sah im Korb bisher ein anthrazitfarbenes.',
       },
+      {
+        text: '**Der Assistent kann die Farbbilder mitpflegen.** Er zeigt beim Lesen eines Artikels, welche Aufnahme an welcher Farbe hängt, und kann sie setzen oder entfernen. Wer nichts dazu sagt, ändert daran nichts.',
+      },
+      {
+        text: '**Beim Einbauen fiel auf, dass die Farben dabei stillschweigend Daten verloren hätten.** Ließ man den Assistenten Farben ändern — und sei es nur, um einen Namen zu berichtigen —, legte er sie neu an statt sie wiederzuerkennen; das Bild wäre damit weg gewesen, und zwar ohne Fehlermeldung. Bei den Varianten war das seit je richtig gelöst, weil dort Stückliste und Werkstattdateien daran hängen — bei den Farben gab es bis jetzt nichts zu verlieren. Behoben, bevor es jemanden treffen konnte, und mit Prüfungen festgenagelt.',
+      },
     ],
   },
   {
