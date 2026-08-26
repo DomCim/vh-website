@@ -344,3 +344,46 @@ export function variantenZuordnen<
     return alt?.id ? { ...v, id: String(alt.id) } : { ...v }
   })
 }
+
+/**
+ * Dasselbe für die Farboptionen — samt ihrem Bild.
+ *
+ * Die Farbe hat weniger dranhängen als die Variante, aber eines schon: das
+ * Bild, das sie zeigt (siehe `lib/artikelbilder.ts`). Ohne diese Zuordnung
+ * legte Payload für jede Zeile eine neue Kennung an, und der Verweis auf das
+ * Bild wäre weg — beim bloßen Ändern eines Farbnamens.
+ *
+ * Das ist keine Vermutung: Vor dieser Funktion löschte ein Aufruf von
+ * `produkt_varianten_setzen` die hinterlegten Farbbilder. Nachgemessen am
+ * laufenden Stand (08/2026), und zwar stillschweigend — das Werkzeug meldete
+ * Erfolg.
+ *
+ * Ein eigenes `bild` in der neuen Zeile gewinnt: Wer es mitgibt, will es
+ * setzen. Wer es wegläßt, will es behalten — und wer es leeren will, gibt
+ * ausdrücklich `null` mit. Ohne diese Unterscheidung müsste jeder, der nur
+ * einen Farbnamen berichtigt, alle Bilder mitschicken.
+ *
+ * Eine eigene Funktion und keine gemeinsame mit `variantenZuordnen`: Dort
+ * heißt das Namensfeld `title`, hier `name`, und eine Fassung mit Feldnamen
+ * als Parameter wäre schwerer zu lesen als zwei klare.
+ */
+export function farbenZuordnen<
+  A extends { id?: string | null; name?: string | null; image?: unknown },
+  N extends { kennung?: string | null; name: string; bild?: number | null },
+>(bisher: A[], neu: N[]): (Omit<N, 'bild'> & { id?: string; image?: unknown })[] {
+  const gleicheAnzahl = neu.length === bisher.length
+  return neu.map((c, i) => {
+    const alt =
+      (c.kennung && bisher.find((b) => String(b.id) === String(c.kennung))) ||
+      bisher.find((b) => b.name === c.name) ||
+      (gleicheAnzahl ? bisher[i] : undefined)
+    const { bild, ...rest } = c
+    return {
+      ...rest,
+      ...(alt?.id ? { id: String(alt.id) } : {}),
+      // `undefined` heißt „nicht angegeben" und erbt das Bisherige;
+      // `null` heißt „weg damit"
+      image: bild === undefined ? alt?.image : bild,
+    }
+  })
+}

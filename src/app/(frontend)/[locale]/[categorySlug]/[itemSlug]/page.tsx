@@ -13,6 +13,7 @@ import { Reveal } from "../../../../../components/motion/Reveal";
 import { RichText } from "../../../../../components/RichText";
 import { ProductDetail } from "../../../../../components/shop/ProductDetail";
 import { aktionFuerArtikel, mitRabatt } from "../../../../../lib/aktionspreis";
+import { bildKennung, galerieErgaenzen } from "../../../../../lib/artikelbilder";
 import {
   getCategoryBySlug,
   getPreisaktionen,
@@ -153,16 +154,41 @@ export default async function ProductPage({ params }: { params: PageParams }) {
 
   // Die Galerie bekommt alle Zuschnitte mit — das große Produktbild ist auf
   // dieser Seite das Wichtigste, und ein Handy soll dafür keine 1800 Pixel laden.
-  const images = (product.images ?? []).map((img) => {
+  const alsGaleriebild = (img: unknown) => {
     const quellen = bildQuellen(img as BildQuelle, "large");
+    const url = quellen?.src || mediaUrl(img, "large") || "";
+    if (!url) return null;
     return {
-      url: quellen?.src || mediaUrl(img, "large") || "",
+      // Die Kennung ordnet Farben und Varianten ihr Bild zu
+      id: bildKennung(img as Parameters<typeof bildKennung>[0]),
+      url,
       srcSet: quellen?.srcSet,
       width: quellen?.width,
       height: quellen?.height,
       alt: mediaAlt(img, product.title),
     };
-  });
+  };
+
+  /*
+   * Farben und Varianten dürfen auf ein Bild zeigen, das nicht oben unter
+   * „Bilder" steht — sonst müsste jemand jedes Farbbild zweimal eintragen und
+   * würde es beim zweiten Mal vergessen. Solche Bilder hängen hinten an.
+   */
+  const images = galerieErgaenzen(
+    (product.images ?? [])
+      .map(alsGaleriebild)
+      .filter((b): b is NonNullable<typeof b> => b !== null),
+    [
+      ...(product.colorOptions ?? []).map((c) => ({
+        bezug: c.image,
+        bild: alsGaleriebild(c.image),
+      })),
+      ...(product.variants ?? []).map((v) => ({
+        bezug: v.image,
+        bild: alsGaleriebild(v.image),
+      })),
+    ],
+  );
 
   // schema.org-Produktdaten für Google Rich Results
   const prices = [
@@ -293,10 +319,12 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               id: v.id,
               title: v.title,
               price: v.price,
+              bildId: bildKennung(v.image) ?? undefined,
             })),
             colorOptions: (product.colorOptions ?? []).map((c) => ({
               name: c.name,
               hex: c.hex ?? undefined,
+              bildId: bildKennung(c.image) ?? undefined,
             })),
             images,
             categorySlug,

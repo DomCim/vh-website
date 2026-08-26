@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import React, { useMemo, useState } from "react";
 
 import { type Preisaktion } from "../../lib/aktionspreis";
+import { bildStelle, stelleFuer } from "../../lib/artikelbilder";
 import { formatPrice, type Locale } from "../../lib/i18n";
 import { Preis } from "../Preis";
 import { useCart } from "./CartProvider";
@@ -21,9 +22,22 @@ type ProductProps = {
   readyMade?: boolean;
   /** Wird als Datei geliefert — kein Versand, keine Anschrift */
   digital?: boolean;
-  variants: { id?: string | null; title: string; price: number }[];
-  colorOptions: { name: string; hex?: string }[];
+  variants: {
+    id?: string | null;
+    title: string;
+    price: number;
+    /** Das Bild dieser Variante, wenn sie anders aussieht (Werkstoff) */
+    bildId?: number | string;
+  }[];
+  colorOptions: {
+    name: string;
+    hex?: string;
+    /** Das Bild in dieser Farbe — darum geht es hier überhaupt */
+    bildId?: number | string;
+  }[];
   images: {
+    /** Kennung aus der Mediathek — ordnet Farben und Varianten ihr Bild zu */
+    id?: number | string | null;
     url: string;
     alt: string;
     /** Alle Zuschnitte, damit der Browser die passende Größe wählt */
@@ -80,7 +94,24 @@ export function ProductDetail({
   aktion?: Preisaktion | null;
 }) {
   const { addItem } = useCart();
-  const [imageIndex, setImageIndex] = useState(0);
+  /*
+   * Womit die Galerie anfängt.
+   *
+   * Die erste Farbe ist vorgewählt und farblich hervorgehoben — hat sie ein
+   * eigenes Bild, muss es von Anfang an stehen. Sonst widerspräche der
+   * hervorgehobene Farbfleck dem Bild schon beim Laden.
+   *
+   * Als Anfangswert und nicht als Effekt: Ein Effekt zeigte zuerst das falsche
+   * Bild und tauschte es danach — auf dem Handy sichtbar als Zucken.
+   */
+  const [imageIndex, setImageIndex] = useState(() => {
+    const stelle = bildStelle(
+      product.colorOptions[0],
+      product.variants[0],
+      product.images,
+    );
+    return stelle ?? 0;
+  });
   const [variantIndex, setVariantIndex] = useState(0);
   const [colorIndex, setColorIndex] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
@@ -90,6 +121,37 @@ export function ProductDetail({
     if (hasVariants) return product.variants[variantIndex]?.price;
     return product.price;
   }, [hasVariants, product.price, product.variants, variantIndex]);
+
+  /*
+   * Farbe und Variante wählen — und dabei das Bild mitnehmen.
+   *
+   * Hat die Auswahl ein eigenes Bild, springt die Galerie darauf. Hat sie
+   * keines, bleibt das Bild stehen: Wer eine Größe wählt, will deswegen nicht
+   * die Ansicht verlieren, die er sich gerade ausgesucht hat.
+   *
+   * Bringen Farbe und Variante beide ein Bild mit, gewinnt die Farbe — sie ist
+   * die feinere Angabe (siehe `lib/artikelbilder.ts`). Beim Wechsel der
+   * Variante zählt deshalb erst die Farbe, und nur wenn die keines hat, das
+   * der Variante.
+   */
+  function bildZeigen(bildId?: number | string) {
+    const stelle = stelleFuer(bildId ?? null, product.images);
+    if (stelle === null) return false;
+    setImageIndex(stelle);
+    return true;
+  }
+
+  function farbeWaehlen(i: number) {
+    setColorIndex(i);
+    bildZeigen(product.colorOptions[i]?.bildId);
+  }
+
+  function varianteWaehlen(i: number) {
+    setVariantIndex(i);
+    // Die gewählte Farbe behält den Vortritt, wenn sie ein Bild hat
+    if (bildZeigen(product.colorOptions[colorIndex]?.bildId)) return;
+    bildZeigen(product.variants[i]?.bildId);
+  }
 
   const canBuy =
     product.available &&
@@ -115,7 +177,10 @@ export function ProductDetail({
       // und der Kunde sähe eine Summe, die an der Kasse eine andere ist.
       shippingCost: product.digital ? 0 : (product.shippingCost ?? 0),
       quantity: 1,
-      image: product.images[0]?.url,
+      // Das Bild, das der Kunde beim Hineinlegen ansah — nicht immer das
+      // erste. Wer ein rotes Herz bestellt, soll im Warenkorb kein
+      // anthrazitfarbenes sehen.
+      image: (product.images[imageIndex] ?? product.images[0])?.url,
       categorySlug: product.categorySlug,
       // Fertige Werkstattstücke liegen schon da; alles andere entsteht erst
       // nach der Bestellung — und zwar nach Vorgabe.
@@ -199,7 +264,7 @@ export function ProductDetail({
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setVariantIndex(i)}
+                  onClick={() => varianteWaehlen(i)}
                   className={`border px-4 py-2 text-sm transition-colors ${
                     i === variantIndex
                       ? "border-ink bg-ink text-on-ink"
@@ -227,7 +292,7 @@ export function ProductDetail({
                   key={i}
                   type="button"
                   title={c.name}
-                  onClick={() => setColorIndex(i)}
+                  onClick={() => farbeWaehlen(i)}
                   className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${
                     i === colorIndex ? "border-ink" : "border-line"
                   }`}

@@ -1,7 +1,7 @@
 import type { Where } from 'payload'
 import { z } from 'zod'
 
-import { variantenZuordnen } from '../material'
+import { farbenZuordnen, variantenZuordnen } from '../material'
 import { richText } from '../richtext'
 import {
   bestaetigen,
@@ -96,7 +96,15 @@ export function registerProdukte(server: McpServer) {
           titel: v.title,
           preis: v.price,
         })),
-        farboptionen: (p.colorOptions ?? []).map((c: any) => ({ name: c.name, hex: c.hex })),
+        // Kennung und Bild wie bei den Varianten: Ohne sie könnte
+        // produkt_varianten_setzen eine Farbe nur über den Namen treffen, und
+        // ohne `bild` wüsste niemand, welche Aufnahme schon hinterlegt ist
+        farboptionen: (p.colorOptions ?? []).map((c: any) => ({
+          kennung: c.id,
+          name: c.name,
+          hex: c.hex,
+          bild: typeof c.image === 'object' && c.image !== null ? c.image.id : (c.image ?? null),
+        })),
         bildIds: (p.images ?? []).map((b: any) => (typeof b === 'object' ? b.id : b)),
         fertigungszeit: p.productionTime ?? null,
         ausDerWerkstatt: Boolean(p.readyMade),
@@ -352,9 +360,30 @@ export function registerProdukte(server: McpServer) {
           .optional()
           .describe('z.B. [{titel: "Größe M", preis: 890}]'),
         farboptionen: z
-          .array(z.object({ name: z.string(), hex: z.string().optional() }))
+          .array(
+            z.object({
+              name: z.string(),
+              hex: z.string().optional(),
+              kennung: z
+                .string()
+                .optional()
+                .describe(
+                  'Die Kennung einer bestehenden Farbe (aus produkt_lesen). Damit bleibt sie ' +
+                    'beim Umbenennen oder Übersetzen dieselbe — daran hängt ihr Bild.',
+                ),
+              bild: z
+                .number()
+                .nullable()
+                .optional()
+                .describe(
+                  'Kennung eines Bildes aus der Mediathek (siehe medien_suchen). Wird gezeigt, ' +
+                    'sobald der Besucher diese Farbe wählt. Weglassen behält das bisherige Bild, ' +
+                    'null entfernt es.',
+                ),
+            }),
+          )
           .optional()
-          .describe('z.B. [{name: "Anthrazitgrau (RAL 7016)", hex: "#383E42"}]'),
+          .describe('z.B. [{name: "Rubinrot (RAL 3003)", hex: "#8d1d2c", bild: 26}]'),
       },
     },
     async ({ slug, sprache: locale, varianten, farboptionen }) => {
@@ -362,6 +391,7 @@ export function registerProdukte(server: McpServer) {
       const produkt = await findeNachSlug<{
         id: number
         variants?: { id?: string | null; title?: string | null }[] | null
+        colorOptions?: { id?: string | null; name?: string | null; image?: unknown }[] | null
       }>(payload, 'products', slug, { locale })
       if (!produkt) return fehler(`Produkt "${slug}" nicht gefunden`)
 
@@ -394,8 +424,22 @@ export function registerProdukte(server: McpServer) {
         locale,
         data: {
           ...(zugeordnet !== undefined && { variants: zugeordnet }),
+          /*
+           * Auch die Farben behalten ihre Kennung — und damit ihr Bild.
+           *
+           * Vorher stand hier `farboptionen.map(...)` mit nur Name und
+           * Farbwert. Payload ersetzt bei einem Array-Feld den ganzen Inhalt,
+           * also legte es neue Zeilen an, und das hinterlegte Farbbild war
+           * weg — beim bloßen Berichtigen eines Farbnamens, ohne Fehlermeldung
+           * (siehe `farbenZuordnen`).
+           */
           ...(farboptionen !== undefined && {
-            colorOptions: farboptionen.map((c) => ({ name: c.name, hex: c.hex })),
+            colorOptions: farbenZuordnen(produkt.colorOptions ?? [], farboptionen).map((c) => ({
+              name: c.name,
+              hex: c.hex,
+              ...(c.id ? { id: c.id } : {}),
+              image: c.image as number | null | undefined,
+            })),
           }),
         },
       })
