@@ -1,97 +1,90 @@
+import { readFileSync } from 'node:fs'
+
 import { expect, test } from '@playwright/test'
 
-import { firmenzeile, logoAnhang, pflichtangaben } from '../src/lib/mail'
-import { mailHtmlSaeubern } from '../src/lib/mailhtml'
+import { briefbogen } from '../src/lib/mail'
 
 /**
- * Wie eine Mail beim Empfänger steht.
+ * Der Rahmen um jede Mail — Breite, Abstand, Logo.
  *
- * Alle drei Fälle hier sind einmal wirklich passiert und keiner fiel beim
- * Schreiben auf — man sieht sie erst im fremden Postfach, und dann ist die
- * Mail weg.
+ * Zwei Fehler, die Vincent und Dominik am Handy gesehen haben, sichert diese
+ * Datei ab:
+ *
+ * 1. **Der Text klebte am linken Rand.** Der Brief stand in einem einzelnen
+ *    `div` mit `max-width`, ohne Innenabstand und ohne Zentrierung — am Handy
+ *    fing das erste Zeichen an der Glaskante an, am Rechner stand die halbe
+ *    Seite leer daneben.
+ * 2. **Das Logo reichte von Kante zu Kante.** Die Datei ist 2062 Pixel breit,
+ *    angegeben war nur die Höhe. Programme, die den Stil ignorieren, nehmen
+ *    die Originalbreite.
+ *
+ * Gemessen wird im Browser und nicht am HTML: Ob ein Abstand ankommt,
+ * entscheidet die Darstellung, nicht die Zeichenkette.
  */
 
-test('Absätze stehen so eng wie im Schreibfeld', () => {
-  const html = mailHtmlSaeubern('<p>Zeile 1</p><p>Zeile 2</p>')
-  /*
-   * Ohne eigenen Abstand setzt das Mailprogramm seinen eigenen — rund eine
-   * Leerzeile je Absatz. Aus vier getippten Zeilen wird dann eine Seite mit
-   * Lücken.
-   */
-  expect(html).toContain('<p style="margin:0;">Zeile 1</p>')
-  expect(html).toContain('<p style="margin:0;">Zeile 2</p>')
-})
+const FIRMA = {
+  legalName: 'Next-Concept SAS',
+  shareCapital: '1 000 €',
+  siret: '98755015900014',
+  vatId: 'FR53987550159',
+  rcsNumber: '987550159',
+  rcsCity: 'Strasbourg',
+  address: ['24, avenue Clemenceau', '67630 Lauterbourg', 'Frankreich'].join(
+    String.fromCharCode(10),
+  ),
+}
 
-test('eine getippte Leerzeile bleibt eine Leerzeile', () => {
-  // Quill schreibt sie als leeren Absatz; mit `margin:0` fiele der auf null
-  // Höhe zusammen, und die Zeile vor der Grußformel wäre weg
-  const html = mailHtmlSaeubern('<p>Zeile 4</p><p></p><p>Mit freundlichen Grüßen</p>')
-  expect(html).toContain('<br>')
-  expect(html.indexOf('<br>')).toBeGreaterThan(html.indexOf('Zeile 4'))
-  expect(html.indexOf('<br>')).toBeLessThan(html.indexOf('Mit freundlichen'))
-})
+const INHALT = `<p>Guten Tag Dominik Dill,</p>
+<p>anbei die Stornorechnung <strong>RE-2026-0003</strong>. Sie hebt die Rechnung
+RE-2026-0001 vom 19.8.2026 auf; daraus ist nichts mehr zu zahlen.</p>`
 
-test('die eigene Gestaltung behält das letzte Wort', () => {
-  // Der Abstand steht vorn, die Wahl des Schreibenden dahinter
-  const html = mailHtmlSaeubern('<p style="text-align: center">Mitte</p>')
-  expect(html).toContain('margin:0;')
-  expect(html).toContain('text-align')
-  expect(html.indexOf('margin:0;')).toBeLessThan(html.indexOf('text-align'))
-})
+/** Das Logo als echte Datei — `cid:` kennt der Browser nicht. */
+function mitLogo(html: string): string {
+  const logo = readFileSync('public/logo-mail.png').toString('base64')
+  return html.replace('cid:vh-logo', `data:image/png;base64,${logo}`)
+}
 
-test('der Strich aus der Leiste bekommt seine Maße für die Mail', () => {
-  // Im gespeicherten Text steht nur die Spielart; die Maße kommen erst hier
-  // dazu, weil eine Mail kein Stylesheet mitbringt
-  const fein = mailHtmlSaeubern('<p>Text</p><hr data-strich="fein">')
-  expect(fein).toContain('height:1px')
-  expect(fein).toContain('width:60px')
-  expect(fein).toContain('#a5622d')
+test.describe('Der Briefbogen der Mails', () => {
+  test('am Handy: Logo im Rahmen, Text mit Abstand', async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 852 })
+    await page.setContent(mitLogo(briefbogen(INHALT, FIRMA)))
 
-  expect(mailHtmlSaeubern('<hr data-strich="kraeftig">')).toContain('width:140px')
-  // Quer über die Breite: eine Kante, kein Ausrufezeichen
-  expect(mailHtmlSaeubern('<hr data-strich="quer">')).toContain('width:100%')
+    const logo = await page.locator('img').first().boundingBox()
+    expect(logo!.width, 'das Logo bleibt im Brief statt über die Kante zu reichen').toBeLessThan(340)
+    expect(logo!.width, 'und ist nicht bis zur Unsichtbarkeit geschrumpft').toBeGreaterThan(100)
+    // 2062 × 192 der Datei ergibt ein Verhältnis von etwa 10,7 : 1
+    expect(logo!.width / logo!.height, 'unverzerrt').toBeGreaterThan(8)
 
-  // Ein fremdes <hr> aus einer zitierten Mail sieht danach aus wie unseres
-  expect(mailHtmlSaeubern('<hr>')).toContain('width:84px')
-  expect(mailHtmlSaeubern('<hr style="border:5px solid red">')).not.toContain('red')
-})
+    const text = await page.locator('p').first().boundingBox()
+    expect(text!.x, 'der Text klebt nicht an der Glaskante').toBeGreaterThan(20)
+  })
 
-test('Überschriften tragen ihren Corten-Strich von selbst', () => {
-  const html = mailHtmlSaeubern('<h1>Große Überschrift</h1><h2>Kleine</h2><p>Text</p>')
-  // Dieselbe Regel wie auf der Website und auf dem Angebot: 112 × 3 unter der
-  // großen, 40 × 2 unter der kleinen
-  expect(html).toContain('width:112px')
-  expect(html).toContain('width:40px')
-  expect(html.indexOf('width:112px')).toBeGreaterThan(html.indexOf('Große Überschrift'))
-  expect(html.indexOf('width:112px')).toBeLessThan(html.indexOf('Kleine'))
+  test('am Rechner: der Brief steht mittig, nicht links angeschlagen', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 900 })
+    await page.setContent(mitLogo(briefbogen(INHALT, FIRMA)))
 
-  // Ein Absatz bekommt keinen — sonst stünde unter jeder Zeile ein Strich
-  expect(mailHtmlSaeubern('<p>Nur Text</p>')).not.toContain('width:40px')
-})
+    const text = await page.locator('p').first().boundingBox()
+    // Links angeschlagen wäre x rund 30; mittig sind es bei 1000 px über 200
+    expect(text!.x, 'zentriert statt am linken Rand').toBeGreaterThan(120)
 
-test('das Logo reist nur mit, wenn es im Text vorkommt', () => {
-  const mit = logoAnhang('<img src="cid:vh-logo" />')
-  expect(mit).toHaveLength(1)
-  // Die weiße Fassung: Sie trägt ihren hellen Grund im Bild und bleibt damit
-  // auch in einem dunkel gestellten Mailprogramm lesbar
-  expect(mit[0].filename).toBe('logo-mail.png')
-  expect(mit[0].cid).toBe('vh-logo')
+    // Und der Brief wird nicht breiter als seine 600 Punkte plus Innenabstand
+    const karte = await page.locator('table table').first().boundingBox()
+    expect(karte!.width, 'die Zeilen bleiben lesbar kurz').toBeLessThanOrEqual(620)
+  })
 
-  expect(logoAnhang('<p>Ohne Kopf</p>')).toHaveLength(0)
-})
+  test('die Pflichtangaben stehen drunter, auch bei eigenem Text', async ({ page }) => {
+    await page.setContent(mitLogo(briefbogen(INHALT, FIRMA)))
+    // Sie gehören auf jede Geschäftsmail — eine Vorlage darf sie nicht verlieren
+    await expect(page.locator('body')).toContainText('98755015900014')
+    await expect(page.locator('body')).toContainText('Next-Concept SAS')
+  })
 
-test('die Rechtsform steht einmal in der Fußzeile, nicht zweimal', () => {
-  // Wer den Firmennamen einträgt, schreibt die Rechtsform mit — die Vorlage
-  // hängte sie trotzdem noch einmal an: „Next-Concept SAS SAS"
-  expect(firmenzeile({ legalName: 'Next-Concept SAS', legalForm: 'SAS' })).toBe('Next-Concept SAS')
-  expect(firmenzeile({ legalName: 'Next-Concept', legalForm: 'SAS' })).toBe('Next-Concept SAS')
-  // Ein Name, der nur zufällig so endet, verliert nichts
-  expect(firmenzeile({ legalName: 'Sassenberg', legalForm: 'SAS' })).toBe('Sassenberg SAS')
+  test('ohne Fußzeile bleibt der Rahmen stehen', async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 852 })
+    await page.setContent(mitLogo(briefbogen(INHALT, FIRMA, false)))
 
-  // Dasselbe beim Handelsregister
-  const angaben = pflichtangaben({ rcsNumber: '987550159', rcsCity: 'RCS Strasbourg' })
-  expect(angaben).toContain('RCS Strasbourg 987550159')
-  expect(pflichtangaben({ rcsNumber: '987550159', rcsCity: 'Strasbourg' })).toContain(
-    'RCS Strasbourg 987550159',
-  )
+    const text = await page.locator('p').first().boundingBox()
+    expect(text!.x, 'auch die interne Mail hat ihren Abstand').toBeGreaterThan(20)
+    await expect(page.locator('body')).not.toContainText('98755015900014')
+  })
 })
