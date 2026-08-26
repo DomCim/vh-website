@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-import { istOffenerPosten, zaehltZumUmsatz } from '../src/lib/zahlungsstand'
+import {
+  bestellungZaehltZumUmsatz,
+  istOffenerPosten,
+  zaehltZumUmsatz,
+} from '../src/lib/zahlungsstand'
 
 /**
  * Ein Storno darf den Umsatz nur aufheben, nicht doppelt abziehen.
@@ -86,5 +90,47 @@ test.describe('Storno am laufenden Server', () => {
     // Keiner von beiden wartet auf Geld
     expect(istOffenerPosten(original)).toBe(false)
     expect(istOffenerPosten(storno)).toBe(false)
+  })
+})
+
+/**
+ * Ein Kauf auf Rechnung darf nicht zweimal zählen.
+ *
+ * Der Fehler, den das abfängt: Beim Kauf auf Rechnung entsteht erst die
+ * Bestellung, dann über den Fertigungsauftrag die Rechnung — beide mit
+ * demselben Betrag. Gezählt wurden beide, also stand derselbe Umsatz zweimal
+ * in der Summe und beim Steuerberater als zwei Einnahmen für eine Lieferung.
+ *
+ * Aufgefallen ist es erst durch ein Storno, und zwar von der falschen Seite:
+ * Original und Gegenrechnung hoben sich richtig auf, die Bestellung blieb mit
+ * 1.791 € stehen. Solange keiner der beiden Belege wegfällt, merkt man das
+ * Doppelte nicht.
+ */
+test.describe('Kauf auf Rechnung zählt nur einmal', () => {
+  test('die Bestellung tritt hinter ihre Rechnung zurück', () => {
+    // Kauf auf Rechnung: Der Auftrag ist der Träger der Rechnung, das Geld
+    // kommt über sie herein — sie ist der Beleg, nicht die Bestellung.
+    expect(bestellungZaehltZumUmsatz({ paymentProvider: 'rechnung' })).toBe(false)
+  })
+
+  test('bei PayPal bleibt die Bestellung der Beleg', () => {
+    // Dort ist das Geld beim Kauf eingezogen, eine Rechnung entsteht nicht
+    expect(bestellungZaehltZumUmsatz({ paymentProvider: 'paypal' })).toBe(true)
+  })
+
+  test('ohne Angabe zählt die Bestellung — kein Umsatz fällt still weg', () => {
+    expect(bestellungZaehltZumUmsatz({})).toBe(true)
+    expect(bestellungZaehltZumUmsatz({ paymentProvider: null })).toBe(true)
+  })
+
+  test('Bestellung und ihre Rechnung ergeben zusammen den einfachen Betrag', () => {
+    const bestellung = { paymentProvider: 'rechnung', total: 1791 }
+    const rechnung = { status: 'bezahlt', total: 1791 }
+
+    const summe =
+      (bestellungZaehltZumUmsatz(bestellung) ? bestellung.total : 0) +
+      (zaehltZumUmsatz(rechnung) ? rechnung.total : 0)
+
+    expect(summe, 'einmal 1791, nicht zweimal').toBe(1791)
   })
 })

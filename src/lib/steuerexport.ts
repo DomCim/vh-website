@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import { AUSGABEN_KATEGORIEN } from '../collections/Expenses'
 import { jahresZeitraum, monatsZeitraum } from './office'
+import { bestellungZaehltZumUmsatz } from './zahlungsstand'
 
 /**
  * Zusammenstellung für den Steuerberater.
@@ -121,6 +122,21 @@ export async function steuerbericht(
   const zeilen: Steuerzeile[] = []
 
   for (const o of bestellungen.docs) {
+    /*
+     * Ein Kauf auf Rechnung steht schon als Rechnung weiter unten.
+     *
+     * Sonst zählt derselbe Umsatz zweimal: erst die Bestellung, dann die
+     * Rechnung, die über den Fertigungsauftrag daraus entstanden ist — beide
+     * mit demselben Betrag. Beim Steuerberater wären das zwei Einnahmen für
+     * eine Lieferung, und die Umsatzsteuer doppelt erklärt.
+     *
+     * Bei PayPal bleibt es bei der Bestellung: Dort entsteht keine Rechnung,
+     * das Geld ist beim Kauf schon eingezogen. Siehe
+     * `bestellungZaehltZumUmsatz` in lib/zahlungsstand.ts — dieselbe Regel
+     * gilt in der Büro-Übersicht.
+     */
+    if (!bestellungZaehltZumUmsatz(o)) continue
+
     const brutto = o.total ?? 0
     const netto = runden(brutto / (1 + standardSatz / 100))
     zeilen.push({
