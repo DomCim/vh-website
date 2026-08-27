@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 76,
+    datum: null,
+    titel: 'Aus einem Auftrag wird ein Artikel — die Vorlage fürs nächste Mal',
+    punkte: [
+      {
+        text: '**Im Auftrag gibt es jetzt „Als Artikel ablegen".** Eine Lohnarbeit, die zum zweiten Mal kommt — dasselbe Frästeil, dasselbe Geländer — fing bisher wieder bei null an: Stückliste abtippen, Ablauf abtippen, Zeit schätzen. Jetzt wandert alles drei als Vorlage an einen neuen Artikel; der nächste gleiche Auftrag findet es dort vor.',
+      },
+      {
+        text: '**Der Artikel erscheint nicht im Shop.** Er steht auf „nur auf Anfrage" und „nicht verfügbar" — sichtbar machen ist danach eine bewusste Entscheidung in der Website-Verwaltung. Kategorie und Bild fragt der Dialog ab, weil ein Artikel beides braucht.',
+      },
+      {
+        text: '**Mitgenommen wird die Vorlage, nicht die Geschichte:** Material ohne beigestellte Posten (die gehören dem Auftraggeber), Mengen und Arbeitszeit **je Stück** statt gesamt, der Ablauf ohne die Häkchen des alten Auftrags. Preise und Kundendaten bleiben zurück — die sind verhandelt und gehören zu diesem einen Auftrag.',
+      },
+      {
+        text: '**Die erste Position des Auftrags zeigt danach auf den neuen Artikel** — damit erscheint das Bild auf den Papieren, wie bei Artikeln aus dem Shop.',
+      },
+    ],
+  },
+  {
     nummer: 75,
     datum: null,
     titel: 'Laufmarken: Ein QR-Code wandert mit dem Teil — und jeder sieht, wo es ist',
