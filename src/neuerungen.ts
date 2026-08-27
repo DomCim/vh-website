@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 77,
+    datum: null,
+    titel: 'Interne Artikel — und der Merchant-Feed zeigt jetzt alle Bilder',
+    punkte: [
+      {
+        text: '**Ein Artikel kann jetzt „intern" sein** — ein Haken in der Website-Verwaltung. Intern heißt: Er existiert nach außen nicht. Keine Artikelseite (der Aufruf gibt 404), keine Sitemap, kein Google-Feed, keine Suche, keine „Verwendete Arbeiten"-Kacheln, und auch die Datenschnittstelle gibt ihn ohne Anmeldung nicht heraus. Er lebt nur im Büro und in der Verwaltung.',
+      },
+      {
+        text: '**Der Unterschied zu „nicht verfügbar":** Ein nicht verfügbarer Artikel behält seine öffentliche Seite — sie sagt nur, dass er nicht lieferbar ist. Ein interner Artikel ist unsichtbar. Gedacht für Lohnarbeits-Vorlagen, an denen Kundenname und Zuschnitt hängen: Die gehen Google nichts an.',
+      },
+      {
+        text: '**„Als Artikel ablegen" legt jetzt intern ab.** Die Vorlage aus einem Auftrag war bisher nur „nicht verfügbar" — ihre Seite gab es trotzdem. Ab jetzt ist sie unsichtbar, bis jemand den Haken bewusst herausnimmt. Auch der Assistent kann das Feld lesen und setzen.',
+      },
+      {
+        text: '**An Google Merchant gehen jetzt alle Bilder eines Artikels**, nicht mehr nur das erste. Der Tisch stand im Shopping-Ergebnis in einer Ansicht, während die Artikelseite fünf hat — jetzt reisen bis zu zehn Zusatzbilder mit, im selben sparsamen Zuschnitt wie bisher das Hauptbild.',
+      },
+    ],
+  },
+  {
     nummer: 76,
     datum: null,
     titel: 'Aus einem Auftrag wird ein Artikel — die Vorlage fürs nächste Mal',

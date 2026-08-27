@@ -29,7 +29,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     payload.find({ collection: 'categories', limit: 200, depth: 0 }),
     payload.find({
       collection: 'products',
-      where: { available: { equals: true } },
+      // Interne Artikel existieren nach außen nicht — siehe Products.intern
+      where: { and: [{ available: { equals: true } }, { intern: { not_equals: true } }] },
       limit: 500,
       depth: 1,
     }),

@@ -60,6 +60,7 @@ export function registerProdukte(server: McpServer) {
           ausDerWerkstatt: Boolean(p.readyMade),
           nurAufAnfrage: Boolean(p.onRequestOnly),
           verfuegbar: p.available !== false,
+          intern: Boolean(p.intern),
           aufStartseite: Boolean(p.featured),
         })),
       })
@@ -110,6 +111,7 @@ export function registerProdukte(server: McpServer) {
         ausDerWerkstatt: Boolean(p.readyMade),
         nurAufAnfrage: Boolean(p.onRequestOnly),
         verfuegbar: p.available !== false,
+        intern: Boolean(p.intern),
         aufStartseite: Boolean(p.featured),
         reihenfolge: p.order ?? 0,
       })
@@ -144,6 +146,13 @@ export function registerProdukte(server: McpServer) {
           .describe('true = fertiges Stück, sofort lieferbar (wird nach dem Verkauf automatisch ausgeblendet)'),
         verfuegbar: z.boolean().optional(),
         nurAufAnfrage: z.boolean().optional(),
+        intern: z
+          .boolean()
+          .optional()
+          .describe(
+            'Intern heißt: nicht auf der Website — keine Artikelseite, keine Sitemap, ' +
+              'keine Suche, kein Google. Für Lohnarbeits-Vorlagen, die nur das Büro sieht.',
+          ),
         aufStartseite: z.boolean().optional(),
         reihenfolge: z.number().optional(),
         /*
@@ -196,6 +205,7 @@ export function registerProdukte(server: McpServer) {
       ausDerWerkstatt,
       verfuegbar,
       nurAufAnfrage,
+      intern,
       aufStartseite,
       reihenfolge,
       varianten,
@@ -229,6 +239,7 @@ export function registerProdukte(server: McpServer) {
           ...(ausDerWerkstatt !== undefined && { readyMade: ausDerWerkstatt }),
           ...(verfuegbar !== undefined && { available: verfuegbar }),
           ...(nurAufAnfrage !== undefined && { onRequestOnly: nurAufAnfrage }),
+          ...(intern !== undefined && { intern }),
           ...(aufStartseite !== undefined && { featured: aufStartseite }),
           ...(reihenfolge !== undefined && { order: reihenfolge }),
           // Bestehende Varianten behalten ihre Kennung — siehe variantenZuordnen
