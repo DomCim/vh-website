@@ -26,6 +26,16 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 78,
+    datum: null,
+    titel: 'Die Laufmarken sind jetzt DIN A6',
+    punkte: [
+      {
+        text: '**Das Druckblatt liefert vier Marken je A4 statt zwanzig** — jede genau DIN A6, die Schnittlinien sind die Blattmitten. Der QR-Code ist entsprechend groß, der Code darunter aus zwei Metern lesbar. Kleine Schnipsel gehen in einer Werkstatt verloren; eine A6-Marke an einem Stahlteil fällt auf.',
+      },
+    ],
+  },
+  {
     nummer: 77,
     datum: null,
     titel: 'Interne Artikel — und der Merchant-Feed zeigt jetzt alle Bilder',
