@@ -155,7 +155,14 @@ export function variantenArbeitsplan(
   const variante = varianteFinden(produkt.variants, bezug) as
     | { arbeitsplan?: unknown }
     | undefined
-  const quelle = (variante?.arbeitsplan ?? produkt.arbeitsplan) as
+  /*
+   * Dieselbe Regel wie bei Stückliste und Fremdleistung: Ein **leerer**
+   * Varianten-Ablauf heißt „hier gilt die Vorlage vom Artikel", nicht „hat
+   * keinen Ablauf". Mit `??` statt der Längenprüfung griffe der Rückfall nie,
+   * denn Payload liefert das Feld an jeder Variante als leere Liste mit.
+   */
+  const eigener = variante?.arbeitsplan
+  const quelle = (Array.isArray(eigener) && eigener.length ? eigener : produkt.arbeitsplan) as
     | Record<string, unknown>[]
     | undefined
   if (!Array.isArray(quelle) || !quelle.length) return []
@@ -176,6 +183,55 @@ export function variantenArbeitsplan(
     stand: 'offen' as const,
     notiz: (schritt.notiz as string | null) ?? null,
   }))
+}
+
+/**
+ * Bestellzeilen zu Auftragspositionen — die Abschrift für die Werkstatt.
+ *
+ * Drei Angaben reisen mit, und jede hat einen Leser: Die **Beschreibung** ist
+ * der Text auf dem Papier. Der **Artikelbezug** bringt das Bild ins Büro und
+ * zum Dienstleister. Die **Farbe** steht zusätzlich als eigenes Feld, weil der
+ * Beschichter über die Laufmarke nur Felder gezeigt bekommt, nie den
+ * verhandelten Text — eine Farbe, die nur im Satz steckt, sähe er nicht.
+ *
+ * Als reine Funktion ausgelagert, damit sie prüfbar ist, ohne eine Bestellung
+ * durch die Kasse zu schieben.
+ */
+export function auftragsPositionen(
+  items:
+    | {
+        titleSnapshot?: string | null
+        variantTitle?: string | null
+        color?: string | null
+        quantity?: number | null
+        unitPrice?: number | null
+        /** Kennung oder geladenes Objekt — je nach Ladetiefe */
+        product?: unknown
+      }[]
+    | null
+    | undefined,
+): {
+  description: string
+  quantity?: number | null
+  price?: number | null
+  farbe?: string
+  product: number | null
+}[] {
+  return (items ?? []).map((p) => {
+    const produkt =
+      typeof p.product === 'object' && p.product !== null
+        ? ((p.product as { id?: number }).id ?? null)
+        : typeof p.product === 'number'
+          ? p.product
+          : null
+    return {
+      description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
+      quantity: p.quantity,
+      price: p.unitPrice,
+      farbe: p.color ?? undefined,
+      product: produkt,
+    }
+  })
 }
 
 export type Bedarfsposten = {

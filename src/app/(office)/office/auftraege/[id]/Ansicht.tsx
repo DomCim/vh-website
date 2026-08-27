@@ -29,7 +29,13 @@ type Auftrag = {
   jobNumber?: string | null
   title?: string | null
   positions?:
-    | { description?: string | null; quantity?: number | null; price?: number | null; product?: unknown }[]
+    | {
+        description?: string | null
+        quantity?: number | null
+        price?: number | null
+        product?: unknown
+        farbe?: string | null
+      }[]
     | null
   material?: { item?: unknown; quantity?: number | null }[] | null
   arbeitsplan?: Arbeitsschritt[] | null
@@ -160,6 +166,7 @@ export function AuftragAnsicht() {
             quantity: p.quantity ?? 1,
             price: p.price ?? 0,
             product: (p.product as number) ?? '',
+            farbe: p.farbe ?? '',
           })),
           material: (j.material ?? []).map((m) => ({
             item: Number(typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item),

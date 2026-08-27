@@ -399,6 +399,21 @@ export const Jobs: CollectionConfig = {
             },
           ],
         },
+        {
+          /*
+           * Die Farbe als eigene Angabe, nicht nur im Beschreibungstext.
+           *
+           * Der Text auf dem Papier trägt sie oft mit („Herz, Rubinrot") —
+           * aber wer sie **braucht**, ist der Beschichter, und der bekommt
+           * über die Laufmarke nur die Felder gezeigt, nie den verhandelten
+           * Text. Freitext wie in der Bestellzeile: Dort steht auch „RAL
+           * 7016", und eine Auswahlliste wäre nur eine zweite Pflegequelle.
+           */
+          name: 'farbe',
+          label: 'Farbe',
+          type: 'text',
+          admin: { description: 'z.B. „Rubinrot (RAL 3003)" — sieht der Beschichter beim Scannen.' },
+        },
       ],
     },
     {

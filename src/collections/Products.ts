@@ -472,6 +472,24 @@ export const Products: CollectionConfig = {
         { name: 'note', label: 'Bemerkung', type: 'text' },
       ],
     },
+    /*
+     * Der Ablauf als Vorlage — jetzt auch am Artikel selbst.
+     *
+     * Bisher gab es ihn nur an der Variante, und `variantenArbeitsplan` in
+     * lib/material.ts griff mit `variante?.arbeitsplan ?? produkt.arbeitsplan`
+     * schon immer nach diesem Feld — nur existierte es nicht, und der
+     * Rückfall war toter Code. Ein Artikel ohne Varianten (Lohnfertigung,
+     * Maßanfertigung) konnte deshalb gar keine Vorlage tragen.
+     *
+     * Mit dem Feld wird der Rückfall lebendig, ohne dass sich eine Zeile
+     * Logik ändert. Es gilt dieselbe Stufenfolge wie bei Stückliste und
+     * Arbeitszeit: Die Variante geht vor, der Artikel ist die Grundlage.
+     */
+    arbeitsplanFeld(
+      false,
+      'Die Reihenfolge, in der dieses Stück entsteht — Vorlage für Aufträge. ' +
+        'Ein an der Variante hinterlegter Ablauf geht vor.',
+    ),
     {
       name: 'productionMinutes',
       label: 'Arbeitszeit je Stück (Minuten)',

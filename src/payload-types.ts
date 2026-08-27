@@ -355,6 +355,27 @@ export interface Product {
       }[]
     | null;
   /**
+   * Die Reihenfolge, in der dieses Stück entsteht — Vorlage für Aufträge. Ein an der Variante hinterlegter Ablauf geht vor.
+   */
+  arbeitsplan?:
+    | {
+        /**
+         * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+         */
+        was: string;
+        art: 'eigen' | 'fremd';
+        minuten?: number | null;
+        dienstleister?: (number | null) | Contact;
+        kosten?: number | null;
+        /**
+         * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+         */
+        vorlaufTage?: number | null;
+        notiz?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Reine Werkstattzeit. Zusammen mit dem Stundensatz ergibt sie den größten Teil der Kosten — ohne sie ist jede Nachkalkulation geschönt.
    */
   productionMinutes?: number | null;
@@ -1088,6 +1109,10 @@ export interface Job {
          * Bei Shop-Bestellungen der Preis von der Website.
          */
         price?: number | null;
+        /**
+         * z.B. „Rubinrot (RAL 3003)" — sieht der Beschichter beim Scannen.
+         */
+        farbe?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -2126,6 +2151,18 @@ export interface ProductsSelect<T extends boolean = true> {
         note?: T;
         id?: T;
       };
+  arbeitsplan?:
+    | T
+    | {
+        was?: T;
+        art?: T;
+        minuten?: T;
+        dienstleister?: T;
+        kosten?: T;
+        vorlaufTage?: T;
+        notiz?: T;
+        id?: T;
+      };
   productionMinutes?: T;
   productionTime?: T;
   readyMade?: T;
@@ -2508,6 +2545,7 @@ export interface JobsSelect<T extends boolean = true> {
         product?: T;
         quantity?: T;
         price?: T;
+        farbe?: T;
         id?: T;
       };
   material?:

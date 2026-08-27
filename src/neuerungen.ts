@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 74,
+    datum: null,
+    titel: 'Der Ablauf lässt sich jetzt anlegen — am Auftrag und als Vorlage am Artikel',
+    punkte: [
+      {
+        text: '**Im Auftrag lassen sich die Arbeitsschritte jetzt eintragen, umsortieren und löschen** — nicht mehr nur abhaken. Bisher versprach der leere Bereich „hier von Hand anlegen", aber es gab keinen Knopf dafür: Ein Auftrag ohne Artikel dahinter (Lohnarbeit, Maßanfertigung) stand ohne Ablauf da. Je Schritt stehen Art (eigene Arbeit oder Dienstleister), Minuten beziehungsweise Betrieb, Kosten und Vorlauftage.',
+      },
+      {
+        text: '**Am Artikel gibt es den Ablauf jetzt als Vorlage** — unter `/office/artikel` neben Stückliste und Fremdleistung, mit derselben Regel: Was an der Variante steht, gilt; eine Variante ohne eigenen Ablauf übernimmt die Vorlage vom Artikel. Beim Anlegen eines Auftrags aus einer Bestellung wird die Vorlage abgeschrieben und dort abgehakt. Bisher konnte nur eine Variante eine Vorlage tragen — ein Artikel ohne Varianten gar keine.',
+      },
+      {
+        text: '**Die Farbe steht am Auftrag jetzt als eigenes Feld je Position.** Aus einer Shop-Bestellung wird sie übernommen, von Hand lässt sie sich eintragen. Der Anlass ist die geplante Laufmarke: Der Beschichter soll beim Scannen die Farbe sehen — und die stand bisher nur mitten im Beschreibungstext, den er nicht zu sehen bekommt.',
+      },
+      {
+        text: '**Ebenfalls übernommen wird jetzt der Artikelbezug** aus der Shop-Bestellung: Der Auftrag zeigt damit das Bild des bestellten Artikels, wie es beim Kauf auf Rechnung schon lange der Fall war.',
+      },
+    ],
+  },
+  {
     nummer: 73,
     datum: null,
     titel: 'Das Bild passt jetzt schon beim Öffnen zur gewählten Ausführung',

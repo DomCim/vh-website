@@ -117,6 +117,8 @@ export async function POST(req: Request) {
           price: p.price ?? undefined,
           // Nur für das Bild auf den Papieren — siehe Jobs.positions.product
           product: Number(p.product) || undefined,
+          // Für den Beschichter über die Laufmarke — siehe Jobs.positions.farbe
+          farbe: typeof p.farbe === 'string' && p.farbe.trim() ? p.farbe.trim() : undefined,
         })),
       material: (b.material ?? [])
         .filter((m: { item?: number }) => m.item)

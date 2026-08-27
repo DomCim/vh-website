@@ -6,6 +6,8 @@ import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { Werkstattdateien } from './Werkstattdateien'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Ablauf } from './Ablauf'
+import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -27,6 +29,8 @@ export type VariantenEingabe = {
   stueckliste: StuecklistenZeile[]
   dienstleister: DienstleisterZeile[]
   minuten?: number | null
+  /** Der Ablauf als Vorlage — leer heißt „erbt die Vorlage vom Artikel" */
+  ablauf?: Arbeitsschritt[]
 }
 
 const euro = (v: number) =>
@@ -54,6 +58,7 @@ export function ArtikelFormular({
   partner,
   verkaufspreis,
   arbeitsminuten,
+  ablauf = [],
   varianten = [],
   stundensatz,
   wunschaufschlag,
@@ -66,6 +71,8 @@ export function ArtikelFormular({
   verkaufspreis?: number | null
   /** Arbeitszeit je Stück in Minuten — steht am Artikel in der Verwaltung */
   arbeitsminuten?: number | null
+  /** Der Ablauf als Vorlage am Artikel — wird beim Anlegen eines Auftrags abgeschrieben */
+  ablauf?: Arbeitsschritt[]
   varianten?: VariantenEingabe[]
   stundensatz: number
   wunschaufschlag: number
@@ -73,6 +80,7 @@ export function ArtikelFormular({
   const [basis, setBasis] = useState<StuecklistenZeile[]>(stueckliste)
   const [basisMinuten, setBasisMinuten] = useState<number>(arbeitsminuten ?? 0)
   const [basisDienste, setBasisDienste] = useState<DienstleisterZeile[]>(dienstleister)
+  const [basisAblauf, setBasisAblauf] = useState<Arbeitsschritt[]>(ablauf)
 
   // '' ist die Grundlage, sonst die Kennung der Variante
   const [gewaehlt, setGewaehlt] = useState<string>('')
@@ -84,6 +92,9 @@ export function ArtikelFormular({
   )
   const [diensteJe, setDiensteJe] = useState<Record<string, DienstleisterZeile[]>>(() =>
     Object.fromEntries(varianten.map((v) => [v.id, v.dienstleister])),
+  )
+  const [ablaufJe, setAblaufJe] = useState<Record<string, Arbeitsschritt[]>>(() =>
+    Object.fromEntries(varianten.map((v) => [v.id, v.ablauf ?? []])),
   )
 
   const [laeuft, setLaeuft] = useState(false)
@@ -109,6 +120,15 @@ export function ArtikelFormular({
   const setDienste = (aendern: (v: DienstleisterZeile[]) => DienstleisterZeile[]) => {
     if (!gewaehlt) return setBasisDienste(aendern)
     setDiensteJe((v) => ({ ...v, [gewaehlt]: aendern(v[gewaehlt] ?? []) }))
+  }
+
+  const eigenerAblauf = gewaehlt ? (ablaufJe[gewaehlt] ?? []) : basisAblauf
+  /** Zeigt diese Variante nur, was die Grundlage an Ablauf sagt? */
+  const erbtAblauf = Boolean(gewaehlt) && eigenerAblauf.length === 0
+  const ablaufAktiv = erbtAblauf ? basisAblauf : eigenerAblauf
+  const setAblauf = (plan: Arbeitsschritt[]) => {
+    if (!gewaehlt) return setBasisAblauf(plan)
+    setAblaufJe((v) => ({ ...v, [gewaehlt]: plan }))
   }
 
   const eigeneMinuten = gewaehlt ? (minutenJe[gewaehlt] ?? 0) : basisMinuten
@@ -149,11 +169,13 @@ export function ArtikelFormular({
     const sauber = (v: StuecklistenZeile[]) => v.filter((z) => z.item && z.quantity)
     const sauberDienste = (v: DienstleisterZeile[]) =>
       v.filter((d) => d.contact && d.service?.trim())
+    const sauberAblauf = (v: Arbeitsschritt[]) => v.filter((s) => s.was?.trim())
     const variantenDaten = varianten.map((v) => ({
       id: v.id,
       zeilen: sauber(listen[v.id] ?? []),
       dienstleister: sauberDienste(diensteJe[v.id] ?? []),
       minuten: minutenJe[v.id] || null,
+      ablauf: sauberAblauf(ablaufJe[v.id] ?? []),
     }))
     try {
       const { sofort } = await absenden({
@@ -164,6 +186,7 @@ export function ArtikelFormular({
           zeilen: sauber(basis),
           dienstleister: sauberDienste(basisDienste),
           arbeitsminuten: basisMinuten || 0,
+          ablauf: sauberAblauf(basisAblauf),
           varianten: variantenDaten,
         },
         // Der Schlüssel heißt hier produktId — der Bestand kennt nur `id`
@@ -172,6 +195,7 @@ export function ArtikelFormular({
           billOfMaterials: sauber(basis),
           serviceProviders: sauberDienste(basisDienste),
           productionMinutes: basisMinuten || 0,
+          arbeitsplan: sauberAblauf(basisAblauf),
           variants: varianten.map((v) => ({
             id: v.id,
             title: v.titel,
@@ -179,6 +203,7 @@ export function ArtikelFormular({
             billOfMaterials: sauber(listen[v.id] ?? []),
             serviceProviders: sauberDienste(diensteJe[v.id] ?? []),
             productionMinutes: minutenJe[v.id] || null,
+            arbeitsplan: sauberAblauf(ablaufJe[v.id] ?? []),
           })),
         },
       })
@@ -220,16 +245,20 @@ export function ArtikelFormular({
                 {/* Ein Haken für „hat eine eigene Liste". Wer nichts Eigenes
                     hat, braucht auch kein Zeichen — der Normalfall bleibt
                     unbeschriftet. */}
-                {(listen[v.id] ?? []).length > 0 || (diensteJe[v.id] ?? []).length > 0 ? ' ✓' : ''}
+                {(listen[v.id] ?? []).length > 0 ||
+                (diensteJe[v.id] ?? []).length > 0 ||
+                (ablaufJe[v.id] ?? []).length > 0
+                  ? ' ✓'
+                  : ''}
               </button>
             ))}
           </div>
           <p className="buero-unterzeile">
             {gewaehlt === ''
               ? 'Gilt für alle Varianten, die nichts Eigenes hinterlegt haben.'
-              : erbt && erbtDienste
-                ? 'Diese Variante übernimmt Material, Fremdleistung und Zeit von der Grundlage.'
-                : `Eigenes hinterlegt: ${[!erbt && 'Material', !erbtDienste && 'Fremdleistung', eigeneMinuten > 0 && 'Zeit']
+              : erbt && erbtDienste && erbtAblauf
+                ? 'Diese Variante übernimmt Material, Fremdleistung, Ablauf und Zeit von der Grundlage.'
+                : `Eigenes hinterlegt: ${[!erbt && 'Material', !erbtDienste && 'Fremdleistung', !erbtAblauf && 'Ablauf', eigeneMinuten > 0 && 'Zeit']
                     .filter(Boolean)
                     .join(', ')}. Der Rest kommt von der Grundlage.`}
           </p>
@@ -504,6 +533,60 @@ export function ArtikelFormular({
           </button>
         )}
       </div>
+        </>
+      )}
+
+      <h2 style={{ marginTop: '1.5rem' }}>
+        Ablauf (Vorlage){variante ? ` · ${variante.titel}` : ''}
+      </h2>
+      <p className="buero-unterzeile">
+        Die Reihenfolge, in der das Stück entsteht — wird beim Anlegen eines Auftrags
+        abgeschrieben und dort abgehakt.
+        {gewaehlt !== '' && ' Leer heißt: Es gilt die Vorlage der Grundlage.'}
+      </p>
+      {/*
+       * Wie bei Material und Fremdleistung: Was von der Grundlage geerbt wird,
+       * wird gezeigt und nicht bearbeitet — wer hier einen Schritt für die
+       * große Variante einfügt, hätte ihn sonst für alle eingefügt.
+       */}
+      {erbtAblauf ? (
+        <>
+          {ablaufAktiv.length > 0 ? (
+            <Ablauf plan={ablaufAktiv} />
+          ) : (
+            <div className="buero-leer">Auch die Grundlage hat noch keinen Ablauf.</div>
+          )}
+          <button
+            type="button"
+            className="buero-knopf leise"
+            onClick={() =>
+              setAblaufJe((v) => ({
+                ...v,
+                [gewaehlt]: basisAblauf.length
+                  ? basisAblauf.map((s) => ({ ...s }))
+                  : [{ was: '', art: 'eigen' }],
+              }))
+            }
+          >
+            Eigenen Ablauf für „{variante?.titel}“ anlegen
+          </button>
+        </>
+      ) : (
+        <>
+          <Ablauf
+            plan={ablaufAktiv}
+            bearbeiten={{ ersetzen: setAblauf, mitStand: false }}
+          />
+          {gewaehlt !== '' && eigenerAblauf.length > 0 && (
+            <button
+              type="button"
+              className="buero-knopf leise"
+              style={{ marginLeft: '.6rem' }}
+              onClick={() => setAblaufJe((v) => ({ ...v, [gewaehlt]: [] }))}
+            >
+              Wieder die Grundlage verwenden
+            </button>
+          )}
         </>
       )}
 

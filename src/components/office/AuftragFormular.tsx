@@ -23,6 +23,8 @@ export type AuftragPosition = {
   price?: number | null
   /** Nur für das Bild auf dem Papier — ändert an keiner Zahl etwas */
   product?: number | '' | null
+  /** Sieht der Beschichter über die Laufmarke — der Text auf dem Papier nicht */
+  farbe?: string | null
 }
 
 export type AuftragMaterial = {
@@ -431,6 +433,20 @@ export function AuftragFormular({
               }
             />
           </label>
+          <label className="buero-feld">
+            <span>Farbe</span>
+            <input
+              value={p.farbe ?? ''}
+              placeholder="z.B. Rubinrot (RAL 3003)"
+              onChange={(e) =>
+                setzen({
+                  positions: (w.positions ?? []).map((x, idx) =>
+                    idx === i ? { ...x, farbe: e.target.value } : x,
+                  ),
+                })
+              }
+            />
+          </label>
         </div>
       ))}
       <button
@@ -450,6 +466,10 @@ export function AuftragFormular({
       <h2>Ablauf</h2>
       <Ablauf
         plan={w.arbeitsplan ?? []}
+        bearbeiten={{
+          ersetzen: (plan) => setzen({ arbeitsplan: plan }),
+          mitStand: true,
+        }}
         aendern={(index, stand) =>
           setzen({
             arbeitsplan: (w.arbeitsplan ?? []).map((s, i) =>
