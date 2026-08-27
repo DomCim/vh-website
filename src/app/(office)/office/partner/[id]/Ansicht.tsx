@@ -83,6 +83,8 @@ export function PartnerBearbeitenAnsicht() {
           defaultCategory: k.defaultCategory as string,
           sprache: k.sprache as string,
           notes: k.notes as string,
+          markenZugangGesetztAm:
+            ((k.markenZugang as { gesetztAm?: string } | undefined)?.gesetztAm as string) ?? null,
         }}
         kategorien={AUSGABEN_KATEGORIEN.map((x) => ({ wert: x.value, text: x.label }))}
       />

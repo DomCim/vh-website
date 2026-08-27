@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import { MELDUNG_GELESEN_TAGE, MELDUNG_TAGE } from '../collections/Notifications'
+import { draussenUeberfaellig } from './arbeitsplan'
 import { GRABSTEIN_TAGE } from './bereiche'
 import { liveMelden } from './live'
 import { reviewRequestEmail } from './mail'
@@ -446,6 +447,50 @@ export async function bestandMelden(payload: Payload): Promise<number> {
 }
 
 /**
+ * Teile melden, die beim Dienstleister überfällig sind.
+ *
+ * Genau dafür wurden die Vorlauftage am Fremd-Schritt erfunden: Verzinken
+ * dauert fünf Tage, in denen die Werkstatt nichts tut und die Uhr trotzdem
+ * läuft. Überfällig heißt: rausgebucht, nicht zurück, Vorlauftage um — die
+ * Regel steht in `draussenUeberfaellig` (lib/arbeitsplan.ts), damit sie
+ * prüfbar ist.
+ *
+ * Gemeldet wird mit fester Kennung je Auftrag und Schritt: Der Takt klopft
+ * viermal in der Stunde, und dieselbe Kennung **ersetzt** die Meldung, statt
+ * sie zu stapeln — kein Meldungsgewitter über ein Teil, das drei Tage zu
+ * lange beim Beschichter liegt.
+ */
+export async function teileDraussenMelden(payload: Payload): Promise<number> {
+  const { docs } = await payload.find({
+    collection: 'jobs',
+    where: { status: { in: ['geplant', 'inFertigung'] } },
+    limit: 500,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  let gemeldet = 0
+  for (const auftrag of docs) {
+    const plan = (auftrag.arbeitsplan ?? []) as import('./arbeitsplan').Arbeitsschritt[]
+    for (let i = 0; i < plan.length; i += 1) {
+      const schritt = plan[i]
+      if (!draussenUeberfaellig(schritt)) continue
+      const tage = Math.floor(
+        (Date.now() - new Date(schritt.rausAm as string).getTime()) / 86400_000,
+      )
+      await benachrichtige(payload, {
+        titel: `Teil überfällig: ${schritt.was ?? 'Fremdleistung'}`,
+        text: `${auftrag.jobNumber ?? auftrag.id} ist seit ${tage} Tagen draußen — zugesagt waren ${schritt.vorlaufTage}.`,
+        url: `/office/auftraege/${auftrag.id}`,
+        tag: `draussen-${auftrag.id}-${i}`,
+      }).catch(() => undefined)
+      gemeldet += 1
+    }
+  }
+  return gemeldet
+}
+
+/**
  * Fällige Wiedervorlagen melden.
  *
  * Der Unterschied zu allem anderen hier: Diese Erinnerung hat sich jemand
@@ -725,6 +770,7 @@ export type WartungsBericht = {
   wiederkehrend: number
   aufgeraeumt: Record<string, number>
   stillstand: string[]
+  draussen: number
 }
 
 /** Ein kompletter Wartungslauf. Fehler einer Aufgabe halten die anderen nicht auf. */
@@ -740,6 +786,7 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     wiederkehrend: 0,
     aufgeraeumt: {},
     stillstand: [],
+    draussen: 0,
   }
 
   try {
@@ -782,6 +829,12 @@ export async function wartungslauf(payload: Payload): Promise<WartungsBericht> {
     bericht.wiedervorlagen = await wiedervorlagenMelden(payload)
   } catch (err) {
     payload.logger.error({ err }, 'Wartung: Wiedervorlagen fehlgeschlagen')
+  }
+
+  try {
+    bericht.draussen = await teileDraussenMelden(payload)
+  } catch (err) {
+    payload.logger.error({ err }, 'Wartung: Überfällig-draußen-Meldung fehlgeschlagen')
   }
 
   try {

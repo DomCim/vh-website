@@ -123,6 +123,49 @@ export function arbeitsschritte(mitStand: boolean): Field[] {
               },
             ],
           },
+          /*
+           * Die Reise eines Fremd-Schritts — vier Zeitstempel, kein vierter
+           * Stand-Wert.
+           *
+           * „Draußen" ist kein eigener Zustand: Ein Fremd-Schritt mit Stand
+           * „läuft" **ist** außer Haus. Ein vierter Wert liefe durch jede
+           * Stelle, die den Stand kennt, und beim Zurückspringen wäre unklar,
+           * was gilt. Zeitstempel sind dagegen Fakten: Sie überschreiben
+           * einander nicht, sie tragen die Überfälligkeitsrechnung
+           * (`rausAm + vorlaufTage < heute` und kein `zurueckAm`) und die
+           * Anzeige „seit 3 Tagen beim Verzinker".
+           *
+           * Zwei Paare, zwei Schreiber: `rausAm`/`zurueckAm` bucht das Büro,
+           * `angekommenAm`/`fertigGemeldetAm` meldet der Betrieb selbst über
+           * den Scan der Laufmarke. Keiner fasst die Felder des anderen an —
+           * zusammen erzählen sie die Reise.
+           */
+          {
+            type: 'row',
+            admin: { condition: (_: unknown, g: { art?: string }) => g?.art === 'fremd' },
+            fields: [
+              { name: 'rausAm', label: 'Raus am', type: 'date' },
+              { name: 'zurueckAm', label: 'Zurück am', type: 'date' },
+            ],
+          },
+          {
+            type: 'row',
+            admin: { condition: (_: unknown, g: { art?: string }) => g?.art === 'fremd' },
+            fields: [
+              {
+                name: 'angekommenAm',
+                label: 'Beim Betrieb angekommen am',
+                type: 'date',
+                admin: { readOnly: true },
+              },
+              {
+                name: 'fertigGemeldetAm',
+                label: 'Vom Betrieb fertiggemeldet am',
+                type: 'date',
+                admin: { readOnly: true },
+              },
+            ],
+          },
         ] as Field[])
       : []),
     { name: 'notiz', label: 'Bemerkung', type: 'text' },
@@ -154,7 +197,32 @@ export type Arbeitsschritt = {
   vorlaufTage?: number | null
   stand?: 'offen' | 'laeuft' | 'erledigt' | null
   erledigtAm?: string | null
+  /** Vom Büro gebucht: wann das Teil zum Betrieb raus und wieder zurück ist */
+  rausAm?: string | null
+  zurueckAm?: string | null
+  /** Vom Betrieb selbst gemeldet, über den Scan der Laufmarke */
+  angekommenAm?: string | null
+  fertigGemeldetAm?: string | null
   notiz?: string | null
+}
+
+/**
+ * Ist dieses Teil gerade außer Haus überfällig?
+ *
+ * Überfällig heißt: rausgebucht, nicht zurück, und die zugesagten Vorlauftage
+ * sind um. Ohne `vorlaufTage` gibt es keine Zusage — dann kann auch nichts
+ * überfällig sein; eine Meldung ohne Maßstab wäre nur Lärm.
+ */
+export function draussenUeberfaellig(
+  schritt: Arbeitsschritt,
+  jetzt: Date = new Date(),
+): boolean {
+  if (schritt.art !== 'fremd' || !schritt.rausAm || schritt.zurueckAm) return false
+  const tage = Number(schritt.vorlaufTage) || 0
+  if (tage <= 0) return false
+  const frist = new Date(schritt.rausAm)
+  frist.setDate(frist.getDate() + tage)
+  return jetzt.getTime() > frist.getTime()
 }
 
 /**

@@ -23,6 +23,8 @@ export type PartnerWerte = {
   defaultCategory?: string | null
   sprache?: string | null
   notes?: string | null
+  /** Nur zum Anzeigen, ob ein Laufmarken-PIN existiert — der Abdruck selbst bleibt drinnen */
+  markenZugangGesetztAm?: string | null
 }
 
 const SPRACHEN = [
@@ -55,6 +57,7 @@ export function PartnerFormular({
   const [w, setW] = useState<PartnerWerte>(anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+  const [pinKlartext, setPinKlartext] = useState<string | null>(null)
 
   // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
   const entwurf = useEntwurf(`partner:${werte.id ?? 'neu'}`, w, anfang)
@@ -203,6 +206,58 @@ export function PartnerFormular({
         <span>Notiz</span>
         <textarea rows={2} value={w.notes ?? ''} onChange={(e) => setzen({ notes: e.target.value })} />
       </label>
+
+      {/*
+        * Der Laufmarken-Zugang — nur an einem gespeicherten Partner.
+        *
+        * Direkt gesendet, nicht über die Warteschlange: Die Antwort trägt den
+        * Klartext-PIN, und der existiert genau einmal — in dieser Antwort.
+        * Eine Warteschlange, die später sendet, hätte niemanden mehr, dem sie
+        * ihn zeigen kann.
+        */}
+      {w.id && (
+        <>
+          <h2>Laufmarken-Zugang</h2>
+          <p className="buero-unterzeile">
+            Mit diesem PIN meldet sich der Betrieb an, wenn er eine Laufmarke scannt — einmal je
+            Gerät. Der PIN bleibt gültig, bis hier ein neuer erzeugt wird.
+            {w.markenZugangGesetztAm ? ' Es ist bereits einer gesetzt.' : ''}
+          </p>
+          {pinKlartext && (
+            <div className="buero-hinweis" style={{ marginBottom: '.8rem' }}>
+              PIN: <strong style={{ fontSize: '1.2rem', letterSpacing: '.12em' }}>{pinKlartext}</strong>
+              {' '}— jetzt notieren und dem Betrieb geben. Er wird nicht noch einmal angezeigt.
+            </div>
+          )}
+          <button
+            type="button"
+            className="buero-knopf leise"
+            disabled={laeuft}
+            onClick={async () => {
+              setLaeuft(true)
+              setMeldung(null)
+              try {
+                const r = await fetch('/api/office/partner', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ aktion: 'markenPin', id: w.id }),
+                })
+                const daten = (await r.json()) as { pin?: string }
+                if (r.ok && daten.pin) {
+                  setPinKlartext(daten.pin)
+                  setzen({ markenZugangGesetztAm: new Date().toISOString() })
+                } else setMeldung('Das hat nicht geklappt.')
+              } catch {
+                setMeldung('Das hat nicht geklappt — dafür braucht es Netz.')
+              } finally {
+                setLaeuft(false)
+              }
+            }}
+          >
+            {w.markenZugangGesetztAm ? 'PIN erneuern' : 'PIN erzeugen'}
+          </button>
+        </>
+      )}
 
       <Fussleiste>
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>

@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 75,
+    datum: null,
+    titel: 'Laufmarken: Ein QR-Code wandert mit dem Teil — und jeder sieht, wo es ist',
+    punkte: [
+      {
+        text: '**Unter `/office/laufmarken` gibt es jetzt die Tafel.** Marken anlegen, als Druckblatt (PDF, zwanzig je A4) ausdrucken, ausschneiden — fertig. Eine Marke wird an einen Auftrag gekoppelt und wandert physisch mit dem Teil: zum Verzinker, zurück, zum Beschichter. Die Übersicht zeigt je Marke, an welchem Auftrag sie hängt, welcher Schritt dran ist und was außer Haus ist — bei wem, seit wann, und wann es zurückerwartet wird. Überfälliges steht rot und meldet sich zusätzlich aufs Handy.',
+      },
+      {
+        text: '**Wer die Marke scannt, sieht je nach Anmeldung Verschiedenes.** Das Büro bekommt die Seite mit den großen Knöpfen: „Teil ist raus zum Verzinker" und „Teil ist zurück" — ein Tipp bucht, ein versehentlicher Scan ändert nichts. Ohne Anmeldung steht da nur ein Satz: Diese Marke gehört zu einem Auftrag der Werkstatt Hellmann. Ob es einen Code überhaupt gibt, verrät die Seite nicht.',
+      },
+      {
+        text: '**Der Dienstleister meldet sich mit einem PIN an** — einmal je Gerät, danach merkt es sich das Telefon. Den PIN erzeugt das Büro am Geschäftspartner (`Partner` → „Laufmarken-Zugang"); er bleibt gültig, bis dort ein neuer erzeugt wird. Angemeldet sieht der Betrieb **nur seinen eigenen Schritt**: Artikel mit Bild, Menge, Farbe, Wunschtermin. Keine Preise, keine Kundendaten, keine anderen Schritte — was er nicht braucht, verlässt das Haus nicht.',
+      },
+      {
+        text: '**Der Betrieb kann selbst melden:** „Teil ist angekommen" und „Fertig — kann abgeholt werden". Die Fertigmeldung kommt als Meldung aufs Handy. Am Auftrag stehen dafür eigene Zeitstempel neben denen des Büros — wer wann was gemeldet hat, bleibt auseinanderhaltbar.',
+      },
+      {
+        text: '**Nach der Lieferung wird die Marke von selbst frei** und hängt wieder an der Tafel — wer sie danach scannt, sieht nichts vom alten Auftrag. Der nächste Auftrag benutzt dieselbe Marke; nichts wird weggeworfen.',
+      },
+    ],
+  },
+  {
     nummer: 74,
     datum: null,
     titel: 'Der Ablauf lässt sich jetzt anlegen — am Auftrag und als Vorlage am Artikel',
