@@ -106,5 +106,33 @@ export const Contacts: CollectionConfig = {
       ],
     },
     { name: 'notes', label: 'Notiz', type: 'textarea' },
+    {
+      /*
+       * Der Zugang dieses Betriebs zu den Laufmarken.
+       *
+       * Der Beschichter scannt eine Marke und weist sich mit einem kurzen PIN
+       * aus — einmal je Gerät, danach trägt ihn ein Cookie. Der PIN ist
+       * **dauerhaft**: Er ändert sich nur, wenn das Büro es anstößt, denn ein
+       * Betrieb, der sich alle paar Tage neu ausweisen müsste, hörte auf zu
+       * scannen.
+       *
+       * Gespeichert wird nur der scrypt-Abdruck (siehe lib/uebergabe.ts) —
+       * der Klartext steht ein einziges Mal in der Antwort der Büro-Route,
+       * die ihn erzeugt, und danach nirgends mehr.
+       */
+      name: 'markenZugang',
+      label: 'Laufmarken-Zugang',
+      type: 'group',
+      admin: { description: 'Erzeugt und erneuert im Büro unter Partner.' },
+      fields: [
+        {
+          name: 'pin',
+          label: 'PIN (Abdruck)',
+          type: 'text',
+          admin: { readOnly: true },
+        },
+        { name: 'gesetztAm', label: 'Gesetzt am', type: 'date', admin: { readOnly: true } },
+      ],
+    },
   ],
 }

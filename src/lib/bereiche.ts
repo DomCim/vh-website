@@ -19,6 +19,7 @@ export const BEREICHE = {
   inventur: 'stocktakes',
   kontobewegungen: 'bank-transactions',
   kundenstimmen: 'testimonials',
+  laufmarken: 'job-tags',
   medien: 'media',
   meldungen: 'notifications',
   neuerungen: 'changelog',
@@ -85,6 +86,7 @@ export const BEREICH_RECHTE: Partial<Record<Bereich, string[]>> = {
   inventar: ['inventar.pflegen', 'auftraege.bearbeiten', 'website.pflegen'],
   inventur: ['inventar.pflegen'],
   kontobewegungen: ['rechnungen.schreiben', 'zahlen.sehen'],
+  laufmarken: ['auftraege.bearbeiten'],
   newsletter: ['newsletter.versenden'],
   partner: [
     'partner.pflegen',

@@ -60,6 +60,7 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
     titel: 'Werkstatt',
     punkte: [
       { href: '/office/auftraege', label: 'Aufträge', recht: 'auftraege.bearbeiten' },
+      { href: '/office/laufmarken', label: 'Laufmarken', recht: 'auftraege.bearbeiten' },
       { href: '/office/kalender', label: 'Kalender', recht: 'auftraege.bearbeiten' },
       { href: '/office/auslastung', label: 'Auslastung', recht: 'auftraege.bearbeiten' },
       { href: '/office/artikel', label: 'Artikel', recht: 'website.pflegen' },
@@ -203,6 +204,15 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <path d="M9 4h6v2.5H9z" />
       <path d="M6 6.5h12a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z" />
       <path d="M8.5 12h7M8.5 15.5h4.5" />
+    </>
+  ),
+  '/office/laufmarken': (
+    // Ein QR-Code, grob gerastert — mehr braucht die Marke nicht
+    <>
+      <rect x="4" y="4" width="6" height="6" />
+      <rect x="14" y="4" width="6" height="6" />
+      <rect x="4" y="14" width="6" height="6" />
+      <path d="M14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 17.5h1.2M18.8 14H20" />
     </>
   ),
   '/office/kalender': (

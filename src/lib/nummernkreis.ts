@@ -99,6 +99,22 @@ export async function naechsteAuftragsnummer(payload: Payload): Promise<string> 
   return `AU-${jahr}-${String(nummer).padStart(4, '0')}`
 }
 
+/**
+ * Marken-Code einer Laufmarke, z.B. M-007.
+ *
+ * Ohne Jahr, anders als alle anderen Kreise hier: Die Marke ist Hardware —
+ * ein Stück Blech mit QR-Code an der Magnettafel, das den Jahreswechsel
+ * übersteht und wiederverwendet wird. Ein Jahres-Präfix hieße, jedes Jahr
+ * neue Marken zu drucken.
+ *
+ * Drei Stellen, weil der Code von Hand abtippbar bleiben soll, falls die
+ * Kamera streikt — und niemand tausend Marken an eine Tafel hängt.
+ */
+export async function naechsterMarkenCode(payload: Payload): Promise<string> {
+  const nummer = await naechsteNummer(payload, 'laufmarke')
+  return `M-${String(nummer).padStart(3, '0')}`
+}
+
 /** Wareneingangsnummer, z.B. WE-2026-0007 */
 export async function naechsteWareneingangsnummer(payload: Payload): Promise<string> {
   const jahr = new Date().getFullYear()

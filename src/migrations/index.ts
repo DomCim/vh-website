@@ -65,6 +65,7 @@ import * as migration_20260826_074038_datev_nummern from './20260826_074038_date
 import * as migration_20260826_105448_mailvorlagen from './20260826_105448_mailvorlagen';
 import * as migration_20260826_140454_farbbilder from './20260826_140454_farbbilder';
 import * as migration_20260827_134731_ablauf_fundament from './20260827_134731_ablauf_fundament';
+import * as migration_20260827_143309_laufmarken from './20260827_143309_laufmarken';
 
 export const migrations = [
   {
@@ -400,6 +401,11 @@ export const migrations = [
   {
     up: migration_20260827_134731_ablauf_fundament.up,
     down: migration_20260827_134731_ablauf_fundament.down,
-    name: '20260827_134731_ablauf_fundament'
+    name: '20260827_134731_ablauf_fundament',
+  },
+  {
+    up: migration_20260827_143309_laufmarken.up,
+    down: migration_20260827_143309_laufmarken.down,
+    name: '20260827_143309_laufmarken'
   },
 ];

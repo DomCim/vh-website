@@ -42,6 +42,49 @@ export async function POST(req: Request) {
     }
 
     /*
+     * Teil raus zum Dienstleister / Teil ist zurück — zwei enge Wege.
+     *
+     * Sie buchen genau einen Fremd-Schritt des Ablaufs und fassen sonst
+     * nichts an: Lesen–Ändern–Schreiben der Liste, jede Zeile mit ihrer
+     * Kennung, damit Payload die ungenannten Felder behält. „Raus" setzt den
+     * Schritt auf „läuft" und stempelt `rausAm`; „zurück" stempelt
+     * `zurueckAm` und hakt den Schritt ab. Die Zeitstempel des Betriebs
+     * (`angekommenAm`, `fertigGemeldetAm`) gehören dem Scan und bleiben
+     * unberührt — zwei Schreiber, zwei Felderpaare.
+     */
+    if (b.aktion === 'schrittRaus' || b.aktion === 'schrittZurueck') {
+      const index = Number(b.schritt)
+      if (!b.id || !Number.isInteger(index) || index < 0) {
+        return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      }
+      const auftrag = await payload
+        .findByID({ collection: 'jobs', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      const plan = (auftrag?.arbeitsplan ?? []) as Record<string, unknown>[]
+      const schritt = plan[index]
+      if (!schritt || schritt.art !== 'fremd') {
+        return NextResponse.json({ error: 'kein-fremdschritt' }, { status: 400 })
+      }
+      const jetzt = new Date().toISOString()
+      const neu =
+        b.aktion === 'schrittRaus'
+          ? { ...schritt, stand: 'laeuft', rausAm: schritt.rausAm ?? jetzt }
+          : {
+              ...schritt,
+              stand: 'erledigt',
+              zurueckAm: schritt.zurueckAm ?? jetzt,
+              erledigtAm: schritt.erledigtAm ?? jetzt,
+            }
+      const doc = await payload.update({
+        collection: 'jobs',
+        id: b.id,
+        overrideAccess: true,
+        data: { arbeitsplan: plan.map((s, i) => (i === index ? neu : s)) as never },
+      })
+      return NextResponse.json({ ok: true, id: doc.id })
+    }
+
+    /*
      * Rechnung aus dem Auftrag — ebenfalls ein enger Weg.
      *
      * Am Auftrag steht alles, was auf die Rechnung gehört: Positionen,
