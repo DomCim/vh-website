@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 import {
   farbenZuordnen,
   varianteFinden,
+  variantenArbeitsplan,
   variantenDienstleister,
   variantenMinuten,
   variantenStueckliste,
@@ -264,5 +265,64 @@ test.describe('Farben einem bestehenden Artikel zuordnen', () => {
     const raus = farbenZuordnen([], [{ name: 'Einzige', bild: 5 }])
     expect(raus[0].id).toBeUndefined()
     expect(raus[0].image).toBe(5)
+  })
+})
+
+/**
+ * Welcher Ablauf gilt — dieselbe Stufenfolge wie bei Stückliste und Zeit.
+ *
+ * Der heimtückische Fall ist der **leere** Varianten-Ablauf: Payload liefert
+ * das Feld an jeder Variante als leere Liste mit. Zählte die als „hat einen
+ * (leeren) Ablauf", griffe die Vorlage am Artikel bei Artikeln mit Varianten
+ * nie — genau so stand es hier zuerst im Code (`??` statt Längenprüfung).
+ */
+test.describe('Welcher Ablauf gilt', () => {
+  const MIT_PLAN = {
+    variants: [
+      { id: 'v1', title: 'Klein', arbeitsplan: [] },
+      {
+        id: 'v2',
+        title: 'Groß',
+        arbeitsplan: [{ was: 'Extra-Naht', art: 'fremd', dienstleister: 7, vorlaufTage: 3 }],
+      },
+    ],
+    arbeitsplan: [
+      { was: 'Zuschnitt', art: 'eigen', minuten: 30 },
+      { was: 'Schweißen', art: 'eigen', minuten: 90 },
+    ],
+  }
+
+  test('der eigene der Variante, wenn sie einen hat', () => {
+    const plan = variantenArbeitsplan(MIT_PLAN, { variantId: 'v2' })
+    expect(plan.map((s) => s.was)).toEqual(['Extra-Naht'])
+    // Die Verknüpfung wird zur Kennung — der Auftrag zeigt auf den Betrieb,
+    // schleppt aber nicht dessen Daten mit
+    expect(plan[0].dienstleister).toBe(7)
+  })
+
+  test('ein leerer Varianten-Ablauf erbt die Vorlage vom Artikel', () => {
+    const plan = variantenArbeitsplan(MIT_PLAN, { variantId: 'v1' })
+    expect(plan.map((s) => s.was)).toEqual(['Zuschnitt', 'Schweißen'])
+  })
+
+  test('ohne Variante gilt die Vorlage vom Artikel', () => {
+    expect(variantenArbeitsplan(MIT_PLAN, {}).map((s) => s.was)).toEqual([
+      'Zuschnitt',
+      'Schweißen',
+    ])
+  })
+
+  test('die Abschrift fängt immer bei offen an', () => {
+    // Auch wenn in der Vorlage je ein Stand stünde: Ein frischer Auftrag hat
+    // noch nichts erledigt
+    const plan = variantenArbeitsplan(
+      { arbeitsplan: [{ was: 'Kanten', art: 'eigen', stand: 'erledigt' }] },
+      {},
+    )
+    expect(plan[0].stand).toBe('offen')
+  })
+
+  test('ohne alles bleibt die Liste leer statt undefiniert', () => {
+    expect(variantenArbeitsplan({}, {})).toEqual([])
   })
 })

@@ -18,10 +18,12 @@ export type VerknuepfteArbeit = {
 /**
  * Aus den verknüpften Datensätzen die Kacheln machen.
  *
- * Zwei Dinge fallen dabei weg: nicht aufgelöste Verweise (reine Zahlen —
- * `depth` reichte nicht) und Artikel ohne Kategorie oder Pfad. Für die gäbe
- * es keine Adresse, und eine Kachel, die ins Leere führt, ist schlimmer als
- * keine.
+ * Drei Dinge fallen dabei weg: nicht aufgelöste Verweise (reine Zahlen —
+ * `depth` reichte nicht), Artikel ohne Kategorie oder Pfad (für die gäbe es
+ * keine Adresse, und eine Kachel, die ins Leere führt, ist schlimmer als
+ * keine) — und **interne Artikel**: Ihre Seite gibt es öffentlich nicht,
+ * und eine Referenz, die auf einen 404 zeigt, verriete obendrein, dass da
+ * etwas ist.
  */
 export function arbeitenAus(
   verweise: unknown,
@@ -31,6 +33,7 @@ export function arbeitenAus(
   const liste = Array.isArray(verweise) ? verweise : []
   return liste
     .filter((p): p is Record<string, any> => typeof p === 'object' && p !== null)
+    .filter((p) => !p.intern)
     .map((p) => ({
       id: p.id,
       titel: String(p.title ?? ''),

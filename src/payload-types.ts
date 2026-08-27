@@ -85,6 +85,7 @@ export interface Config {
     'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
     'goods-receipts': GoodsReceipt;
+    'job-tags': JobTag;
     'product-files': ProductFile;
     'customer-uploads': CustomerUpload;
     stocktakes: Stocktake;
@@ -126,6 +127,7 @@ export interface Config {
     'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     'goods-receipts': GoodsReceiptsSelect<false> | GoodsReceiptsSelect<true>;
+    'job-tags': JobTagsSelect<false> | JobTagsSelect<true>;
     'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
     'customer-uploads': CustomerUploadsSelect<false> | CustomerUploadsSelect<true>;
     stocktakes: StocktakesSelect<false> | StocktakesSelect<true>;
@@ -355,6 +357,27 @@ export interface Product {
       }[]
     | null;
   /**
+   * Die Reihenfolge, in der dieses Stück entsteht — Vorlage für Aufträge. Ein an der Variante hinterlegter Ablauf geht vor.
+   */
+  arbeitsplan?:
+    | {
+        /**
+         * z.B. „Zuschnitt", „Schweißen", „Verzinken", „Montage"
+         */
+        was: string;
+        art: 'eigen' | 'fremd';
+        minuten?: number | null;
+        dienstleister?: (number | null) | Contact;
+        kosten?: number | null;
+        /**
+         * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
+         */
+        vorlaufTage?: number | null;
+        notiz?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Reine Werkstattzeit. Zusammen mit dem Stundensatz ergibt sie den größten Teil der Kosten — ohne sie ist jede Nachkalkulation geschönt.
    */
   productionMinutes?: number | null;
@@ -375,6 +398,10 @@ export interface Product {
    */
   onRequestOnly?: boolean | null;
   available?: boolean | null;
+  /**
+   * Nur im Büro und hier sichtbar — keine Artikelseite, keine Sitemap, keine Suche.
+   */
+  intern?: boolean | null;
   featured?: boolean | null;
   /**
    * Kleinere Zahl = weiter vorne in der Kategorie
@@ -559,6 +586,13 @@ export interface Contact {
   defaultCategory?: string | null;
   sprache?: ('de' | 'fr' | 'en') | null;
   notes?: string | null;
+  /**
+   * Erzeugt und erneuert im Büro unter Partner.
+   */
+  markenZugang?: {
+    pin?: string | null;
+    gesetztAm?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1088,6 +1122,10 @@ export interface Job {
          * Bei Shop-Bestellungen der Preis von der Website.
          */
         price?: number | null;
+        /**
+         * z.B. „Rubinrot (RAL 3003)" — sieht der Beschichter beim Scannen.
+         */
+        farbe?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1163,6 +1201,10 @@ export interface Job {
         vorlaufTage?: number | null;
         stand?: ('offen' | 'laeuft' | 'erledigt') | null;
         erledigtAm?: string | null;
+        rausAm?: string | null;
+        zurueckAm?: string | null;
+        angekommenAm?: string | null;
+        fertigGemeldetAm?: string | null;
         notiz?: string | null;
         id?: string | null;
       }[]
@@ -1400,6 +1442,37 @@ export interface GoodsReceipt {
    */
   expense?: (number | null) | Expense;
   note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "job-tags".
+ */
+export interface JobTag {
+  id: number;
+  /**
+   * Steht als QR-Code auf der Marke — z.B. M-001.
+   */
+  code: string;
+  /**
+   * Leer = die Marke ist frei und hängt an der Tafel.
+   */
+  auftrag?: (number | null) | Job;
+  gekoppeltAm?: string | null;
+  /**
+   * z.B. „Tafel Reihe 2" — wo die Marke physisch wohnt.
+   */
+  notiz?: string | null;
+  verlauf?:
+    | {
+        jobNumber?: string | null;
+        gekoppeltAm?: string | null;
+        entkoppeltAm?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1934,6 +2007,10 @@ export interface PayloadLockedDocument {
         value: number | GoodsReceipt;
       } | null)
     | ({
+        relationTo: 'job-tags';
+        value: number | JobTag;
+      } | null)
+    | ({
         relationTo: 'product-files';
         value: number | ProductFile;
       } | null)
@@ -2126,12 +2203,25 @@ export interface ProductsSelect<T extends boolean = true> {
         note?: T;
         id?: T;
       };
+  arbeitsplan?:
+    | T
+    | {
+        was?: T;
+        art?: T;
+        minuten?: T;
+        dienstleister?: T;
+        kosten?: T;
+        vorlaufTage?: T;
+        notiz?: T;
+        id?: T;
+      };
   productionMinutes?: T;
   productionTime?: T;
   readyMade?: T;
   digital?: T;
   onRequestOnly?: T;
   available?: T;
+  intern?: T;
   featured?: T;
   order?: T;
   updatedAt?: T;
@@ -2392,6 +2482,12 @@ export interface ContactsSelect<T extends boolean = true> {
   defaultCategory?: T;
   sprache?: T;
   notes?: T;
+  markenZugang?:
+    | T
+    | {
+        pin?: T;
+        gesetztAm?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2508,6 +2604,7 @@ export interface JobsSelect<T extends boolean = true> {
         product?: T;
         quantity?: T;
         price?: T;
+        farbe?: T;
         id?: T;
       };
   material?:
@@ -2557,6 +2654,10 @@ export interface JobsSelect<T extends boolean = true> {
         vorlaufTage?: T;
         stand?: T;
         erledigtAm?: T;
+        rausAm?: T;
+        zurueckAm?: T;
+        angekommenAm?: T;
+        fertigGemeldetAm?: T;
         notiz?: T;
         id?: T;
       };
@@ -2722,6 +2823,27 @@ export interface GoodsReceiptsSelect<T extends boolean = true> {
   booked?: T;
   expense?: T;
   note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "job-tags_select".
+ */
+export interface JobTagsSelect<T extends boolean = true> {
+  code?: T;
+  auftrag?: T;
+  gekoppeltAm?: T;
+  notiz?: T;
+  verlauf?:
+    | T
+    | {
+        jobNumber?: T;
+        gekoppeltAm?: T;
+        entkoppeltAm?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;

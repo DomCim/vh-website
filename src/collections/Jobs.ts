@@ -134,6 +134,46 @@ export const Jobs: CollectionConfig = {
           }
         }
 
+        /*
+         * Laufmarken freigeben, sobald der Auftrag das Haus verlassen hat.
+         *
+         * Die Marke hängt danach wieder an der Tafel — wer das Entkoppeln
+         * vergäße, gäbe dem nächsten Scanner die Daten des **alten** Auftrags.
+         * Bei „fertig" bewusst nicht: Das Teil ist im Haus, aber die Marke
+         * klebt bis zur Lieferung dran.
+         */
+        if (
+          doc.status !== previousDoc?.status &&
+          (doc.status === 'geliefert' || doc.status === 'abgebrochen')
+        ) {
+          try {
+            const { docs: marken } = await req.payload.find({
+              collection: 'job-tags',
+              where: { auftrag: { equals: doc.id } },
+              depth: 0,
+              overrideAccess: true,
+              req,
+            })
+            for (const marke of marken) {
+              const verlauf = ((marke.verlauf ?? []) as Record<string, unknown>[]).map(
+                (z, i, alle) =>
+                  i === alle.length - 1 && !z.entkoppeltAm
+                    ? { ...z, entkoppeltAm: new Date().toISOString() }
+                    : z,
+              )
+              await req.payload.update({
+                collection: 'job-tags',
+                id: marke.id,
+                overrideAccess: true,
+                req,
+                data: { auftrag: null, gekoppeltAm: null, verlauf: verlauf as never },
+              })
+            }
+          } catch (err) {
+            req.payload.logger.error({ err }, `Auftrag ${doc.jobNumber}: Marken nicht freigegeben`)
+          }
+        }
+
         // Bestellung mitziehen: der Kunde erfährt vom Fertigungsstart
         const bestellId = typeof doc.order === 'object' ? doc.order?.id : doc.order
         if (bestellId && doc.status !== previousDoc?.status) {
@@ -398,6 +438,21 @@ export const Jobs: CollectionConfig = {
               admin: { description: 'Bei Shop-Bestellungen der Preis von der Website.' },
             },
           ],
+        },
+        {
+          /*
+           * Die Farbe als eigene Angabe, nicht nur im Beschreibungstext.
+           *
+           * Der Text auf dem Papier trägt sie oft mit („Herz, Rubinrot") —
+           * aber wer sie **braucht**, ist der Beschichter, und der bekommt
+           * über die Laufmarke nur die Felder gezeigt, nie den verhandelten
+           * Text. Freitext wie in der Bestellzeile: Dort steht auch „RAL
+           * 7016", und eine Auswahlliste wäre nur eine zweite Pflegequelle.
+           */
+          name: 'farbe',
+          label: 'Farbe',
+          type: 'text',
+          admin: { description: 'z.B. „Rubinrot (RAL 3003)" — sieht der Beschichter beim Scannen.' },
         },
       ],
     },

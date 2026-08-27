@@ -42,6 +42,172 @@ export async function POST(req: Request) {
     }
 
     /*
+     * Aus dem Auftrag einen Artikel machen — der Weg zurück zur Vorlage.
+     *
+     * Die Gegenrichtung gibt es längst (Artikel → Auftrag, orderHooks). Was
+     * fehlte: Eine Lohnarbeit, die zum zweiten Mal kommt, fing wieder bei
+     * null an — Stückliste abtippen, Ablauf abtippen. Hier wird der Auftrag
+     * zur Vorlage: Material, Ablauf und Zeit wandern an einen neuen Artikel,
+     * der **nicht** im Shop erscheint (onRequestOnly und nicht verfügbar,
+     * doppelt vernäht — sichtbar machen ist danach eine bewusste
+     * Entscheidung in der Verwaltung).
+     *
+     * Kategorie und Bild sind Pflicht, weil der Artikel sie verlangt — ein
+     * Artikel ohne Bild ließe sich schlicht nicht anlegen.
+     *
+     * Doppelrecht wie bei `rechnung`: Es entsteht Website-Inhalt.
+     */
+    if (b.aktion === 'alsArtikel') {
+      if (!b.id || !b.kategorie || !b.bild) {
+        return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      }
+      if (!(await darf(payload, user, 'website.pflegen'))) {
+        return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
+      }
+
+      const auftrag = await payload
+        .findByID({ collection: 'jobs', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      if (!auftrag) return NextResponse.json({ error: 'auftrag-fehlt' }, { status: 400 })
+
+      /*
+       * Zeigt schon eine Position auf einen Artikel, gibt es nichts
+       * abzulegen — und die Offline-Warteschlange darf einen doppelt
+       * getippten Knopf nicht in zwei Artikel verwandeln.
+       */
+      const positionen = (auftrag.positions ?? []) as Record<string, unknown>[]
+      if (positionen.some((p) => p.product)) {
+        return NextResponse.json({ error: 'schon-verknuepft' }, { status: 409 })
+      }
+
+      // Der Auftrag zählt gesamt, der Artikel je Stück
+      const stueckzahl = Math.max(1, Number(positionen[0]?.quantity) || 1)
+      const runden = (n: number) => Math.round(n * 1000) / 1000
+
+      /*
+       * Beigestelltes bleibt draußen: Es gehört dem Auftraggeber, und in
+       * einer Vorlage wäre es eine Lüge über den eigenen Bedarf.
+       */
+      const stueckliste = ((auftrag.material ?? []) as Record<string, unknown>[])
+        .filter((m) => m.item && !m.beigestellt)
+        .map((m) => ({
+          item: Number(typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item),
+          quantity: runden((Number(m.quantity) || 0) / stueckzahl),
+        }))
+        .filter((m) => m.item && m.quantity > 0)
+
+      /*
+       * Der Ablauf gestutzt auf die Vorlagenform: `stand`, `erledigtAm` und
+       * die Reise-Zeitstempel sind Geschichte dieses einen Auftrags, keine
+       * Vorlage für den nächsten.
+       */
+      const ablauf = ((auftrag.arbeitsplan ?? []) as Record<string, unknown>[])
+        .filter((s) => typeof s.was === 'string' && s.was.trim())
+        .map((s) => ({
+          was: s.was as string,
+          art: (s.art === 'fremd' ? 'fremd' : 'eigen') as 'eigen' | 'fremd',
+          minuten: (s.minuten as number | null) ?? null,
+          dienstleister:
+            Number(typeof s.dienstleister === 'object' ? (s.dienstleister as { id?: number })?.id : s.dienstleister) ||
+            undefined,
+          kosten: (s.kosten as number | null) ?? null,
+          vorlaufTage: (s.vorlaufTage as number | null) ?? null,
+          notiz: (s.notiz as string | null) || undefined,
+        }))
+
+      const artikel = await payload.create({
+        collection: 'products',
+        overrideAccess: true,
+        locale: 'de',
+        data: {
+          title: (typeof b.titel === 'string' && b.titel.trim()) || auftrag.title || 'Artikel',
+          category: Number(b.kategorie),
+          images: [Number(b.bild)],
+          /*
+           * Intern, und dazu doppelt vernäht: `intern` nimmt dem Artikel die
+           * Seite, die Sitemap und die Suche — an einer Lohnarbeits-Vorlage
+           * hängen Kundenname und Zuschnitt, die gehen Google nichts an.
+           * `onRequestOnly` und `available: false` bleiben als Gürtel zum
+           * Hosenträger: Wer den Artikel später sichtbar macht, hat immer
+           * noch keinen Kaufknopf, bis er es ausdrücklich will. Preise
+           * wandern bewusst nicht mit — die am Auftrag sind verhandelt und
+           * kundenspezifisch.
+           */
+          intern: true,
+          onRequestOnly: true,
+          available: false,
+          billOfMaterials: stueckliste as never,
+          arbeitsplan: ablauf as never,
+          productionMinutes: auftrag.plannedMinutes
+            ? Math.max(1, Math.round(auftrag.plannedMinutes / stueckzahl))
+            : undefined,
+        },
+      })
+
+      /*
+       * Rückverweis: Die erste Position zeigt jetzt auf den neuen Artikel —
+       * damit erscheint künftig das Bild auf den Papieren, und der nächste
+       * gleiche Auftrag findet Vorlage und Stückliste. Die ganze Liste wird
+       * zurückgeschrieben, samt `farbe` — Teilabschriften verlieren Felder.
+       */
+      await payload.update({
+        collection: 'jobs',
+        id: b.id,
+        overrideAccess: true,
+        data: {
+          positions: positionen.map((p, i) =>
+            i === 0 ? { ...p, product: artikel.id } : p,
+          ) as never,
+        },
+      })
+
+      return NextResponse.json({ ok: true, artikel: artikel.id })
+    }
+
+    /*
+     * Teil raus zum Dienstleister / Teil ist zurück — zwei enge Wege.
+     *
+     * Sie buchen genau einen Fremd-Schritt des Ablaufs und fassen sonst
+     * nichts an: Lesen–Ändern–Schreiben der Liste, jede Zeile mit ihrer
+     * Kennung, damit Payload die ungenannten Felder behält. „Raus" setzt den
+     * Schritt auf „läuft" und stempelt `rausAm`; „zurück" stempelt
+     * `zurueckAm` und hakt den Schritt ab. Die Zeitstempel des Betriebs
+     * (`angekommenAm`, `fertigGemeldetAm`) gehören dem Scan und bleiben
+     * unberührt — zwei Schreiber, zwei Felderpaare.
+     */
+    if (b.aktion === 'schrittRaus' || b.aktion === 'schrittZurueck') {
+      const index = Number(b.schritt)
+      if (!b.id || !Number.isInteger(index) || index < 0) {
+        return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      }
+      const auftrag = await payload
+        .findByID({ collection: 'jobs', id: b.id, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      const plan = (auftrag?.arbeitsplan ?? []) as Record<string, unknown>[]
+      const schritt = plan[index]
+      if (!schritt || schritt.art !== 'fremd') {
+        return NextResponse.json({ error: 'kein-fremdschritt' }, { status: 400 })
+      }
+      const jetzt = new Date().toISOString()
+      const neu =
+        b.aktion === 'schrittRaus'
+          ? { ...schritt, stand: 'laeuft', rausAm: schritt.rausAm ?? jetzt }
+          : {
+              ...schritt,
+              stand: 'erledigt',
+              zurueckAm: schritt.zurueckAm ?? jetzt,
+              erledigtAm: schritt.erledigtAm ?? jetzt,
+            }
+      const doc = await payload.update({
+        collection: 'jobs',
+        id: b.id,
+        overrideAccess: true,
+        data: { arbeitsplan: plan.map((s, i) => (i === index ? neu : s)) as never },
+      })
+      return NextResponse.json({ ok: true, id: doc.id })
+    }
+
+    /*
      * Rechnung aus dem Auftrag — ebenfalls ein enger Weg.
      *
      * Am Auftrag steht alles, was auf die Rechnung gehört: Positionen,
@@ -117,6 +283,8 @@ export async function POST(req: Request) {
           price: p.price ?? undefined,
           // Nur für das Bild auf den Papieren — siehe Jobs.positions.product
           product: Number(p.product) || undefined,
+          // Für den Beschichter über die Laufmarke — siehe Jobs.positions.farbe
+          farbe: typeof p.farbe === 'string' && p.farbe.trim() ? p.farbe.trim() : undefined,
         })),
       material: (b.material ?? [])
         .filter((m: { item?: number }) => m.item)

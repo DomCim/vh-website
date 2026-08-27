@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
 import { AUFTRAG_STATUS } from '../../lib/listen'
+import { useBestand } from '../../lib/buero/bestand'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
@@ -23,6 +24,8 @@ export type AuftragPosition = {
   price?: number | null
   /** Nur für das Bild auf dem Papier — ändert an keiner Zahl etwas */
   product?: number | '' | null
+  /** Sieht der Beschichter über die Laufmarke — der Text auf dem Papier nicht */
+  farbe?: string | null
 }
 
 export type AuftragMaterial = {
@@ -431,17 +434,41 @@ export function AuftragFormular({
               }
             />
           </label>
+          <label className="buero-feld">
+            <span>Farbe</span>
+            <input
+              value={p.farbe ?? ''}
+              placeholder="z.B. Rubinrot (RAL 3003)"
+              onChange={(e) =>
+                setzen({
+                  positions: (w.positions ?? []).map((x, idx) =>
+                    idx === i ? { ...x, farbe: e.target.value } : x,
+                  ),
+                })
+              }
+            />
+          </label>
         </div>
       ))}
-      <button
-        type="button"
-        className="buero-knopf leise"
-        onClick={() =>
-          setzen({ positions: [...(w.positions ?? []), { description: '', quantity: 1 }] })
-        }
-      >
-        Position hinzufügen
-      </button>
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="buero-knopf leise"
+          onClick={() =>
+            setzen({ positions: [...(w.positions ?? []), { description: '', quantity: 1 }] })
+          }
+        >
+          Position hinzufügen
+        </button>
+        {/*
+          * Nur an einem gespeicherten Auftrag, dessen Positionen noch auf
+          * keinen Artikel zeigen: Sonst gibt es nichts abzulegen — die
+          * Vorlage existiert dann schon.
+          */}
+        {w.id && !(w.positions ?? []).some((p) => p.product) && (
+          <AlsArtikelDialog auftragId={w.id} />
+        )}
+      </div>
 
       {/*
         * Der Ablauf steht über dem Material: In der Werkstatt fragt man
@@ -450,6 +477,10 @@ export function AuftragFormular({
       <h2>Ablauf</h2>
       <Ablauf
         plan={w.arbeitsplan ?? []}
+        bearbeiten={{
+          ersetzen: (plan) => setzen({ arbeitsplan: plan }),
+          mitStand: true,
+        }}
         aendern={(index, stand) =>
           setzen({
             arbeitsplan: (w.arbeitsplan ?? []).map((s, i) =>
@@ -591,6 +622,125 @@ export function AuftragFormular({
           Speichern
         </button>
       </Fussleiste>
+    </div>
+  )
+}
+
+/**
+ * Aus dem Auftrag einen Artikel machen — der Weg zurück zur Vorlage.
+ *
+ * Eine Lohnarbeit, die zum zweiten Mal kommt, soll nicht wieder bei null
+ * anfangen: Material, Ablauf und Zeit wandern an einen neuen Artikel, der
+ * nicht im Shop erscheint. Kategorie und Bild fragt der Dialog ab, weil der
+ * Artikel beides verlangt.
+ *
+ * Direkt gesendet, nicht über die Warteschlange: Die Antwort trägt die
+ * Kennung des neuen Artikels, und ohne Netz gäbe es niemanden, der sie
+ * entgegennimmt. Der Server hat den Doppel-Riegel — zweimal getippt gibt
+ * keinen zweiten Artikel.
+ */
+function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
+  const medien = useBestand<{ id: number | string; alt?: string | null; filename?: string | null }>(
+    'medien',
+  )
+  const [offen, setOffen] = useState(false)
+  const [kategorien, setKategorien] = useState<{ id: number; titel: string }[]>([])
+  const [kategorie, setKategorie] = useState<number | ''>('')
+  const [bild, setBild] = useState<number | ''>('')
+  const [laeuft, setLaeuft] = useState(false)
+  const [meldung, setMeldung] = useState<string | null>(null)
+  const [fertig, setFertig] = useState(false)
+
+  async function oeffnen() {
+    setOffen(true)
+    try {
+      const r = await fetch('/api/office/kategorien')
+      if (r.ok) setKategorien(((await r.json()) as { kategorien: typeof kategorien }).kategorien)
+      else setMeldung('Kategorien nicht ladbar — dafür braucht es das Website-Recht.')
+    } catch {
+      setMeldung('Kategorien nicht ladbar — dafür braucht es Netz.')
+    }
+  }
+
+  async function ablegen() {
+    setLaeuft(true)
+    setMeldung(null)
+    try {
+      const r = await fetch('/api/office/auftrag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aktion: 'alsArtikel', id: auftragId, kategorie, bild }),
+      })
+      if (r.status === 409) setMeldung('Eine Position zeigt schon auf einen Artikel.')
+      else if (!r.ok) setMeldung('Das hat nicht geklappt.')
+      else {
+        setFertig(true)
+        setMeldung('Abgelegt — Stückliste, Ablauf und Zeit sind jetzt Vorlage am Artikel.')
+      }
+    } catch {
+      setMeldung('Das hat nicht geklappt — dafür braucht es Netz.')
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  if (!offen) {
+    return (
+      <button type="button" className="buero-knopf leise" onClick={() => void oeffnen()}>
+        Als Artikel ablegen
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ flexBasis: '100%' }}>
+      <Rueckmeldung text={meldung} />
+      {!fertig && (
+        <div className="buero-reihe" style={{ alignItems: 'end' }}>
+          <label className="buero-feld">
+            <span>Kategorie</span>
+            <select value={kategorie} onChange={(e) => setKategorie(Number(e.target.value) || '')}>
+              <option value="">— wählen —</option>
+              {kategorien.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.titel}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="buero-feld">
+            <span>Bild (aus der Mediathek)</span>
+            <select value={bild} onChange={(e) => setBild(Number(e.target.value) || '')}>
+              <option value="">— wählen —</option>
+              {[...medien]
+                .sort((a, b) =>
+                  String(a.alt ?? a.filename ?? '').localeCompare(
+                    String(b.alt ?? b.filename ?? ''),
+                    'de',
+                  ),
+                )
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.alt || m.filename || m.id}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <div style={{ paddingBottom: '.2rem', display: 'flex', gap: '.6rem' }}>
+            <button
+              type="button"
+              className="buero-knopf"
+              disabled={laeuft || !kategorie || !bild}
+              onClick={() => void ablegen()}
+            >
+              Ablegen
+            </button>
+            <button type="button" className="buero-knopf leise" onClick={() => setOffen(false)}>
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

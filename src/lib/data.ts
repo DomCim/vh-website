@@ -63,7 +63,12 @@ export async function getProductsByCategory(categoryIds: (number | string)[], lo
   const { docs } = await payload.find({
     collection: 'products',
     where: {
-      and: [{ category: { in: categoryIds } }, { available: { equals: true } }],
+      and: [
+        { category: { in: categoryIds } },
+        { available: { equals: true } },
+        // Interne Artikel existieren nach außen nicht — siehe Products.intern
+        { intern: { not_equals: true } },
+      ],
     },
     sort: 'order',
     locale,
@@ -77,7 +82,12 @@ export async function getProductBySlug(slug: string, locale: Locale) {
   const payload = await payloadClient()
   const { docs } = await payload.find({
     collection: 'products',
-    where: { slug: { equals: slug } },
+    /*
+     * Der Intern-Filter sitzt hier und nicht erst auf der Seite: Diese
+     * Abfrage füttert auch die Metadaten — sonst stünde der Titel eines
+     * internen Artikels im `<head>`, während die Seite 404 sagt.
+     */
+    where: { and: [{ slug: { equals: slug } }, { intern: { not_equals: true } }] },
     locale,
     limit: 1,
     depth: 1,
@@ -90,7 +100,11 @@ export async function getFeaturedProducts(locale: Locale) {
   const { docs } = await payload.find({
     collection: 'products',
     where: {
-      and: [{ featured: { equals: true } }, { available: { equals: true } }],
+      and: [
+        { featured: { equals: true } },
+        { available: { equals: true } },
+        { intern: { not_equals: true } },
+      ],
     },
     sort: 'order',
     locale,
@@ -312,6 +326,7 @@ export async function getProductsForPromotion(
     where: {
       and: [
         { available: { equals: true } },
+        { intern: { not_equals: true } },
         ...(auswahl.art === 'feld' ? [{ [auswahl.feld]: { in: auswahl.werte } } as Where] : []),
       ],
     },

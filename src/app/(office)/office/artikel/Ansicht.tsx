@@ -15,6 +15,7 @@ type Artikel = {
   images?: unknown[] | null
   billOfMaterials?: unknown[] | null
   serviceProviders?: unknown[] | null
+  intern?: boolean | null
 }
 
 type Medium = {
@@ -109,6 +110,8 @@ export function ArtikelAnsicht() {
                     {dienste > 0 ? ` · ${dienste} Dienstleister` : ''}
                   </div>
                 </div>
+                {/* Intern heißt: nicht auf der Website — nur hier und in der Verwaltung */}
+                {p.intern && <span className="buero-marker">intern</span>}
                 {zeilen === 0 && <span className="buero-marker offen">offen</span>}
               </Link>
             )

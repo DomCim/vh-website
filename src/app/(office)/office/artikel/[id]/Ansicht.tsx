@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
 import { ArtikelFormular } from '../../../../../components/office/ArtikelFormular'
+import type { Arbeitsschritt } from '../../../../../lib/arbeitsplan'
 import { useAbgleich, useBestand, useDatensatz, useRahmen } from '../../../../../lib/buero/bestand'
 
 /** Ein Artikel mit Stückliste, Dienstleistern und Kalkulation. */
@@ -31,8 +32,10 @@ type Artikel = {
             }[]
           | null
         productionMinutes?: number | null
+        arbeitsplan?: Arbeitsschritt[] | null
       }[]
     | null
+  arbeitsplan?: Arbeitsschritt[] | null
   serviceProviders?:
     | {
         contact?: unknown
@@ -123,6 +126,7 @@ export function ArtikelBearbeitenAnsicht() {
         posten={posten}
         partner={partner}
         arbeitsminuten={p.productionMinutes}
+        ablauf={p.arbeitsplan ?? []}
         varianten={(p.variants ?? [])
           // Ohne Kennung ließe sich die Liste später nicht zuordnen — solche
           // Zeilen gibt es nur, solange die Variante noch nicht gespeichert ist
@@ -144,6 +148,7 @@ export function ArtikelBearbeitenAnsicht() {
               note: d.note,
             })),
             minuten: v.productionMinutes,
+            ablauf: v.arbeitsplan ?? [],
           }))}
         stundensatz={stundensatz}
         wunschaufschlag={wunschaufschlag}

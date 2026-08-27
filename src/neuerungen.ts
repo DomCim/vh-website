@@ -26,6 +26,85 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 77,
+    datum: null,
+    titel: 'Interne Artikel — und der Merchant-Feed zeigt jetzt alle Bilder',
+    punkte: [
+      {
+        text: '**Ein Artikel kann jetzt „intern" sein** — ein Haken in der Website-Verwaltung. Intern heißt: Er existiert nach außen nicht. Keine Artikelseite (der Aufruf gibt 404), keine Sitemap, kein Google-Feed, keine Suche, keine „Verwendete Arbeiten"-Kacheln, und auch die Datenschnittstelle gibt ihn ohne Anmeldung nicht heraus. Er lebt nur im Büro und in der Verwaltung.',
+      },
+      {
+        text: '**Der Unterschied zu „nicht verfügbar":** Ein nicht verfügbarer Artikel behält seine öffentliche Seite — sie sagt nur, dass er nicht lieferbar ist. Ein interner Artikel ist unsichtbar. Gedacht für Lohnarbeits-Vorlagen, an denen Kundenname und Zuschnitt hängen: Die gehen Google nichts an.',
+      },
+      {
+        text: '**„Als Artikel ablegen" legt jetzt intern ab.** Die Vorlage aus einem Auftrag war bisher nur „nicht verfügbar" — ihre Seite gab es trotzdem. Ab jetzt ist sie unsichtbar, bis jemand den Haken bewusst herausnimmt. Auch der Assistent kann das Feld lesen und setzen.',
+      },
+      {
+        text: '**An Google Merchant gehen jetzt alle Bilder eines Artikels**, nicht mehr nur das erste. Der Tisch stand im Shopping-Ergebnis in einer Ansicht, während die Artikelseite fünf hat — jetzt reisen bis zu zehn Zusatzbilder mit, im selben sparsamen Zuschnitt wie bisher das Hauptbild.',
+      },
+    ],
+  },
+  {
+    nummer: 76,
+    datum: null,
+    titel: 'Aus einem Auftrag wird ein Artikel — die Vorlage fürs nächste Mal',
+    punkte: [
+      {
+        text: '**Im Auftrag gibt es jetzt „Als Artikel ablegen".** Eine Lohnarbeit, die zum zweiten Mal kommt — dasselbe Frästeil, dasselbe Geländer — fing bisher wieder bei null an: Stückliste abtippen, Ablauf abtippen, Zeit schätzen. Jetzt wandert alles drei als Vorlage an einen neuen Artikel; der nächste gleiche Auftrag findet es dort vor.',
+      },
+      {
+        text: '**Der Artikel erscheint nicht im Shop.** Er steht auf „nur auf Anfrage" und „nicht verfügbar" — sichtbar machen ist danach eine bewusste Entscheidung in der Website-Verwaltung. Kategorie und Bild fragt der Dialog ab, weil ein Artikel beides braucht.',
+      },
+      {
+        text: '**Mitgenommen wird die Vorlage, nicht die Geschichte:** Material ohne beigestellte Posten (die gehören dem Auftraggeber), Mengen und Arbeitszeit **je Stück** statt gesamt, der Ablauf ohne die Häkchen des alten Auftrags. Preise und Kundendaten bleiben zurück — die sind verhandelt und gehören zu diesem einen Auftrag.',
+      },
+      {
+        text: '**Die erste Position des Auftrags zeigt danach auf den neuen Artikel** — damit erscheint das Bild auf den Papieren, wie bei Artikeln aus dem Shop.',
+      },
+    ],
+  },
+  {
+    nummer: 75,
+    datum: null,
+    titel: 'Laufmarken: Ein QR-Code wandert mit dem Teil — und jeder sieht, wo es ist',
+    punkte: [
+      {
+        text: '**Unter `/office/laufmarken` gibt es jetzt die Tafel.** Marken anlegen, als Druckblatt (PDF, zwanzig je A4) ausdrucken, ausschneiden — fertig. Eine Marke wird an einen Auftrag gekoppelt und wandert physisch mit dem Teil: zum Verzinker, zurück, zum Beschichter. Die Übersicht zeigt je Marke, an welchem Auftrag sie hängt, welcher Schritt dran ist und was außer Haus ist — bei wem, seit wann, und wann es zurückerwartet wird. Überfälliges steht rot und meldet sich zusätzlich aufs Handy.',
+      },
+      {
+        text: '**Wer die Marke scannt, sieht je nach Anmeldung Verschiedenes.** Das Büro bekommt die Seite mit den großen Knöpfen: „Teil ist raus zum Verzinker" und „Teil ist zurück" — ein Tipp bucht, ein versehentlicher Scan ändert nichts. Ohne Anmeldung steht da nur ein Satz: Diese Marke gehört zu einem Auftrag der Werkstatt Hellmann. Ob es einen Code überhaupt gibt, verrät die Seite nicht.',
+      },
+      {
+        text: '**Der Dienstleister meldet sich mit einem PIN an** — einmal je Gerät, danach merkt es sich das Telefon. Den PIN erzeugt das Büro am Geschäftspartner (`Partner` → „Laufmarken-Zugang"); er bleibt gültig, bis dort ein neuer erzeugt wird. Angemeldet sieht der Betrieb **nur seinen eigenen Schritt**: Artikel mit Bild, Menge, Farbe, Wunschtermin. Keine Preise, keine Kundendaten, keine anderen Schritte — was er nicht braucht, verlässt das Haus nicht.',
+      },
+      {
+        text: '**Der Betrieb kann selbst melden:** „Teil ist angekommen" und „Fertig — kann abgeholt werden". Die Fertigmeldung kommt als Meldung aufs Handy. Am Auftrag stehen dafür eigene Zeitstempel neben denen des Büros — wer wann was gemeldet hat, bleibt auseinanderhaltbar.',
+      },
+      {
+        text: '**Nach der Lieferung wird die Marke von selbst frei** und hängt wieder an der Tafel — wer sie danach scannt, sieht nichts vom alten Auftrag. Der nächste Auftrag benutzt dieselbe Marke; nichts wird weggeworfen.',
+      },
+    ],
+  },
+  {
+    nummer: 74,
+    datum: null,
+    titel: 'Der Ablauf lässt sich jetzt anlegen — am Auftrag und als Vorlage am Artikel',
+    punkte: [
+      {
+        text: '**Im Auftrag lassen sich die Arbeitsschritte jetzt eintragen, umsortieren und löschen** — nicht mehr nur abhaken. Bisher versprach der leere Bereich „hier von Hand anlegen", aber es gab keinen Knopf dafür: Ein Auftrag ohne Artikel dahinter (Lohnarbeit, Maßanfertigung) stand ohne Ablauf da. Je Schritt stehen Art (eigene Arbeit oder Dienstleister), Minuten beziehungsweise Betrieb, Kosten und Vorlauftage.',
+      },
+      {
+        text: '**Am Artikel gibt es den Ablauf jetzt als Vorlage** — unter `/office/artikel` neben Stückliste und Fremdleistung, mit derselben Regel: Was an der Variante steht, gilt; eine Variante ohne eigenen Ablauf übernimmt die Vorlage vom Artikel. Beim Anlegen eines Auftrags aus einer Bestellung wird die Vorlage abgeschrieben und dort abgehakt. Bisher konnte nur eine Variante eine Vorlage tragen — ein Artikel ohne Varianten gar keine.',
+      },
+      {
+        text: '**Die Farbe steht am Auftrag jetzt als eigenes Feld je Position.** Aus einer Shop-Bestellung wird sie übernommen, von Hand lässt sie sich eintragen. Der Anlass ist die geplante Laufmarke: Der Beschichter soll beim Scannen die Farbe sehen — und die stand bisher nur mitten im Beschreibungstext, den er nicht zu sehen bekommt.',
+      },
+      {
+        text: '**Ebenfalls übernommen wird jetzt der Artikelbezug** aus der Shop-Bestellung: Der Auftrag zeigt damit das Bild des bestellten Artikels, wie es beim Kauf auf Rechnung schon lange der Fall war.',
+      },
+    ],
+  },
+  {
     nummer: 73,
     datum: null,
     titel: 'Das Bild passt jetzt schon beim Öffnen zur gewählten Ausführung',

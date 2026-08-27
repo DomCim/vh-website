@@ -24,6 +24,7 @@ import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Expenses } from './collections/Expenses'
 import { FollowUps } from './collections/FollowUps'
 import { GoodsReceipts } from './collections/GoodsReceipts'
+import { JobTags } from './collections/JobTags'
 import { CustomerUploads } from './collections/CustomerUploads'
 import { ProductFiles } from './collections/ProductFiles'
 import { Inquiries } from './collections/Inquiries'
@@ -98,6 +99,7 @@ export default buildConfig({
     BankTransactions,
     InventoryItems,
     GoodsReceipts,
+    JobTags,
     ProductFiles,
     CustomerUploads,
     Stocktakes,

@@ -101,7 +101,10 @@ export async function GET(req: Request) {
   const payload = await payloadClient()
   const { docs } = await payload.find({
     collection: 'products',
-    where: { onRequestOnly: { not_equals: true } },
+    // Interne Artikel existieren nach außen nicht — siehe Products.intern
+    where: {
+      and: [{ onRequestOnly: { not_equals: true } }, { intern: { not_equals: true } }],
+    },
     limit: 500,
     depth: 1,
     locale,
@@ -170,6 +173,21 @@ export async function GET(req: Request) {
     if (!bildUrl) continue
 
     /*
+     * Die übrigen Bilder als Zusatzbilder — Google kennt bis zu zehn.
+     *
+     * Bisher ging nur das erste hinaus, und im Shopping-Ergebnis stand der
+     * Tisch nur in einer Ansicht, während die Artikelseite fünf hat. Gleicher
+     * Zuschnitt wie beim Hauptbild, aus demselben Grund: Google lädt jedes
+     * Bild wieder und wieder.
+     */
+    const zusatzbilder = (Array.isArray(p.images) ? p.images.slice(1, 11) : [])
+      .map((b: unknown) => {
+        const quelle = bildQuellen(b as BildQuelle, 'large')?.src
+        return absoluteUrl(quelle ?? (typeof b === 'object' ? (b as { url?: string })?.url : undefined))
+      })
+      .filter((u): u is string => Boolean(u))
+
+    /*
      * Jede Variante ist ein eigener Eintrag.
      *
      * Ein Kübel in 100 × 50 kostet anderes als derselbe in 60 × 30; ein
@@ -218,6 +236,7 @@ export async function GET(req: Request) {
           `<g:description>${escape(beschreibung)}</g:description>`,
           `<g:link>${escape(`${BASE_URL}${pfad}`)}</g:link>`,
           `<g:image_link>${escape(bildUrl)}</g:image_link>`,
+          ...zusatzbilder.map((u) => `<g:additional_image_link>${escape(u)}</g:additional_image_link>`),
           `<g:availability>${p.available === false ? 'out_of_stock' : 'in_stock'}</g:availability>`,
           `<g:price>${preis(v.wert)}</g:price>`,
           ...(aktion

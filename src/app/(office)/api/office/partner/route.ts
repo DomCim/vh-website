@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
+import { passwortErzeugen, passwortVerwahren } from '../../../../../lib/uebergabe'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,30 @@ export async function POST(req: Request) {
     }
 
     const b = (await req.json()) as Record<string, any>
+
+    /*
+     * PIN für den Laufmarken-Zugang erzeugen oder erneuern — ein enger Weg,
+     * wie `termin` am Auftrag: Er fasst nur den Zugang an, nichts sonst.
+     *
+     * Der Klartext steht **nur in dieser Antwort**. Gespeichert wird der
+     * scrypt-Abdruck; wer den PIN verliert, bekommt hier einen neuen — den
+     * alten kennt danach niemand mehr, auch die Datenbank nicht. Der PIN ist
+     * dauerhaft: Erneuert wird nur auf diesen Knopf, nie von selbst.
+     */
+    if (b.aktion === 'markenPin') {
+      if (!b.id) return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
+      const pin = passwortErzeugen(8)
+      await payload.update({
+        collection: 'contacts',
+        id: b.id,
+        overrideAccess: true,
+        data: {
+          markenZugang: { pin: passwortVerwahren(pin), gesetztAm: new Date().toISOString() },
+        },
+      })
+      return NextResponse.json({ ok: true, pin })
+    }
+
     if (!b.name?.trim()) return NextResponse.json({ error: 'name-fehlt' }, { status: 400 })
 
     const daten = {
