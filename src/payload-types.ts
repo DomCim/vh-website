@@ -398,6 +398,10 @@ export interface Product {
    */
   onRequestOnly?: boolean | null;
   available?: boolean | null;
+  /**
+   * Nur im Büro und hier sichtbar — keine Artikelseite, keine Sitemap, keine Suche.
+   */
+  intern?: boolean | null;
   featured?: boolean | null;
   /**
    * Kleinere Zahl = weiter vorne in der Kategorie
@@ -2217,6 +2221,7 @@ export interface ProductsSelect<T extends boolean = true> {
   digital?: T;
   onRequestOnly?: T;
   available?: T;
+  intern?: T;
   featured?: T;
   order?: T;
   updatedAt?: T;

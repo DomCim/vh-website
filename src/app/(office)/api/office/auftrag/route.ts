@@ -124,10 +124,16 @@ export async function POST(req: Request) {
           category: Number(b.kategorie),
           images: [Number(b.bild)],
           /*
-           * Nicht im Shop, doppelt vernäht: kein Kaufknopf **und** nicht
-           * gelistet. Preise wandern bewusst nicht mit — die am Auftrag sind
-           * verhandelt und kundenspezifisch.
+           * Intern, und dazu doppelt vernäht: `intern` nimmt dem Artikel die
+           * Seite, die Sitemap und die Suche — an einer Lohnarbeits-Vorlage
+           * hängen Kundenname und Zuschnitt, die gehen Google nichts an.
+           * `onRequestOnly` und `available: false` bleiben als Gürtel zum
+           * Hosenträger: Wer den Artikel später sichtbar macht, hat immer
+           * noch keinen Kaufknopf, bis er es ausdrücklich will. Preise
+           * wandern bewusst nicht mit — die am Auftrag sind verhandelt und
+           * kundenspezifisch.
            */
+          intern: true,
           onRequestOnly: true,
           available: false,
           billOfMaterials: stueckliste as never,

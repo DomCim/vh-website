@@ -120,7 +120,9 @@ export async function priceCart(
       depth: 0,
     })
 
-    if (!product || product.available === false || product.onRequestOnly) {
+    // `intern` gehört dazu: Ein interner Artikel hat keine Seite — eine von
+    // Hand gebaute Kassen-Anfrage darf ihn trotzdem nicht kaufen können
+    if (!product || product.available === false || product.onRequestOnly || product.intern) {
       throw new Error(`Produkt nicht bestellbar: ${item.productId}`)
     }
 

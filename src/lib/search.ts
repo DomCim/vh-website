@@ -46,7 +46,11 @@ export async function suche(
     const { docs } = await payload.find({
       collection: 'products',
       where: {
-        or: [{ title: { contains: q } }, { shortDescription: { contains: q } }],
+        and: [
+          // Interne Artikel existieren nach außen nicht — siehe Products.intern
+          { intern: { not_equals: true } },
+          { or: [{ title: { contains: q } }, { shortDescription: { contains: q } }] },
+        ],
       },
       limit: proBereich,
       depth: 1,

@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins, anyoneAusserIntern } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
 import { autoSlug, slugFreigeben } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
@@ -39,7 +39,8 @@ export const Products: CollectionConfig = {
     group: 'Shop',
   },
   access: {
-    read: anyone,
+    // Interne Artikel (Lohnarbeits-Vorlagen) sieht nur das Büro — siehe access/index.ts
+    read: anyoneAusserIntern,
     create: admins,
     update: admins,
     delete: admins,
@@ -561,6 +562,33 @@ export const Products: CollectionConfig = {
       defaultValue: true,
       admin: {
         position: 'sidebar',
+      },
+    },
+    {
+      /*
+       * Intern heißt: nicht auf der Website — nirgends.
+       *
+       * Der Unterschied zu „nicht verfügbar": Ein nicht verfügbarer Artikel
+       * hat weiter seine öffentliche Seite (sie sagt es nur), steht in der
+       * Sitemap und wird gefunden. Ein interner Artikel existiert nach außen
+       * gar nicht: keine Seite (404), keine Sitemap, kein Feed, keine Suche,
+       * kein Google. Er lebt nur im Büro und in der Verwaltung — gedacht für
+       * Lohnarbeits-Vorlagen, an denen Kundenname und Zuschnitt hängen.
+       *
+       * Durchgesetzt an zwei Ebenen: Die Zugriffsregel filtert die
+       * REST-Schnittstelle (access/index.ts), und jede öffentliche Abfrage
+       * der Website filtert selbst — die Local-API läuft an Zugriffsregeln
+       * vorbei, und doppelt genäht reißt nicht.
+       */
+      name: 'intern',
+      label: 'Intern (nicht auf der Website)',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Nur im Büro und hier sichtbar — keine Artikelseite, keine Sitemap, keine Suche.',
       },
     },
     {
