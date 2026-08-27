@@ -64,6 +64,7 @@ import * as migration_20260825_075655_uebergabefotos from './20260825_075655_ueb
 import * as migration_20260826_074038_datev_nummern from './20260826_074038_datev_nummern';
 import * as migration_20260826_105448_mailvorlagen from './20260826_105448_mailvorlagen';
 import * as migration_20260826_140454_farbbilder from './20260826_140454_farbbilder';
+import * as migration_20260827_134731_ablauf_fundament from './20260827_134731_ablauf_fundament';
 
 export const migrations = [
   {
@@ -394,6 +395,11 @@ export const migrations = [
   {
     up: migration_20260826_140454_farbbilder.up,
     down: migration_20260826_140454_farbbilder.down,
-    name: '20260826_140454_farbbilder'
+    name: '20260826_140454_farbbilder',
+  },
+  {
+    up: migration_20260827_134731_ablauf_fundament.up,
+    down: migration_20260827_134731_ablauf_fundament.down,
+    name: '20260827_134731_ablauf_fundament'
   },
 ];

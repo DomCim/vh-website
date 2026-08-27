@@ -5,6 +5,35 @@ import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
 
+/** Ein Schritt, wie ihn das Formular schickt — die Vorlagenform ohne Stand */
+type Ablaufschritt = {
+  was?: string
+  art?: string
+  minuten?: number | string | null
+  dienstleister?: number | string | null
+  kosten?: number | string | null
+  vorlaufTage?: number | string | null
+  notiz?: string
+}
+
+/*
+ * Die Säuberung des Ablaufs — dieselbe wie in der Auftrags-Route, nur ohne
+ * `stand` und `erledigtAm`: Eine Vorlage kennt keinen Stand, den bekommt erst
+ * die Abschrift am Auftrag.
+ */
+const sauberAblauf = (schritte: Ablaufschritt[] | undefined) =>
+  (schritte ?? [])
+    .filter((s) => s.was?.trim())
+    .map((s) => ({
+      was: s.was as string,
+      art: (s.art === 'fremd' ? 'fremd' : 'eigen') as 'eigen' | 'fremd',
+      minuten: s.minuten === '' || s.minuten == null ? null : Number(s.minuten) || 0,
+      dienstleister: Number(s.dienstleister) || undefined,
+      kosten: s.kosten === '' || s.kosten == null ? null : Number(s.kosten) || 0,
+      vorlaufTage: s.vorlaufTage === '' || s.vorlaufTage == null ? null : Number(s.vorlaufTage) || 0,
+      notiz: s.notiz || undefined,
+    }))
+
 /**
  * Stückliste und Dienstleister eines Artikels speichern.
  *
@@ -36,6 +65,8 @@ export async function POST(req: Request) {
         note?: string
       }[]
       arbeitsminuten?: number
+      /** Der Ablauf als Vorlage am Artikel — ohne Stand, den kennt nur der Auftrag */
+      ablauf?: Ablaufschritt[]
       varianten?: {
         id?: string
         zeilen?: { item?: number; quantity?: number; note?: string }[]
@@ -47,6 +78,7 @@ export async function POST(req: Request) {
           leadTime?: string
           note?: string
         }[]
+        ablauf?: Ablaufschritt[]
       }[]
     }
     if (!b.produktId) return NextResponse.json({ error: 'produktId fehlt' }, { status: 400 })
@@ -87,6 +119,12 @@ export async function POST(req: Request) {
       varianten = (produkt?.variants ?? []).map((v) => {
         const neu = b.varianten!.find((x) => x.id && String(x.id) === String(v.id))
         return {
+          /*
+           * Die Kennung ist die Lebensversicherung dieser Abschrift: Mit ihr
+           * behält Payload alle Unterfelder der Zeile, die hier nicht stehen
+           * (nachgemessen 08/2026 — Bild und Ablauf überleben). Ohne sie
+           * entstünden neue Zeilen, und alles Ungenannte wäre weg.
+           */
           id: v.id,
           title: v.title,
           price: v.price,
@@ -97,6 +135,9 @@ export async function POST(req: Request) {
               ? Math.max(0, Math.round(neu.minuten))
               : null
             : (v.productionMinutes ?? null),
+          // Nur anfassen, wenn das Formular ihn mitschickt — ein älteres
+          // Formular im Gerät kennt das Feld nicht und darf nichts leeren
+          ...(neu && neu.ablauf !== undefined ? { arbeitsplan: sauberAblauf(neu.ablauf) } : {}),
         }
       })
     }
@@ -112,6 +153,8 @@ export async function POST(req: Request) {
           typeof b.arbeitsminuten === 'number' ? Math.max(0, Math.round(b.arbeitsminuten)) : undefined,
         billOfMaterials: sauber(b.zeilen),
         serviceProviders: sauberDienste(b.dienstleister),
+        // Wie bei den Varianten: nur anfassen, wenn mitgeschickt
+        ...(b.ablauf !== undefined ? { arbeitsplan: sauberAblauf(b.ablauf) } : {}),
       },
     })
 

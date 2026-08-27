@@ -180,6 +180,7 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
     quantity: number
     price: number
     product?: number
+    farbe?: string
   }[] = (bestellung.items ?? []).map((p) => ({
     description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
     quantity: p.quantity,
@@ -188,6 +189,9 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
       typeof p.product === 'object' && p.product
         ? Number((p.product as { id?: number }).id)
         : (Number(p.product) || undefined),
+    // Als eigenes Feld zusätzlich zum Text: Der Beschichter bekommt über die
+    // Laufmarke nur Felder gezeigt, nie den verhandelten Beschreibungstext
+    farbe: p.color ?? undefined,
   }))
 
   if ((bestellung.shippingTotal ?? 0) > 0) {

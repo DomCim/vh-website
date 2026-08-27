@@ -14,6 +14,7 @@ import {
   orderShippedEmail,
 } from './mail'
 import {
+  auftragsPositionen,
   bedarfFuerBestellung,
   type Planschritt,
   variantenArbeitsplan,
@@ -215,11 +216,8 @@ async function auftragAusBestellung(
         customerName: order.customer?.name ?? undefined,
         order: order.id as number,
         plannedMinutes: alleBekannt && minuten > 0 ? minuten : undefined,
-        positions: zuFertigen.map((p) => ({
-          description: [p.titleSnapshot, p.variantTitle, p.color].filter(Boolean).join(' · '),
-          quantity: p.quantity,
-          price: p.unitPrice,
-        })),
+        // Beschreibung, Bild-Bezug und Farbe je Zeile — siehe auftragsPositionen
+        positions: auftragsPositionen(zuFertigen),
         material: bedarf.map((b) => ({ item: b.itemId, quantity: b.benoetigt })),
         ...(plan.length ? { arbeitsplan: plan } : {}),
       },
