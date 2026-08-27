@@ -79,7 +79,7 @@ export async function markenBlatt(codes: string[], basisUrl: string): Promise<Bu
       .font('Sans')
       .fontSize(11)
       .fillColor('#555')
-      .text('Werkstatt Hellmann', x, oben + QR_KANTE + 52, { width: ZELLE_B, align: 'center' })
+      .text('Next-Concept SAS', x, oben + QR_KANTE + 52, { width: ZELLE_B, align: 'center' })
   }
 
   doc.end()
