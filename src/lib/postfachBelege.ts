@@ -36,13 +36,15 @@ import { benachrichtige } from './push'
  */
 
 /*
- * `postbeleg2`, nicht `postbeleg`: Der allererste Lauf (08/2026) hatte den
- * Ungelesen-Fehler und schwieg über seine Gründe — seine Mails gelten als
- * angesehen, obwohl womöglich Belege darin stecken. Der neue Schlüssel lässt
- * den Lauf einmalig wieder bei den letzten 30 anfangen; vor Doppel-Anlage
+ * `postbeleg3`, nicht `postbeleg`: Jede Nummer ist ein einmaliger Neuanlauf
+ * über die letzten 30 Mails. Die 2 kam, weil der allererste Lauf (08/2026)
+ * den Ungelesen-Fehler hatte und über seine Gründe schwieg; die 3, weil der
+ * zweite Lauf ohne Anthropic-Schlüssel lief — er konnte nur Factur-X lesen,
+ * rückte den Merker aber trotzdem vor, und die Amazon-Rechnung galt fortan
+ * als angesehen, obwohl nie eine KI sie gesehen hatte. Vor Doppel-Anlage
  * schützt ohnehin die Kennung am Beleg, nicht der Merker.
  */
-const MERKER = (fachId: string | number) => `postbeleg2-${fachId}`
+const MERKER = (fachId: string | number) => `postbeleg3-${fachId}`
 const MAX_ANHAENGE_JE_MAIL = 3
 const MAX_PDF_BYTES = 15 * 1024 * 1024
 
@@ -137,6 +139,16 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
       // Der Merker rückt auch ohne Anhänge vor — sonst sähe der Lauf
       // dieselben anhanglosen Mails bei jedem Takt erneut an
       const hoechste = nachrichten.reduce((m, k) => Math.max(m, k.uid), zuletzt)
+      /*
+       * Aber nie über eine gescheiterte Mail hinweg. Ein API-Aussetzer oder
+       * ein leeres Guthaben beim KI-Anbieter warf früher genau eine Mail
+       * weg: Der Fehler wurde protokolliert, der Merker rückte trotzdem vor,
+       * und die Rechnung galt für immer als angesehen. Bleibt die Grenze vor
+       * der gescheiterten Mail stehen, versucht der nächste Takt sie erneut
+       * — und was dahinter schon gelang, legt die Kennung am Beleg nicht
+       * doppelt an.
+       */
+      let grenze = hoechste
 
       for (const kopf of neue) {
         try {
@@ -242,12 +254,25 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
             }).catch(() => undefined)
           }
         } catch (err) {
-          // Eine kaputte Mail hält die nächste nicht auf
-          payload.logger.warn({ err, uid: kopf.uid }, 'Postfach-Beleg: Mail übersprungen')
+          // Eine kaputte Mail hält die nächste nicht auf — aber der Merker
+          // bleibt vor ihr stehen, damit sie noch einmal drankommt
+          grenze = Math.min(grenze, kopf.uid - 1)
+          payload.logger.warn(
+            { err, uid: kopf.uid },
+            'Postfach-Beleg: Mail übersprungen, wird beim nächsten Takt erneut versucht',
+          )
         }
       }
 
-      if (hoechste > zuletzt) await merkerSchreiben(payload, schluessel, hoechste)
+      /*
+       * Ohne KI-Schlüssel bleibt der Merker stehen. Genau das hat einmal
+       * eine Rechnung verschluckt: Der Lauf konnte nur Factur-X lesen,
+       * hakte die Mails aber trotzdem ab — als der Schlüssel kam, galt die
+       * Amazon-Rechnung als erledigt. Steht der Merker still, sieht sich
+       * der nächste Lauf mit Schlüssel dieselben Mails noch einmal an; vor
+       * doppelten Entwürfen schützt die Kennung am Beleg.
+       */
+      if (zugang && grenze > zuletzt) await merkerSchreiben(payload, schluessel, grenze)
     } catch (err) {
       payload.logger.error({ err, fach: fach.id }, 'Postfach-Belege fehlgeschlagen')
     }
