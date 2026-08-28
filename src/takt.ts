@@ -75,6 +75,7 @@ export async function taktStarten(): Promise<void> {
   const { istFaellig, postfachPruefen, takteinstellungen, wartungslauf } = await import(
     './lib/wartung'
   )
+  const { belegeAusPostfach } = await import('./lib/postfachBelege')
 
   /**
    * Zwei Läufe dürfen sich nicht überholen: Eine Sicherung kann Minuten
@@ -93,6 +94,14 @@ export async function taktStarten(): Promise<void> {
       laeuftPostfach = true
       void postfachPruefen(payload)
         .catch((err) => payload.logger.error({ err }, 'Postfach-Blick fehlgeschlagen'))
+        /*
+         * Im selben Zug: Rechnungen aus neuen Mails als Beleg-Entwürfe
+         * (siehe lib/postfachBelege.ts). Nach dem Blick und nicht parallel,
+         * damit nicht zwei IMAP-Verbindungen auf dasselbe Fach zugreifen —
+         * und unter demselben Riegel, weil beides dasselbe Postfach ist.
+         */
+        .then(() => belegeAusPostfach(payload))
+        .catch((err) => payload.logger.error({ err }, 'Postfach-Belege fehlgeschlagen'))
         .finally(() => {
           laeuftPostfach = false
         })

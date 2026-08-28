@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 80,
+    datum: null,
+    titel: 'Rechnungen aus dem Postfach werden von selbst Beleg-Entwürfe',
+    punkte: [
+      {
+        text: '**Kommt auf dem Postfach eine Mail mit PDF-Anhang an, liest das Büro sie von selbst aus** — erst als elektronische Rechnung (Factur-X, exakt und ohne KI), sonst mit der KI — und legt einen Beleg-Entwurf an, samt PDF in der Mediathek. Der Entwurf steht markiert als „ungeprüft" in den Belegen und meldet sich aufs Handy; gebucht ist er erst, wenn er nach dem Prüfen bestätigt wird. Bisher hieß derselbe Weg: Anhang herunterladen, im Büro hochladen, auslesen lassen.',
+      },
+      {
+        text: '**Die Mail bleibt dabei ungelesen** — das Postfach zeigt weiter ehrlich, was noch niemand gesehen hat. Und ein Fehl-Entwurf (etwa aus einem Angebot, das wie eine Rechnung aussieht) wird einfach weggeworfen: Derselbe Anhang wird kein zweites Mal angelegt, auch wenn die Mail liegen bleibt.',
+      },
+      {
+        text: '**Ohne Betrag entsteht nichts.** Zeichnungen, Kataloge und Werbe-PDFs kommen auf `info@` genauso an — ein „Beleg" ohne Bruttobetrag ist keiner und wird still übersprungen. Jeder Anhang wird genau einmal angesehen, egal wie oft der Takt schlägt.',
+      },
+    ],
+  },
+  {
     nummer: 79,
     datum: null,
     titel: 'Die Büro-App zeigt am Symbol, dass etwas anliegt',

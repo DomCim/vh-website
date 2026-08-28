@@ -176,6 +176,22 @@ export const Expenses: CollectionConfig = {
       admin: { readOnly: true, hidden: true },
     },
     {
+      /*
+       * Aus welcher Mail dieser Beleg entstand — Message-ID plus Dateiname.
+       *
+       * Das ist die Sperre gegen Doppel-Anlage: Der Postfach-Lauf sieht
+       * dieselbe ungelesene Mail wieder und wieder (sie bleibt absichtlich
+       * ungelesen), und ohne diese Kennung entstünde bei jedem Takt derselbe
+       * Entwurf noch einmal. Geprüft wird samt Papierkorb — ein weggeworfener
+       * Fehl-Entwurf soll nicht beim nächsten Lauf wieder auferstehen.
+       */
+      name: 'quelleMail',
+      label: 'Quelle (Mail-Kennung)',
+      type: 'text',
+      index: true,
+      admin: { readOnly: true, hidden: true },
+    },
+    {
       name: 'deductible',
       label: 'Steuerlich absetzbar',
       type: 'checkbox',
