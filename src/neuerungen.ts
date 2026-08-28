@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 81,
+    datum: null,
+    titel: 'Postfach: Wischen führt zurück in den Posteingang — und der Beleg-Automat erklärt sich',
+    punkte: [
+      {
+        text: '**Wer am Telefon in einer geöffneten Mail von links wischt, landet jetzt im Posteingang** — nicht mehr auf der Seite, auf der er vor dem Postfach war. Die geöffnete Mail ist dafür ein echter Verlaufseintrag geworden; auch „Antworten", Löschen und Verschieben räumen ihn sauber ab.',
+      },
+      {
+        text: '**Der Beleg-Automat lässt die Mails jetzt wirklich ungelesen.** Beim allerersten Lauf stempelte er die durchgesehenen Mails als gelesen — er benutzte denselben Lesegriff wie das Büro, und der markiert zu Recht: Ein Mensch, der öffnet, hat gelesen. Der Automat sieht jetzt nur noch durch. Die schon gestempelten Mails lassen sich über das „⋯"-Menü wieder auf ungelesen setzen.',
+      },
+      {
+        text: '**Und er sagt jetzt, was er tut:** Für jeden geprüften Anhang steht im Server-Protokoll, ob ein Entwurf entstand oder warum nicht (nichts auslesbar, kein Betrag, kein KI-Schlüssel hinterlegt). Beim ersten Lauf schwieg er — und als eine Amazon-Rechnung nicht auftauchte, gab es nichts, woran man den Grund hätte sehen können. Die bereits durchgesehenen Mails werden nach diesem Update einmalig erneut geprüft; Doppel-Anlagen verhindert die Kennung am Beleg.',
+      },
+    ],
+  },
+  {
     nummer: 80,
     datum: null,
     titel: 'Rechnungen aus dem Postfach werden von selbst Beleg-Entwürfe',
