@@ -214,6 +214,40 @@ export function MarkeAnsicht() {
               {betriebsname} hat am {datum(fremdDran.schritt.fertigGemeldetAm)} fertig gemeldet.
             </p>
           )}
+          {/*
+            * Und derselbe große Knopf für eigene Arbeit.
+            *
+            * Vorher hatte nur der Fremd-Schritt Knöpfe — steht aber eigene
+            * Arbeit an (und das ist der häufigere Fall: „CNC - ASP2",
+            * „Entgraten", „Verpacken"), zeigte die Scan-Seite den Ablauf
+            * nur an. Wer am Ende eines Arbeitsgangs die Marke scannt, will
+            * genau das eine tun: abhaken. Ihn stattdessen in die
+            * Auftragsliste zu schicken, macht den Scan sinnlos.
+            * Gemeldet von Dominik nach dem ersten Scan (08/2026).
+            */}
+          {jetzt && !fremdDran && (
+            <button
+              type="button"
+              className="buero-knopf"
+              style={{ padding: '1rem 1.4rem', fontSize: '1.05rem', marginBottom: '.8rem' }}
+              disabled={laeuft || !auftrag}
+              onClick={() =>
+                void senden(
+                  '/api/office/auftrag',
+                  'auftraege',
+                  { aktion: 'schrittErledigt', id: auftrag!.id, schritt: jetzt.index },
+                  'Gebucht — Schritt erledigt.',
+                )
+              }
+            >
+              {`„${jetzt.schritt.was}“ ist erledigt`}
+            </button>
+          )}
+          {!jetzt && (
+            <p className="buero-unterzeile">
+              Alle Schritte sind erledigt — die Marke kann zurück an die Tafel.
+            </p>
+          )}
 
           <h2>Ablauf</h2>
           <Ablauf plan={plan} />

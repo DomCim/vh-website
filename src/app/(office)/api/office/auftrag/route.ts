@@ -175,7 +175,11 @@ export async function POST(req: Request) {
      * (`angekommenAm`, `fertigGemeldetAm`) gehören dem Scan und bleiben
      * unberührt — zwei Schreiber, zwei Felderpaare.
      */
-    if (b.aktion === 'schrittRaus' || b.aktion === 'schrittZurueck') {
+    if (
+      b.aktion === 'schrittRaus' ||
+      b.aktion === 'schrittZurueck' ||
+      b.aktion === 'schrittErledigt'
+    ) {
       const index = Number(b.schritt)
       if (!b.id || !Number.isInteger(index) || index < 0) {
         return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
@@ -185,19 +189,32 @@ export async function POST(req: Request) {
         .catch(() => null)
       const plan = (auftrag?.arbeitsplan ?? []) as Record<string, unknown>[]
       const schritt = plan[index]
-      if (!schritt || schritt.art !== 'fremd') {
+      if (!schritt) {
+        return NextResponse.json({ error: 'kein-schritt' }, { status: 400 })
+      }
+      /*
+       * Raus und zurück gibt es nur bei fremden Schritten — ein Teil, das
+       * das Haus nie verlässt, kann nicht zurückkommen. Abhaken gibt es
+       * dagegen für jeden Schritt: Beim Scan einer Laufmarke steht meist
+       * eigene Arbeit an („CNC - ASP2"), und ohne diesen Weg gab es dort
+       * keinen Knopf — man musste den Auftrag im Büro suchen und dort
+       * abhaken. Gemeldet von Dominik nach dem ersten Scan (08/2026).
+       */
+      if (b.aktion !== 'schrittErledigt' && schritt.art !== 'fremd') {
         return NextResponse.json({ error: 'kein-fremdschritt' }, { status: 400 })
       }
       const jetzt = new Date().toISOString()
       const neu =
         b.aktion === 'schrittRaus'
           ? { ...schritt, stand: 'laeuft', rausAm: schritt.rausAm ?? jetzt }
-          : {
-              ...schritt,
-              stand: 'erledigt',
-              zurueckAm: schritt.zurueckAm ?? jetzt,
-              erledigtAm: schritt.erledigtAm ?? jetzt,
-            }
+          : b.aktion === 'schrittErledigt'
+            ? { ...schritt, stand: 'erledigt', erledigtAm: schritt.erledigtAm ?? jetzt }
+            : {
+                ...schritt,
+                stand: 'erledigt',
+                zurueckAm: schritt.zurueckAm ?? jetzt,
+                erledigtAm: schritt.erledigtAm ?? jetzt,
+              }
       const doc = await payload.update({
         collection: 'jobs',
         id: b.id,
