@@ -184,6 +184,30 @@ test.describe('Laufmarken am laufenden Server', () => {
     })
     expect(falsch.status()).toBe(400)
 
+    /*
+     * Die Zeit, die beim Abhaken mitgeht: dieselbe Arbeitszeit-Liste wie die
+     * Stoppuhr, mit dem Namen des Arbeitsgangs als Beschriftung. Ohne sie
+     * bliebe die Nachkalkulation blind — der Anlass der ganzen Sache.
+     */
+    const gebucht = await request.post(`${BASIS}/api/office/zeit`, {
+      headers: kopf!,
+      data: { aktion: 'nachtragen', id: auftragId, minuten: 75, notiz: 'Zuschnitt' },
+    })
+    expect(gebucht.ok()).toBe(true)
+    const mitZeit = await request.get(`${BASIS}/api/jobs/${auftragId}?depth=0`, { headers: kopf! })
+    const zeiten = ((await mitZeit.json()) as { timeEntries?: Record<string, unknown>[] })
+      .timeEntries
+    expect(zeiten?.some((z) => z.minutes === 75 && z.note === 'Zuschnitt')).toBe(true)
+
+    // Und die zwei Schalter, nach denen die Scan-Seite ihr Feld richtet
+    const regel = await request.get(`${BASIS}/api/office/laufmarken`, { headers: kopf! })
+    expect(regel.ok()).toBe(true)
+    const { schrittzeit } = (await regel.json()) as {
+      schrittzeit: { pflicht: boolean; planzeitVorbelegen: boolean }
+    }
+    expect(typeof schrittzeit.pflicht).toBe('boolean')
+    expect(typeof schrittzeit.planzeitVorbelegen).toBe('boolean')
+
     // Büro bucht raus und zurück — die zwei engen Wege
     const raus = await request.post(`${BASIS}/api/office/auftrag`, {
       headers: kopf!,

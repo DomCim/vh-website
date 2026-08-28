@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 85,
+    datum: null,
+    titel: 'Beim Abhaken nach dem Scan lässt sich die Zeit gleich mitbuchen',
+    punkte: [
+      {
+        text: '**Wer nach dem Scan einer Laufmarke einen eigenen Arbeitsgang abhakt, kann die gebrauchte Zeit gleich eintragen.** Sie steht danach in der Arbeitszeit des Auftrags — genau dort, wo auch die Stoppuhr im Büro bucht — und zählt für die Nachkalkulation. Die Buchung heißt automatisch wie der Arbeitsgang, es ist also später zu sehen, wofür die Stunden draufgingen. Damit erledigt der Scan beides auf einmal: Der Auftrag muss nicht mehr eigens aufgeschlagen werden, um die Zeit zu führen.',
+      },
+      {
+        text: '**Wie streng das ist, entscheidet der Betrieb** — unter Verwaltung → Integrationen → `Zeit beim Abhaken`. Ein Häkchen macht die Zeit zur Pflicht (dann bleiben in der Nachkalkulation keine Lücken), ein zweites belegt das Feld mit der geplanten Zeit des Arbeitsgangs vor, sodass ein Tipp genügt. Voreingestellt ist: vorbelegt, aber nicht erzwungen.',
+      },
+    ],
+  },
+  {
     nummer: 84,
     datum: null,
     titel: 'Nach dem Scan lässt sich auch eigene Arbeit abhaken',

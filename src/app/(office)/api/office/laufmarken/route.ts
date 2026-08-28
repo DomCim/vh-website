@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { payloadClient } from '../../../../../lib/data'
 import { naechsterMarkenCode } from '../../../../../lib/nummernkreis'
+import { schrittzeitEinstellung } from '../../../../../lib/laufmarken'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,29 @@ export const dynamic = 'force-dynamic'
  * Auftragsnummer, damit die Geschichte einen später gelöschten Auftrag
  * übersteht. Der Verlauf bleibt im Haus; die Scan-API gibt ihn nie heraus.
  */
+/**
+ * Was die Scan-Seite über die Zeitbuchung wissen muss.
+ *
+ * Die zwei Schalter stehen in den Einstellungen (Gruppe `schrittzeit`), und
+ * die Scan-Seite muss sie lesen — sie liegen aber hinter dem Recht
+ * `einstellungen.aendern`, das ein Werkstatt-Konto zu Recht nicht hat.
+ * Deshalb kommen sie hier heraus, mit demselben Recht, das den Scan erlaubt:
+ * Zwei Wahrheitswerte sind nichts, was verborgen bleiben müsste.
+ */
+export async function GET(req: Request) {
+  try {
+    const payload = await payloadClient()
+    const { user } = await payload.auth({ headers: req.headers })
+    if (!user || !(await darf(payload, user, 'auftraege.bearbeiten'))) {
+      return NextResponse.json({ error: 'nicht-erlaubt' }, { status: 403 })
+    }
+    return NextResponse.json({ schrittzeit: await schrittzeitEinstellung(payload) })
+  } catch {
+    // Fällt das aus, arbeitet die Scan-Seite mit ihren Vorgaben weiter
+    return NextResponse.json({ error: 'fehlgeschlagen' }, { status: 500 })
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const payload = await payloadClient()
