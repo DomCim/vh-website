@@ -26,6 +26,16 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 84,
+    datum: null,
+    titel: 'Nach dem Scan lässt sich auch eigene Arbeit abhaken',
+    punkte: [
+      {
+        text: '**Der Scan einer Laufmarke zeigt jetzt für jeden Schritt einen großen Knopf** — nicht nur für die Arbeit außer Haus. Stand eigene Arbeit an („CNC - ASP2", „Entgraten", „Verpacken"), zeigte die Seite den Ablauf bloß an; abhaken ging nur über die Auftragsliste, was den Scan sinnlos machte. Jetzt steht dort „‹Schritt› ist erledigt", und sind alle Schritte durch, sagt die Seite das auch.',
+      },
+    ],
+  },
+  {
     nummer: 83,
     datum: null,
     titel: 'Belege nehmen jetzt auch PDFs an',
