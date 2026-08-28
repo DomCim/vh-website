@@ -165,11 +165,38 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Keine Provenance-Beilage: Buildx schiebt sonst je Push ein
+          # ungetaggtes Begleit-Manifest mit in die Registry. Die Dinger
+          # zählen gegen den Paket-Speicher, und beim Aufräumen (unten) sind
+          # sie eine Falle — wer sie einzeln löscht, zerreißt das getaggte
+          # Abbild, zu dem sie gehören. Gebraucht hat sie hier nie jemand.
+          provenance: false
           build-args: |
             GIT_SHA=${{ github.sha }}
             ROLLE=${{ matrix.rolle }}
           cache-from: type=gha,scope=${{ matrix.rolle }}
           cache-to: type=gha,mode=max,scope=${{ matrix.rolle }}
+
+      # ── Alte Fassungen aufräumen ─────────────────────────────────────────
+      #
+      # Ohne das wächst die Registry mit jedem Release — und sobald die
+      # Pakete privat sind, zählt jeder Stand gegen den Paket-Speicher
+      # (2 GB bei GitHub Pro; die beiden Abbilder liegen zusammen schon bei
+      # gut einem Gigabyte je Stand, geteilte Schichten mildern das nur).
+      #
+      # Behalten werden die zehn neuesten Versionen je Abbild. Das sind
+      # großzügig gerechnet die letzten fünf Releases — mehr Stände zum
+      # Zurückrollen (VH_FASSUNG im Stack) brauchte noch nie jemand. Zehn
+      # statt fünf, weil aus der Zeit vor `provenance: false` noch
+      # ungetaggte Begleit-Manifeste zwischen den echten Fassungen liegen
+      # und mitzählen; die wandern so nach und nach von selbst hinaus.
+      - name: Alte Fassungen aufräumen
+        if: steps.dran.outputs.noetig == 'true'
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ matrix.abbild }}
+          package-type: container
+          min-versions-to-keep: 10
 
   # ── Ausrollen ──────────────────────────────────────────────────────────────
   #
@@ -189,6 +216,9 @@ jobs:
       && inputs.ausrollen != 'nein'
       && !contains(github.event.head_commit.message, '[kein-ausrollen]')
     runs-on: ubuntu-latest
+    permissions:
+      # Zum Weiterschieben des Betriebszeigers (Branch `betrieb`, siehe unten)
+      contents: write
     steps:
       # Zwei Bremsen, weil es zwei Fälle gibt.
       #
@@ -197,6 +227,32 @@ jobs:
       # Commits. Wer `[kein-ausrollen]` in die Merge-Nachricht schreibt, baut
       # `latest`, ohne dass es gleich live geht; ausgerollt wird dann später
       # von Hand über den Portainer-Stack.
+
+      # ── Der Betriebszeiger ─────────────────────────────────────────────
+      #
+      # Der Branch `betrieb` zeigt auf den Stand, den der Betrieb fahren
+      # soll — Portainer pollt ihn (GitOps, Stack aus dem Repository) und
+      # rollt bei jeder Bewegung neu aus, samt frischer Abbilder.
+      #
+      # Warum ein eigener Branch und nicht `main`: Portainer pollt das
+      # **Repo**, gebaut werden die Abbilder aber erst **nach** dem Push.
+      # Pollte Portainer `main`, käme es regelmäßig zwischen Push und
+      # fertigem Bau — es zöge dann die alten Abbilder und bliebe darauf
+      # stehen, weil sich das Repo danach nicht mehr rührt. Der Zeiger
+      # bewegt sich deshalb erst hier, wenn beide Abbilder im Regal liegen.
+      #
+      # Kein neuer Commit, nur ein Zeiger: `betrieb` steht immer auf einem
+      # Commit von `main`.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Betriebszeiger weiterschieben
+        run: |
+          git push --force origin "HEAD:refs/heads/betrieb"
+          echo "betrieb steht jetzt auf ${GITHUB_SHA:0:7} — Portainer holt sich das beim nächsten Poll."
+
       - name: Ausrollen anstoßen (über Home Assistant)
         env:
           HA_DEPLOY_WEBHOOK: ${{ secrets.HA_DEPLOY_WEBHOOK }}
