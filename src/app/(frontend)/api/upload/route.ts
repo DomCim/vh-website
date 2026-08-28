@@ -36,7 +36,8 @@ export async function POST(req: Request) {
       collection: 'media',
       overrideAccess: true,
       locale: 'de',
-      data: { alt: `Anfrage: ${datei.name}`.slice(0, 200) },
+      // intern: Skizzen und Fotos aus Anfragen gehören dem Absender und dem Büro
+      data: { alt: `Anfrage: ${datei.name}`.slice(0, 200), intern: true },
       file: {
         data: daten,
         mimetype: datei.type,

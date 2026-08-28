@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 83,
+    datum: null,
+    titel: 'Belege nehmen jetzt auch PDFs an',
+    punkte: [
+      {
+        text: '**Ein Rechnungs-PDF lässt sich beim Beleg jetzt wirklich hochladen.** Das Eingabefeld bot PDF zwar an, die Mediathek lehnte die Datei dann aber stillschweigend ab — es ging nur das Foto. Derselbe Riegel war auch der wahre Grund, warum der Beleg-Automat die Amazon-Rechnung nicht ablegen konnte: Er hatte sie gelesen, durfte das PDF aber nicht speichern. Beides geht jetzt.',
+      },
+      {
+        text: '**Am Handy öffnet „Beleg fotografieren oder auswählen" jetzt die Auswahl** (Kamera, Fotos oder Dateien) statt sofort die Kamera — vorher ließ sich eine PDF-Rechnung am iPhone gar nicht erst auswählen. Dasselbe gilt für den Lieferschein beim Wareneingang.',
+      },
+      {
+        text: '**Interne Dateien liefert die Mediathek nur noch an Angemeldete aus.** Belegscans, Lieferscheine, Übergabefotos, Inventarfotos, Bestellscans und Anhänge aus Kundenanfragen — auch die schon liegenden — sind ab jetzt nur noch mit Anmeldung abrufbar; vorher genügte es, den exakten Dateinamen zu kennen. PDF-Dateien sind grundsätzlich zu, und die Produktbilder bleiben öffentlich, davon lebt die Website.',
+      },
+    ],
+  },
+  {
     nummer: 82,
     datum: null,
     titel: 'Postfach: Die Liste bleibt eine Liste — und der Beleg-Automat holt Verpasstes nach',

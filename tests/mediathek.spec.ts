@@ -108,4 +108,54 @@ test.describe('Mediathek', () => {
       })
     }
   })
+
+  test('Internes und PDFs gibt es nur mit Anmeldung', async ({ playwright, request }) => {
+    const anmeldung = await request.post(`${BASIS}/api/users/login`, {
+      data: { email: EMAIL, password: PASSWORT },
+    })
+    expect(anmeldung.ok()).toBeTruthy()
+    const { token } = await anmeldung.json()
+    const kopf = { Authorization: `JWT ${token}` }
+    const fremder = await playwright.request.newContext()
+
+    /*
+     * Der Weg des Betriebs: Ein Belegfoto über die Upload-Route. Sie setzt
+     * das intern-Kennzeichen — und genau das muss die Auslieferung dann
+     * auch durchsetzen. Wichtig als Bedingung, nicht als Feldvergleich:
+     * Payload reicht der Statikdatei-Prüfung nur den Dateinamen herein,
+     * ein `data.intern`-Vergleich wäre still immer wahr (so gefunden
+     * 08/2026, am Container nachgemessen).
+     */
+    const PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    )
+    const hochgeladen = await request.post(`${BASIS}/api/office/beleg-upload`, {
+      headers: kopf,
+      multipart: { datei: { name: 'beleg-probe.png', mimeType: 'image/png', buffer: PNG } },
+    })
+    expect(hochgeladen.ok()).toBeTruthy()
+    const { id, datei } = await hochgeladen.json()
+
+    try {
+      const url = `${BASIS}/api/media/file/${encodeURIComponent(datei)}`
+      // Ohne Anmeldung zu, mit Anmeldung offen
+      expect((await fremder.get(url)).status()).toBe(403)
+      expect((await request.get(url, { headers: kopf })).status()).toBe(200)
+
+      // Und ein PDF ist ohne Anmeldung pauschal zu, egal was am Datensatz steht
+      const proben = await request.get(`${BASIS}/api/media?limit=200`, { headers: kopf })
+      const pdf = (await proben.json()).docs?.find((m: { mimeType?: string }) =>
+        m.mimeType === 'application/pdf',
+      )
+      if (pdf?.filename) {
+        expect(
+          (await fremder.get(`${BASIS}/api/media/file/${encodeURIComponent(pdf.filename)}`)).status(),
+        ).toBe(403)
+      }
+    } finally {
+      await fremder.dispose()
+      await request.delete(`${BASIS}/api/media/${id}`, { headers: kopf })
+    }
+  })
 })

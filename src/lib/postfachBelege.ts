@@ -226,7 +226,8 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
             const medium = await payload.create({
               collection: 'media',
               overrideAccess: true,
-              data: { alt: `Beleg: ${entwurf.supplierName}` },
+              // intern: Rechnungen gehen niemanden außer dem Büro etwas an
+              data: { alt: `Beleg: ${entwurf.supplierName}`, intern: true },
               file: {
                 data: anhang.daten,
                 mimetype: 'application/pdf',

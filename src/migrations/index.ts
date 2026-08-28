@@ -68,6 +68,7 @@ import * as migration_20260827_134731_ablauf_fundament from './20260827_134731_a
 import * as migration_20260827_143309_laufmarken from './20260827_143309_laufmarken';
 import * as migration_20260827_155552_interne_artikel from './20260827_155552_interne_artikel';
 import * as migration_20260828_101253_postfach_belege from './20260828_101253_postfach_belege';
+import * as migration_20260828_124256_mediathek_intern from './20260828_124256_mediathek_intern';
 
 export const migrations = [
   {
@@ -418,6 +419,11 @@ export const migrations = [
   {
     up: migration_20260828_101253_postfach_belege.up,
     down: migration_20260828_101253_postfach_belege.down,
-    name: '20260828_101253_postfach_belege'
+    name: '20260828_101253_postfach_belege',
+  },
+  {
+    up: migration_20260828_124256_mediathek_intern.up,
+    down: migration_20260828_124256_mediathek_intern.down,
+    name: '20260828_124256_mediathek_intern'
   },
 ];

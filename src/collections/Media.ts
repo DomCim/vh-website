@@ -32,7 +32,24 @@ import { liveHooks } from '../lib/liveHooks'
  * tut, ist er wenigstens nicht mehr aufzählbar. Siehe HANDOVER.md.
  */
 const mediathekLesen: Access = ({ data, isReadingStaticFile, req: { user } }) => {
-  if (isReadingStaticFile) return !/[\\/]/.test(String(data?.filename ?? ''))
+  if (isReadingStaticFile) {
+    const name = String(data?.filename ?? '')
+    if (/[\\/]/.test(name)) return false
+    if (user) return true
+    /*
+     * Unangemeldete bekommen PDFs nie (die Website braucht öffentlich
+     * keine einzige — was als PDF liegt, sind Rechnungen und Belege) und
+     * alles andere nur ohne intern-Kennzeichen. Das Kennzeichen steht als
+     * **Bedingung** hier, nicht als `data.intern`-Abfrage: Payload reicht
+     * der Prüfung bei statischen Dateien nur `{ filename }` herein
+     * (nachgelesen in checkFileAccess.js und am Container nachgemessen —
+     * ein Feldvergleich wäre still immer wahr gewesen). Eine
+     * zurückgegebene Bedingung dagegen läuft in die Datensatz-Suche: kein
+     * Treffer, keine Datei.
+     */
+    if (name.toLowerCase().endsWith('.pdf')) return false
+    return { intern: { not_equals: true } }
+  }
   return Boolean(user)
 }
 
@@ -57,7 +74,17 @@ export const Media: CollectionConfig = {
   },
   upload: {
     staticDir: 'media',
-    mimeTypes: ['image/*', 'video/mp4', 'video/webm'],
+    /*
+     * `application/pdf` steht hier für die Belege. Der Hand-Upload
+     * (`beleg-upload`-Route) und das Eingabefeld im Büro erlaubten PDF von
+     * Anfang an, die Sammlung lehnte es aber ab — Rechnungs-PDFs ließen
+     * sich deshalb weder von Hand hochladen noch vom Beleg-Automaten
+     * ablegen (`Invalid MIME type: application/pdf`, gefunden 08/2026).
+     * Die Dateien werden wie alle hier öffentlich per Namen ausgeliefert;
+     * dass Belege eigentlich nicht in diese Sammlung gehören, steht oben
+     * und in HANDOVER.md.
+     */
+    mimeTypes: ['image/*', 'video/mp4', 'video/webm', 'application/pdf'],
     /**
      * Fünf Stufen statt drei, und alle als WebP.
      *
@@ -109,6 +136,25 @@ export const Media: CollectionConfig = {
       label: 'Alternativtext',
       type: 'text',
       localized: true,
+    },
+    {
+      /*
+       * Die Trennlinie durch die Mediathek: Was die Website zeigt, bleibt
+       * öffentlich per Namen abrufbar (davon lebt sie — Google Shopping
+       * holt die Bilder dort ab). Alles andere — Belege, Lieferscheine,
+       * Übergabefotos, Kundenanhänge — trägt dieses Kennzeichen und wird
+       * nur an Angemeldete ausgeliefert. Gesetzt wird es von den
+       * Upload-Wegen des Büros; im Admin lässt es sich nachziehen.
+       */
+      name: 'intern',
+      label: 'Intern — nur mit Anmeldung abrufbar',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Belege, Lieferscheine und andere Unterlagen des Betriebs. Ohne Häkchen ist die Datei öffentlich abrufbar, wie es Produktbilder sein müssen.',
+      },
     },
   ],
 }
