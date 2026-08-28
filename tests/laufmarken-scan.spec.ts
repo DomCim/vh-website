@@ -157,6 +157,33 @@ test.describe('Laufmarken am laufenden Server', () => {
     expect(doc.status).toBe('geplant')
     expect(doc.gemeldet?.inFertigung ?? null).toBeNull()
 
+    /*
+     * Eigene Arbeit abhaken — der Weg, den die Scan-Seite für „CNC - ASP2"
+     * und Verwandte braucht. Bei Fremd-Schritten wäre er falsch (da gilt
+     * raus/zurück), aber bei eigener Arbeit war vorher gar kein Knopf da.
+     */
+    const abgehakt = await request.post(`${BASIS}/api/office/auftrag`, {
+      headers: kopf!,
+      data: { aktion: 'schrittErledigt', id: auftragId, schritt: 0 },
+    })
+    expect(abgehakt.ok()).toBe(true)
+    const nachAbhaken = await request.get(`${BASIS}/api/jobs/${auftragId}?depth=0`, {
+      headers: kopf!,
+    })
+    const planEigen = ((await nachAbhaken.json()) as { arbeitsplan: Record<string, unknown>[] })
+      .arbeitsplan
+    expect(planEigen[0].stand).toBe('erledigt')
+    expect(planEigen[0].erledigtAm).toBeTruthy()
+    // Und kein rausAm: Was das Haus nie verlässt, ist nicht draußen gewesen
+    expect(planEigen[0].rausAm ?? null).toBeNull()
+
+    // Umgekehrt bleibt raus/zurück den Fremd-Schritten vorbehalten
+    const falsch = await request.post(`${BASIS}/api/office/auftrag`, {
+      headers: kopf!,
+      data: { aktion: 'schrittRaus', id: auftragId, schritt: 0 },
+    })
+    expect(falsch.status()).toBe(400)
+
     // Büro bucht raus und zurück — die zwei engen Wege
     const raus = await request.post(`${BASIS}/api/office/auftrag`, {
       headers: kopf!,
