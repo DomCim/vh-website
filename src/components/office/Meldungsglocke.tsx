@@ -42,6 +42,28 @@ export function Meldungsglocke() {
   useEffect(() => setOffen(false), [pfad])
 
   /*
+   * Die Zahl der Glocke auch ans App-Symbol.
+   *
+   * Wer die Büro-App installiert hat, sieht damit schon am Startbildschirm,
+   * dass etwas anliegt — ohne die App zu öffnen. Dieselbe Quelle wie die
+   * Glocke selbst, also zeigen beide immer dasselbe; „Alles gelesen" räumt
+   * das Symbol mit ab.
+   *
+   * Still abgesichert: Die Badge-Schnittstelle gibt es nur in installierten
+   * Apps (Android/Chrome, iOS ab 16.4 mit Meldungserlaubnis) — im Browser-Tab
+   * fehlt sie, und dann soll hier nichts scheppern.
+   */
+  useEffect(() => {
+    const n = navigator as Navigator & {
+      setAppBadge?: (n: number) => Promise<void>
+      clearAppBadge?: () => Promise<void>
+    }
+    if (typeof n.setAppBadge !== 'function') return
+    if (ungelesen > 0) void n.setAppBadge(ungelesen).catch(() => undefined)
+    else void n.clearAppBadge?.().catch(() => undefined)
+  }, [ungelesen])
+
+  /*
    * Solange das Blatt offen ist, weiß die Seite davon.
    *
    * Der Grund ist ein handfester: Auf Seiten mit einer Hauptaktion lag deren

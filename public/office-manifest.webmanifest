@@ -19,8 +19,27 @@
       "purpose": "maskable"
     }
   ],
+  "launch_handler": { "client_mode": "navigate-existing" },
   "shortcuts": [
-    { "name": "Beleg erfassen", "url": "/office/belege/neu" },
-    { "name": "Rechnung schreiben", "url": "/office/rechnungen/neu" }
+    {
+      "name": "Aufträge",
+      "url": "/office/auftraege",
+      "icons": [{ "src": "/office-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Laufmarken",
+      "url": "/office/laufmarken",
+      "icons": [{ "src": "/office-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Beleg erfassen",
+      "url": "/office/belege/neu",
+      "icons": [{ "src": "/office-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Rechnung schreiben",
+      "url": "/office/rechnungen/neu",
+      "icons": [{ "src": "/office-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

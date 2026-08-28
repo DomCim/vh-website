@@ -344,14 +344,31 @@ self.addEventListener('push', (event) => {
     if (event.data) daten.text = event.data.text()
   }
 
+  /*
+   * Die Zahl am App-Symbol — auch bei geschlossener App.
+   *
+   * Der Dienstbote kennt den Bestand nicht; die Zahl der Ungelesenen reist
+   * deshalb in der Nutzlast mit (siehe lib/push.ts). Ist die App offen,
+   * korrigiert die Glocke das Badge ohnehin aus erster Hand — hier zählt der
+   * Fall, in dem niemand hinsieht. Ohne Badge-Schnittstelle (Browser-Tab,
+   * ältere Systeme) passiert still nichts.
+   */
+  const badgeSetzen =
+    typeof daten.ungelesen === 'number' && navigator.setAppBadge
+      ? navigator.setAppBadge(daten.ungelesen).catch(() => undefined)
+      : Promise.resolve()
+
   event.waitUntil(
-    self.registration.showNotification(daten.titel, {
-      body: daten.text,
-      icon: '/office-icon-192.png',
-      badge: '/office-icon-192.png',
-      tag: daten.tag || undefined,
-      data: { url: daten.url || '/office' },
-    }),
+    Promise.all([
+      badgeSetzen,
+      self.registration.showNotification(daten.titel, {
+        body: daten.text,
+        icon: '/office-icon-192.png',
+        badge: '/office-icon-192.png',
+        tag: daten.tag || undefined,
+        data: { url: daten.url || '/office' },
+      }),
+    ]),
   )
 })
 

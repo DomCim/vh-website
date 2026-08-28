@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 79,
+    datum: null,
+    titel: 'Die Büro-App zeigt am Symbol, dass etwas anliegt',
+    punkte: [
+      {
+        text: '**Am Symbol der installierten Büro-App steht jetzt die Zahl der ungelesenen Meldungen** — wie bei einer Mail-App. Sie kommt aus derselben Quelle wie die Glocke oben rechts, beide zeigen also immer dasselbe; „Alles gelesen" räumt auch das Symbol ab. Das funktioniert auch bei geschlossener App: Jede Handy-Meldung bringt den aktuellen Stand mit. Am iPhone braucht es iOS 16.4 oder neuer und die erlaubten Mitteilungen.',
+      },
+      {
+        text: '**Langes Drücken auf das Symbol bietet jetzt vier Abkürzungen:** Aufträge, Laufmarken, Beleg erfassen und Rechnung schreiben — je nach Gerät die üblichen Schnellzugriffe, ohne erst die App zu öffnen und zu tippen.',
+      },
+    ],
+  },
+  {
     nummer: 78,
     datum: null,
     titel: 'Die Laufmarken sind jetzt DIN A6',
