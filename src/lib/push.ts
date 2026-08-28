@@ -219,7 +219,28 @@ export async function benachrichtige(
   if (!docs.length) return 0
 
   webpush.setVapidDetails(schluessel.subject, schluessel.publicKey, schluessel.privateKey)
-  const inhalt = JSON.stringify(nachricht)
+
+  /*
+   * Die Zahl der Ungelesenen reist mit — für das Badge am App-Symbol.
+   *
+   * Sie muss hier mit, weil das Gerät sie selbst nicht kennt: Ist die App zu,
+   * hat der Dienstbote nur die Nutzlast in der Hand. Gezählt wird nach dem
+   * Ablegen der Meldung, damit die eben verschickte schon mitzählt. Scheitert
+   * das Zählen, geht die Meldung ohne Zahl raus — ein Badge weniger ist
+   * besser als ein Push weniger.
+   */
+  let ungelesen: number | undefined
+  try {
+    const { totalDocs } = await payload.count({
+      collection: 'notifications',
+      where: { gelesen: { equals: false } },
+      overrideAccess: true,
+    })
+    ungelesen = totalDocs
+  } catch {
+    ungelesen = undefined
+  }
+  const inhalt = JSON.stringify({ ...nachricht, ...(ungelesen !== undefined ? { ungelesen } : {}) })
 
   let zugestellt = 0
   for (const geraet of docs) {
