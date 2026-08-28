@@ -26,6 +26,16 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 83,
+    datum: null,
+    titel: 'Belege nehmen jetzt auch PDFs an',
+    punkte: [
+      {
+        text: '**Ein Rechnungs-PDF lässt sich beim Beleg jetzt wirklich hochladen.** Das Eingabefeld bot PDF zwar an, die Mediathek lehnte die Datei dann aber stillschweigend ab — es ging nur das Foto. Derselbe Riegel war auch der wahre Grund, warum der Beleg-Automat die Amazon-Rechnung nicht ablegen konnte: Er hatte sie gelesen, durfte das PDF aber nicht speichern. Beides geht jetzt.',
+      },
+    ],
+  },
+  {
     nummer: 82,
     datum: null,
     titel: 'Postfach: Die Liste bleibt eine Liste — und der Beleg-Automat holt Verpasstes nach',

@@ -57,7 +57,17 @@ export const Media: CollectionConfig = {
   },
   upload: {
     staticDir: 'media',
-    mimeTypes: ['image/*', 'video/mp4', 'video/webm'],
+    /*
+     * `application/pdf` steht hier für die Belege. Der Hand-Upload
+     * (`beleg-upload`-Route) und das Eingabefeld im Büro erlaubten PDF von
+     * Anfang an, die Sammlung lehnte es aber ab — Rechnungs-PDFs ließen
+     * sich deshalb weder von Hand hochladen noch vom Beleg-Automaten
+     * ablegen (`Invalid MIME type: application/pdf`, gefunden 08/2026).
+     * Die Dateien werden wie alle hier öffentlich per Namen ausgeliefert;
+     * dass Belege eigentlich nicht in diese Sammlung gehören, steht oben
+     * und in HANDOVER.md.
+     */
+    mimeTypes: ['image/*', 'video/mp4', 'video/webm', 'application/pdf'],
     /**
      * Fünf Stufen statt drei, und alle als WebP.
      *
