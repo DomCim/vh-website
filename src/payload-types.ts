@@ -982,6 +982,7 @@ export interface Expense {
    */
   turnus?: ('nein' | 'monatlich' | 'vierteljaehrlich' | 'jaehrlich') | null;
   reminderSentAt?: string | null;
+  quelleMail?: string | null;
   /**
    * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
    */
@@ -2513,6 +2514,7 @@ export interface ExpensesSelect<T extends boolean = true> {
   paid?: T;
   turnus?: T;
   reminderSentAt?: T;
+  quelleMail?: T;
   deductible?: T;
   notes?: T;
   extraction?:
