@@ -163,10 +163,10 @@ export function WareneingangFormular({
         ref={ablageBereich}
         className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}>
         <span>Lieferschein fotografieren oder auswählen</span>
+        {/* Ohne `capture` — es zwang iOS in die Kamera, PDFs blieben unerreichbar (siehe BelegFormular) */}
         <input
           type="file"
           accept="image/*,application/pdf"
-          capture="environment"
           disabled={laeuft === 'upload'}
           onChange={(e) => {
             const d = e.target.files?.[0]

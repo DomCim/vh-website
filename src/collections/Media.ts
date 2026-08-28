@@ -32,7 +32,20 @@ import { liveHooks } from '../lib/liveHooks'
  * tut, ist er wenigstens nicht mehr aufzählbar. Siehe HANDOVER.md.
  */
 const mediathekLesen: Access = ({ data, isReadingStaticFile, req: { user } }) => {
-  if (isReadingStaticFile) return !/[\\/]/.test(String(data?.filename ?? ''))
+  if (isReadingStaticFile) {
+    const name = String(data?.filename ?? '')
+    if (/[\\/]/.test(name)) return false
+    /*
+     * Internes nur mit Anmeldung — das Kennzeichen setzen die Upload-Wege
+     * des Büros (siehe Feld `intern`). PDFs zusätzlich pauschal: Die
+     * Website braucht öffentlich keine einzige PDF-Datei; was hier als PDF
+     * liegt, sind Rechnungen und Belege. Der doppelte Boden fängt Dateien,
+     * die am Kennzeichen vorbei hereinkamen (etwa von Hand im Admin).
+     */
+    if (data?.intern === true) return Boolean(user)
+    if (name.toLowerCase().endsWith('.pdf')) return Boolean(user)
+    return true
+  }
   return Boolean(user)
 }
 
@@ -119,6 +132,25 @@ export const Media: CollectionConfig = {
       label: 'Alternativtext',
       type: 'text',
       localized: true,
+    },
+    {
+      /*
+       * Die Trennlinie durch die Mediathek: Was die Website zeigt, bleibt
+       * öffentlich per Namen abrufbar (davon lebt sie — Google Shopping
+       * holt die Bilder dort ab). Alles andere — Belege, Lieferscheine,
+       * Übergabefotos, Kundenanhänge — trägt dieses Kennzeichen und wird
+       * nur an Angemeldete ausgeliefert. Gesetzt wird es von den
+       * Upload-Wegen des Büros; im Admin lässt es sich nachziehen.
+       */
+      name: 'intern',
+      label: 'Intern — nur mit Anmeldung abrufbar',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Belege, Lieferscheine und andere Unterlagen des Betriebs. Ohne Häkchen ist die Datei öffentlich abrufbar, wie es Produktbilder sein müssen.',
+      },
     },
   ],
 }

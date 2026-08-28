@@ -75,6 +75,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       locale: 'de',
       data: {
         alt: `Übergabe ${auftrag.jobNumber ?? id}${bemerkung ? `: ${bemerkung}` : ''}`.slice(0, 200),
+        // intern: Der Kunde bekommt die Fotos im Lieferschein-PDF, nie per Link
+        intern: true,
       },
       file: {
         data: daten,

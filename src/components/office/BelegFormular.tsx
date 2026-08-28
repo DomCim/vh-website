@@ -220,10 +220,15 @@ export function BelegFormular({
           ref={ablageBereich}
           className={`buero-feld buero-ablage${ablage.drueber ? ' ist-drueber' : ''}`}>
           <span>Beleg fotografieren oder auswählen</span>
+          {/*
+            * Ohne `capture`: Das Attribut zwang iOS, sofort die Kamera zu
+            * öffnen — eine PDF-Rechnung ließ sich so nie auswählen, obwohl
+            * `accept` sie erlaubte. Ohne das Attribut zeigt das Handy die
+            * Wahl Kamera/Fotos/Dateien; die Kamera ist einen Tipp entfernt.
+            */}
           <input
             type="file"
             accept="image/*,application/pdf"
-            capture="environment"
             onChange={(e) => {
               const d = e.target.files?.[0]
               if (d) void hochladen(d)

@@ -29,7 +29,8 @@ export async function POST(req: Request) {
       collection: 'media',
       overrideAccess: true,
       locale: 'de',
-      data: { alt: `Beleg: ${datei.name}`.slice(0, 200) },
+      // intern: Belege und Lieferscheine sind nie für die Öffentlichkeit
+      data: { alt: `Beleg: ${datei.name}`.slice(0, 200), intern: true },
       file: {
         data: daten,
         mimetype: datei.type,
