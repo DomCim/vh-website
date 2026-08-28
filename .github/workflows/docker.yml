@@ -165,11 +165,38 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Keine Provenance-Beilage: Buildx schiebt sonst je Push ein
+          # ungetaggtes Begleit-Manifest mit in die Registry. Die Dinger
+          # zählen gegen den Paket-Speicher, und beim Aufräumen (unten) sind
+          # sie eine Falle — wer sie einzeln löscht, zerreißt das getaggte
+          # Abbild, zu dem sie gehören. Gebraucht hat sie hier nie jemand.
+          provenance: false
           build-args: |
             GIT_SHA=${{ github.sha }}
             ROLLE=${{ matrix.rolle }}
           cache-from: type=gha,scope=${{ matrix.rolle }}
           cache-to: type=gha,mode=max,scope=${{ matrix.rolle }}
+
+      # ── Alte Fassungen aufräumen ─────────────────────────────────────────
+      #
+      # Ohne das wächst die Registry mit jedem Release — und sobald die
+      # Pakete privat sind, zählt jeder Stand gegen den Paket-Speicher
+      # (2 GB bei GitHub Pro; die beiden Abbilder liegen zusammen schon bei
+      # gut einem Gigabyte je Stand, geteilte Schichten mildern das nur).
+      #
+      # Behalten werden die zehn neuesten Versionen je Abbild. Das sind
+      # großzügig gerechnet die letzten fünf Releases — mehr Stände zum
+      # Zurückrollen (VH_FASSUNG im Stack) brauchte noch nie jemand. Zehn
+      # statt fünf, weil aus der Zeit vor `provenance: false` noch
+      # ungetaggte Begleit-Manifeste zwischen den echten Fassungen liegen
+      # und mitzählen; die wandern so nach und nach von selbst hinaus.
+      - name: Alte Fassungen aufräumen
+        if: steps.dran.outputs.noetig == 'true'
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ matrix.abbild }}
+          package-type: container
+          min-versions-to-keep: 10
 
   # ── Ausrollen ──────────────────────────────────────────────────────────────
   #
