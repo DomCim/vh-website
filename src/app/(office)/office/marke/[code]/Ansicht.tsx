@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { type Arbeitsschritt, naechsterSchritt } from '../../../../../lib/arbeitsplan'
 import { useAbgleich, useBestand } from '../../../../../lib/buero/bestand'
@@ -65,6 +65,32 @@ export function MarkeAnsicht() {
   const [wahl, setWahl] = useState<number | ''>('')
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
+  /*
+   * Die gebrauchte Zeit, gebucht beim Abhaken.
+   *
+   * `null` heißt „noch nicht angefasst" — dann darf die Planzeit einspringen
+   * (siehe unten). Eine leere Zeichenkette heißt „bewusst geleert", und die
+   * soll nicht heimlich wieder vollaufen.
+   */
+  const [zeit, setZeit] = useState<string | null>(null)
+  const [regel, setRegel] = useState<{ pflicht: boolean; planzeitVorbelegen: boolean }>({
+    pflicht: false,
+    planzeitVorbelegen: true,
+  })
+
+  // Die zwei Schalter aus den Einstellungen — einmal beim Öffnen
+  useEffect(() => {
+    let abgebrochen = false
+    fetch('/api/office/laufmarken')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!abgebrochen && d?.schrittzeit) setRegel(d.schrittzeit)
+      })
+      .catch(() => undefined)
+    return () => {
+      abgebrochen = true
+    }
+  }, [])
 
   // Zum Koppeln stehen die Aufträge bereit, die noch durch die Werkstatt gehen
   const koppelbar = useMemo(
@@ -83,6 +109,22 @@ export function MarkeAnsicht() {
       'Dienstleister')
     : null
 
+  /*
+   * Was jetzt im Zeitfeld steht, als Zahl — 0 heißt „keine Buchung".
+   *
+   * Die Vorbelegung liegt bewusst nicht im Zustand, sondern wird hier
+   * gerechnet: Sonst müsste ein Effekt sie beim Schrittwechsel nachziehen,
+   * und ein solcher Effekt hat schon einmal die Eingabe eines Menschen
+   * überschrieben, während er tippte.
+   */
+  const minutenJetzt = useMemo(() => {
+    const roh =
+      zeit ??
+      (regel.planzeitVorbelegen && jetzt?.schritt.minuten ? String(jetzt.schritt.minuten) : '')
+    const n = Math.round(Number(roh))
+    return Number.isFinite(n) && n > 0 ? n : 0
+  }, [zeit, regel.planzeitVorbelegen, jetzt])
+
   async function senden(
     pfad: string,
     bereich: 'laufmarken' | 'auftraege',
@@ -94,6 +136,54 @@ export function MarkeAnsicht() {
     try {
       const { sofort } = await absenden({ pfad, bereich, koerper })
       setMeldung(sofort ? text : 'Gemerkt — geht raus, sobald wieder Netz da ist.')
+    } catch {
+      setMeldung('Das hat nicht geklappt.')
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  /**
+   * Abhaken und, wenn eine Zeit dabeisteht, sie gleich buchen.
+   *
+   * Zwei Sendungen, nicht eine: Die Zeit hat ihren eigenen engen Weg
+   * (`api/office/zeit`), und der prüft sein eigenes Recht. Beide gehen über
+   * die Warteschlange, überleben also einen Netzausfall in der Werkstatt.
+   * Zuerst die Zeit — schlägt sie fehl, ist der Schritt noch offen, und die
+   * Stunde geht nicht verloren. Umgekehrt wäre der Schritt erledigt und
+   * niemand wüsste mehr, dass eine Zeit fehlt.
+   */
+  async function schrittAbhaken(dran: { index: number; schritt: Arbeitsschritt }) {
+    if (!auftrag) return
+    const minuten = minutenJetzt
+    setLaeuft(true)
+    setMeldung(null)
+    try {
+      if (minuten > 0) {
+        await absenden({
+          pfad: '/api/office/zeit',
+          bereich: 'auftraege',
+          koerper: {
+            aktion: 'nachtragen',
+            id: auftrag.id,
+            minuten,
+            notiz: dran.schritt.was ?? undefined,
+          },
+        })
+      }
+      const { sofort } = await absenden({
+        pfad: '/api/office/auftrag',
+        bereich: 'auftraege',
+        koerper: { aktion: 'schrittErledigt', id: auftrag.id, schritt: dran.index },
+      })
+      setZeit(null)
+      setMeldung(
+        sofort
+          ? minuten > 0
+            ? `Gebucht — erledigt, ${minuten} min auf dem Auftrag.`
+            : 'Gebucht — Schritt erledigt.'
+          : 'Gemerkt — geht raus, sobald wieder Netz da ist.',
+      )
     } catch {
       setMeldung('Das hat nicht geklappt.')
     } finally {
@@ -226,22 +316,49 @@ export function MarkeAnsicht() {
             * Gemeldet von Dominik nach dem ersten Scan (08/2026).
             */}
           {jetzt && !fremdDran && (
-            <button
-              type="button"
-              className="buero-knopf"
-              style={{ padding: '1rem 1.4rem', fontSize: '1.05rem', marginBottom: '.8rem' }}
-              disabled={laeuft || !auftrag}
-              onClick={() =>
-                void senden(
-                  '/api/office/auftrag',
-                  'auftraege',
-                  { aktion: 'schrittErledigt', id: auftrag!.id, schritt: jetzt.index },
-                  'Gebucht — Schritt erledigt.',
-                )
-              }
-            >
-              {`„${jetzt.schritt.was}“ ist erledigt`}
-            </button>
+            <>
+              {/*
+                * Die gebrauchte Zeit gleich mit — damit sie nicht ein zweites
+                * Mal am Auftrag geführt werden muss.
+                *
+                * Die Buchung geht in dieselbe Arbeitszeit-Liste wie die
+                * Stoppuhr im Büro (`api/office/zeit`, Aktion „nachtragen")
+                * und trägt damit die Nachkalkulation. Der Wunsch kam von
+                * Dominik (08/2026): „dann brauche ich es nicht mehr hier
+                * führen und habe dennoch was Belegbares."
+                *
+                * Ob Pflicht und ob die Planzeit vorsteht, entscheidet der
+                * Betrieb unter Einstellungen → Zeit beim Abhaken.
+                */}
+              <label className="buero-feld" style={{ marginBottom: '.6rem' }}>
+                <span>
+                  Gebrauchte Zeit (Minuten){regel.pflicht ? '' : ' — darf leer bleiben'}
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  placeholder={regel.pflicht ? 'z.B. 60' : 'ohne Zeitbuchung leer lassen'}
+                  value={
+                    zeit ??
+                    (regel.planzeitVorbelegen && jetzt.schritt.minuten
+                      ? String(jetzt.schritt.minuten)
+                      : '')
+                  }
+                  onChange={(e) => setZeit(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="buero-knopf"
+                style={{ padding: '1rem 1.4rem', fontSize: '1.05rem', marginBottom: '.8rem' }}
+                disabled={laeuft || !auftrag || (regel.pflicht && !minutenJetzt)}
+                onClick={() => void schrittAbhaken(jetzt)}
+              >
+                {`„${jetzt.schritt.was}“ ist erledigt`}
+                {minutenJetzt ? ` (${minutenJetzt} min)` : ''}
+              </button>
+            </>
           )}
           {!jetzt && (
             <p className="buero-unterzeile">

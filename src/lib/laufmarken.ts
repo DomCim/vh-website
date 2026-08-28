@@ -182,3 +182,29 @@ export function eigenerSchrittIndex(
   const offen = eigene.find(({ s }) => (s.stand ?? 'offen') !== 'erledigt')
   return (offen ?? eigene[eigene.length - 1]).i
 }
+
+/** Die zwei Schalter zur Zeitbuchung beim Abhaken (Einstellungen → Zeit beim Abhaken). */
+export type Schrittzeit = { pflicht: boolean; planzeitVorbelegen: boolean }
+
+/**
+ * Wie die Scan-Seite die Zeit abfragen soll.
+ *
+ * Aus der Datenbank statt aus dem Code, weil es eine Frage der Arbeitsweise
+ * ist: In der Serie stimmt die Planzeit meist und ein Tipp genügt, beim
+ * Einzelstück wäre sie eine Lüge, die man leicht durchwinkt. Fällt das Lesen
+ * aus, gilt das Nachsichtige — ein Arbeitsgang muss sich abhaken lassen, auch
+ * wenn die Einstellungen gerade nicht zu erreichen sind.
+ */
+export async function schrittzeitEinstellung(payload: {
+  findGlobal: (args: { slug: 'integrations'; depth?: number }) => Promise<unknown>
+}): Promise<Schrittzeit> {
+  try {
+    const global = (await payload.findGlobal({ slug: 'integrations', depth: 0 })) as {
+      schrittzeit?: { pflicht?: boolean | null; planzeitVorbelegen?: boolean | null }
+    }
+    const s = global?.schrittzeit ?? {}
+    return { pflicht: s.pflicht === true, planzeitVorbelegen: s.planzeitVorbelegen !== false }
+  } catch {
+    return { pflicht: false, planzeitVorbelegen: true }
+  }
+}
