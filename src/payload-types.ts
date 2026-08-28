@@ -3861,6 +3861,19 @@ export interface Integration {
     notiz?: string | null;
   };
   /**
+   * Gilt für den Scan einer Laufmarke: Beim Abhaken eines eigenen Arbeitsgangs lässt sich die gebrauchte Zeit gleich mitbuchen. Sie steht danach in der Arbeitszeit des Auftrags und zählt für die Nachkalkulation.
+   */
+  schrittzeit?: {
+    /**
+     * Mit Häkchen lässt sich ein eigener Arbeitsgang nur abhaken, wenn eine Zeit dabeisteht — dann bleiben in der Nachkalkulation keine Lücken. Ohne Häkchen darf das Feld leer bleiben.
+     */
+    pflicht?: boolean | null;
+    /**
+     * Das Feld steht schon auf den geplanten Minuten des Arbeitsgangs — ein Tipp bucht sie, wer länger gebraucht hat, tippt die Zahl um. Ohne Häkchen ist es leer, und jede Zahl ist bewusst eingegeben.
+     */
+    planzeitVorbelegen?: boolean | null;
+  };
+  /**
    * Der Server sieht selbst regelmäßig nach, ob etwas ansteht — Sicherung, Erinnerung an fällige Belege, Angebote nachfassen, Aufräumen, neue Post. Änderungen hier greifen binnen einer Minute; niemand muss dafür an den Server.
    */
   wartung?: {
@@ -4252,6 +4265,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
         kennung?: T;
         registriertAm?: T;
         notiz?: T;
+      };
+  schrittzeit?:
+    | T
+    | {
+        pflicht?: T;
+        planzeitVorbelegen?: T;
       };
   wartung?:
     | T

@@ -818,6 +818,51 @@ export const Integrations: GlobalConfig = {
       ],
     },
     {
+      /*
+       * Zeit beim Abhaken — die Regeln dafür gehören dem Betrieb.
+       *
+       * Wer eine Laufmarke scannt und einen eigenen Arbeitsgang abhakt, kann
+       * dabei die gebrauchte Zeit buchen. Sie landet in derselben
+       * Arbeitszeit-Liste wie die Stoppuhr im Büro und trägt damit die
+       * Nachkalkulation — das war Dominiks Anlass (08/2026): „dann brauche
+       * ich es nicht mehr am Auftrag führen und habe dennoch was Belegbares."
+       *
+       * Ob das Pflicht ist und ob die Planzeit vorsteht, ist eine Frage der
+       * Arbeitsweise und keine des Programms: In der Serie ist die Planzeit
+       * meist richtig und ein Tipp genug; beim Einzelstück wäre sie eine
+       * Lüge, die man leicht durchwinkt. Deshalb hier statt im Code.
+       */
+      name: 'schrittzeit',
+      label: 'Zeit beim Abhaken (Laufmarken)',
+      type: 'group',
+      admin: {
+        description:
+          'Gilt für den Scan einer Laufmarke: Beim Abhaken eines eigenen Arbeitsgangs lässt sich die gebrauchte Zeit gleich mitbuchen. Sie steht danach in der Arbeitszeit des Auftrags und zählt für die Nachkalkulation.',
+      },
+      fields: [
+        {
+          name: 'pflicht',
+          label: 'Zeit ist Pflicht',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description:
+              'Mit Häkchen lässt sich ein eigener Arbeitsgang nur abhaken, wenn eine Zeit dabeisteht — dann bleiben in der Nachkalkulation keine Lücken. Ohne Häkchen darf das Feld leer bleiben.',
+          },
+        },
+        {
+          name: 'planzeitVorbelegen',
+          label: 'Planzeit vorbelegen',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'Das Feld steht schon auf den geplanten Minuten des Arbeitsgangs — ein Tipp bucht sie, wer länger gebraucht hat, tippt die Zahl um. Ohne Häkchen ist es leer, und jede Zahl ist bewusst eingegeben.',
+          },
+        },
+      ],
+    },
+    {
       name: 'wartung',
       label: 'Takt (Automatik)',
       type: 'group',
