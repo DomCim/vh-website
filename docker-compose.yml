@@ -130,6 +130,34 @@ services:
       # weiter alles, auch /office, und man sieht den alten Stand.
       - traefik.http.routers.vhweb.priority=100
       - traefik.http.services.vhweb.loadbalancer.server.port=3000
+      # ── Ratenbremse als zweite Schicht ─────────────────────────────────
+      #
+      # Die Bremsen in der Anwendung sitzen nur an den heiklen Endpunkten
+      # und leben im Speicher je Container. Diese hier fängt davor ab, was
+      # die App gar nicht erst sehen soll: stumpfes Geflute auf beliebige
+      # Adressen — auch die teuren wie die Suche (eine unauthentifizierte
+      # LIKE-Abfrage auf die Datenbank) und die PDF-Routen.
+      #
+      # Die Werte sind je Besucher-IP und bewusst großzügig: Eine
+      # Artikelseite lädt ein Dutzend Bilder und Skripte auf einen Schlag,
+      # und zwei Leute hinter derselben Firmen-IP teilen sich ein Konto.
+      # Ein Mensch erreicht 50/s nicht — ein Skript sofort.
+      #
+      # WICHTIG: `depth=1` liest die Besucher-IP aus X-Forwarded-For, das
+      # der NPM setzt. Ohne das zählte Traefik alle Besucher auf die IP des
+      # NPM zusammen — die Bremse träfe dann alle gleichzeitig oder nie.
+      # Kommt je ein weiterer Proxy davor (z.B. Cloudflare), muss die Zahl
+      # auf 2 hoch.
+      - traefik.http.middlewares.vhweb-bremse.ratelimit.average=50
+      - traefik.http.middlewares.vhweb-bremse.ratelimit.burst=100
+      - traefik.http.middlewares.vhweb-bremse.ratelimit.sourcecriterion.ipstrategy.depth=1
+      - traefik.http.middlewares.vhweb-gleichzeitig.inflightreq.amount=40
+      - traefik.http.middlewares.vhweb-gleichzeitig.inflightreq.sourcecriterion.ipstrategy.depth=1
+      - traefik.http.routers.vhweb.middlewares=vhweb-bremse,vhweb-gleichzeitig
+    # Ein gefluteter Web-Container darf Datenbank und Büro nicht mit in den
+    # Abgrund ziehen — die Trennung in zwei Container trägt nur mit Limits.
+    mem_limit: 1g
+    cpus: 2
 
   # ── Büro ────────────────────────────────────────────────────────────────
   #
@@ -202,10 +230,27 @@ services:
       # Höher als die Website — siehe die Erklärung dort
       - traefik.http.routers.vhbuero.priority=200
       - traefik.http.services.vhbuero.loadbalancer.server.port=3000
+      # Dieselbe Bremse wie an der Website — siehe die Erklärung dort.
+      # Etwas straffer, weil hinter /office keine anonyme Laufkundschaft
+      # steht; die Live-Verbindungen (WebSocket) zählen in `inflightreq`
+      # dauerhaft mit, deshalb nicht zu knapp: Handy, Tablet und Rechner
+      # der Werkstatt hängen hinter derselben IP.
+      - traefik.http.middlewares.vhbuero-bremse.ratelimit.average=30
+      - traefik.http.middlewares.vhbuero-bremse.ratelimit.burst=60
+      - traefik.http.middlewares.vhbuero-bremse.ratelimit.sourcecriterion.ipstrategy.depth=1
+      - traefik.http.middlewares.vhbuero-gleichzeitig.inflightreq.amount=30
+      - traefik.http.middlewares.vhbuero-gleichzeitig.inflightreq.sourcecriterion.ipstrategy.depth=1
+      - traefik.http.routers.vhbuero.middlewares=vhbuero-bremse,vhbuero-gleichzeitig
+    mem_limit: 1g
+    cpus: 1.5
 
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    # Die Datenbank bekommt ihr eigenes Dach — sie ist der eine Dienst, der
+    # unter keinen Umständen verhungern darf, wenn ein Nachbar Amok läuft.
+    mem_limit: 1g
+    cpus: 1
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-vh}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
