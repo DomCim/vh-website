@@ -34,7 +34,7 @@ export const NEUERUNGEN: Neuerung[] = [
         text: '**Lange Betreffzeilen zerlegen die Postfach-Liste nicht mehr.** Ein Dateiname als Betreff (`Rechnung_R000139707…pdf`) ist ein einziges Wort, breiter als jedes Handy — er schob sich unter die Uhrzeit und den „⋯"-Knopf oder drückte beide unter den Text. Jetzt bricht auch so ein Wortungetüm sauber um, die Vorschau endet nach zwei Zeilen, und Uhrzeit und Knopf stehen fest an ihrem Platz.',
       },
       {
-        text: '**Der Beleg-Automat hakt Mails nur noch ab, wenn er sie wirklich lesen konnte.** Lief er ohne hinterlegten KI-Schlüssel, galten die Mails trotzdem als angesehen — als der Schlüssel dann kam, blieb eine Amazon-Rechnung liegen, weil sie „schon erledigt" war. Ohne Schlüssel merkt er sich jetzt nichts, und nach diesem Update sieht er die letzten 30 Mails einmalig erneut durch; Doppel-Anlagen verhindert die Kennung am Beleg.',
+        text: '**Der Beleg-Automat hakt Mails nur noch ab, wenn er sie wirklich lesen konnte.** Scheiterte das Auslesen — etwa an einem Aussetzer beim KI-Anbieter oder weil kein Schlüssel hinterlegt war —, galt die Mail trotzdem als angesehen und blieb für immer liegen. Jetzt bleibt der Automat vor der gescheiterten Mail stehen und versucht sie beim nächsten Takt erneut. Nach diesem Update sieht er die letzten 30 Mails einmalig noch einmal durch; Doppel-Anlagen verhindert die Kennung am Beleg.',
       },
     ],
   },
