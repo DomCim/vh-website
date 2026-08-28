@@ -35,16 +35,20 @@ const mediathekLesen: Access = ({ data, isReadingStaticFile, req: { user } }) =>
   if (isReadingStaticFile) {
     const name = String(data?.filename ?? '')
     if (/[\\/]/.test(name)) return false
+    if (user) return true
     /*
-     * Internes nur mit Anmeldung — das Kennzeichen setzen die Upload-Wege
-     * des Büros (siehe Feld `intern`). PDFs zusätzlich pauschal: Die
-     * Website braucht öffentlich keine einzige PDF-Datei; was hier als PDF
-     * liegt, sind Rechnungen und Belege. Der doppelte Boden fängt Dateien,
-     * die am Kennzeichen vorbei hereinkamen (etwa von Hand im Admin).
+     * Unangemeldete bekommen PDFs nie (die Website braucht öffentlich
+     * keine einzige — was als PDF liegt, sind Rechnungen und Belege) und
+     * alles andere nur ohne intern-Kennzeichen. Das Kennzeichen steht als
+     * **Bedingung** hier, nicht als `data.intern`-Abfrage: Payload reicht
+     * der Prüfung bei statischen Dateien nur `{ filename }` herein
+     * (nachgelesen in checkFileAccess.js und am Container nachgemessen —
+     * ein Feldvergleich wäre still immer wahr gewesen). Eine
+     * zurückgegebene Bedingung dagegen läuft in die Datensatz-Suche: kein
+     * Treffer, keine Datei.
      */
-    if (data?.intern === true) return Boolean(user)
-    if (name.toLowerCase().endsWith('.pdf')) return Boolean(user)
-    return true
+    if (name.toLowerCase().endsWith('.pdf')) return false
+    return { intern: { not_equals: true } }
   }
   return Boolean(user)
 }
