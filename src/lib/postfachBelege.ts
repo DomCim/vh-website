@@ -36,13 +36,15 @@ import { benachrichtige } from './push'
  */
 
 /*
- * `postbeleg2`, nicht `postbeleg`: Der allererste Lauf (08/2026) hatte den
- * Ungelesen-Fehler und schwieg über seine Gründe — seine Mails gelten als
- * angesehen, obwohl womöglich Belege darin stecken. Der neue Schlüssel lässt
- * den Lauf einmalig wieder bei den letzten 30 anfangen; vor Doppel-Anlage
+ * `postbeleg3`, nicht `postbeleg`: Jede Nummer ist ein einmaliger Neuanlauf
+ * über die letzten 30 Mails. Die 2 kam, weil der allererste Lauf (08/2026)
+ * den Ungelesen-Fehler hatte und über seine Gründe schwieg; die 3, weil der
+ * zweite Lauf ohne Anthropic-Schlüssel lief — er konnte nur Factur-X lesen,
+ * rückte den Merker aber trotzdem vor, und die Amazon-Rechnung galt fortan
+ * als angesehen, obwohl nie eine KI sie gesehen hatte. Vor Doppel-Anlage
  * schützt ohnehin die Kennung am Beleg, nicht der Merker.
  */
-const MERKER = (fachId: string | number) => `postbeleg2-${fachId}`
+const MERKER = (fachId: string | number) => `postbeleg3-${fachId}`
 const MAX_ANHAENGE_JE_MAIL = 3
 const MAX_PDF_BYTES = 15 * 1024 * 1024
 
@@ -247,7 +249,15 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
         }
       }
 
-      if (hoechste > zuletzt) await merkerSchreiben(payload, schluessel, hoechste)
+      /*
+       * Ohne KI-Schlüssel bleibt der Merker stehen. Genau das hat einmal
+       * eine Rechnung verschluckt: Der Lauf konnte nur Factur-X lesen,
+       * hakte die Mails aber trotzdem ab — als der Schlüssel kam, galt die
+       * Amazon-Rechnung als erledigt. Steht der Merker still, sieht sich
+       * der nächste Lauf mit Schlüssel dieselben Mails noch einmal an; vor
+       * doppelten Entwürfen schützt die Kennung am Beleg.
+       */
+      if (zugang && hoechste > zuletzt) await merkerSchreiben(payload, schluessel, hoechste)
     } catch (err) {
       payload.logger.error({ err, fach: fach.id }, 'Postfach-Belege fehlgeschlagen')
     }

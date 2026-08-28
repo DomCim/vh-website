@@ -993,7 +993,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
                       {n.markiert && <span className="buero-nur-vorlesen">Markiert: </span>}
                       {n.von}
                     </div>
-                    <div className="buero-zeile-neben">
+                    <div className="buero-zeile-neben buero-mailvorschau">
                       {n.betreff}
                       {n.anhaenge ? ' · Anhang' : ''}
                     </div>
