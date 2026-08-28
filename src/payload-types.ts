@@ -443,6 +443,10 @@ export interface Category {
 export interface Media {
   id: number;
   alt?: string | null;
+  /**
+   * Belege, Lieferscheine und andere Unterlagen des Betriebs. Ohne Häkchen ist die Datei öffentlich abrufbar, wie es Produktbilder sein müssen.
+   */
+  intern?: boolean | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -3103,6 +3107,7 @@ export interface PushSubscriptionsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  intern?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
