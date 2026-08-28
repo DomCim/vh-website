@@ -1233,6 +1233,18 @@ html.tastatur-offen .buero-inhalt {
   font-size: 0.8rem;
   color: var(--buero-tinte-leise);
   margin-top: 0.2rem;
+  /*
+   * Auch Wortungetüme müssen brechen dürfen.
+   *
+   * Auf info@ kommen Betreffzeilen wie „Rechnung_R000139707______vom_…pdf"
+   * an — ein einziges Wort, breiter als jedes Handy. Ohne Brechstelle kann
+   * die Flexspalte nicht schmaler werden als dieses Wort: Der Text schob
+   * sich unter Zeit und „⋯", oder beide fielen unter die Zeile. `anywhere`
+   * greift nur, wenn nichts anderes hilft — normale Sätze brechen weiter
+   * am Leerzeichen.
+   */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Zahlen in der Nebenzeile hervorheben: „Bestand 12 m von 50 m" liest man
@@ -1933,6 +1945,21 @@ html.tastatur-offen .buero-inhalt {
 .buero-mailzeit {
   white-space: nowrap;
   flex: 0 0 auto;
+}
+
+/*
+ * Die Betreff-Vorschau endet nach zwei Zeilen.
+ *
+ * Seit Betreffs brechen dürfen (siehe `.buero-zeile-neben`), würde ein
+ * Dateiname als Betreff die Zeile sonst auf fünf, sechs Zeilen aufblasen —
+ * die Liste soll aber eine Liste bleiben. Zwei Zeilen reichen, um eine Mail
+ * zu erkennen; der volle Betreff steht in der geöffneten Mail.
+ */
+.buero-mailvorschau {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Die rechte Seite einer Listenzeile: Zeit und „⋯" */

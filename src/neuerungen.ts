@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 82,
+    datum: null,
+    titel: 'Postfach: Die Liste bleibt eine Liste — und der Beleg-Automat holt Verpasstes nach',
+    punkte: [
+      {
+        text: '**Lange Betreffzeilen zerlegen die Postfach-Liste nicht mehr.** Ein Dateiname als Betreff (`Rechnung_R000139707…pdf`) ist ein einziges Wort, breiter als jedes Handy — er schob sich unter die Uhrzeit und den „⋯"-Knopf oder drückte beide unter den Text. Jetzt bricht auch so ein Wortungetüm sauber um, die Vorschau endet nach zwei Zeilen, und Uhrzeit und Knopf stehen fest an ihrem Platz.',
+      },
+      {
+        text: '**Der Beleg-Automat hakt Mails nur noch ab, wenn er sie wirklich lesen konnte.** Scheiterte das Auslesen — etwa an einem Aussetzer beim KI-Anbieter oder weil kein Schlüssel hinterlegt war —, galt die Mail trotzdem als angesehen und blieb für immer liegen. Jetzt bleibt der Automat vor der gescheiterten Mail stehen und versucht sie beim nächsten Takt erneut. Nach diesem Update sieht er die letzten 30 Mails einmalig noch einmal durch; Doppel-Anlagen verhindert die Kennung am Beleg.',
+      },
+    ],
+  },
+  {
     nummer: 81,
     datum: null,
     titel: 'Postfach: Wischen führt zurück in den Posteingang — und der Beleg-Automat erklärt sich',
