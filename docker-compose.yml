@@ -35,6 +35,38 @@
 #    ohne das endet der Upload mit 413, bevor überhaupt etwas ankommt)
 #  - Websockets aktivieren (die Live-Verbindung des Büros unter /ws/buero)
 #  - X-Forwarded-Proto muss https sein, sonst baut die Anwendung http-Links
+#
+# ── Ausrollen über Portainer aus dem Repository (GitOps) ───────────────────
+#
+# Der Stack kommt direkt aus diesem Repo — kein Webhook, kein Zwischenglied:
+#
+#   Build method:          Repository
+#   Repository URL:        https://github.com/DomCim/vh-website
+#                          (öffentlich — Authentication bleibt aus)
+#   Repository reference:  refs/heads/betrieb      ← NICHT main!
+#   Compose path:          docker-compose.yml
+#   GitOps updates:        an, Polling (5 Minuten reichen)
+#   Re-pull image:         an — sonst bleibt trotz neuem Stand das alte
+#                          Abbild im Einsatz
+#   Environment variables: von Hand eintragen (Advanced mode, Werte aus der
+#                          bisherigen Stack-Konfiguration). Pflicht sind
+#                          PAYLOAD_SECRET und POSTGRES_PASSWORD; der Rest
+#                          steht in .env.example. KEIN stack.env ins Repo —
+#                          es ist öffentlich.
+#
+# Warum `betrieb` und nicht `main`: Portainer pollt das Repo, die Abbilder
+# werden aber erst NACH dem Push auf main gebaut. Wer main pollt, erwischt
+# regelmäßig den Moment dazwischen, zieht die alten Abbilder — und bleibt
+# darauf stehen. Der Workflow schiebt den Branch `betrieb` deshalb erst
+# weiter, wenn beide Abbilder fertig im Regal liegen (docker.yml, Job
+# „ausrollen").
+#
+# Beim Umzug vom alten Stack: erst den alten Stack löschen (die Volumes
+# bleiben dabei liegen), dann diesen unter EXAKT demselben Namen anlegen —
+# die Volumes heißen <Stackname>_media, _dbdata, _backups und docken nur bei
+# gleichem Namen wieder an. Danach kann der HA-Webhook weg: In den
+# GitHub-Secrets HA_DEPLOY_WEBHOOK entfernen, der Workflow überspringt den
+# Schritt dann von selbst.
 services:
   web:
     # Zwei Abbilder aus demselben Quelltext: Dieses hier enthält Website, Shop

@@ -189,6 +189,9 @@ jobs:
       && inputs.ausrollen != 'nein'
       && !contains(github.event.head_commit.message, '[kein-ausrollen]')
     runs-on: ubuntu-latest
+    permissions:
+      # Zum Weiterschieben des Betriebszeigers (Branch `betrieb`, siehe unten)
+      contents: write
     steps:
       # Zwei Bremsen, weil es zwei Fälle gibt.
       #
@@ -197,6 +200,32 @@ jobs:
       # Commits. Wer `[kein-ausrollen]` in die Merge-Nachricht schreibt, baut
       # `latest`, ohne dass es gleich live geht; ausgerollt wird dann später
       # von Hand über den Portainer-Stack.
+
+      # ── Der Betriebszeiger ─────────────────────────────────────────────
+      #
+      # Der Branch `betrieb` zeigt auf den Stand, den der Betrieb fahren
+      # soll — Portainer pollt ihn (GitOps, Stack aus dem Repository) und
+      # rollt bei jeder Bewegung neu aus, samt frischer Abbilder.
+      #
+      # Warum ein eigener Branch und nicht `main`: Portainer pollt das
+      # **Repo**, gebaut werden die Abbilder aber erst **nach** dem Push.
+      # Pollte Portainer `main`, käme es regelmäßig zwischen Push und
+      # fertigem Bau — es zöge dann die alten Abbilder und bliebe darauf
+      # stehen, weil sich das Repo danach nicht mehr rührt. Der Zeiger
+      # bewegt sich deshalb erst hier, wenn beide Abbilder im Regal liegen.
+      #
+      # Kein neuer Commit, nur ein Zeiger: `betrieb` steht immer auf einem
+      # Commit von `main`.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Betriebszeiger weiterschieben
+        run: |
+          git push --force origin "HEAD:refs/heads/betrieb"
+          echo "betrieb steht jetzt auf ${GITHUB_SHA:0:7} — Portainer holt sich das beim nächsten Poll."
+
       - name: Ausrollen anstoßen (über Home Assistant)
         env:
           HA_DEPLOY_WEBHOOK: ${{ secrets.HA_DEPLOY_WEBHOOK }}
