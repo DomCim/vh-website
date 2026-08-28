@@ -233,11 +233,20 @@ export async function neuesteUngelesene(fach: MailboxKonfiguration): Promise<Kop
   })
 }
 
-/** Eine einzelne Nachricht mit Text, HTML und Anhangsliste. */
+/**
+ * Eine einzelne Nachricht mit Text, HTML und Anhangsliste.
+ *
+ * `gelesenMarkieren` unterscheidet Mensch und Automat: Wer eine Mail im Büro
+ * öffnet, hat sie gelesen — der Postfach-Beleg-Lauf dagegen sieht sie nur
+ * durch, und das Postfach soll weiter ehrlich zeigen, was noch niemand
+ * gesehen hat. Genau das ging beim ersten Lauf schief: Der Automat las mit
+ * dieser Funktion und stempelte dabei fremde Mails als gelesen.
+ */
 export async function nachrichtLesen(
   fach: MailboxKonfiguration,
   ordner: string,
   uid: number,
+  gelesenMarkieren = true,
 ): Promise<Nachricht | null> {
   return mitVerbindung(fach, async (client) => {
     const schloss = await client.getMailboxLock(ordner)
@@ -247,7 +256,9 @@ export async function nachrichtLesen(
       const mail = await simpleParser(roh.content)
 
       // Gelesen markieren — wer eine Mail öffnet, hat sie gelesen
-      await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true }).catch(() => undefined)
+      if (gelesenMarkieren) {
+        await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true }).catch(() => undefined)
+      }
 
       const zuText = (a: unknown): string => {
         if (!a) return ''

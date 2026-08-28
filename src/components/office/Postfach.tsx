@@ -248,6 +248,38 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [faecher, fach])
 
+  /*
+   * Die geöffnete Mail ist ein Verlaufseintrag — wegen der Wischgeste.
+   *
+   * Am Telefon heißt „von links wischen" Browser-Zurück. Solange die offene
+   * Mail nur Komponentenzustand war, verließ die Geste das ganze Postfach
+   * und landete dort, wo man vor dem Postfach war — statt im Posteingang
+   * (Dominik, 08/2026). Deshalb legt das Öffnen einen Verlaufseintrag an,
+   * und die Wischgeste (popstate) schließt nur die Mail.
+   *
+   * `offenRef` statt `offen` im Horcher: Der wird einmal angemeldet und
+   * sähe sonst für immer den Zustand vom Anmelden.
+   */
+  const offenRef = useRef<Nachricht | null>(null)
+  offenRef.current = offen
+
+  useEffect(() => {
+    const beiZurueck = () => {
+      if (offenRef.current) {
+        setDetailMehr(false)
+        setOffen(null)
+      }
+    }
+    window.addEventListener('popstate', beiZurueck)
+    return () => window.removeEventListener('popstate', beiZurueck)
+  }, [])
+
+  /** Die Mail zumachen — über den Verlauf, damit der Eintrag nicht liegen bleibt. */
+  function detailSchliessen() {
+    if (window.history.state?.postfachMail) window.history.back()
+    else setOffen(null)
+  }
+
   async function oeffnen(uid: number) {
     setLaeuft(true)
     try {
@@ -263,6 +295,10 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
       // beim Wechsel wäre es sonst über der nächsten noch offen.
       setDetailMehr(false)
       setOffen(j.nachricht)
+      // Nur ein Eintrag, auch wenn nacheinander mehrere Mails geöffnet werden
+      if (!window.history.state?.postfachMail) {
+        window.history.pushState({ postfachMail: true }, '')
+      }
       setListe((v) => v.map((n) => (n.uid === uid ? { ...n, gelesen: true } : n)))
     } finally {
       setLaeuft(false)
@@ -293,10 +329,10 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
     if (was === 'loeschen') {
       setListe((v) => v.filter((n) => n.uid !== uid))
-      setOffen(null)
+      detailSchliessen()
     } else if (was === 'ungelesen' || was === 'gelesen') {
       setListe((v) => v.map((n) => (n.uid === uid ? { ...n, gelesen: was === 'gelesen' } : n)))
-      setOffen(null)
+      detailSchliessen()
     } else if (was === 'markiert' || was === 'unmarkiert') {
       setListe((v) =>
         v.map((n) => (n.uid === uid ? { ...n, markiert: was === 'markiert' } : n)),
@@ -317,7 +353,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
     }
     // Aus dieser Liste ist sie weg — sie liegt jetzt woanders
     setListe((v) => v.filter((n) => n.uid !== uid))
-    setOffen(null)
+    detailSchliessen()
     const zielName = ordnerAlle.find((o) => o.pfad === ziel)
     setMeldung(`Verschoben nach ${zielName ? ordnerName(zielName) : ziel}.`)
   }
@@ -455,7 +491,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
         `<blockquote style="color: #666666">${zitat}</blockquote>`,
       antwortAufMessageId: n.messageId,
     })
-    setOffen(null)
+    detailSchliessen()
   }
 
   if (nichtEingerichtet) {
@@ -654,7 +690,7 @@ export function Postfach({ vorgabe }: { vorgabe?: Entwurf | null }) {
        * die Karte: Dort wäre die volle Breite das andere Extrem.
        */
       <div className="buero-karte buero-mail-offen">
-        <button type="button" className="buero-ruecken" onClick={() => setOffen(null)}>
+        <button type="button" className="buero-ruecken" onClick={() => detailSchliessen()}>
           <Zeichen was="zurueck" /> Zurück
         </button>
         <h2 style={{ marginTop: '.5rem' }}>{offen.betreff}</h2>

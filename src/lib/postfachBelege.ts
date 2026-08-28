@@ -35,7 +35,14 @@ import { benachrichtige } from './push'
  * also je Anhang genau einmal an, nicht je Takt.
  */
 
-const MERKER = (fachId: string | number) => `postbeleg-${fachId}`
+/*
+ * `postbeleg2`, nicht `postbeleg`: Der allererste Lauf (08/2026) hatte den
+ * Ungelesen-Fehler und schwieg über seine Gründe — seine Mails gelten als
+ * angesehen, obwohl womöglich Belege darin stecken. Der neue Schlüssel lässt
+ * den Lauf einmalig wieder bei den letzten 30 anfangen; vor Doppel-Anlage
+ * schützt ohnehin die Kennung am Beleg, nicht der Merker.
+ */
+const MERKER = (fachId: string | number) => `postbeleg2-${fachId}`
 const MAX_ANHAENGE_JE_MAIL = 3
 const MAX_PDF_BYTES = 15 * 1024 * 1024
 
@@ -92,6 +99,13 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
 
   // Einmal je Lauf, nicht je Anhang: Der Zugang ändert sich nicht zwischendrin
   const zugang = await kiZugang(payload)
+  if (!zugang) {
+    // Ohne Schlüssel liest nur Factur-X — gewöhnliche PDF-Rechnungen bleiben
+    // liegen, und das soll im Protokoll stehen statt still zu passieren
+    payload.logger.warn(
+      'Postfach-Belege: Kein Anthropic-Schlüssel unter Integrationen — es werden nur elektronische Rechnungen (Factur-X) erkannt.',
+    )
+  }
 
   // Bekannte Lieferanten, damit die KI deren Schreibweise trifft — dieselbe
   // Hilfe, die auch die Hand-Erfassung bekommt (api/ki)
@@ -126,7 +140,8 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
 
       for (const kopf of neue) {
         try {
-          const nachricht = await nachrichtLesen(fach, 'INBOX', kopf.uid)
+          // Ausdrücklich ohne Gelesen-Stempel — der Automat sieht nur durch
+          const nachricht = await nachrichtLesen(fach, 'INBOX', kopf.uid, false)
           if (!nachricht) continue
 
           const pdfs = (nachricht.dateien ?? [])
@@ -155,6 +170,25 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
                 zugang,
                 { daten: anhang.daten, mimetype: 'application/pdf' },
                 lieferanten,
+              )
+            }
+
+            /*
+             * Jede Entscheidung steht im Protokoll. Der erste Lauf schwieg —
+             * und als eine Amazon-Rechnung nicht auftauchte, gab es nichts,
+             * woran man hätte sehen können, warum.
+             */
+            if (!daten) {
+              payload.logger.info(
+                { betreff: kopf.betreff, datei: pdf.name },
+                zugang
+                  ? 'Postfach-Beleg: nichts ausgelesen'
+                  : 'Postfach-Beleg: übersprungen — kein Factur-X und kein KI-Schlüssel',
+              )
+            } else if (!daten.brutto || daten.brutto <= 0) {
+              payload.logger.info(
+                { betreff: kopf.betreff, datei: pdf.name },
+                'Postfach-Beleg: übersprungen — kein Bruttobetrag (vermutlich kein Beleg)',
               )
             }
 
@@ -195,6 +229,10 @@ export async function belegeAusPostfach(payload: Payload): Promise<number> {
               data: { ...entwurf, document: medium.id },
             })
             angelegt += 1
+            payload.logger.info(
+              { beleg: beleg.id, lieferant: entwurf.supplierName, brutto: entwurf.grossAmount },
+              'Postfach-Beleg: Entwurf angelegt',
+            )
 
             await benachrichtige(payload, {
               titel: `Beleg-Entwurf: ${entwurf.supplierName}`,
