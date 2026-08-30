@@ -381,7 +381,8 @@ function FlaggenHilfe({
         <div className="buero-flaggen-inhalt">
           <p className="buero-unterzeile">
             In die Notiz geschrieben, wirken diese Zeilen auf der Website. Sie gehen auch am
-            Telefon — die Notiz kommt über den Kalender hier an. Anklicken setzt die Zeile ein.
+            Telefon — die Notiz kommt über den Kalender hier an. Anklicken setzt die Zeile ein. Der
+            Doppelpunkt darf auch fehlen: <code>#ort Ettlingen</code> gilt genauso.
           </p>
 
           <dl className="buero-flaggen-liste">

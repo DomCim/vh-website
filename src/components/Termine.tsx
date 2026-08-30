@@ -15,14 +15,33 @@ import { t } from '../lib/i18n'
  * abgesagter Termin nicht an einer von zwei Stellen wie ein gültiger aussieht.
  */
 
+/**
+ * Die Zeitzone der Werkstatt — nicht die des Servers.
+ *
+ * Diese Seite wird auf dem Server gebaut, und der Container läuft nach UTC.
+ * Ohne Angabe formatierte er die Uhrzeit in UTC: Ein Termin um 9 Uhr stand
+ * für **jeden** Besucher als „07:00" da. Genau so gemeldet, nachdem die
+ * Uhrzeit im Büro längst stimmte — dort rechnet der Browser, hier der Server.
+ *
+ * Dieselbe Festlegung wie beim Tagesstempel der Statistik (`lib/statistik.ts`)
+ * und aus demselben Grund: Die Werkstatt steht in Frankreich, und was auf der
+ * Website steht, ist eine Ansage an Besucher vor Ort.
+ */
+const ZONE = 'Europe/Paris'
+
 /** Der Tag, groß herausgestellt — daran findet man sich in einer Liste zurecht. */
 function Tagesblock({ termin, sprache }: { termin: OeffentlicherTermin; sprache: Locale }) {
   const d = new Date(termin.beginn)
   return (
     <div className="border-line bg-paper-soft flex h-16 w-16 shrink-0 flex-col items-center justify-center border">
-      <span className="text-ink text-xl leading-none font-semibold">{d.getDate()}</span>
+      {/* Auch die Tageszahl in der Zone der Werkstatt — `getDate()` nähme
+          die des Servers, und ein Termin am späten Abend stünde dann unter
+          dem falschen Tag. */}
+      <span className="text-ink text-xl leading-none font-semibold">
+        {d.toLocaleDateString(sprache, { day: 'numeric', timeZone: ZONE })}
+      </span>
       <span className="text-ink-soft mt-1 text-[10px] uppercase">
-        {d.toLocaleDateString(sprache, { month: 'short' })}
+        {d.toLocaleDateString(sprache, { month: 'short', timeZone: ZONE })}
       </span>
     </div>
   )
@@ -43,18 +62,22 @@ function zeitraum(termin: OeffentlicherTermin, sprache: Locale): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone: ZONE,
   })
 
   if (termin.ganztaegig) {
     // Über mehrere Tage: „30. August bis 2. September"
-    if (ende && ende.toDateString() !== beginn.toDateString()) {
-      return `${tag} – ${ende.toLocaleDateString(sprache, { day: 'numeric', month: 'long' })}`
+    // Verglichen wird der Tag in der Zone der Werkstatt; `toDateString()`
+    // nähme die des Servers und zöge einen Abendtermin über zwei Tage
+    const alsTag = (d: Date) => d.toLocaleDateString('sv-SE', { timeZone: ZONE })
+    if (ende && alsTag(ende) !== alsTag(beginn)) {
+      return `${tag} – ${ende.toLocaleDateString(sprache, { day: 'numeric', month: 'long', timeZone: ZONE })}`
     }
     return `${tag} · ${dict.events.allDay}`
   }
 
   const uhr = (d: Date) =>
-    d.toLocaleTimeString(sprache, { hour: '2-digit', minute: '2-digit' })
+    d.toLocaleTimeString(sprache, { hour: '2-digit', minute: '2-digit', timeZone: ZONE })
 
   return ende ? `${tag} · ${uhr(beginn)} – ${uhr(ende)}` : `${tag} · ${uhr(beginn)}`
 }

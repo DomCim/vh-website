@@ -74,13 +74,17 @@ const FLAGGEN: Record<string, string[]> = {
 /**
  * Merkmale, die genau eine Zeile lang sind.
  *
- * Eine Adresse und ein Dateiname gehen nie über mehrere Zeilen — wohl aber
- * eine Beschreibung. Ohne diese Unterscheidung verschluckt das letzte Flag
- * alles, was danach noch kommt: Steht unter `#link:` noch „Aufbau ab 6 Uhr",
- * landet die interne Notiz mitten im Verweis und verschwindet zugleich aus
- * dem Rest. Genau das ist beim Prüfen aufgefallen.
+ * Ein Titel, eine Adresse, ein Verweis und ein Dateiname gehen nie über
+ * mehrere Zeilen — **die Beschreibung als einzige schon.** Ohne diese
+ * Unterscheidung verschluckt das letzte Flag alles, was danach noch kommt:
+ * Steht unter `#ort Nancy` noch „Aufbau ab 6 Uhr", landet die interne Notiz
+ * in der Adresse und verschwindet zugleich aus dem Rest.
+ *
+ * Genau so beim Prüfen aufgefallen, zweimal — erst bei `#link`, dann bei
+ * `#ort`. Die Regel dahinter ist einfach: Mehrzeilig ist nur, was mehrzeilig
+ * sein muss.
  */
-const EINZEILIG = new Set(['link', 'bild'])
+const EINZEILIG = new Set(['link', 'bild', 'ort', 'titel'])
 
 /** Zu welchem Merkmal gehört dieses Wort? */
 function merkmalZu(wort: string): string | null {
@@ -149,10 +153,40 @@ export function merkmaleLesen(notiz: string | null | undefined): Merkmale {
      * Ein Flag hat bis zu drei Teile: Name, Sprache, Text. Getrennt wird am
      * Doppelpunkt — aber nur an den ersten beiden, denn im Text stehen
      * regelmäßig weitere („#link: https://…").
+     *
+     * **Der Doppelpunkt darf fehlen.** Genau das versprach die Hilfe in der
+     * Terminmaske, und genau daran hielt sich der Code zuerst nicht: Bei
+     * `#beschreibung Text ohne Doppelpunkt` war der erste Teil die ganze
+     * Zeile, und die erkennt niemand als Flagge. Die Folge war die
+     * unangenehmste Sorte Fehler — der Termin stand auf der Website (denn
+     * `#oeffentlich` allein hat keinen Doppelpunkt und griff), aber ohne
+     * Titel, ohne Beschreibung, ohne Ort. Alles Übrige lag still im internen
+     * Rest. So gemeldet aus dem Betrieb.
+     *
+     * Deshalb wird zuerst am Doppelpunkt getrennt und, wenn das kein
+     * bekanntes Flag ergibt, am ersten Leerzeichen. Ein Wort ohne beides
+     * (`#absage`) bleibt, wie es ist.
      */
     const inhalt = angefangen[1]
-    const teile = inhalt.split(':')
-    const name = merkmalZu(teile[0])
+    let teile = inhalt.split(':')
+    let name = merkmalZu(teile[0])
+
+    if (!name) {
+      const leer = inhalt.search(/\s/)
+      if (leer > 0) {
+        const wort = inhalt.slice(0, leer)
+        const rest = inhalt.slice(leer + 1)
+        if (merkmalZu(wort)) {
+          name = merkmalZu(wort)
+          /*
+           * Von hier an sieht alles Weitere so aus, als wäre der Doppelpunkt
+           * dagewesen. Der Rest bleibt als **ein** Stück stehen, damit
+           * `#link https://…` nicht an seinen eigenen Doppelpunkten zerfällt.
+           */
+          teile = [wort, rest]
+        }
+      }
+    }
 
     if (!name) {
       // Kein Flag, das wir kennen — eine Raute darf auch einfach Text sein
