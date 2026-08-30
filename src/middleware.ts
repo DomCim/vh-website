@@ -23,8 +23,69 @@ import { mitSprache, pfadNenntSprache, SPRACH_COOKIE, spracheWaehlen } from './l
  * festsetzen. Aus demselben Grund steht `Vary` dabei: Antwort und Ziel hängen
  * von Kopf und Cookie ab.
  */
-export function middleware(anfrage: NextRequest) {
+/**
+ * Die Verben, die WebDAV über HTTP hinaus mitbringt.
+ *
+ * Next kennt in einer Route nur GET, HEAD, OPTIONS, POST, PUT, DELETE und
+ * PATCH (`next/dist/server/web/http.js`). Ein exportiertes `PROPFIND` wird
+ * schlicht nicht angesprungen — die Antwort wäre `405`, und zwar ausgerechnet
+ * bei den Anfragen, mit denen das iPhone ein CalDAV-Konto überhaupt erst
+ * einrichtet.
+ *
+ * Deshalb der Umweg: Diese Verben kommen als `POST` in der Route an und
+ * tragen ihren echten Namen in einem eigenen Kopf mit. Die Route liest ihn
+ * und verzweigt selbst (siehe `api/caldav/[[...pfad]]/route.ts`).
+ */
+const DAV_VERBEN = ['PROPFIND', 'REPORT', 'PROPPATCH', 'MKCALENDAR', 'MKCOL']
+export const DAV_KOPF = 'x-dav-methode'
+
+export async function middleware(anfrage: NextRequest) {
   const { pathname, search } = anfrage.nextUrl
+
+  // CalDAV steht ganz vorn — siehe die beiden Vermerke darin
+  if (pathname.startsWith('/api/caldav')) {
+    /*
+     * Erst einmal: **kein Sprachkürzel**. Der Abgleich lief hier zunächst in
+     * die Sprachumleitung und landete bei `/en/api/caldav/…` — eine Adresse,
+     * die es nicht gibt. Alles unter `/api` ist von der Umleitung
+     * ausgenommen (siehe `config.matcher`); dieser eine Zweig ist nur
+     * deshalb überhaupt hier, weil Next die WebDAV-Verben sonst gar nicht
+     * durchlässt. Die Umleitung darf ihn folglich nicht anfassen.
+     */
+    if (!DAV_VERBEN.includes(anfrage.method)) return NextResponse.next()
+
+    /*
+     * Das echte Verb in den Kopf, und als `POST` weiterreichen.
+     *
+     * Next entscheidet am Verb, **bevor** eine Route gefragt wird, und
+     * beantwortet alles außerhalb seiner sieben selbst — ein exportiertes
+     * `PROPFIND` wird nie angesprungen. Ein `rewrite` hilft nicht, es setzt
+     * nur ein Ziel und lässt das Verb, wie es war. Die Anfrage muss hier
+     * also wirklich zu einem `POST` werden; die Route liest den Kopf und
+     * verteilt selbst.
+     *
+     * Der Rumpf wird vorher **ganz gelesen**. Ihn als Strom weiterzugeben
+     * brach im Container mit „transformAlgorithm is not a function": Ein
+     * laufender Anfragestrom lässt sich hier nicht zuverlässig
+     * weiterverschicken. Die Rümpfe sind ein paar Zeilen XML, das Einlesen
+     * kostet also nichts.
+     *
+     * **Kein Kreislauf:** Die neue Anfrage ist ein `POST`, und `POST` steht
+     * nicht in `DAV_VERBEN` — sie fällt oben durch die Bedingung und geht
+     * geradewegs an die Route.
+     */
+    const kopf = new Headers(anfrage.headers)
+    kopf.set(DAV_KOPF, anfrage.method)
+    kopf.delete('content-length')
+
+    const rumpf = await anfrage.text()
+    return fetch(`${anfrage.nextUrl.origin}${pathname}${search}`, {
+      method: 'POST',
+      headers: kopf,
+      body: rumpf || undefined,
+      redirect: 'manual',
+    })
+  }
 
   // Eine Adresse, die ihre Sprache nennt, bleibt, wie sie ist — sie ist die
   // Zusage an jeden, der den Link weitergibt
@@ -45,6 +106,11 @@ export const config = {
   /*
    * Alles außer: Schnittstellen, Büro, Verwaltung, Nexts eigenem Kram, den
    * Medien — und allem mit einem Punkt, also jeder Datei.
+   *
+   * Dazu als einzige Ausnahme unter `/api` der CalDAV-Weg: Dort muss die
+   * Middleware ans Werk, weil Next die WebDAV-Verben sonst gar nicht erst
+   * durchlässt (siehe oben). Die Sprachumleitung greift dort nicht — der
+   * Block steht vor ihr und antwortet selbst.
    */
-  matcher: ['/((?!(?:api|office|admin|_next|media|js)(?:/|$)|.*\\.).*)'],
+  matcher: ['/((?!(?:api|office|admin|_next|media|js)(?:/|$)|.*\\.).*)', '/api/caldav/:pfad*'],
 }

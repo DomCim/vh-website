@@ -10,6 +10,7 @@ import { fr } from '@payloadcms/translations/languages/fr'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { Appointments } from './collections/Appointments'
 import { BankTransactions } from './collections/BankTransactions'
 import { Categories } from './collections/Categories'
 import { Changelog } from './collections/Changelog'
@@ -92,6 +93,7 @@ export default buildConfig({
     NewsletterSubscribers,
     // Büro: Geschäftszahlen, nur für die Inhaberrolle
     Contacts,
+    Appointments,
     Expenses,
     Quotes,
     Jobs,
