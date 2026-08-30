@@ -2438,6 +2438,93 @@ html.tastatur-offen .buero-inhalt {
   width: auto;
 }
 
+/* ── Die Flaggen für die Website ────────────────────────────────────────── */
+/*
+ * Steht unter dem Notizfeld der Terminmaske. Eingeklappt, weil man sie nicht
+ * jedes Mal braucht — aber an Ort und Stelle, weil ein Muster, das man
+ * auswendig können muss, nach drei Wochen niemand mehr benutzt.
+ */
+.buero-flaggen {
+  margin-top: -0.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.buero-flaggen-kopf {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  background: var(--buero-papier);
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--buero-tinte);
+  cursor: pointer;
+  text-align: left;
+}
+
+.buero-flaggen-kopf:hover {
+  background: var(--buero-flaeche);
+}
+
+.buero-flaggen-still {
+  font-size: 0.72rem;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-flaggen-inhalt {
+  padding: 0.6rem;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-flaggen-liste {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+  margin: 0.6rem 0;
+}
+
+.buero-flaggen-liste dt {
+  margin: 0;
+}
+
+.buero-flaggen-liste dd {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--buero-tinte-leise);
+}
+
+/* Die Flagge selbst ist der Knopf, der sie einsetzt */
+.buero-flaggen-knopf {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 5px;
+  background: var(--buero-papier);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--buero-tinte);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.buero-flaggen-knopf:hover {
+  border-color: var(--buero-bronze);
+  color: var(--buero-bronze);
+}
+
+.buero-flaggen-inhalt code {
+  padding: 0.05rem 0.25rem;
+  border-radius: 4px;
+  background: var(--buero-papier);
+  font-size: 0.72rem;
+}
+
 /* ── Kalender aufs Telefon ──────────────────────────────────────────────── */
 .buero-kalender-zugang {
   margin-top: 2rem;

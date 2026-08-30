@@ -1,6 +1,8 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+
+import { merkmaleLesen } from '../../../../lib/kalender/merkmale'
 
 /**
  * Die Maske für einen eigenen Termin — anlegen, ändern, löschen.
@@ -75,6 +77,29 @@ export function TerminMaske({
   const [notiz, setNotiz] = useState(vorhanden?.notiz ?? '')
   const [laeuft, setLaeuft] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
+  const notizFeld = useRef<HTMLTextAreaElement>(null)
+
+  /**
+   * Eine Flagge in die Notiz setzen.
+   *
+   * Immer in einer eigenen Zeile — ein Flag mitten im Satz wirkt nicht (der
+   * Leser sucht die Raute am Zeilenanfang, siehe `lib/kalender/merkmale.ts`).
+   * Danach steht der Zeiger hinter der eingesetzten Zeile, damit man sofort
+   * weiterschreiben kann; das ist der ganze Sinn des Knopfes.
+   */
+  const flaggeEinfuegen = (text: string) => {
+    setNotiz((vorher) => {
+      const braucht = vorher.length > 0 && !vorher.endsWith('\n')
+      return `${vorher}${braucht ? '\n' : ''}${text}`
+    })
+    // Nach dem Neuzeichnen den Zeiger ans Ende setzen
+    setTimeout(() => {
+      const feld = notizFeld.current
+      if (!feld) return
+      feld.focus()
+      feld.selectionStart = feld.selectionEnd = feld.value.length
+    }, 0)
+  }
 
   // Escape schließt — dasselbe, was jedes Fenster tut
   useEffect(() => {
@@ -199,10 +224,18 @@ export function TerminMaske({
 
         <label className="buero-feld">
           <span>Notiz</span>
-          <textarea rows={3} value={notiz} onChange={(e) => setNotiz(e.target.value)} />
+          <textarea
+            ref={notizFeld}
+            rows={4}
+            value={notiz}
+            onChange={(e) => setNotiz(e.target.value)}
+            placeholder="Interne Notizen. Für die Website: #öffentlich"
+          />
         </label>
 
-        {fehler && <p className="buero-fehler">{fehler}</p>}
+        <FlaggenHilfe einfuegen={flaggeEinfuegen} notiz={notiz} />
+
+        {fehler && <p className="buero-hinweis warn">{fehler}</p>}
 
         <div className="buero-terminmaske-fuss">
           {id && (
@@ -229,6 +262,119 @@ export function TerminMaske({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Die Flaggen zum Nachlesen — und zum Einsetzen per Klick.
+ *
+ * Der Grund, warum das hier steht und nicht in einer Anleitung: Ein Muster,
+ * das man auswendig können muss, benutzt nach drei Wochen niemand mehr. Wer
+ * einen Termin anlegt, hat die Frage „wie war das noch mit der Website?"
+ * genau hier — also gehört die Antwort auch hierher.
+ *
+ * Eingeklappt, damit sie im Weg steht, wenn man sie braucht, und sonst nicht.
+ * Der Kopf zeigt trotzdem, ob dieser Termin öffentlich ist: Das ist die eine
+ * Angabe, die man auch dann sehen will, wenn man die Hilfe nicht aufklappt.
+ */
+function FlaggenHilfe({
+  einfuegen,
+  notiz,
+}: {
+  einfuegen: (text: string) => void
+  notiz: string
+}) {
+  const [offen, setOffen] = useState(false)
+  const merkmale = merkmaleLesen(notiz)
+
+  const flaggen: { flagge: string; was: string; beispiel: string }[] = [
+    {
+      flagge: '#öffentlich',
+      was: 'Zeigt den Termin auf der Website. Ohne das bleibt er intern.',
+      beispiel: '#öffentlich\n',
+    },
+    {
+      flagge: '#beschreibung:',
+      was: 'Der Text auf der Website. Darf über mehrere Zeilen gehen; **fett** und *kursiv* wirken.',
+      beispiel: '#beschreibung: ',
+    },
+    {
+      flagge: '#titel:',
+      was: 'Ein anderer Titel nach außen als hier oben.',
+      beispiel: '#titel: ',
+    },
+    {
+      flagge: '#ort:',
+      was: 'Die Anschrift für Besucher — statt des Kürzels im Feld „Ort".',
+      beispiel: '#ort: ',
+    },
+    { flagge: '#link:', was: 'Die Seite des Veranstalters.', beispiel: '#link: https://' },
+    {
+      flagge: '#bild:',
+      was: 'Der Dateiname eines Bildes aus der Mediathek.',
+      beispiel: '#bild: ',
+    },
+    {
+      flagge: '#absage',
+      was: 'Der Termin fällt aus. Er bleibt sichtbar, aber deutlich als abgesagt.',
+      beispiel: '#absage\n',
+    },
+  ]
+
+  return (
+    <div className="buero-flaggen">
+      <button
+        type="button"
+        className="buero-flaggen-kopf"
+        onClick={() => setOffen((o) => !o)}
+        aria-expanded={offen}
+      >
+        <span>{offen ? '▾' : '▸'} Für die Website</span>
+        {merkmale.oeffentlich ? (
+          <span className="buero-marker erledigt">
+            {merkmale.abgesagt ? 'öffentlich · abgesagt' : 'steht auf der Website'}
+          </span>
+        ) : (
+          <span className="buero-flaggen-still">nur intern</span>
+        )}
+      </button>
+
+      {offen && (
+        <div className="buero-flaggen-inhalt">
+          <p className="buero-unterzeile">
+            In die Notiz geschrieben, wirken diese Zeilen auf der Website. Sie gehen auch am
+            Telefon — die Notiz kommt über den Kalender hier an. Anklicken setzt die Zeile ein.
+          </p>
+
+          <dl className="buero-flaggen-liste">
+            {flaggen.map((f) => (
+              <React.Fragment key={f.flagge}>
+                <dt>
+                  <button
+                    type="button"
+                    className="buero-flaggen-knopf"
+                    onClick={() => einfuegen(f.beispiel)}
+                    title="In die Notiz einsetzen"
+                  >
+                    {f.flagge}
+                  </button>
+                </dt>
+                <dd>{f.was}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+
+          <p className="buero-unterzeile">
+            <strong>Andere Sprache:</strong> Das Kürzel hinter das Flag —{' '}
+            <code>#beschreibung:fr:</code> für Französisch, <code>:en:</code> für Englisch. Was
+            fehlt, steht auf Deutsch da; eine leere Stelle gibt es nie.
+          </p>
+          <p className="buero-unterzeile">
+            Alles ohne Flagge bleibt intern und steht nirgends draußen.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

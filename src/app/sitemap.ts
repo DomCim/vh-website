@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
 
 import { payloadClient } from '../lib/data'
-import { locales } from '../lib/i18n'
+import { defaultLocale, locales } from '../lib/i18n'
+import { oeffentlicheTermine } from '../lib/kalender/oeffentlich'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ function entries(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const payload = await payloadClient()
 
-  const [categories, products, news, projects] = await Promise.all([
+  const [categories, products, news, projects, termine] = await Promise.all([
     payload.find({ collection: 'categories', limit: 200, depth: 0 }),
     payload.find({
       collection: 'products',
@@ -41,6 +42,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       depth: 0,
     }),
     payload.find({ collection: 'projects', limit: 500, depth: 0 }),
+    /*
+     * Ob es kommende Termine gibt.
+     *
+     * Die Terminseite verschwindet, wenn keine anstehen (siehe
+     * `[locale]/termine/page.tsx`). Sie darf dann auch hier nicht stehen —
+     * eine Adresse in der Sitemap, die mit 404 antwortet, meldet die Search
+     * Console als Fehler, und zwar fuer jede der drei Sprachen.
+     */
+    oeffentlicheTermine(payload, defaultLocale, 1),
   ])
 
   const result: MetadataRoute.Sitemap = [
@@ -52,6 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entries('/massanfertigung', undefined, 0.7),
     ...entries('/faq', undefined, 0.6),
     ...entries('/kontakt', undefined, 0.5),
+    ...(termine.length > 0 ? entries('/termine', undefined, 0.7) : []),
   ]
 
   for (const p of projects.docs) {
