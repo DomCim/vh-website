@@ -87,7 +87,27 @@
    * scrollt.
    */
   margin: 0;
-  min-height: 100vh;
+  /*
+   * Die Höhe des Fensters, und zwar die **tatsächlich sichtbare**.
+   *
+   * `100vh` ist am Handy nicht das, was man sieht: Die Einheit misst das
+   * Fenster mit **ausgefahrener** Adressleiste — also stets die größere der
+   * beiden Höhen, damit sie beim Scrollen nicht springt. Fährt die Leiste
+   * beim Hochscrollen ein, ist der Body damit rund 60 Pixel höher als der
+   * Bildschirm, und was unten an ihm klebt, rutscht genau um diesen Betrag
+   * darunter.
+   *
+   * Genau so gemeldet: Nach unten gescrollt stand die Fußleiste vollständig
+   * da, nach oben gescrollt war von den Symbolen nur noch die obere Hälfte
+   * zu sehen und die Beschriftung ganz weg. Der Sicherheitsrand war nicht
+   * schuld — der ist gesetzt (siehe `.buero-tableiste`) und tat sein Werk.
+   *
+   * `100dvh` misst das Fenster so, wie es gerade wirklich ist, und wandert
+   * mit der Leiste mit. Der Nachteil der Einheit — sie ändert sich beim
+   * Scrollen — trägt hier nichts aus: Es ist eine Mindesthöhe, und der
+   * Inhalt ist ohnehin länger.
+   */
+  min-height: 100dvh;
   background: var(--buero-papier);
   color: var(--buero-tinte);
   font-family:
