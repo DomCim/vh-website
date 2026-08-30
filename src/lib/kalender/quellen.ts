@@ -31,10 +31,18 @@ function zeitraum() {
   return { von, bis }
 }
 
-/** Aus einem Datumsfeld einen ganztägigen Termin machen. */
+/**
+ * Aus einem Datumsfeld einen ganztägigen Termin machen.
+ *
+ * Gelesen wird in UTC, nicht in der Zeitzone des Servers. Eigene Termine
+ * liegen mittags um zwölf UTC (siehe `TerminMaske.alsTag`) — von beiden
+ * Tagesgrenzen zwölf Stunden entfernt, damit sie nirgends verrutschen. Mit
+ * `getDate()` statt `getUTCDate()` machte der Server seine eigene Zeitzone
+ * zum Maßstab und schöbe den Tag, sobald er anderswo steht.
+ */
 function amTag(wert: string): Date {
   const d = new Date(wert)
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
 
 /**

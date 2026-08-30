@@ -39,6 +39,48 @@ function fuerFeld(wert: string | Date | null | undefined): string {
   )}`
 }
 
+/**
+ * Aus der Eingabe einen **eindeutigen** Zeitpunkt machen.
+ *
+ * `<input type="datetime-local">` liefert `2026-09-07T09:00` — Ortszeit ohne
+ * jedes Kennzeichen. Wer das so verschickt, überlässt die Deutung dem
+ * Empfänger, und der Server im Container läuft auf UTC: Aus „9 Uhr in
+ * Ettlingen" wurde dort „9 Uhr UTC", gespeichert als `09:00Z`. Das Telefon
+ * rechnete anschließend völlig richtig in Berliner Zeit um — und zeigte
+ * 11 Uhr.
+ *
+ * Genau so gemeldet: eingetragen 9 Uhr, im Kalender 11 Uhr. Auf der Website
+ * stand weiter 9 Uhr, weil dort der Tag zählt und nicht die Stunde — der
+ * Fehler fiel deshalb nur an einer von drei Stellen auf.
+ *
+ * `new Date(…).toISOString()` deutet den Wert in der Zeitzone **des
+ * Browsers** — also der des Menschen, der ihn eingetippt hat — und schreibt
+ * ihn als UTC. Damit steht in der Datenbank ein Zeitpunkt, über den sich
+ * niemand mehr streiten kann, und jede Anzeige rechnet ihn selbst zurück.
+ */
+function alsZeitpunkt(wert: string): string {
+  const d = new Date(wert)
+  // Unlesbares unverändert weiterreichen — der Server sagt dann, was fehlt
+  return Number.isNaN(d.getTime()) ? wert : d.toISOString()
+}
+
+/**
+ * Ein ganztägiger Termin als Zeitpunkt — **mittags**, nicht um Mitternacht.
+ *
+ * Mitternacht ist hier die Falle: `2026-09-07T00:00:00` ohne Kennzeichen wird
+ * auf einem Server in Berliner Zeit zu `2026-09-06T22:00Z` — der Termin
+ * rutscht auf den Vortag, sobald ihn jemand als UTC-Datum liest. Umgekehrt
+ * genauso.
+ *
+ * Zwölf Uhr mittags in UTC liegt von beiden Tagesgrenzen zwölf Stunden
+ * entfernt. Keine Zeitzone der Welt schiebt so weit, der Tag bleibt also
+ * derselbe — egal, wo Server und Betrachter stehen.
+ */
+function alsTag(wert: string): string {
+  const tag = wert.slice(0, 10)
+  return `${tag}T12:00:00.000Z`
+}
+
 /** Nur der Tag, für das Datumsfeld eines ganztägigen Termins. */
 function tagFuerFeld(wert: string | Date | null | undefined): string {
   if (!wert) return ''
@@ -124,13 +166,8 @@ export function TerminMaske({
         body: JSON.stringify({
           id,
           title: titel,
-          /*
-           * Ganztägig heißt: nur ein Datum. Das Feld liefert dann `2026-08-30`
-           * ohne Uhrzeit — mit angehängter Mitternacht wird daraus ein
-           * Zeitpunkt, den der Server als Tag versteht.
-           */
-          start: ganztaegig ? `${start.slice(0, 10)}T00:00:00` : start,
-          ende: ende ? (ganztaegig ? `${ende.slice(0, 10)}T00:00:00` : ende) : null,
+          start: ganztaegig ? alsTag(start) : alsZeitpunkt(start),
+          ende: ende ? (ganztaegig ? alsTag(ende) : alsZeitpunkt(ende)) : null,
           ganztaegig,
           ort,
           notiz,

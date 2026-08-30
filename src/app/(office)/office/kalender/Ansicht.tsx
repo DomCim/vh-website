@@ -42,6 +42,8 @@ type Eintrag = {
   art: Art
   /** Beginn als Zeitpunkt — nur bei eigenen Terminen mit Uhrzeit. */
   zeit?: Date | null
+  /** Das Ende — die Tagesansicht zeichnet den Termin darüber hinweg. */
+  bis?: Date | null
   ganztaegig?: boolean
   /** Die Kennung des eigenen Termins, zum Bearbeiten. */
   terminId?: number | string
@@ -191,6 +193,7 @@ export function KalenderAnsicht() {
           neben: t.ort ?? undefined,
           art: 'termin' as const,
           zeit: t.ganztaegig ? null : new Date(t.start!),
+          bis: t.ganztaegig || !t.ende ? null : new Date(t.ende),
           ganztaegig: Boolean(t.ganztaegig),
           terminId: t.id,
         })),
@@ -338,10 +341,30 @@ export function KalenderAnsicht() {
   }
 
   /** Ein einzelner Eintrag — als Link, wenn er einen Vorgang hat. */
-  const Stueck = ({ e, mitZeit }: { e: Eintrag; mitZeit?: boolean }) => {
+  const Stueck = ({
+    e,
+    mitZeit,
+    mitSpanne,
+  }: {
+    e: Eintrag
+    mitZeit?: boolean
+    /** Auch das Ende zeigen — nur wo Platz ist, also nicht im Monatsblatt. */
+    mitSpanne?: boolean
+  }) => {
     const inhalt = (
       <>
-        {mitZeit && e.zeit ? <em>{uhrzeit(e.zeit)}</em> : null}
+        {/*
+          * Mit Ende, wo eines da ist: „09:00 – 18:00" sagt, wie lange der Tag
+          * belegt ist. Im Monatsblatt bliebe dafür kein Platz — dort steht
+          * nur der Beginn.
+          */}
+        {mitZeit && e.zeit ? (
+          <em>
+            {mitSpanne && e.bis && !e.ganztaegig
+              ? `${uhrzeit(e.zeit)} – ${uhrzeit(e.bis)}`
+              : uhrzeit(e.zeit)}
+          </em>
+        ) : null}
         <strong>{e.titel}</strong>
         {e.neben ? <span> {e.neben}</span> : null}
       </>
@@ -448,7 +471,7 @@ export function KalenderAnsicht() {
               {drin.length === 0 ? (
                 <span className="buero-kalender-leer">—</span>
               ) : (
-                drin.map((e, k) => <Stueck key={k} e={e} mitZeit />)
+                drin.map((e, k) => <Stueck key={k} e={e} mitZeit mitSpanne />)
               )}
             </div>
           )
@@ -483,11 +506,33 @@ export function KalenderAnsicht() {
           * danach, damit nichts verschwindet.
           */}
         {Array.from({ length: 15 }, (_, i) => i + 6).map((stunde) => {
+          /*
+           * Ein Termin steht in **jeder** Stunde, die er berührt.
+           *
+           * Vorher zählte allein die Anfangsstunde: Ein Termin von 9 bis 18
+           * Uhr war ein Strich in der Zeile „09:00" und darunter neun leere
+           * Zeilen — die Ansicht behauptete, der Tag sei frei, obwohl er
+           * belegt war. Genau so gemeldet.
+           *
+           * Die Beschriftung trägt nur die erste Zeile; in den folgenden
+           * steht der Balken ohne Text weiter, sonst stünde derselbe Titel
+           * zehnmal untereinander.
+           */
           const drinnen = mitUhr.filter((e) => {
-            const h = e.zeit!.getHours()
-            if (stunde === 6) return h <= 6
-            if (stunde === 20) return h >= 20
-            return h === stunde
+            const von = e.zeit!.getHours()
+            // Ohne Ende eine Stunde annehmen — wie beim Ausliefern ans Telefon
+            const bis = e.bis ? e.bis : new Date(e.zeit!.getTime() + 60 * 60 * 1000)
+            /*
+             * Endet ein Termin auf einer vollen Stunde, gehört diese ihm
+             * nicht mehr: 9–18 Uhr belegt 9 bis 17, nicht 9 bis 18. Sonst
+             * stünde er eine Zeile länger da, als er dauert.
+             */
+            const letzte = bis.getMinutes() > 0 ? bis.getHours() : bis.getHours() - 1
+            const endstunde = Math.max(von, letzte)
+
+            if (stunde === 6) return von <= 6
+            if (stunde === 20) return endstunde >= 20 || von >= 20
+            return stunde >= von && stunde <= endstunde
           })
           return (
             <div key={stunde} className="buero-kalender-stunde">
@@ -497,9 +542,14 @@ export function KalenderAnsicht() {
                 onDoubleClick={() => setMaske({ tag: stempel })}
                 title="Doppelklick legt hier einen Termin an"
               >
-                {drinnen.map((e, k) => (
-                  <Stueck key={k} e={e} mitZeit />
-                ))}
+                {drinnen.map((e, k) =>
+                  // Beschriftet nur dort, wo er anfängt — siehe oben
+                  e.zeit!.getHours() === stunde || stunde === 6 ? (
+                    <Stueck key={k} e={e} mitZeit mitSpanne />
+                  ) : (
+                    <div key={k} className={`buero-kalender-weiter ${e.art}`} aria-hidden="true" />
+                  ),
+                )}
               </div>
             </div>
           )
@@ -545,15 +595,35 @@ export function KalenderAnsicht() {
             ))}
           </div>
 
-          <Link className="buero-knopf leise schmal" href={verschieben(-1)}>
-            Zurück
-          </Link>
-          <Link className="buero-knopf leise schmal" href={weg({ tag: null, monat: null })}>
-            Heute
-          </Link>
-          <Link className="buero-knopf leise schmal" href={verschieben(1)}>
-            Weiter
-          </Link>
+          {/*
+            * Blättern als eine zusammenhängende Gruppe.
+            *
+            * Vorher standen hier drei einzelne Knöpfe. Am Handy passten sie
+            * nicht mehr neben den Umschalter, „Weiter" rutschte in eine
+            * zweite Zeile und die Leiste zerfiel — genau so gemeldet. Als
+            * Gruppe brauchen sie knapp die Hälfte: Die Pfeile tragen sich
+            * selbst, „Heute" steht in der Mitte.
+            */}
+          <div className="buero-kalender-blaettern">
+            <Link
+              className="buero-kalender-pfeil"
+              href={verschieben(-1)}
+              aria-label={sicht === 'monat' ? 'Voriger Monat' : sicht === 'woche' ? 'Vorige Woche' : 'Voriger Tag'}
+            >
+              ‹
+            </Link>
+            <Link className="buero-kalender-heute" href={weg({ tag: null, monat: null })}>
+              Heute
+            </Link>
+            <Link
+              className="buero-kalender-pfeil"
+              href={verschieben(1)}
+              aria-label={sicht === 'monat' ? 'Nächster Monat' : sicht === 'woche' ? 'Nächste Woche' : 'Nächster Tag'}
+            >
+              ›
+            </Link>
+          </div>
+
           <button
             type="button"
             className="buero-knopf schmal"
