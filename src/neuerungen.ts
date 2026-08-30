@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 86,
+    datum: null,
+    titel: 'Eigene Termine im Kalender — und der Kalender aufs Telefon',
+    punkte: [
+      {
+        text: '**Der Kalender nimmt jetzt eigene Termine auf.** Bisher zeigte er nur, was aus einem Vorgang folgt: Fertigstellungen, zugesagte Liefertermine, ablaufende Angebote, fällige Belege. Was zu keinem Vorgang gehört — „Dienstag 9 Uhr Steuerberater", eine Anlieferung, ein Werkstatttag — hatte nirgends Platz und stand auf einem Zettel. Über „Termin anlegen" oder einen Doppelklick auf einen Tag steht es jetzt im Kalender, mit Uhrzeit oder ganztägig, mit Ort und Notiz.',
+      },
+      {
+        text: '**Dazu drei Ansichten: Monat, Woche und Tag.** Der Monat gibt den Überblick, aber in einer vollen Woche stapelten sich die Einträge in einer Zelle, bis nichts mehr zu lesen war. Passen mehr als drei in einen Tag, steht dort jetzt „+2 weitere"; ein Klick auf die Tageszahl öffnet den Tag mit einer Stundenleiste, wo alles Platz hat. Die gewählte Ansicht steht in der Adresse — ein weitergegebener Link zeigt also das, was der Absender vor sich hatte.',
+      },
+      {
+        text: '**Der Kalender lässt sich aufs iPhone holen** — unter Kalender → `Kalender aufs Telefon`. Zwei Wege stehen dort: Das **Abonnement** ist in zehn Sekunden eingerichtet und zeigt alles zum Nachsehen, lässt sich aber nicht beschreiben. Das **CalDAV-Konto** ist etwas mehr Tipparbeit und geht in beide Richtungen: Ein Termin, der unterwegs am Telefon entsteht, steht danach auch im Büro.',
+      },
+      {
+        text: '**Der Zugang gilt je Person und lässt sich zurückziehen.** Die Adresse enthält einen Schlüssel, der so viel wert ist wie ein Passwort — sie gehört deshalb nicht weitergegeben. Ist ein Telefon abhandengekommen, macht „Neuer Schlüssel" den alten sofort wertlos, ohne dass jemand anders sein Abonnement neu einrichten muss. Aufträge, Bestellungen, Angebote und Belege wandern mit aufs Telefon, lassen sich dort aber bewusst **nicht** ändern: Ein verschobener Liefertermin ist eine Zusage an die Kundschaft und gehört ins Büro, nicht in eine Wischgeste in der Bahn.',
+      },
+    ],
+  },
+  {
     nummer: 85,
     datum: null,
     titel: 'Beim Abhaken nach dem Scan lässt sich die Zeit gleich mitbuchen',

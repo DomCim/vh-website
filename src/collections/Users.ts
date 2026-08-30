@@ -210,6 +210,24 @@ export const Users: CollectionConfig = {
     },
     // ── Nicht anzeigen, nicht über die API ausliefern ────────────────────────
     {
+      /*
+       * Der Schlüssel, mit dem das Telefon den Kalender abruft.
+       *
+       * Er steckt in der Adresse des Abonnements und ist damit so viel wert
+       * wie ein Passwort — deshalb steht er hier unten bei den geheimen
+       * Feldern und nicht oben bei den sichtbaren. Über die REST-Schnittstelle
+       * geht er nie hinaus; wer ihn braucht, bekommt ihn über
+       * `/api/office/kalender-zugang`, und zwar nur den eigenen.
+       *
+       * Leer heißt: kein Abonnement eingerichtet. Siehe lib/kalender/zugang.ts.
+       */
+      name: 'kalenderSchluessel',
+      type: 'text',
+      index: true,
+      hidden: true,
+      access: { read: () => false, create: () => false, update: () => false },
+    },
+    {
       name: 'mfaSecret',
       type: 'text',
       hidden: true,
