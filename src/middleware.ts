@@ -39,39 +39,50 @@ import { mitSprache, pfadNenntSprache, SPRACH_COOKIE, spracheWaehlen } from './l
 const DAV_VERBEN = ['PROPFIND', 'REPORT', 'PROPPATCH', 'MKCALENDAR', 'MKCOL']
 export const DAV_KOPF = 'x-dav-methode'
 
-export function middleware(anfrage: NextRequest) {
+export async function middleware(anfrage: NextRequest) {
   const { pathname, search } = anfrage.nextUrl
 
-  /*
-   * CalDAV: das echte Verb retten und als POST weiterreichen.
-   *
-   * Muss vor allem anderen stehen, und es genügt nicht, den Kopf zu setzen
-   * und weiterzureichen: Next prüft das Verb, **bevor** eine Route gefragt
-   * wird, und beantwortet alles außerhalb seiner Liste selbst mit einem
-   * nackten `400` (`route-modules/app-route/module.js`, `resolve`). Ein
-   * `rewrite` ändert daran nichts — es setzt nur ein Ziel, das Verb bleibt.
-   *
-   * Also wird die Anfrage hier zu einem echten `POST` umgeschrieben und an
-   * dieselbe Adresse weitergereicht. Das Verb steht im Kopf, die Route liest
-   * es dort. Ein Umweg, ja — aber der einzige, der ohne eigenen Server neben
-   * Next auskommt.
-   *
-   * **Warum das nicht im Kreis läuft:** Die weitergereichte Anfrage ist ein
-   * `POST`, und `POST` steht nicht in `DAV_VERBEN`. Sie kommt hier also ein
-   * zweites Mal vorbei, fällt durch diese Bedingung hindurch und geht
-   * geradewegs an die Route. Wer die Liste je erweitert, muss das im Kopf
-   * behalten: Ein `POST` darin wäre eine Schleife ohne Boden.
-   */
-  if (pathname.startsWith('/api/caldav') && DAV_VERBEN.includes(anfrage.method)) {
+  // CalDAV steht ganz vorn — siehe die beiden Vermerke darin
+  if (pathname.startsWith('/api/caldav')) {
+    /*
+     * Erst einmal: **kein Sprachkürzel**. Der Abgleich lief hier zunächst in
+     * die Sprachumleitung und landete bei `/en/api/caldav/…` — eine Adresse,
+     * die es nicht gibt. Alles unter `/api` ist von der Umleitung
+     * ausgenommen (siehe `config.matcher`); dieser eine Zweig ist nur
+     * deshalb überhaupt hier, weil Next die WebDAV-Verben sonst gar nicht
+     * durchlässt. Die Umleitung darf ihn folglich nicht anfassen.
+     */
+    if (!DAV_VERBEN.includes(anfrage.method)) return NextResponse.next()
+
+    /*
+     * Das echte Verb in den Kopf, und als `POST` weiterreichen.
+     *
+     * Next entscheidet am Verb, **bevor** eine Route gefragt wird, und
+     * beantwortet alles außerhalb seiner sieben selbst — ein exportiertes
+     * `PROPFIND` wird nie angesprungen. Ein `rewrite` hilft nicht, es setzt
+     * nur ein Ziel und lässt das Verb, wie es war. Die Anfrage muss hier
+     * also wirklich zu einem `POST` werden; die Route liest den Kopf und
+     * verteilt selbst.
+     *
+     * Der Rumpf wird vorher **ganz gelesen**. Ihn als Strom weiterzugeben
+     * brach im Container mit „transformAlgorithm is not a function": Ein
+     * laufender Anfragestrom lässt sich hier nicht zuverlässig
+     * weiterverschicken. Die Rümpfe sind ein paar Zeilen XML, das Einlesen
+     * kostet also nichts.
+     *
+     * **Kein Kreislauf:** Die neue Anfrage ist ein `POST`, und `POST` steht
+     * nicht in `DAV_VERBEN` — sie fällt oben durch die Bedingung und geht
+     * geradewegs an die Route.
+     */
     const kopf = new Headers(anfrage.headers)
     kopf.set(DAV_KOPF, anfrage.method)
-    return fetch(new URL(`${pathname}${search}`, anfrage.url), {
+    kopf.delete('content-length')
+
+    const rumpf = await anfrage.text()
+    return fetch(`${anfrage.nextUrl.origin}${pathname}${search}`, {
       method: 'POST',
       headers: kopf,
-      body: anfrage.body,
-      // Ohne das lehnt undici einen Rumpf am POST ab
-      // @ts-expect-error — gehört zur Laufzeit, fehlt in den Typen
-      duplex: 'half',
+      body: rumpf || undefined,
       redirect: 'manual',
     })
   }
