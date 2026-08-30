@@ -6,7 +6,8 @@ import { Footer } from '../../../components/layout/Footer'
 import { Header } from '../../../components/layout/Header'
 import { SmoothScroll } from '../../../components/motion/SmoothScroll'
 import { CartProvider } from '../../../components/shop/CartProvider'
-import { getMainCategories, getSiteSettings } from '../../../lib/data'
+import { getMainCategories, getSiteSettings, payloadClient } from '../../../lib/data'
+import { oeffentlicheTermine } from '../../../lib/kalender/oeffentlich'
 import { isLocale, t } from '../../../lib/i18n'
 import { alternatesFor, BASE_URL, jsonLd } from '../../../lib/seo'
 
@@ -99,9 +100,14 @@ export default async function LocaleLayout({ children, params }: Args) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
 
-  const [categories, settings] = await Promise.all([
+  const [categories, settings, termine] = await Promise.all([
     getMainCategories(locale),
     getSiteSettings(locale),
+    /*
+     * Nur die Frage, ob es ueberhaupt einen gibt — der Menuepunkt haengt
+     * daran. Einer genuegt dafuer, also wird auch nur einer geholt.
+     */
+    payloadClient().then((p) => oeffentlicheTermine(p, locale, 1)),
   ])
 
   const dict = t(locale)
@@ -168,7 +174,12 @@ export default async function LocaleLayout({ children, params }: Args) {
         ) : null}
         <CartProvider>
           <SmoothScroll />
-          <Header locale={locale} categories={categories} dict={dict} />
+          <Header
+            locale={locale}
+            categories={categories}
+            dict={dict}
+            termineVorhanden={termine.length > 0}
+          />
           <main className="min-h-screen pt-20">{children}</main>
           <Footer locale={locale} settings={settings} dict={dict} />
         </CartProvider>

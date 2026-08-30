@@ -78,6 +78,7 @@ export interface Config {
     'login-codes': LoginCode;
     'newsletter-subscribers': NewsletterSubscriber;
     contacts: Contact;
+    appointments: Appointment;
     expenses: Expense;
     quotes: Quote;
     jobs: Job;
@@ -120,6 +121,7 @@ export interface Config {
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
     contacts: ContactsSelect<false> | ContactsSelect<true>;
+    appointments: AppointmentsSelect<false> | AppointmentsSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
     quotes: QuotesSelect<false> | QuotesSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
@@ -940,137 +942,25 @@ export interface NewsletterSubscriber {
   deletedAt?: string | null;
 }
 /**
- * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
- *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "expenses".
+ * via the `definition` "appointments".
  */
-export interface Expense {
+export interface Appointment {
   id: number;
+  title: string;
+  start: string;
   /**
-   * Foto oder PDF der Rechnung. Wird für den Steuer-Export mit ausgegeben.
+   * Leer lassen für einen Termin ohne feste Dauer.
    */
-  document?: (number | null) | Media;
-  title?: string | null;
-  supplier?: (number | null) | Contact;
-  /**
-   * Falls noch kein Geschäftspartner angelegt ist.
-   */
-  supplierName?: string | null;
-  invoiceNumber?: string | null;
-  invoiceDate: string;
-  /**
-   * Steht ein Zahlungsziel auf dem Beleg, liest die KI es mit. Vorher bleibt es still; ab drei Tagen vor Fälligkeit meldet sich das Büro jeden Tag, bis der Beleg auf „bezahlt" steht.
-   */
-  dueDate?: string | null;
-  netAmount?: number | null;
-  vatRate?: number | null;
-  vatAmount?: number | null;
-  grossAmount: number;
-  category:
-    | 'material'
-    | 'werkzeug'
-    | 'fremdleistung'
-    | 'fahrzeug'
-    | 'miete'
-    | 'versicherung'
-    | 'buero'
-    | 'werbung'
-    | 'reise'
-    | 'gebuehren'
-    | 'sonstiges';
-  paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
-  paid?: boolean | null;
-  /**
-   * Miete, Internet & Co.: Zum nächsten Termin entsteht der Folgebeleg von selbst — nur der Beleg-Scan ist dann noch nachzureichen.
-   */
-  turnus?: ('nein' | 'monatlich' | 'vierteljaehrlich' | 'jaehrlich') | null;
-  reminderSentAt?: string | null;
-  quelleMail?: string | null;
-  /**
-   * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
-   */
-  deductible?: boolean | null;
-  notes?: string | null;
-  /**
-   * Ergebnis der KI-Auslesung — bitte immer gegen den Beleg prüfen.
-   */
-  extraction?: {
-    status?: ('ungeprueft' | 'bestaetigt' | 'fehler') | null;
-    confidence?: number | null;
-    note?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "quotes".
- */
-export interface Quote {
-  id: number;
-  quoteNumber?: string | null;
-  status: 'entwurf' | 'versendet' | 'angenommen' | 'abgelehnt';
-  title?: string | null;
-  customer?: (number | null) | Contact;
-  customerName?: string | null;
-  customerAddress?: string | null;
-  /**
-   * Wird beim Versenden gesetzt und ist der Beginn des Nachfassens.
-   */
-  sentAt?: string | null;
-  lastFollowUpAt?: string | null;
-  issueDate?: string | null;
-  /**
-   * Bei Stahlpreisen üblich: 30 Tage.
-   */
-  validUntil?: string | null;
-  items?:
-    | {
-        description: string;
-        product?: (number | null) | Product;
-        quantity: number;
-        unit?: string | null;
-        unitPrice: number;
-        vatRate: number;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.
-   */
-  discountKind?: ('kein' | 'prozent' | 'betrag') | null;
-  discountValue?: number | null;
-  /**
-   * Steht so auf dem Angebot, z.B. „Projektnachlass".
-   */
-  discountReason?: string | null;
-  subtotal?: number | null;
-  discountTotal?: number | null;
-  netTotal?: number | null;
-  vatTotal?: number | null;
-  total?: number | null;
-  /**
-   * Zählt bei jeder Änderung nach dem Versenden hoch. Die Nummer bleibt.
-   */
-  revision?: number | null;
-  revisedAt?: string | null;
-  /**
-   * Wird beim Annehmen gesetzt.
-   */
-  acceptedAt?: string | null;
-  acceptedVia?: ('portal' | 'buero') | null;
-  /**
-   * Der Name, den die Kundschaft dabei angegeben hat.
-   */
-  acceptedName?: string | null;
-  /**
-   * z.B. „6–8 Wochen ab Auftragserteilung"
-   */
-  productionTime?: string | null;
-  note?: string | null;
-  inquiry?: (number | null) | Inquiry;
+  ende?: string | null;
+  ganztaegig?: boolean | null;
+  ort?: string | null;
+  notiz?: string | null;
+  contact?: (number | null) | Contact;
+  job?: (number | null) | Job;
+  uid?: string | null;
+  quelle?: ('buero' | 'caldav') | null;
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1264,6 +1154,77 @@ export interface Job {
   deletedAt?: string | null;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes".
+ */
+export interface Quote {
+  id: number;
+  quoteNumber?: string | null;
+  status: 'entwurf' | 'versendet' | 'angenommen' | 'abgelehnt';
+  title?: string | null;
+  customer?: (number | null) | Contact;
+  customerName?: string | null;
+  customerAddress?: string | null;
+  /**
+   * Wird beim Versenden gesetzt und ist der Beginn des Nachfassens.
+   */
+  sentAt?: string | null;
+  lastFollowUpAt?: string | null;
+  issueDate?: string | null;
+  /**
+   * Bei Stahlpreisen üblich: 30 Tage.
+   */
+  validUntil?: string | null;
+  items?:
+    | {
+        description: string;
+        product?: (number | null) | Product;
+        quantity: number;
+        unit?: string | null;
+        unitPrice: number;
+        vatRate: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wird anteilig auf die Positionen verteilt, damit die Steuer stimmt.
+   */
+  discountKind?: ('kein' | 'prozent' | 'betrag') | null;
+  discountValue?: number | null;
+  /**
+   * Steht so auf dem Angebot, z.B. „Projektnachlass".
+   */
+  discountReason?: string | null;
+  subtotal?: number | null;
+  discountTotal?: number | null;
+  netTotal?: number | null;
+  vatTotal?: number | null;
+  total?: number | null;
+  /**
+   * Zählt bei jeder Änderung nach dem Versenden hoch. Die Nummer bleibt.
+   */
+  revision?: number | null;
+  revisedAt?: string | null;
+  /**
+   * Wird beim Annehmen gesetzt.
+   */
+  acceptedAt?: string | null;
+  acceptedVia?: ('portal' | 'buero') | null;
+  /**
+   * Der Name, den die Kundschaft dabei angegeben hat.
+   */
+  acceptedName?: string | null;
+  /**
+   * z.B. „6–8 Wochen ab Auftragserteilung"
+   */
+  productionTime?: string | null;
+  note?: string | null;
+  inquiry?: (number | null) | Inquiry;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
  * Rechnungen an Kommunen, Gewerbe und Privat außerhalb des Shops.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1378,6 +1339,179 @@ export interface OutgoingInvoice {
    * Wird beim Umwandeln eines Angebots gesetzt.
    */
   quote?: (number | null) | Quote;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name?: string | null;
+  /**
+   * Bestimmt, was dieses Konto im Büro darf.
+   */
+  rolle?: (number | null) | Role;
+  /**
+   * Vorgänger der Rollen. Wird nicht mehr gepflegt — maßgeblich ist das Feld „Rolle" darüber.
+   */
+  role: 'redaktion' | 'inhaber';
+  /**
+   * Wird über die Einrichtung unten aktiviert.
+   */
+  mfaEnabled?: boolean | null;
+  /**
+   * Nummer der zuletzt gelesenen Neuerung. Setzt das Büro selbst.
+   */
+  neuerungGesehen?: number | null;
+  passkeys?:
+    | {
+        credentialId: string;
+        publicKey: string;
+        counter?: number | null;
+        transports?: string | null;
+        label?: string | null;
+        lastUsedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  kalenderSchluessel?: string | null;
+  mfaSecret?: string | null;
+  mfaPendingSecret?: string | null;
+  mfaBackupCodes?:
+    | {
+        hash?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  email?: string | null;
+  username?: string | null;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * Verwaltet wird das im Büro unter Einstellungen → Benutzer.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roles".
+ */
+export interface Role {
+  id: number;
+  /**
+   * Wie die Rolle im Büro heißt, z.B. „Werkstatt" oder „Buchhaltung".
+   */
+  name: string;
+  /**
+   * Unveränderlicher Bezeichner, z.B. „werkstatt". Kleinbuchstaben ohne Umlaute.
+   */
+  schluessel: string;
+  /**
+   * Was diese Rolle darf. Die Inhaberrolle darf immer alles, unabhängig von den Haken.
+   */
+  rechte?:
+    | (
+        | 'buero.oeffnen'
+        | 'postfach.lesen'
+        | 'anfragen.bearbeiten'
+        | 'angebote.schreiben'
+        | 'auftraege.bearbeiten'
+        | 'rechnungen.schreiben'
+        | 'belege.erfassen'
+        | 'inventar.pflegen'
+        | 'partner.pflegen'
+        | 'zahlen.sehen'
+        | 'website.pflegen'
+        | 'newsletter.versenden'
+        | 'sicherung.ausloesen'
+        | 'einstellungen.aendern'
+        | 'benutzer.verwalten'
+      )[]
+    | null;
+  /**
+   * Eingebaute Rollen lassen sich nicht löschen.
+   */
+  eingebaut?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Eingangsrechnungen, Quittungen und alles, was Geld gekostet hat.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expenses".
+ */
+export interface Expense {
+  id: number;
+  /**
+   * Foto oder PDF der Rechnung. Wird für den Steuer-Export mit ausgegeben.
+   */
+  document?: (number | null) | Media;
+  title?: string | null;
+  supplier?: (number | null) | Contact;
+  /**
+   * Falls noch kein Geschäftspartner angelegt ist.
+   */
+  supplierName?: string | null;
+  invoiceNumber?: string | null;
+  invoiceDate: string;
+  /**
+   * Steht ein Zahlungsziel auf dem Beleg, liest die KI es mit. Vorher bleibt es still; ab drei Tagen vor Fälligkeit meldet sich das Büro jeden Tag, bis der Beleg auf „bezahlt" steht.
+   */
+  dueDate?: string | null;
+  netAmount?: number | null;
+  vatRate?: number | null;
+  vatAmount?: number | null;
+  grossAmount: number;
+  category:
+    | 'material'
+    | 'werkzeug'
+    | 'fremdleistung'
+    | 'fahrzeug'
+    | 'miete'
+    | 'versicherung'
+    | 'buero'
+    | 'werbung'
+    | 'reise'
+    | 'gebuehren'
+    | 'sonstiges';
+  paymentMethod?: ('ueberweisung' | 'karte' | 'bar' | 'lastschrift' | 'paypal') | null;
+  paid?: boolean | null;
+  /**
+   * Miete, Internet & Co.: Zum nächsten Termin entsteht der Folgebeleg von selbst — nur der Beleg-Scan ist dann noch nachzureichen.
+   */
+  turnus?: ('nein' | 'monatlich' | 'vierteljaehrlich' | 'jaehrlich') | null;
+  reminderSentAt?: string | null;
+  quelleMail?: string | null;
+  /**
+   * Abwählen bei privaten Anteilen — erscheint dann nicht im Steuer-Export.
+   */
+  deductible?: boolean | null;
+  notes?: string | null;
+  /**
+   * Ergebnis der KI-Auslesung — bitte immer gegen den Beleg prüfen.
+   */
+  extraction?: {
+    status?: ('ungeprueft' | 'bestaetigt' | 'fehler') | null;
+    confidence?: number | null;
+    note?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1631,113 +1765,6 @@ export interface FollowUp {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name?: string | null;
-  /**
-   * Bestimmt, was dieses Konto im Büro darf.
-   */
-  rolle?: (number | null) | Role;
-  /**
-   * Vorgänger der Rollen. Wird nicht mehr gepflegt — maßgeblich ist das Feld „Rolle" darüber.
-   */
-  role: 'redaktion' | 'inhaber';
-  /**
-   * Wird über die Einrichtung unten aktiviert.
-   */
-  mfaEnabled?: boolean | null;
-  /**
-   * Nummer der zuletzt gelesenen Neuerung. Setzt das Büro selbst.
-   */
-  neuerungGesehen?: number | null;
-  passkeys?:
-    | {
-        credentialId: string;
-        publicKey: string;
-        counter?: number | null;
-        transports?: string | null;
-        label?: string | null;
-        lastUsedAt?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  mfaSecret?: string | null;
-  mfaPendingSecret?: string | null;
-  mfaBackupCodes?:
-    | {
-        hash?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-  email?: string | null;
-  username?: string | null;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * Verwaltet wird das im Büro unter Einstellungen → Benutzer.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "roles".
- */
-export interface Role {
-  id: number;
-  /**
-   * Wie die Rolle im Büro heißt, z.B. „Werkstatt" oder „Buchhaltung".
-   */
-  name: string;
-  /**
-   * Unveränderlicher Bezeichner, z.B. „werkstatt". Kleinbuchstaben ohne Umlaute.
-   */
-  schluessel: string;
-  /**
-   * Was diese Rolle darf. Die Inhaberrolle darf immer alles, unabhängig von den Haken.
-   */
-  rechte?:
-    | (
-        | 'buero.oeffnen'
-        | 'postfach.lesen'
-        | 'anfragen.bearbeiten'
-        | 'angebote.schreiben'
-        | 'auftraege.bearbeiten'
-        | 'rechnungen.schreiben'
-        | 'belege.erfassen'
-        | 'inventar.pflegen'
-        | 'partner.pflegen'
-        | 'zahlen.sehen'
-        | 'website.pflegen'
-        | 'newsletter.versenden'
-        | 'sicherung.ausloesen'
-        | 'einstellungen.aendern'
-        | 'benutzer.verwalten'
-      )[]
-    | null;
-  /**
-   * Eingebaute Rollen lassen sich nicht löschen.
-   */
-  eingebaut?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "workshop-weeks".
  */
 export interface WorkshopWeek {
@@ -1982,6 +2009,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'contacts';
         value: number | Contact;
+      } | null)
+    | ({
+        relationTo: 'appointments';
+        value: number | Appointment;
       } | null)
     | ({
         relationTo: 'expenses';
@@ -2493,6 +2524,26 @@ export interface ContactsSelect<T extends boolean = true> {
         pin?: T;
         gesetztAm?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appointments_select".
+ */
+export interface AppointmentsSelect<T extends boolean = true> {
+  title?: T;
+  start?: T;
+  ende?: T;
+  ganztaegig?: T;
+  ort?: T;
+  notiz?: T;
+  contact?: T;
+  job?: T;
+  uid?: T;
+  quelle?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -3196,6 +3247,7 @@ export interface UsersSelect<T extends boolean = true> {
         lastUsedAt?: T;
         id?: T;
       };
+  kalenderSchluessel?: T;
   mfaSecret?: T;
   mfaPendingSecret?: T;
   mfaBackupCodes?:

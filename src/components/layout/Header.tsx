@@ -33,6 +33,7 @@ type Category = {
 
 type Dict = {
   nav: {
+    events: string
     news: string
     contact: string
     cart: string
@@ -52,10 +53,20 @@ export function Header({
   locale,
   categories,
   dict,
+  termineVorhanden,
 }: {
   locale: Locale
   categories: Category[]
   dict: Dict
+  /*
+   * Ob es ueberhaupt kommende Termine gibt.
+   *
+   * Der Menuepunkt erscheint nur dann. Ein Weg, der auf eine Seite fuehrt,
+   * die "Zurzeit stehen keine Termine an" sagt, ist kein Angebot, sondern
+   * eine Enttaeuschung — und er steht das ganze Jahr da, auch wenn Vincent
+   * seit Monaten auf keiner Messe war.
+   */
+  termineVorhanden?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [kollektionOffen, setKollektionOffen] = useState(false)
@@ -105,6 +116,7 @@ export function Header({
     { href: `/${locale}/massanfertigung`, label: dict.nav.custom },
     { href: `/${locale}/projekte`, label: dict.nav.projects },
     { href: `/${locale}/ueber-uns`, label: dict.nav.about },
+    ...(termineVorhanden ? [{ href: `/${locale}/termine`, label: dict.nav.events }] : []),
     { href: `/${locale}/news`, label: dict.nav.news },
     { href: `/${locale}/kontakt`, label: dict.nav.contact },
   ]

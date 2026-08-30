@@ -1,11 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import React, { useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useMemo, useState } from 'react'
 
 import { useBestand } from '../../../../lib/buero/bestand'
 import { euro } from '../../../../lib/format'
+import { TerminMaske } from './TerminMaske'
+import { Zugang } from './Zugang'
 
 /**
  * Kalender: was wann fällig ist.
@@ -16,22 +18,44 @@ import { euro } from '../../../../lib/format'
  *
  * Die vier Abfragen von früher sind vier Filter über den Bestand im Gerät
  * geworden. Das Blättern durch die Monate ist damit ohne Wartezeit.
+ *
+ * Seit 08/2026 kommt eine fünfte Quelle dazu, und sie ist die einzige, die
+ * man von Hand füllt: eigene Termine (`collections/Appointments.ts`). Der
+ * Kalender war bis dahin ein reiner Ableitungskalender — er konnte alles
+ * zeigen, was aus einem Vorgang folgt, und das Naheliegendste nicht:
+ * „Dienstag 9 Uhr Steuerberater" eintragen.
+ *
+ * Dazu drei Ansichten. Der Monat gibt den Überblick, aber in einer vollen
+ * Woche stapeln sich die Einträge in einer Zelle, bis nichts mehr lesbar ist;
+ * Woche und Tag zeigen dann Uhrzeiten statt bloßer Balken. Umgeschaltet wird
+ * über die Adresse (`?sicht=`), damit ein Link auf genau das zeigt, was der
+ * Absender vor sich hatte.
  */
+
+type Art = 'termin' | 'auftrag' | 'bestellung' | 'angebot' | 'beleg'
 
 type Eintrag = {
   tag: string
   titel: string
   neben?: string
-  href: string
-  art: 'auftrag' | 'bestellung' | 'angebot' | 'beleg'
+  href?: string
+  art: Art
+  /** Beginn als Zeitpunkt — nur bei eigenen Terminen mit Uhrzeit. */
+  zeit?: Date | null
+  ganztaegig?: boolean
+  /** Die Kennung des eigenen Termins, zum Bearbeiten. */
+  terminId?: number | string
 }
 
-const ART_TEXT: Record<Eintrag['art'], string> = {
+const ART_TEXT: Record<Art, string> = {
+  termin: 'Termin',
   auftrag: 'Auftrag',
   bestellung: 'Bestellung',
   angebot: 'Angebot',
   beleg: 'Beleg',
 }
+
+type Sicht = 'monat' | 'woche' | 'tag'
 
 const tagesStempel = (v: string | Date) => {
   const d = new Date(v)
@@ -40,6 +64,21 @@ const tagesStempel = (v: string | Date) => {
   ).padStart(2, '0')}`
 }
 
+/** Aus einem Tagesstempel wieder ein Datum — ohne Zeitzonenrutsch. */
+const ausStempel = (s: string) => new Date(`${s}T00:00:00`)
+
+const uhrzeit = (d: Date) =>
+  d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+
+type Termin = {
+  id: number | string
+  title?: string | null
+  start?: string | null
+  ende?: string | null
+  ganztaegig?: boolean | null
+  ort?: string | null
+  notiz?: string | null
+}
 type Auftrag = {
   id: number | string
   dueDate?: string | null
@@ -73,22 +112,70 @@ type Beleg = {
 
 export function KalenderAnsicht() {
   const suche = useSearchParams()
+  const router = useRouter()
   const monat = suche.get('monat') ?? undefined
+  const sicht = (suche.get('sicht') as Sicht) ?? 'monat'
+  const gewaehlterTag = suche.get('tag') ?? undefined
 
+  /** Welcher Termin gerade bearbeitet wird — `null` heißt: keiner. */
+  const [maske, setMaske] = useState<{ id?: number | string; tag?: string } | null>(null)
+
+  const termine = useBestand<Termin>('termine')
   const auftraege = useBestand<Auftrag>('auftraege')
   const bestellungen = useBestand<Bestellung>('bestellungen')
   const angebote = useBestand<Angebot>('angebote')
   const belege = useBestand<Beleg>('belege')
 
   const heute = new Date()
-  const gewaehlt = /^\d{4}-\d{2}$/.test(monat ?? '')
-    ? new Date(`${monat}-01T00:00:00`)
-    : new Date(heute.getFullYear(), heute.getMonth(), 1)
 
-  const beginn = new Date(gewaehlt.getFullYear(), gewaehlt.getMonth(), 1)
-  const ende = new Date(gewaehlt.getFullYear(), gewaehlt.getMonth() + 1, 1)
+  /*
+   * Der Anker der Ansicht.
+   *
+   * Im Monat zählt der Monat, in Woche und Tag der gewählte Tag. Ein Klick im
+   * Monatsblatt setzt `tag` und schaltet auf `tag` um — deshalb muss beides
+   * nebeneinander in der Adresse stehen können.
+   */
+  const anker = useMemo(
+    () =>
+      gewaehlterTag
+        ? ausStempel(gewaehlterTag)
+        : /^\d{4}-\d{2}$/.test(monat ?? '')
+          ? new Date(`${monat}-01T00:00:00`)
+          : new Date(heute.getFullYear(), heute.getMonth(), 1),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gewaehlterTag, monat],
+  )
 
-  const imMonat = (wert: string | null | undefined) => {
+  /** Montag der Woche, in der dieser Tag liegt. */
+  const wochenBeginn = (d: Date) => {
+    const m = new Date(d)
+    m.setDate(m.getDate() - ((m.getDay() + 6) % 7))
+    m.setHours(0, 0, 0, 0)
+    return m
+  }
+
+  /* Der Zeitraum, den die gewählte Ansicht abdeckt. */
+  const { beginn, ende } = useMemo(() => {
+    if (sicht === 'tag') {
+      const a = new Date(anker)
+      a.setHours(0, 0, 0, 0)
+      const b = new Date(a)
+      b.setDate(b.getDate() + 1)
+      return { beginn: a, ende: b }
+    }
+    if (sicht === 'woche') {
+      const a = wochenBeginn(anker)
+      const b = new Date(a)
+      b.setDate(b.getDate() + 7)
+      return { beginn: a, ende: b }
+    }
+    return {
+      beginn: new Date(anker.getFullYear(), anker.getMonth(), 1),
+      ende: new Date(anker.getFullYear(), anker.getMonth() + 1, 1),
+    }
+  }, [anker, sicht])
+
+  const imZeitraum = (wert: string | null | undefined) => {
     if (!wert) return false
     const zeit = new Date(wert).getTime()
     return zeit >= beginn.getTime() && zeit < ende.getTime()
@@ -96,10 +183,21 @@ export function KalenderAnsicht() {
 
   const eintraege = useMemo<Eintrag[]>(
     () => [
+      ...termine
+        .filter((t) => imZeitraum(t.start))
+        .map((t) => ({
+          tag: tagesStempel(t.start!),
+          titel: t.title ?? 'Termin',
+          neben: t.ort ?? undefined,
+          art: 'termin' as const,
+          zeit: t.ganztaegig ? null : new Date(t.start!),
+          ganztaegig: Boolean(t.ganztaegig),
+          terminId: t.id,
+        })),
       ...auftraege
         .filter(
           (a) =>
-            ['geplant', 'inFertigung', 'fertig'].includes(a.status ?? '') && imMonat(a.dueDate),
+            ['geplant', 'inFertigung', 'fertig'].includes(a.status ?? '') && imZeitraum(a.dueDate),
         )
         .map((a) => ({
           tag: tagesStempel(a.dueDate!),
@@ -107,10 +205,11 @@ export function KalenderAnsicht() {
           neben: a.customerName ?? undefined,
           href: `/office/auftraege/${a.id}`,
           art: 'auftrag' as const,
+          ganztaegig: true,
         })),
       ...bestellungen
         .filter(
-          (b) => ['paid', 'inProduction'].includes(b.status ?? '') && imMonat(b.expectedReady),
+          (b) => ['paid', 'inProduction'].includes(b.status ?? '') && imZeitraum(b.expectedReady),
         )
         .map((b) => ({
           tag: tagesStempel(b.expectedReady!),
@@ -118,28 +217,31 @@ export function KalenderAnsicht() {
           neben: b.customer?.name ?? undefined,
           href: `/office/bestellungen/${b.id}`,
           art: 'bestellung' as const,
+          ganztaegig: true,
         })),
       ...angebote
-        .filter((a) => a.status === 'versendet' && imMonat(a.validUntil))
+        .filter((a) => a.status === 'versendet' && imZeitraum(a.validUntil))
         .map((a) => ({
           tag: tagesStempel(a.validUntil!),
           titel: `${a.quoteNumber ?? 'Angebot'} läuft ab`,
           neben: a.customerName ?? undefined,
           href: `/office/angebote/${a.id}`,
           art: 'angebot' as const,
+          ganztaegig: true,
         })),
       ...belege
-        .filter((b) => !b.paid && imMonat(b.dueDate))
+        .filter((b) => !b.paid && imZeitraum(b.dueDate))
         .map((b) => ({
           tag: tagesStempel(b.dueDate!),
           titel: b.supplierName || b.title || 'Beleg',
           neben: euro(b.grossAmount),
           href: `/office/belege/${b.id}`,
           art: 'beleg' as const,
+          ganztaegig: true,
         })),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [auftraege, bestellungen, angebote, belege, monat],
+    [termine, auftraege, bestellungen, angebote, belege, beginn, ende],
   )
 
   /*
@@ -155,8 +257,8 @@ export function KalenderAnsicht() {
    * die Bestellung). Stattdessen stehen die Terminlosen unter dem Blatt, mit
    * dem Weg zum Auftrag — dort trägt man den Termin ein, wenn man ihn weiß.
    *
-   * Bewusst unabhängig vom gewählten Monat: Etwas ohne Datum gehört in keinen
-   * Monat, und wer im März blättert, soll es trotzdem sehen.
+   * Bewusst unabhängig vom gewählten Zeitraum: Etwas ohne Datum gehört in
+   * keinen Monat, und wer im März blättert, soll es trotzdem sehen.
    */
   const ohneTermin = useMemo(
     () =>
@@ -174,52 +276,106 @@ export function KalenderAnsicht() {
   for (const e of eintraege) {
     nachTag.set(e.tag, [...(nachTag.get(e.tag) ?? []), e])
   }
-
-  // Montag als erster Tag der Woche — hier arbeitet niemand nach US-Kalender
-  const ersterWochentag = (beginn.getDay() + 6) % 7
-  const tageImMonat = new Date(gewaehlt.getFullYear(), gewaehlt.getMonth() + 1, 0).getDate()
-  const zellen: (number | null)[] = [
-    ...Array.from({ length: ersterWochentag }, () => null),
-    ...Array.from({ length: tageImMonat }, (_, i) => i + 1),
-  ]
-  while (zellen.length % 7 !== 0) zellen.push(null)
-
-  const monatsName = beginn.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
-  const verschieben = (schritt: number) => {
-    const d = new Date(gewaehlt.getFullYear(), gewaehlt.getMonth() + schritt, 1)
-    return `/office/kalender?monat=${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  // Innerhalb eines Tages: Ganztägiges zuerst, danach nach Uhrzeit
+  for (const [, liste] of nachTag) {
+    liste.sort((a, b) => {
+      if (!a.zeit && !b.zeit) return 0
+      if (!a.zeit) return -1
+      if (!b.zeit) return 1
+      return a.zeit.getTime() - b.zeit.getTime()
+    })
   }
 
-  return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '1rem',
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h1>Kalender</h1>
-          <p className="buero-unterzeile">
-            {monatsName} · {eintraege.length} Termine
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '.5rem' }}>
-          <Link className="buero-knopf leise schmal" href={verschieben(-1)}>
-            Zurück
-          </Link>
-          <Link className="buero-knopf leise schmal" href="/office/kalender">
-            Heute
-          </Link>
-          <Link className="buero-knopf leise schmal" href={verschieben(1)}>
-            Weiter
-          </Link>
-        </div>
-      </div>
+  /** Die Adresse für einen Wechsel — vorhandene Angaben bleiben stehen. */
+  const weg = (aend: { sicht?: Sicht; tag?: string | null; monat?: string | null }) => {
+    const p = new URLSearchParams()
+    const s = aend.sicht ?? sicht
+    if (s !== 'monat') p.set('sicht', s)
 
+    const t = aend.tag === null ? undefined : (aend.tag ?? gewaehlterTag)
+    if (t) p.set('tag', t)
+
+    const m = aend.monat === null ? undefined : (aend.monat ?? monat)
+    if (m && !t) p.set('monat', m)
+
+    const q = p.toString()
+    return `/office/kalender${q ? `?${q}` : ''}`
+  }
+
+  /** Einen Schritt vor oder zurück — je nach Ansicht Monat, Woche oder Tag. */
+  const verschieben = (schritt: number) => {
+    if (sicht === 'monat') {
+      const d = new Date(anker.getFullYear(), anker.getMonth() + schritt, 1)
+      return weg({
+        monat: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        tag: null,
+      })
+    }
+    const d = new Date(anker)
+    d.setDate(d.getDate() + (sicht === 'woche' ? 7 * schritt : schritt))
+    return weg({ tag: tagesStempel(d) })
+  }
+
+  const titelZeile = () => {
+    if (sicht === 'tag') {
+      return anker.toLocaleDateString('de-DE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    }
+    if (sicht === 'woche') {
+      const bis = new Date(beginn)
+      bis.setDate(bis.getDate() + 6)
+      const gleicherMonat = beginn.getMonth() === bis.getMonth()
+      return `${beginn.toLocaleDateString('de-DE', {
+        day: 'numeric',
+        ...(gleicherMonat ? {} : { month: 'long' }),
+      })}. – ${bis.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    }
+    return beginn.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+  }
+
+  /** Ein einzelner Eintrag — als Link, wenn er einen Vorgang hat. */
+  const Stueck = ({ e, mitZeit }: { e: Eintrag; mitZeit?: boolean }) => {
+    const inhalt = (
+      <>
+        {mitZeit && e.zeit ? <em>{uhrzeit(e.zeit)}</em> : null}
+        <strong>{e.titel}</strong>
+        {e.neben ? <span> {e.neben}</span> : null}
+      </>
+    )
+    if (e.href) {
+      return (
+        <Link href={e.href} className={`buero-kalender-eintrag ${e.art}`}>
+          {inhalt}
+        </Link>
+      )
+    }
+    // Eigene Termine führen nirgendwohin — sie öffnen die Maske
+    return (
+      <button
+        type="button"
+        className={`buero-kalender-eintrag ${e.art}`}
+        onClick={() => setMaske({ id: e.terminId, tag: e.tag })}
+      >
+        {inhalt}
+      </button>
+    )
+  }
+
+  /* ── Monat ─────────────────────────────────────────────────────────── */
+  const monatsBlatt = () => {
+    const ersterWochentag = (beginn.getDay() + 6) % 7
+    const tageImMonat = new Date(anker.getFullYear(), anker.getMonth() + 1, 0).getDate()
+    const zellen: (number | null)[] = [
+      ...Array.from({ length: ersterWochentag }, () => null),
+      ...Array.from({ length: tageImMonat }, (_, i) => i + 1),
+    ]
+    while (zellen.length % 7 !== 0) zellen.push(null)
+
+    return (
       <div className="buero-kalender">
         {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t) => (
           <div key={t} className="buero-kalender-kopf">
@@ -228,26 +384,194 @@ export function KalenderAnsicht() {
         ))}
         {zellen.map((tag, i) => {
           if (!tag) return <div key={`leer-${i}`} className="buero-kalender-zelle leer" />
-          const stempel = tagesStempel(new Date(gewaehlt.getFullYear(), gewaehlt.getMonth(), tag))
+          const stempel = tagesStempel(new Date(anker.getFullYear(), anker.getMonth(), tag))
           const heutiger = stempel === tagesStempel(heute)
+          const drin = nachTag.get(stempel) ?? []
+          /*
+           * Mehr als drei Einträge sprengen die Zelle. Statt sie zu stapeln,
+           * bis nichts mehr lesbar ist, steht dort „+2 weitere" — und der
+           * Klick führt in die Tagesansicht, wo alle Platz haben.
+           */
+          const sichtbar = drin.slice(0, 3)
+          const rest = drin.length - sichtbar.length
+
           return (
             <div key={stempel} className={`buero-kalender-zelle${heutiger ? ' heute' : ''}`}>
-              <div className="buero-kalender-tag">{tag}</div>
-              {(nachTag.get(stempel) ?? []).map((e, k) => (
-                <Link key={k} href={e.href} className={`buero-kalender-eintrag ${e.art}`}>
-                  <strong>{e.titel}</strong>
-                  {e.neben ? <span> {e.neben}</span> : null}
-                </Link>
+              <Link
+                href={weg({ sicht: 'tag', tag: stempel })}
+                className="buero-kalender-tag"
+                title="Diesen Tag ansehen"
+              >
+                {tag}
+              </Link>
+              {sichtbar.map((e, k) => (
+                <Stueck key={k} e={e} mitZeit />
               ))}
+              {rest > 0 && (
+                <Link href={weg({ sicht: 'tag', tag: stempel })} className="buero-kalender-mehr">
+                  +{rest} weitere
+                </Link>
+              )}
             </div>
           )
         })}
       </div>
+    )
+  }
+
+  /* ── Woche ─────────────────────────────────────────────────────────── */
+  const wochenBlatt = () => {
+    const tage = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(beginn)
+      d.setDate(d.getDate() + i)
+      return d
+    })
+
+    return (
+      <div className="buero-kalender woche">
+        {tage.map((d) => (
+          <div key={`kopf-${tagesStempel(d)}`} className="buero-kalender-kopf">
+            {d.toLocaleDateString('de-DE', { weekday: 'short' })} {d.getDate()}.
+          </div>
+        ))}
+        {tage.map((d) => {
+          const stempel = tagesStempel(d)
+          const heutiger = stempel === tagesStempel(heute)
+          const drin = nachTag.get(stempel) ?? []
+          return (
+            <div
+              key={stempel}
+              className={`buero-kalender-zelle hoch${heutiger ? ' heute' : ''}`}
+              onDoubleClick={() => setMaske({ tag: stempel })}
+              title="Doppelklick legt hier einen Termin an"
+            >
+              {drin.length === 0 ? (
+                <span className="buero-kalender-leer">—</span>
+              ) : (
+                drin.map((e, k) => <Stueck key={k} e={e} mitZeit />)
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  /* ── Tag ───────────────────────────────────────────────────────────── */
+  const tagesBlatt = () => {
+    const stempel = tagesStempel(anker)
+    const drin = nachTag.get(stempel) ?? []
+    const ganztags = drin.filter((e) => !e.zeit)
+    const mitUhr = drin.filter((e) => e.zeit)
+
+    return (
+      <div className="buero-kalender-tagblatt">
+        {ganztags.length > 0 && (
+          <div className="buero-kalender-ganztags">
+            {ganztags.map((e, k) => (
+              <Stueck key={k} e={e} />
+            ))}
+          </div>
+        )}
+
+        {/*
+          * Die Stundenleiste von 6 bis 20 Uhr.
+          *
+          * Nicht von 0 bis 24: Vierundzwanzig Zeilen, von denen zwei Drittel
+          * immer leer sind, machen die Ansicht nur lang. Was früher oder
+          * später liegt, steht trotzdem — in der Zeile davor beziehungsweise
+          * danach, damit nichts verschwindet.
+          */}
+        {Array.from({ length: 15 }, (_, i) => i + 6).map((stunde) => {
+          const drinnen = mitUhr.filter((e) => {
+            const h = e.zeit!.getHours()
+            if (stunde === 6) return h <= 6
+            if (stunde === 20) return h >= 20
+            return h === stunde
+          })
+          return (
+            <div key={stunde} className="buero-kalender-stunde">
+              <div className="buero-kalender-uhr">{String(stunde).padStart(2, '0')}:00</div>
+              <div
+                className="buero-kalender-spur"
+                onDoubleClick={() => setMaske({ tag: stempel })}
+                title="Doppelklick legt hier einen Termin an"
+              >
+                {drinnen.map((e, k) => (
+                  <Stueck key={k} e={e} mitZeit />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {drin.length === 0 && (
+          <p className="buero-unterzeile" style={{ marginTop: '1rem' }}>
+            An diesem Tag steht nichts an.
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="buero-kalender-leiste">
+        <div>
+          <h1>Kalender</h1>
+          <p className="buero-unterzeile">
+            {titelZeile()} · {eintraege.length}{' '}
+            {eintraege.length === 1 ? 'Eintrag' : 'Einträge'}
+          </p>
+        </div>
+
+        <div className="buero-kalender-knoepfe">
+          {/* Die Ansicht wählen */}
+          <div className="buero-kalender-umschalter">
+            {(['monat', 'woche', 'tag'] as Sicht[]).map((s) => (
+              <Link
+                key={s}
+                href={weg({
+                  sicht: s,
+                  // Ein Wechsel in Woche oder Tag braucht einen Tag als Anker;
+                  // ohne gewählten nimmt er heute
+                  tag: s === 'monat' ? null : (gewaehlterTag ?? tagesStempel(heute)),
+                  monat: s === 'monat' ? monat : null,
+                })}
+                className={`buero-kalender-umschalter-knopf${sicht === s ? ' an' : ''}`}
+              >
+                {s === 'monat' ? 'Monat' : s === 'woche' ? 'Woche' : 'Tag'}
+              </Link>
+            ))}
+          </div>
+
+          <Link className="buero-knopf leise schmal" href={verschieben(-1)}>
+            Zurück
+          </Link>
+          <Link className="buero-knopf leise schmal" href={weg({ tag: null, monat: null })}>
+            Heute
+          </Link>
+          <Link className="buero-knopf leise schmal" href={verschieben(1)}>
+            Weiter
+          </Link>
+          <button
+            type="button"
+            className="buero-knopf schmal"
+            onClick={() => setMaske({ tag: gewaehlterTag ?? tagesStempel(heute) })}
+          >
+            Termin anlegen
+          </button>
+        </div>
+      </div>
+
+      {sicht === 'monat' ? monatsBlatt() : sicht === 'woche' ? wochenBlatt() : tagesBlatt()}
 
       <p className="buero-unterzeile" style={{ marginTop: '1rem' }}>
-        {Object.values(ART_TEXT).join(' · ')} — Fertigstellungen, zugesagte Liefertermine,
-        ablaufende Angebote und fällige Belege.
+        {Object.values(ART_TEXT).join(' · ')} — eigene Termine, Fertigstellungen, zugesagte
+        Liefertermine, ablaufende Angebote und fällige Belege.
       </p>
+
+      <Zugang />
 
       {ohneTermin.length > 0 && (
         <>
@@ -269,6 +593,19 @@ export function KalenderAnsicht() {
             ))}
           </div>
         </>
+      )}
+
+      {maske && (
+        <TerminMaske
+          id={maske.id}
+          tag={maske.tag}
+          termine={termine}
+          schliessen={() => setMaske(null)}
+          fertig={() => {
+            setMaske(null)
+            router.refresh()
+          }}
+        />
       )}
     </>
   )

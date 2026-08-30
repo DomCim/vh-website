@@ -16,6 +16,7 @@ import {
   RevealStagger,
 } from "../../../components/motion/Reveal";
 import { SplitTextReveal } from "../../../components/motion/SplitTextReveal";
+import { TerminKarte } from "../../../components/Termine";
 import { PromoBanner } from "../../../components/PromoBanner";
 import {
   getActivePromotions,
@@ -29,6 +30,8 @@ import {
   mediaUrl,
 } from "../../../lib/data";
 import { heroTintFor } from "../../../lib/heroColor";
+import { payloadClient } from "../../../lib/data";
+import { oeffentlicheTermine } from "../../../lib/kalender/oeffentlich";
 import { formatDate, isLocale, t } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +53,7 @@ export default async function HomePage({
     featuredProjects,
     testimonials,
     settings,
+    termine,
   ] = await Promise.all([
     getHomepage(locale),
     getMainCategories(locale),
@@ -58,6 +62,13 @@ export default async function HomePage({
     getFeaturedProjects(locale),
     getFeaturedTestimonials(locale),
     getSiteSettings(locale),
+    /*
+     * Die naechsten drei oeffentlichen Termine.
+     *
+     * Nur drei: Die Startseite ist ein Schaufenster, keine Liste. Wer mehr
+     * sehen will, folgt dem Weg zu `/termine` darunter.
+     */
+    payloadClient().then((p) => oeffentlicheTermine(p, locale, 3)),
   ]);
 
   /*
@@ -317,6 +328,41 @@ export default async function HomePage({
             <Reveal>
               <Fragen fragen={fragen} offenAb={0} />
             </Reveal>
+          </div>
+        </section>
+      )}
+
+      {/*
+        * Wo Vincent als Naechstes zu finden ist.
+        *
+        * Steht ueber den News, weil ein Termin verfaellt und ein Beitrag
+        * nicht: Was naechste Woche stattfindet, muss diese Woche gesehen
+        * werden. Faellt nichts an, faellt der ganze Abschnitt weg — eine
+        * Ueberschrift ueber einer leeren Flaeche sieht nach Baustelle aus.
+        */}
+      {termine.length > 0 && (
+        <section className="bg-paper-soft">
+          <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
+            <Reveal>
+              <div className="mb-8 flex items-baseline justify-between">
+                <h2 className="tracking-nav text-ink rule-bronze text-xl font-semibold uppercase">
+                  {dict.events.homeTitle}
+                </h2>
+                <Link
+                  href={`/${locale}/termine`}
+                  className="tracking-nav text-ink-soft hover:text-ink text-xs uppercase underline-offset-4 hover:underline"
+                >
+                  {dict.events.all} →
+                </Link>
+              </div>
+            </Reveal>
+            <RevealStagger className="grid gap-4">
+              {termine.map((termin) => (
+                <RevealItem key={termin.id}>
+                  <TerminKarte termin={termin} sprache={locale} />
+                </RevealItem>
+              ))}
+            </RevealStagger>
           </div>
         </section>
       )}

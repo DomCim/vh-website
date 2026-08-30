@@ -26,6 +26,47 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 87,
+    datum: null,
+    titel: 'Termine auf die Website stellen — mit einer Zeile in der Notiz',
+    punkte: [
+      {
+        text: '**Ein Termin kommt auf die Website, wenn in seiner Notiz `#öffentlich` steht.** Mehr braucht es nicht. Weil die Notiz über den Kalender auch vom iPhone hierher kommt, geht das von einer Messe aus genauso wie vom Schreibtisch: eintragen, `#öffentlich` darunter, fertig. Ohne diese Zeile bleibt ein Termin intern — wer nichts hinschreibt oder sich vertippt, dessen Werkstatttermin steht nicht im Netz.',
+      },
+      {
+        text: '**Was daneben noch geht:** `#beschreibung:` für den Text (über mehrere Zeilen, `**fett**` und `*kursiv*` wirken), `#titel:` für einen anderen Namen nach außen als intern, `#ort:` für die Anschrift statt des Kürzels, `#link:` für die Seite des Veranstalters, `#bild:` für ein Bild aus der Mediathek und `#absage`, wenn etwas ausfällt. Ein abgesagter Termin verschwindet nicht, sondern steht durchgestrichen da — wer schon hinfahren wollte, sucht genau ihn.',
+      },
+      {
+        text: '**Andere Sprachen mit einem Kürzel:** `#beschreibung:fr:` für Französisch, `:en:` für Englisch. Was fehlt, steht auf Deutsch da; eine leere Stelle gibt es nie. Alles, was keine Flagge trägt, bleibt interne Notiz und steht nirgends draußen.',
+      },
+      {
+        text: '**Wie das geht, steht in der Terminmaske selbst** — unter dem Notizfeld unter `Für die Website`. Dort sind alle Flaggen aufgeführt, und ein Klick setzt die Zeile gleich ein. Der Kopf zeigt außerdem auf einen Blick, ob dieser Termin gerade öffentlich ist. Ein Muster, das man auswendig können muss, benutzt nach drei Wochen niemand mehr.',
+      },
+      {
+        text: '**Angezeigt werden die Termine unter `/termine` und auf der Startseite** — dort die nächsten drei. Steht nichts an, verschwindet beides samt Menüpunkt: Eine Seite, die „Zurzeit stehen keine Termine an" sagt, sieht aus, als wäre hier etwas eingeschlafen. Kommt wieder ein Termin, ist alles von selbst wieder da.',
+      },
+    ],
+  },
+  {
+    nummer: 86,
+    datum: null,
+    titel: 'Eigene Termine im Kalender — und der Kalender aufs Telefon',
+    punkte: [
+      {
+        text: '**Der Kalender nimmt jetzt eigene Termine auf.** Bisher zeigte er nur, was aus einem Vorgang folgt: Fertigstellungen, zugesagte Liefertermine, ablaufende Angebote, fällige Belege. Was zu keinem Vorgang gehört — „Dienstag 9 Uhr Steuerberater", eine Anlieferung, ein Werkstatttag — hatte nirgends Platz und stand auf einem Zettel. Über „Termin anlegen" oder einen Doppelklick auf einen Tag steht es jetzt im Kalender, mit Uhrzeit oder ganztägig, mit Ort und Notiz.',
+      },
+      {
+        text: '**Dazu drei Ansichten: Monat, Woche und Tag.** Der Monat gibt den Überblick, aber in einer vollen Woche stapelten sich die Einträge in einer Zelle, bis nichts mehr zu lesen war. Passen mehr als drei in einen Tag, steht dort jetzt „+2 weitere"; ein Klick auf die Tageszahl öffnet den Tag mit einer Stundenleiste, wo alles Platz hat. Die gewählte Ansicht steht in der Adresse — ein weitergegebener Link zeigt also das, was der Absender vor sich hatte.',
+      },
+      {
+        text: '**Der Kalender lässt sich aufs iPhone holen** — unter Kalender → `Kalender aufs Telefon`. Zwei Wege stehen dort: Das **Abonnement** ist in zehn Sekunden eingerichtet und zeigt alles zum Nachsehen, lässt sich aber nicht beschreiben. Das **CalDAV-Konto** ist etwas mehr Tipparbeit und geht in beide Richtungen: Ein Termin, der unterwegs am Telefon entsteht, steht danach auch im Büro.',
+      },
+      {
+        text: '**Der Zugang gilt je Person und lässt sich zurückziehen.** Die Adresse enthält einen Schlüssel, der so viel wert ist wie ein Passwort — sie gehört deshalb nicht weitergegeben. Ist ein Telefon abhandengekommen, macht „Neuer Schlüssel" den alten sofort wertlos, ohne dass jemand anders sein Abonnement neu einrichten muss. Aufträge, Bestellungen, Angebote und Belege wandern mit aufs Telefon, lassen sich dort aber bewusst **nicht** ändern: Ein verschobener Liefertermin ist eine Zusage an die Kundschaft und gehört ins Büro, nicht in eine Wischgeste in der Bahn.',
+      },
+    ],
+  },
+  {
     nummer: 85,
     datum: null,
     titel: 'Beim Abhaken nach dem Scan lässt sich die Zeit gleich mitbuchen',

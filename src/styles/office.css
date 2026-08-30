@@ -2178,9 +2178,23 @@ html.tastatur-offen .buero-inhalt {
   background: var(--buero-papier);
   min-height: 5.5rem;
   padding: 0.3rem 0.3rem 0.4rem;
+  transition: background 0.12s ease;
+}
+
+/* In Woche und Tag ist mehr Platz — dort darf eine Spalte hoch sein */
+.buero-kalender-zelle.hoch {
+  min-height: 11rem;
+}
+
+.buero-kalender-zelle:hover {
+  background: var(--buero-flaeche);
 }
 
 .buero-kalender-zelle.leer {
+  background: var(--buero-flaeche);
+}
+
+.buero-kalender-zelle.leer:hover {
   background: var(--buero-flaeche);
 }
 
@@ -2188,18 +2202,48 @@ html.tastatur-offen .buero-inhalt {
   box-shadow: inset 0 0 0 2px var(--buero-bronze);
 }
 
+/*
+ * Die Tageszahl führt in die Tagesansicht. Sie sieht deshalb anklickbar aus,
+ * ohne sich als Knopf aufzuspielen — ein voller Knopf je Zelle machte das
+ * Blatt unruhig.
+ */
+.buero a.buero-kalender-tag,
 .buero-kalender-tag {
+  display: inline-block;
   font-size: 0.72rem;
   color: var(--buero-tinte-leise);
   margin-bottom: 0.25rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  text-decoration: none;
 }
 
-.buero a.buero-kalender-eintrag {
+.buero a.buero-kalender-tag:hover {
+  background: var(--buero-bronze);
+  color: var(--buero-auf-tinte);
+}
+
+.buero-kalender-zelle.heute .buero-kalender-tag {
+  font-weight: 700;
+  color: var(--buero-bronze);
+}
+
+/*
+ * Einträge sind mal Link (ein Vorgang dahinter), mal Knopf (ein eigener
+ * Termin, der die Maske öffnet). Beide müssen gleich aussehen — deshalb steht
+ * hier beides nebeneinander statt nur `a`.
+ */
+.buero a.buero-kalender-eintrag,
+.buero button.buero-kalender-eintrag {
   display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
   font-size: 0.7rem;
   line-height: 1.25;
   padding: 0.2rem 0.3rem;
   margin-bottom: 0.2rem;
+  border: 0;
   border-radius: 4px;
   border-left: 3px solid var(--buero-tinte-leise);
   background: var(--buero-flaeche);
@@ -2208,23 +2252,340 @@ html.tastatur-offen .buero-inhalt {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.buero a.buero-kalender-eintrag span {
+.buero a.buero-kalender-eintrag:hover,
+.buero button.buero-kalender-eintrag:hover {
+  filter: brightness(0.97);
+}
+
+.buero .buero-kalender-eintrag span {
   color: var(--buero-tinte-leise);
 }
 
-.buero a.buero-kalender-eintrag.auftrag {
+/* Die Uhrzeit vorneweg — sie ordnet, deshalb steht sie nicht kursiv im Weg */
+.buero .buero-kalender-eintrag em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--buero-tinte-leise);
+  margin-right: 0.3rem;
+}
+
+.buero .buero-kalender-eintrag.termin {
+  border-left-color: var(--buero-blau);
+}
+.buero .buero-kalender-eintrag.auftrag {
   border-left-color: var(--buero-bronze);
 }
-.buero a.buero-kalender-eintrag.bestellung {
+.buero .buero-kalender-eintrag.bestellung {
   border-left-color: var(--buero-gruen);
 }
-.buero a.buero-kalender-eintrag.angebot {
+.buero .buero-kalender-eintrag.angebot {
   border-left-color: var(--buero-tinte-leise);
 }
-.buero a.buero-kalender-eintrag.beleg {
+.buero .buero-kalender-eintrag.beleg {
   border-left-color: var(--buero-rot);
+}
+
+/* „+2 weitere" — der Rest, der nicht mehr in die Zelle passt */
+.buero a.buero-kalender-mehr {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--buero-tinte-leise);
+  text-decoration: none;
+  padding: 0.1rem 0.3rem;
+}
+
+.buero a.buero-kalender-mehr:hover {
+  color: var(--buero-bronze);
+}
+
+.buero-kalender-leer {
+  font-size: 0.7rem;
+  color: var(--buero-linie);
+}
+
+/* ── Kopfleiste des Kalenders ───────────────────────────────────────────── */
+.buero-kalender-leiste {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buero-kalender-knoepfe {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Monat / Woche / Tag — ein Schalter aus drei Feldern, nicht drei Knöpfe */
+.buero-kalender-umschalter {
+  display: inline-flex;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.buero a.buero-kalender-umschalter-knopf {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--buero-tinte-leise);
+  background: var(--buero-flaeche);
+  text-decoration: none;
+  border-right: 1px solid var(--buero-linie);
+}
+
+.buero a.buero-kalender-umschalter-knopf:last-child {
+  border-right: 0;
+}
+
+.buero a.buero-kalender-umschalter-knopf.an {
+  background: var(--buero-bronze);
+  color: var(--buero-auf-tinte);
+}
+
+/* ── Tagesansicht ───────────────────────────────────────────────────────── */
+.buero-kalender-tagblatt {
+  margin-top: 1rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--buero-flaeche);
+}
+
+/* Ganztägiges steht über der Stundenleiste — es gehört in keine Stunde */
+.buero-kalender-ganztags {
+  padding: 0.5rem;
+  background: var(--buero-papier);
+  border-bottom: 1px solid var(--buero-linie);
+}
+
+.buero-kalender-stunde {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  border-bottom: 1px solid var(--buero-linie);
+  min-height: 2.6rem;
+}
+
+.buero-kalender-stunde:last-child {
+  border-bottom: 0;
+}
+
+.buero-kalender-uhr {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--buero-tinte-leise);
+  border-right: 1px solid var(--buero-linie);
+  background: var(--buero-papier);
+}
+
+.buero-kalender-spur {
+  padding: 0.25rem 0.4rem;
+}
+
+/* ── Die Maske für einen Termin ─────────────────────────────────────────── */
+.buero-terminmaske-schicht {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.buero-terminmaske {
+  width: min(30rem, 100%);
+  background: var(--buero-flaeche);
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.buero-terminmaske h2 {
+  margin-top: 0;
+}
+
+.buero-terminmaske-zeiten {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.buero-terminmaske-fuss {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+/* Ein waagerechtes Feld — Haken und Beschriftung nebeneinander */
+.buero-feld.waagerecht {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.buero-feld.waagerecht input {
+  width: auto;
+}
+
+/* ── Die Flaggen für die Website ────────────────────────────────────────── */
+/*
+ * Steht unter dem Notizfeld der Terminmaske. Eingeklappt, weil man sie nicht
+ * jedes Mal braucht — aber an Ort und Stelle, weil ein Muster, das man
+ * auswendig können muss, nach drei Wochen niemand mehr benutzt.
+ */
+.buero-flaggen {
+  margin-top: -0.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.buero-flaggen-kopf {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  background: var(--buero-papier);
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--buero-tinte);
+  cursor: pointer;
+  text-align: left;
+}
+
+.buero-flaggen-kopf:hover {
+  background: var(--buero-flaeche);
+}
+
+.buero-flaggen-still {
+  font-size: 0.72rem;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-flaggen-inhalt {
+  padding: 0.6rem;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-flaggen-liste {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+  margin: 0.6rem 0;
+}
+
+.buero-flaggen-liste dt {
+  margin: 0;
+}
+
+.buero-flaggen-liste dd {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--buero-tinte-leise);
+}
+
+/* Die Flagge selbst ist der Knopf, der sie einsetzt */
+.buero-flaggen-knopf {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 5px;
+  background: var(--buero-papier);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--buero-tinte);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.buero-flaggen-knopf:hover {
+  border-color: var(--buero-bronze);
+  color: var(--buero-bronze);
+}
+
+.buero-flaggen-inhalt code {
+  padding: 0.05rem 0.25rem;
+  border-radius: 4px;
+  background: var(--buero-papier);
+  font-size: 0.72rem;
+}
+
+/* ── Kalender aufs Telefon ──────────────────────────────────────────────── */
+.buero-kalender-zugang {
+  margin-top: 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--buero-linie);
+  border-radius: 12px;
+  background: var(--buero-flaeche);
+}
+
+.buero-kalender-zugang-block {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-kalender-zugang-block h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.buero-kalender-zugang-adresse {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/*
+ * Die Adressen sind lang und enthalten den Schlüssel. Sie müssen umbrechen
+ * dürfen — sonst schiebt eine einzige Zeile die ganze Seite in die Breite.
+ */
+.buero-kalender-zugang code {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: var(--buero-papier);
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.buero-kalender-zugang-liste {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 0.75rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+
+.buero-kalender-zugang-liste dt {
+  font-size: 0.8rem;
+  color: var(--buero-tinte-leise);
+}
+
+.buero-kalender-zugang-liste dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
@@ -2233,13 +2594,33 @@ html.tastatur-offen .buero-inhalt {
     padding: 0.2rem;
   }
 
-  .buero a.buero-kalender-eintrag {
+  .buero-kalender-zelle.hoch {
+    min-height: 6rem;
+  }
+
+  .buero .buero-kalender-eintrag {
     font-size: 0.62rem;
     padding: 0.15rem 0.2rem;
   }
 
-  .buero a.buero-kalender-eintrag span {
+  .buero .buero-kalender-eintrag span {
     display: none;
+  }
+
+  .buero-terminmaske-zeiten {
+    grid-template-columns: 1fr;
+  }
+
+  /*
+   * Die Wochenansicht wird auf dem Handy zur Liste. Sieben Spalten auf
+   * 360 Pixeln sind keine Woche mehr, sondern sieben Striche.
+   */
+  .buero-kalender.woche {
+    grid-template-columns: 1fr;
+  }
+
+  .buero-kalender.woche .buero-kalender-zelle.hoch {
+    min-height: 3rem;
   }
 }
 

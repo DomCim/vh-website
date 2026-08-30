@@ -9,6 +9,7 @@ export function isLocale(value: string): value is Locale {
 const de = {
   nav: {
     news: 'News',
+    events: 'Termine',
     contact: 'Kontakt',
     cart: 'Warenkorb',
     collection: 'Kollektion',
@@ -342,6 +343,17 @@ const de = {
     readyMade: 'Sofort lieferbar',
     readyMadeNote: 'Dieses Stück steht fertig in der Werkstatt.',
   },
+  events: {
+    title: 'Termine',
+    intro:
+      'Wo ich als Nächstes zu finden bin — Märkte, Ausstellungen und offene Werkstatt. Kommen Sie vorbei.',
+    empty: 'Zurzeit stehen keine Termine an.',
+    allDay: 'ganztägig',
+    cancelled: 'Fällt aus',
+    more: 'Mehr dazu',
+    homeTitle: 'Wo ich als Nächstes bin',
+    all: 'Alle Termine',
+  },
   news: {
     title: 'News',
     intro: 'Neues aus der Werkstatt: fertige Arbeiten, Werkstoffe und Ratgeber rund um Stahl, Holz und Licht.',
@@ -446,6 +458,7 @@ export type Dictionary = typeof de
 const fr: Dictionary = {
   nav: {
     news: 'Actualités',
+    events: 'Rendez-vous',
     contact: 'Contact',
     cart: 'Panier',
     collection: 'Collection',
@@ -771,6 +784,17 @@ const fr: Dictionary = {
     readyMade: 'Disponible immédiatement',
     readyMadeNote: "Cette pièce est prête à l'atelier.",
   },
+  events: {
+    title: 'Rendez-vous',
+    intro:
+      "Où me trouver prochainement — marchés, expositions et atelier ouvert. Passez me voir.",
+    empty: 'Aucun rendez-vous prévu pour le moment.',
+    allDay: 'toute la journée',
+    cancelled: 'Annulé',
+    more: 'En savoir plus',
+    homeTitle: 'Où me trouver prochainement',
+    all: 'Tous les rendez-vous',
+  },
   news: {
     title: 'Actualités',
     intro: "Des nouvelles de l'atelier : travaux réalisés, matériaux et conseils autour de l'acier, du bois et de la lumière.",
@@ -872,6 +896,7 @@ const fr: Dictionary = {
 const en: Dictionary = {
   nav: {
     news: 'News',
+    events: 'Events',
     contact: 'Contact',
     cart: 'Cart',
     collection: 'Collection',
@@ -1195,6 +1220,17 @@ const en: Dictionary = {
     productionTime: 'Lead time',
     readyMade: 'Available now',
     readyMadeNote: 'This piece is finished and ready in the workshop.',
+  },
+  events: {
+    title: 'Events',
+    intro:
+      'Where to find me next — markets, exhibitions and open workshop. Do drop by.',
+    empty: 'No events coming up at the moment.',
+    allDay: 'all day',
+    cancelled: 'Cancelled',
+    more: 'Find out more',
+    homeTitle: 'Where to find me next',
+    all: 'All events',
   },
   news: {
     title: 'News',
