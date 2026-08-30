@@ -2368,6 +2368,54 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-auf-tinte);
 }
 
+/*
+ * Blättern: zwei Pfeile mit „Heute" dazwischen, als ein Stück.
+ *
+ * Drei ausgeschriebene Knöpfe („Zurück / Heute / Weiter") passten am Handy
+ * nicht mehr neben den Umschalter — „Weiter" fiel in eine zweite Zeile und
+ * die Leiste zerfiel. Die Pfeile brauchen einen Bruchteil des Platzes und
+ * sagen dasselbe; ihre Beschriftung hängt für Vorleseprogramme am
+ * `aria-label` und nennt dort sogar, worum es geht (Monat, Woche, Tag).
+ */
+.buero-kalender-blaettern {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--buero-linie);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.buero a.buero-kalender-pfeil,
+.buero a.buero-kalender-heute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--buero-tinte);
+  background: var(--buero-flaeche);
+  text-decoration: none;
+}
+
+.buero a.buero-kalender-pfeil {
+  /* Die Pfeile sind schmal — hier zählt die Trefferfläche, nicht das Zeichen */
+  min-width: 2.2rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--buero-tinte-leise);
+}
+
+.buero a.buero-kalender-heute {
+  border-left: 1px solid var(--buero-linie);
+  border-right: 1px solid var(--buero-linie);
+}
+
+.buero a.buero-kalender-pfeil:hover,
+.buero a.buero-kalender-heute:hover {
+  background: var(--buero-papier);
+  color: var(--buero-bronze);
+}
+
 /* ── Tagesansicht ───────────────────────────────────────────────────────── */
 .buero-kalender-tagblatt {
   margin-top: 1rem;
@@ -2406,6 +2454,36 @@ html.tastatur-offen .buero-inhalt {
 
 .buero-kalender-spur {
   padding: 0.25rem 0.4rem;
+}
+
+/*
+ * Die Fortsetzung eines Termins in den Folgestunden.
+ *
+ * Nur der Balken, ohne Text: Ein Termin von 9 bis 18 Uhr schriebe seinen
+ * Titel sonst zehnmal untereinander. So sieht man auf einen Blick, wie lange
+ * er den Tag belegt.
+ */
+.buero-kalender-weiter {
+  height: 100%;
+  min-height: 1.4rem;
+  margin-bottom: 0.2rem;
+  border-radius: 4px;
+  border-left: 3px solid var(--buero-tinte-leise);
+  background: var(--buero-flaeche);
+  opacity: 0.55;
+}
+
+.buero-kalender-weiter.termin {
+  border-left-color: var(--buero-blau);
+}
+.buero-kalender-weiter.auftrag {
+  border-left-color: var(--buero-bronze);
+}
+.buero-kalender-weiter.bestellung {
+  border-left-color: var(--buero-gruen);
+}
+.buero-kalender-weiter.beleg {
+  border-left-color: var(--buero-rot);
 }
 
 /* ── Die Maske für einen Termin ─────────────────────────────────────────── */
