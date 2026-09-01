@@ -35,24 +35,62 @@ export function bildQuellen(media: BildQuelle, bevorzugt: string = "card") {
     (z): z is Zuschnitt => Boolean(z?.url && z?.width),
   );
 
-  // Das Original gehört mit in die Auswahl: Bei einem kleinen Upload ist es
-  // die einzige Fassung, die es überhaupt gibt.
+  /*
+   * Das Original gehört mit in die Auswahl — aber nur, wenn es wirklich mehr
+   * bietet als die Zuschnitte.
+   *
+   * Der Grund ist handfest und hat Ladezeit gekostet: Die Zuschnitte sind
+   * WebP, das Original ist das hochgeladene JPG. Beim Hero-Bild war das
+   * Original 1200 Pixel breit — genauso breit wie der größte Zuschnitt. Im
+   * `srcset` standen damit zwei Einträge mit derselben Breitenangabe
+   * (`1200w`), und bei Gleichstand darf der Browser den letzten nehmen. Das
+   * war das JPG: **192 KB statt 74 KB** für die Fassung, die ein Handy
+   * tatsächlich braucht.
+   *
+   * Nachgemessen an der laufenden Website, nachdem die Ladezeit trotz
+   * Vorladen nicht besser wurde — sondern schlechter.
+   *
+   * Das Original kommt deshalb nur dazu, wenn es **breiter** ist als jeder
+   * Zuschnitt. Dann ist es die einzige Fassung in dieser Größe und der
+   * Mehraufwand gerechtfertigt. Gibt es gar keine Zuschnitte (ein kleiner
+   * Upload), bleibt es ohnehin die einzige Wahl.
+   */
+  const breitesterZuschnitt = zuschnitte.reduce(
+    (max, z) => Math.max(max, z.width ?? 0),
+    0,
+  );
+
   const alle = [...zuschnitte];
-  if (media.url && media.width) {
+  if (media.url && media.width && media.width > breitesterZuschnitt) {
     alle.push({ url: media.url, width: media.width, height: media.height });
   }
   if (!alle.length && !media.url) return null;
 
+  /*
+   * Nach Breite sortiert — und doppelte Breiten fliegen raus.
+   *
+   * Zwei Einträge mit derselben Angabe sind für den Browser eine
+   * Zufallsentscheidung; einer davon ist immer der falsche. Es gewinnt der
+   * erste, weil die Zuschnitte vor dem Original stehen und WebP kleiner ist
+   * als das hochgeladene Bild.
+   */
   const nachBreite = [...alle].sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
-  const srcSet = nachBreite.map((z) => `${z.url} ${z.width}w`).join(", ");
+  const gesehen = new Set<number>();
+  const eindeutig = nachBreite.filter((z) => {
+    const b = z.width ?? 0;
+    if (gesehen.has(b)) return false;
+    gesehen.add(b);
+    return true;
+  });
+  const srcSet = eindeutig.map((z) => `${z.url} ${z.width}w`).join(", ");
 
   const gewaehlt =
     media.sizes?.[bevorzugt]?.url ??
-    nachBreite[nachBreite.length - 1]?.url ??
+    eindeutig[eindeutig.length - 1]?.url ??
     media.url ??
     undefined;
 
-  const mass = media.sizes?.[bevorzugt] ?? nachBreite[nachBreite.length - 1];
+  const mass = media.sizes?.[bevorzugt] ?? eindeutig[eindeutig.length - 1];
 
   return {
     src: gewaehlt as string,
