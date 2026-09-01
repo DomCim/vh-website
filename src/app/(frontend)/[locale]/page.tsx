@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import React from "react";
+import { preload } from "react-dom";
 
 import { Bild, bildQuellen, type BildQuelle } from "../../../components/Bild";
 
@@ -101,6 +102,38 @@ export default async function HomePage({
   );
 
   const gallery = homepage?.gallery ?? [];
+
+  /*
+   * Das erste Hero-Bild vorladen.
+   *
+   * Es ist das groesste Bild der Seite und damit das, woran Google die
+   * Ladezeit misst (LCP). Bisher stand es allein im Karussell — und das ist
+   * eine Client-Komponente: Der Browser erfaehrt die Adresse des Bildes also
+   * erst, wenn das JavaScript geladen und ausgefuehrt ist. Im Filmstreifen
+   * der Messung sah man das als drei leere Bilder am Anfang; gemessen wurden
+   * 3,5 Sekunden.
+   *
+   * `preload` schreibt die Zeile in den Kopf des HTML, das der Server
+   * ausliefert. Der Browser sieht sie beim ersten Durchlesen und faengt
+   * sofort an zu laden — parallel zum JavaScript statt danach.
+   *
+   * Bewusst ueber React und nicht als eigenes `<link>` im Baum: Ein solches
+   * Element hebt Next zusaetzlich in den Kopf, und die Zeile stuende zweimal
+   * da. Nachgesehen im gebauten Abbild — genau so war es.
+   *
+   * `imageSrcSet` muss mit: Ohne die Angabe laedt der Browser die grosse
+   * Fassung vor und das Karussell danach die passende — zwei Bilder statt
+   * eines. Mit derselben Angabe wie unten treffen beide dieselbe Datei.
+   */
+  const ersterSlide = slides.find((s) => s.image && !s.video);
+  if (ersterSlide?.image) {
+    preload(ersterSlide.image, {
+      as: "image",
+      imageSrcSet: ersterSlide.srcSet,
+      imageSizes: "100vw",
+      fetchPriority: "high",
+    });
+  }
 
   return (
     <>
