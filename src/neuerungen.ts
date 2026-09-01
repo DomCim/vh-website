@@ -28,13 +28,16 @@ export const NEUERUNGEN: Neuerung[] = [
   {
     nummer: 88,
     datum: null,
-    titel: 'Inventar: Mindestbestand und Nachbestellmenge bleiben beim nächsten Posten stehen',
+    titel: 'Inventar: „Speichern & nächster Posten" lässt mehr stehen — und kennt keine Doppelgänger',
     punkte: [
       {
-        text: '**Wer im Inventar „Speichern & nächster Posten" drückt, bekommt Mindestbestand und Nachbestellmenge vorausgefüllt** — so wie bisher schon Art, Einheit, Lagerort und Lieferant. Bei einer Kiste Kleinteile derselben Sorte sind diese Werte für alle gleich, und wer sie zwanzigmal tippt, lässt sie irgendwann weg. Neu getippt werden nur noch Bezeichnung, Bestand und Artikelnummer.',
+        text: '**Wer im Inventar „Speichern & nächster Posten" drückt, bekommt jetzt auch Bezeichnung, Mindestbestand und Nachbestellmenge vorausgefüllt** — so wie bisher schon Art, Einheit, Lagerort und Lieferant. Die Bezeichnung steht dabei markiert im Feld: Wer lostippt, ersetzt sie; wer ans Ende klickt, ändert nur die Größe. So sehen zwanzig Schraubensorten am Ende gleich aus, ohne dass zwanzigmal derselbe Anfang getippt wird. Neu getippt werden nur noch Bestand und Artikelnummer.',
       },
       {
-        text: '**Die Bezeichnung bleibt absichtlich leer.** Stünde sie noch da, würde ein zweiter Druck auf den Knopf denselben Posten ein zweites Mal anlegen, und das fiele erst im Lager auf. Der Bestand steht beim nächsten Posten auf 0 und lässt sich so auch speichern: Ein Posten ohne Bestand ist erlaubt, er taucht dann eben unter „Nachbestellen" auf, sobald ein Mindestbestand gesetzt ist.',
+        text: '**Einen Posten, den es schon gibt, legt das Formular nicht ein zweites Mal an.** Schon beim Tippen steht unter der Bezeichnung „Gibt es schon" mit einem Sprung zum vorhandenen Posten, und der Speichern-Knopf tut dann nichts. Groß und klein und Leerzeichen zählen dabei nicht — „schraube m8" und „Schraube M8" sind derselbe Posten. Das gilt auch ohne Netz und auch für Posten, die in derselben Runde gerade erst angelegt wurden. Der Server prüft zur Sicherheit noch einmal, falls ein zweites Gerät seit dem letzten Abgleich etwas angelegt hat.',
+      },
+      {
+        text: '**Der Bestand steht beim nächsten Posten auf 0 und lässt sich so auch speichern.** Ein Posten ohne Bestand ist erlaubt; er taucht dann unter „Nachbestellen" auf, sobald ein Mindestbestand gesetzt ist.',
       },
     ],
   },

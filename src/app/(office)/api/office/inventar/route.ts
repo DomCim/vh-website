@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { bewegung } from '../../../../../lib/bestandsbewegung'
 import { payloadClient } from '../../../../../lib/data'
+import { doppelgaenger } from '../../../../../lib/inventarerfassung'
 import { darf } from '../../../../../lib/wache'
 
 export const dynamic = 'force-dynamic'
@@ -58,6 +59,25 @@ export async function POST(req: Request) {
     }
 
     if (!b.name?.trim()) return NextResponse.json({ error: 'name-fehlt' }, { status: 400 })
+
+    /*
+     * Kein zweiter Posten gleichen Namens. Das Formular prüft das schon beim
+     * Tippen gegen den Bestand im Gerät — aber der Bestand ist so alt wie der
+     * letzte Abgleich, und ein zweites Gerät kann seitdem angelegt haben.
+     * `like` findet großzügig (alle Wörter, in beliebiger Reihenfolge), die
+     * genaue Entscheidung trifft dieselbe Regel wie im Formular.
+     */
+    const { docs: aehnliche } = await payload.find({
+      collection: 'inventory-items',
+      where: { name: { like: String(b.name).trim() } },
+      limit: 50,
+      depth: 0,
+      overrideAccess: true,
+    })
+    const vorhanden = doppelgaenger(b.name, aehnliche, b.id)
+    if (vorhanden) {
+      return NextResponse.json({ error: 'doppelt', id: vorhanden.id }, { status: 409 })
+    }
 
     const daten = {
       name: b.name,
