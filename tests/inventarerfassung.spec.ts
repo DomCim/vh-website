@@ -35,6 +35,8 @@ test('der nächste Posten erbt nur, was sich in einer Kiste nicht ändert', () =
     unit: 'Stück',
     location: 'Regal C, Fach 3',
     supplier: 7,
+    minQuantity: 50,
+    orderQuantity: 500,
     quantity: 0,
   })
 })
@@ -47,7 +49,7 @@ test('was den nächsten Posten zum Doppelgänger machen würde, ist weg', () => 
   // Bliebe die Menge stehen, hätte das Lager Bestand, den niemand gezählt hat.
   expect(weiter.quantity).toBe(0)
 
-  for (const feld of ['minQuantity', 'orderQuantity', 'supplierRef', 'unitValue', 'purchaseDate', 'purchaseValue', 'notes']) {
+  for (const feld of ['supplierRef', 'unitValue', 'purchaseDate', 'purchaseValue', 'notes']) {
     expect(weiter[feld], `${feld} darf nicht mitwandern`).toBeUndefined()
   }
 })
@@ -69,8 +71,15 @@ test('eine Kennung, die es beim Server noch nicht gibt, bleibt erhalten', () => 
   expect(lieferantKennung('')).toBe('')
 })
 
-test('die übernommenen Felder sind genau die vier', () => {
+test('die übernommenen Felder sind genau die sechs', () => {
   // Steht hier eines mehr, ist beim Erfassen etwas mitgewandert, das je Posten
   // gehört — die Prüfung soll dazu zwingen, das bewusst zu entscheiden.
-  expect([...UEBERNOMMEN]).toEqual(['type', 'unit', 'location', 'supplier'])
+  expect([...UEBERNOMMEN]).toEqual([
+    'type',
+    'unit',
+    'location',
+    'supplier',
+    'minQuantity',
+    'orderQuantity',
+  ])
 })

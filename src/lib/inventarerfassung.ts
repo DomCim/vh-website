@@ -10,11 +10,25 @@
  * Was von einem Posten zum nächsten stehen bleibt.
  *
  * Wer eine Kiste Kleinteile erfasst, hat für alle dieselbe Art, dieselbe
- * Einheit, dasselbe Regal und denselben Händler — und für jedes eine eigene
- * Bezeichnung, Menge und Artikelnummer. Das ist der Unterschied zwischen vier
- * getippten Feldern je Posten und zehn.
+ * Einheit, dasselbe Regal und denselben Händler — und meist auch denselben
+ * Mindestbestand und dieselbe Nachbestellmenge, weil Schrauben derselben
+ * Sorte gleich knapp werden. Eigen je Posten bleiben Bezeichnung, Menge und
+ * Artikelnummer. Das ist der Unterschied zwischen drei getippten Feldern je
+ * Posten und zehn.
+ *
+ * Mindestbestand und Nachbestellmenge kamen 09/2026 dazu (Wunsch Dominik).
+ * Ein falsch mitgewanderter Mindestbestand ist verkraftbar: Er steht im
+ * Posten sichtbar da und lässt sich beim Nachbestellen korrigieren — anders
+ * als eine doppelte Bezeichnung, die erst im Lager auffällt.
  */
-export const UEBERNOMMEN = ['type', 'unit', 'location', 'supplier'] as const
+export const UEBERNOMMEN = [
+  'type',
+  'unit',
+  'location',
+  'supplier',
+  'minQuantity',
+  'orderQuantity',
+] as const
 
 /**
  * Das Formular für den nächsten Posten.
