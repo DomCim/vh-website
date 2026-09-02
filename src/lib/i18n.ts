@@ -20,6 +20,7 @@ const de = {
     custom: 'Maßanfertigung',
     search: 'Suche',
     menu: 'Menü',
+    nachOben: 'Zurück nach oben',
     language: 'Sprache',
   },
   home: {
@@ -445,6 +446,7 @@ const de = {
     versandZahlung: 'Versand & Zahlung',
     followUs: 'Folgen Sie uns',
     contact: 'Kontakt',
+    umgesetztVon: 'Umgesetzt von DiD0m',
   },
   common: {
     loading: 'Wird geladen …',
@@ -469,6 +471,7 @@ const fr: Dictionary = {
     custom: 'Sur mesure',
     search: 'Recherche',
     menu: 'Menu',
+    nachOben: 'Retour en haut',
     language: 'Langue',
   },
   home: {
@@ -885,6 +888,7 @@ const fr: Dictionary = {
     versandZahlung: 'Livraison & paiement',
     followUs: 'Suivez-nous',
     contact: 'Contact',
+    umgesetztVon: 'Réalisé par DiD0m',
   },
   common: {
     loading: 'Chargement …',
@@ -907,6 +911,7 @@ const en: Dictionary = {
     custom: 'Made to measure',
     search: 'Search',
     menu: 'Menu',
+    nachOben: 'Back to top',
     language: 'Language',
   },
   home: {
@@ -1321,6 +1326,7 @@ const en: Dictionary = {
     versandZahlung: 'Shipping & payment',
     followUs: 'Follow us',
     contact: 'Contact',
+    umgesetztVon: 'Built by DiD0m',
   },
   common: {
     loading: 'Loading …',

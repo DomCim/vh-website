@@ -4,6 +4,7 @@ import React from 'react'
 
 import { Footer } from '../../../components/layout/Footer'
 import { Header } from '../../../components/layout/Header'
+import { NachOben } from '../../../components/layout/NachOben'
 import { SmoothScroll } from '../../../components/motion/SmoothScroll'
 import { CartProvider } from '../../../components/shop/CartProvider'
 import { getMainCategories, getSiteSettings, payloadClient } from '../../../lib/data'
@@ -182,6 +183,7 @@ export default async function LocaleLayout({ children, params }: Args) {
           />
           <main className="min-h-screen pt-20">{children}</main>
           <Footer locale={locale} settings={settings} dict={dict} />
+          <NachOben beschriftung={dict.nav.nachOben} />
         </CartProvider>
       </body>
     </html>

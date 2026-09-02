@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 91,
+    datum: null,
+    titel: 'Im Fuß steht, wer die Seite gebaut hat — und der Weg nach oben fährt mit',
+    punkte: [
+      {
+        text: '**Ganz unten auf der Website steht jetzt „Umgesetzt von DiD0m" mit Zeichen und Verweis** — links, wem die Seite gehört, rechts, wer sie gebaut hat. In allen drei Sprachen. Der Verweis öffnet did0m.dev in einem neuen Fenster; an den Inhalten der Seite ändert sich nichts.',
+      },
+      {
+        text: '**Der Pfeil „nach oben" ist aus dem Fuß ausgezogen und schwebt jetzt unten rechts mit.** Dort, wo er vorher stand, half er genau dann, wenn man ohnehin schon am Seitenende war. Jetzt erscheint er, sobald zwei Bildschirmhöhen gescrollt sind, und verschwindet wieder, sobald der Fuß in Sicht kommt — auf kurzen Seiten taucht er gar nicht erst auf. Am Handy wird der Streifen unten dadurch kaum höher als vorher, obwohl das Zeichen dazugekommen ist.',
+      },
+    ],
+  },
+  {
     nummer: 90,
     datum: null,
     titel: 'Inventar: einen Posten duplizieren',
