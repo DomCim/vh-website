@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 90,
+    datum: null,
+    titel: 'Inventar: einen Posten duplizieren',
+    punkte: [
+      {
+        text: '**An jedem Posten gibt es jetzt „Duplizieren".** Der Knopf öffnet das Anlege-Formular nach dem Muster dieses Postens: Bezeichnung, Art, Einheit, Lagerort, Lieferant, Mindestbestand und Nachbestellmenge sind vorausgefüllt, der Bestand steht auf 0. Das ist derselbe Weg wie „Speichern & nächster Posten", nur dass er bei einem vorhandenen Posten anfängt — wer die „M8 × 50" ein halbes Jahr nach der „M8 × 40" anlegt, muss nicht alles noch einmal tippen.',
+      },
+      {
+        text: '**Gespeichert wird erst, wenn die Bezeichnung sich unterscheidet.** Die Bezeichnung steht markiert im Feld, und solange sie unverändert ist, steht darunter „Gibt es schon". Ein zweiter Posten mit demselben Namen kann so nicht entstehen. Am Handy liegt der Knopf hinter „⋯" neben Speichern.',
+      },
+    ],
+  },
+  {
     nummer: 89,
     datum: null,
     titel: 'Inventar: ein Suchfeld über der Liste',

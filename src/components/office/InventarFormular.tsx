@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBestand } from '../../lib/buero/bestand'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
@@ -41,8 +41,48 @@ const ARTEN = [
 
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
+/**
+ * Ein Posten aus dem Bestand im Gerät, wie das Formular ihn braucht.
+ *
+ * Steht hier und nicht in der Detailseite, weil die Zuordnung inzwischen zwei
+ * Stellen braucht: die Seite, die den Posten bearbeitet, und die, die ihn als
+ * Vorlage für einen neuen nimmt. Zweimal abgeschrieben, wäre beim nächsten
+ * Feld eine der beiden vergessen worden.
+ */
+export function werteAusPosten(i: { id: number | string; [feld: string]: unknown }): InventarWerte {
+  return {
+    id: i.id,
+    name: i.name as string,
+    type: i.type as string,
+    quantity: i.quantity as number,
+    unit: i.unit as string,
+    minQuantity: i.minQuantity as number,
+    orderQuantity: i.orderQuantity as number,
+    supplierRef: i.supplierRef as string,
+    unitValue: i.unitValue as number,
+    location: i.location as string,
+    purchaseDate: i.purchaseDate as string,
+    purchaseValue: i.purchaseValue as number,
+    // Eine vorläufige Kennung bleibt stehen: Der Posten kann ohne Netz
+    // angelegt worden sein und auf einen Lieferanten zeigen, den der
+    // Server noch nicht kennt.
+    supplier:
+      typeof i.supplier === 'string' && i.supplier.startsWith('neu:')
+        ? i.supplier
+        : Number(i.supplier) || undefined,
+    notes: i.notes as string,
+  }
+}
+
 /** Ein Posten im Lager — Bestand, Wert und wo er liegt. */
-export function InventarFormular({ werte }: { werte: InventarWerte }) {
+export function InventarFormular({
+  werte,
+  vorlage = false,
+}: {
+  werte: InventarWerte
+  /** Die Werte stammen von einem vorhandenen Posten — die Bezeichnung steht zum Ändern markiert */
+  vorlage?: boolean
+}) {
   const router = useRouter()
   const [anfang] = useState<InventarWerte>(() => ({
     type: 'material',
@@ -63,6 +103,12 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
 
   /** Ein neuer Posten ist es, solange das Formular nicht auf einem vorhandenen sitzt */
   const neu = !werte.id
+
+  // Wer dupliziert, will als Erstes die Bezeichnung ändern — und solange sie
+  // unverändert dasteht, steht darunter ohnehin „Gibt es schon".
+  useEffect(() => {
+    if (vorlage) nameFeld.current?.select()
+  }, [vorlage])
 
   /*
    * Gibt es diese Bezeichnung schon? Geprüft bei jedem Tastendruck gegen den
@@ -285,14 +331,27 @@ export function InventarFormular({ werte }: { werte: InventarWerte }) {
             </button>
           </>
         ) : (
-          <button
-            type="button"
-            className="buero-knopf"
-            disabled={laeuft}
-            onClick={() => void speichern()}
-          >
-            Speichern
-          </button>
+          <>
+            <button
+              type="button"
+              className="buero-knopf"
+              disabled={laeuft}
+              onClick={() => void speichern()}
+            >
+              Speichern
+            </button>
+            {/*
+             * Duplizieren öffnet das Anlege-Formular mit diesem Posten als
+             * Vorlage — nach derselben Regel wie „& nächster": Bezeichnung,
+             * Art, Einheit, Regal, Händler, Mindestbestand und Nachbestellmenge
+             * kommen mit, Bestand steht auf 0. Speichern geht erst, wenn die
+             * Bezeichnung sich unterscheidet; das erledigt die Doppelgänger-
+             * Prüfung, nicht dieser Knopf.
+             */}
+            <Link href={`/office/inventar/neu?vorlage=${werte.id}`} className="buero-knopf leise">
+              Duplizieren
+            </Link>
+          </>
         )}
       </Fussleiste>
     </div>

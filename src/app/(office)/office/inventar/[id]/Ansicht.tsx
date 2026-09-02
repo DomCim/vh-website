@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import React, { useMemo } from 'react'
 
 import { Bestandskorrektur, type Bewegung } from '../../../../../components/office/Bestandskorrektur'
-import { InventarFormular } from '../../../../../components/office/InventarFormular'
+import { InventarFormular, werteAusPosten } from '../../../../../components/office/InventarFormular'
 import { useAbgleich, useBestand, useDatensatz } from '../../../../../lib/buero/bestand'
 
 /**
@@ -75,30 +75,7 @@ export function PostenAnsicht() {
         </p>
       )}
 
-      <InventarFormular
-        werte={{
-          id: i.id,
-          name: i.name,
-          type: i.type as string,
-          quantity: i.quantity as number,
-          unit: i.unit as string,
-          minQuantity: i.minQuantity as number,
-          orderQuantity: i.orderQuantity as number,
-          supplierRef: i.supplierRef as string,
-          unitValue: i.unitValue as number,
-          location: i.location as string,
-          purchaseDate: i.purchaseDate as string,
-          purchaseValue: i.purchaseValue as number,
-          // Eine vorläufige Kennung bleibt stehen: Der Posten kann ohne Netz
-          // angelegt worden sein und auf einen Lieferanten zeigen, den der
-          // Server noch nicht kennt.
-          supplier:
-            typeof i.supplier === 'string' && i.supplier.startsWith('neu:')
-              ? i.supplier
-              : Number(i.supplier) || undefined,
-          notes: i.notes as string,
-        }}
-      />
+      <InventarFormular werte={werteAusPosten(i)} />
 
       <Bestandskorrektur
         postenId={i.id}
