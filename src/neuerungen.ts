@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 89,
+    datum: null,
+    titel: 'Inventar: ein Suchfeld über der Liste',
+    punkte: [
+      {
+        text: '**Über der Inventarliste steht jetzt ein Suchfeld.** Gefunden wird alles, was am Posten steht: Bezeichnung, Lagerort, Art, Einheit, Lieferant, Artikelnummer beim Lieferanten und Notiz. Mehrere Wörter grenzen ein — „M8 Regal C“ findet die Schraube M8 im Regal C, egal in welcher Reihenfolge getippt wird. Wer „knapp“ tippt, sieht nur, was unter dem Mindestbestand liegt.',
+      },
+      {
+        text: '**Die Suche bleibt beim Zurückgehen stehen.** Wer einen gefundenen Posten öffnet und zurückgeht, steht wieder vor seiner Suche und nicht vor der ganzen Liste. Sie steht in der Adresse, ein weitergegebener Link zeigt also dieselbe Auswahl. Das alles geht ohne Netz, weil die Liste ohnehin aus dem Gerät kommt.',
+      },
+    ],
+  },
+  {
     nummer: 88,
     datum: null,
     titel: 'Inventar: „Speichern & nächster Posten" lässt mehr stehen — und kennt keine Doppelgänger',
