@@ -26,6 +26,35 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 89,
+    datum: null,
+    titel: 'Inventar: ein Suchfeld über der Liste',
+    punkte: [
+      {
+        text: '**Über der Inventarliste steht jetzt ein Suchfeld.** Gefunden wird alles, was am Posten steht: Bezeichnung, Lagerort, Art, Einheit, Lieferant, Artikelnummer beim Lieferanten und Notiz. Mehrere Wörter grenzen ein — „M8 Regal C“ findet die Schraube M8 im Regal C, egal in welcher Reihenfolge getippt wird. Wer „knapp“ tippt, sieht nur, was unter dem Mindestbestand liegt.',
+      },
+      {
+        text: '**Die Suche bleibt beim Zurückgehen stehen.** Wer einen gefundenen Posten öffnet und zurückgeht, steht wieder vor seiner Suche und nicht vor der ganzen Liste. Sie steht in der Adresse, ein weitergegebener Link zeigt also dieselbe Auswahl. Das alles geht ohne Netz, weil die Liste ohnehin aus dem Gerät kommt.',
+      },
+    ],
+  },
+  {
+    nummer: 88,
+    datum: null,
+    titel: 'Inventar: „Speichern & nächster Posten" lässt mehr stehen — und kennt keine Doppelgänger',
+    punkte: [
+      {
+        text: '**Wer im Inventar „Speichern & nächster Posten" drückt, bekommt jetzt auch Bezeichnung, Mindestbestand und Nachbestellmenge vorausgefüllt** — so wie bisher schon Art, Einheit, Lagerort und Lieferant. Die Bezeichnung steht dabei markiert im Feld: Wer lostippt, ersetzt sie; wer ans Ende klickt, ändert nur die Größe. So sehen zwanzig Schraubensorten am Ende gleich aus, ohne dass zwanzigmal derselbe Anfang getippt wird. Neu getippt werden nur noch Bestand und Artikelnummer.',
+      },
+      {
+        text: '**Einen Posten, den es schon gibt, legt das Formular nicht ein zweites Mal an.** Schon beim Tippen steht unter der Bezeichnung „Gibt es schon" mit einem Sprung zum vorhandenen Posten, und der Speichern-Knopf tut dann nichts. Groß und klein und Leerzeichen zählen dabei nicht — „schraube m8" und „Schraube M8" sind derselbe Posten. Das gilt auch ohne Netz und auch für Posten, die in derselben Runde gerade erst angelegt wurden. Der Server prüft zur Sicherheit noch einmal, falls ein zweites Gerät seit dem letzten Abgleich etwas angelegt hat.',
+      },
+      {
+        text: '**Der Bestand steht beim nächsten Posten auf 0 und lässt sich so auch speichern.** Ein Posten ohne Bestand ist erlaubt; er taucht dann unter „Nachbestellen" auf, sobald ein Mindestbestand gesetzt ist.',
+      },
+    ],
+  },
+  {
     nummer: 87,
     datum: null,
     titel: 'Termine auf die Website stellen — mit einer Zeile in der Notiz',
