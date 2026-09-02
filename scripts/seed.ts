@@ -707,25 +707,14 @@ async function run() {
     },
   })
 
-  // ── Rechtliches (Platzhalter — bitte durch echte Texte ersetzen!) ─────────
-  await payload.updateGlobal({
-    slug: 'legal',
-    locale: 'de',
-    data: {
-      impressum: richText(
-        'Platzhalter: Bitte hier das vollständige Impressum einfügen (Firmenname, Anschrift, Vertretungsberechtigte, Registernummer, USt-ID, Kontakt). Die Inhalte der bisherigen Website können im Admin-Panel unter „Rechtliches" eingepflegt werden.',
-      ),
-      datenschutz: richText(
-        'Platzhalter: Bitte hier die Datenschutzerklärung einfügen. Hinweis: Durch Shop (PayPal) und Kontaktformular verarbeitet die Website personenbezogene Daten — die Erklärung sollte PayPal als Zahlungsdienstleister und den E-Mail-Versand erwähnen.',
-      ),
-      agb: richText(
-        'Platzhalter: Bitte hier die Allgemeinen Geschäftsbedingungen für den Online-Shop einfügen (Vertragsschluss, Preise, Lieferung, Widerrufsrecht, Gewährleistung).',
-      ),
-    },
-  })
-
-  // Widerruf, Muster-Widerrufsformular sowie Versand & Zahlung als Entwurf in
-  // allen drei Sprachen — leere Rechtsseiten sind schlimmer als Entwürfe.
+  /*
+   * Rechtliches: Impressum, Datenschutz, AGB, Widerruf, Muster-Widerrufs-
+   * formular sowie Versand & Zahlung — in allen drei Sprachen, aus
+   * `lib/rechtstexte.ts`. Hier standen früher drei Platzhalter-Absätze
+   * („Bitte hier das vollständige Impressum einfügen"). Die waren schlimmer
+   * als nichts: Sie füllten die Felder, und weil das Einspielen nur schreibt,
+   * wo noch nichts steht, kam der richtige Text danach nie mehr an.
+   */
   await rechtstexteEinspielen(payload)
 
   await seedExtras(payload)
@@ -741,7 +730,7 @@ async function run() {
 
   console.log('✓ Seed abgeschlossen.')
   console.log(`  Admin-Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`)
-  console.log('  WICHTIG: Passwort ändern, Demo-Preise prüfen, Rechtstexte einfügen!')
+  console.log('  WICHTIG: Passwort ändern, Demo-Preise prüfen, Firmenangaben vervollständigen!')
 }
 
 /**

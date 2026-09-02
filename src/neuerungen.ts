@@ -26,6 +26,48 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 92,
+    datum: null,
+    titel: 'Die Rechtstexte stehen vollständig und in drei Sprachen bereit',
+    punkte: [
+      {
+        text: '**Der Hinweis „Dieser Text ist ein Entwurf und wurde noch nicht anwaltlich geprüft" steht nicht mehr unter den Rechtstexten.** Gemeint war er für uns, gelesen hat ihn die Kundschaft — und eine Widerrufsbelehrung, die sich selbst als Entwurf bezeichnet, belehrt nicht, sondern relativiert.',
+      },
+      {
+        text: '**Impressum, Datenschutzerklärung und AGB werden jetzt mitgeliefert wie Widerruf und Versand** — in Deutsch, Französisch und Englisch. Bisher standen dort drei Platzhalter-Absätze („Bitte hier das vollständige Impressum einfügen"), und weil das Einspielen nur schreibt, wo noch nichts steht, kam der richtige Text danach nie mehr nach. Firmierung, Anschrift, RCS, SIRET, TVA-Nummer und die Schlichtungsstelle setzt der Text aus den Firmenangaben ein; was dort leer ist, steht sichtbar als `[…]` im Text, statt still zu fehlen.',
+      },
+      {
+        text: '**Zwei Sachfehler sind dabei mitgegangen.** In den AGB stand „Wir sind zur Teilnahme an einem Schlichtungsverfahren weder verpflichtet noch bereit" — das ist die deutsche Formel, und für einen Betrieb in Frankreich das Gegenteil des Erlaubten: Dort muss eine Verbraucherschlichtungsstelle benannt und der Zugang kostenlos eröffnet sein. Die Stelle steht jetzt unter den Firmenangaben und erscheint in AGB und Impressum. Außerdem stand in der französischen und englischen Fassung „67630 Lauterbourg, Frankreich" — das Land kommt jetzt in der Sprache des Textes.',
+      },
+    ],
+  },
+  {
+    nummer: 91,
+    datum: null,
+    titel: 'Im Fuß steht, wer die Seite gebaut hat — und der Weg nach oben fährt mit',
+    punkte: [
+      {
+        text: '**Ganz unten auf der Website steht jetzt „Umgesetzt von DiD0m" mit Zeichen und Verweis** — links, wem die Seite gehört, rechts, wer sie gebaut hat. In allen drei Sprachen. Der Verweis öffnet did0m.dev in einem neuen Fenster; an den Inhalten der Seite ändert sich nichts.',
+      },
+      {
+        text: '**Der Pfeil „nach oben" ist aus dem Fuß ausgezogen und schwebt jetzt unten rechts mit.** Dort, wo er vorher stand, half er genau dann, wenn man ohnehin schon am Seitenende war. Jetzt erscheint er, sobald zwei Bildschirmhöhen gescrollt sind, und verschwindet wieder, sobald der Fuß in Sicht kommt — auf kurzen Seiten taucht er gar nicht erst auf. Am Handy wird der Streifen unten dadurch kaum höher als vorher, obwohl das Zeichen dazugekommen ist.',
+      },
+    ],
+  },
+  {
+    nummer: 90,
+    datum: null,
+    titel: 'Inventar: einen Posten duplizieren',
+    punkte: [
+      {
+        text: '**An jedem Posten gibt es jetzt „Duplizieren".** Der Knopf öffnet das Anlege-Formular nach dem Muster dieses Postens: Bezeichnung, Art, Einheit, Lagerort, Lieferant, Mindestbestand und Nachbestellmenge sind vorausgefüllt, der Bestand steht auf 0. Das ist derselbe Weg wie „Speichern & nächster Posten", nur dass er bei einem vorhandenen Posten anfängt — wer die „M8 × 50" ein halbes Jahr nach der „M8 × 40" anlegt, muss nicht alles noch einmal tippen.',
+      },
+      {
+        text: '**Gespeichert wird erst, wenn die Bezeichnung sich unterscheidet.** Die Bezeichnung steht markiert im Feld, und solange sie unverändert ist, steht darunter „Gibt es schon". Ein zweiter Posten mit demselben Namen kann so nicht entstehen. Am Handy liegt der Knopf hinter „⋯" neben Speichern.',
+      },
+    ],
+  },
+  {
     nummer: 89,
     datum: null,
     titel: 'Inventar: ein Suchfeld über der Liste',

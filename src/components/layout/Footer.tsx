@@ -3,6 +3,7 @@ import React from 'react'
 
 import type { Locale } from '../../lib/i18n'
 import { NewsletterAnmeldung, type NewsletterDict } from '../NewsletterAnmeldung'
+import { DiD0mZeichen } from './DiD0mZeichen'
 import { Logo } from './Logo'
 
 type Settings = {
@@ -32,6 +33,7 @@ type Dict = {
     versandZahlung: string
     followUs: string
     contact: string
+    umgesetztVon: string
   }
 }
 
@@ -162,12 +164,30 @@ export function Footer({
       </div>
 
       <div className="border-dark-soft border-t">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-white/50 sm:flex-row sm:px-6">
+        {/*
+          Zwei Dinge stehen hier, nicht drei: links, wem die Seite gehört,
+          rechts, wer sie gebaut hat. Der Weg nach oben stand bis 09/2026 als
+          „↑" an dieser Stelle und ist in den schwebenden Knopf umgezogen
+          (siehe `NachOben.tsx`) — hier unten half er genau dann, wenn man
+          ohnehin schon am Ende war, und kostete am Handy eine ganze Zeile.
+        */}
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-white/50 sm:flex-row sm:px-6">
           <p>
             © {year} {settings?.siteName || 'Vincent Hellmann'}
           </p>
-          <a href="#top" className="hover:text-white">
-            ↑
+          {/*
+            Das Zeichen bei 36 px und nicht kleiner: Es ist eine feine
+            Strichzeichnung, und unter 28 fällt die Binnenzeichnung zu — dann
+            steht dort ein Fleck statt eines Logos.
+          */}
+          <a
+            href="https://did0m.dev"
+            target="_blank"
+            rel="noopener"
+            className="flex items-center gap-2 transition-colors hover:text-white"
+          >
+            <DiD0mZeichen className="h-9 w-9" />
+            <span>{dict.footer.umgesetztVon}</span>
           </a>
         </div>
       </div>
