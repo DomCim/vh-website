@@ -1,6 +1,7 @@
 import React from 'react'
 
 import type { OeffentlicherTermin } from '../lib/kalender/oeffentlich'
+import { WERKSTATT_ZONE } from '../lib/kalender/zone'
 import type { Locale } from '../lib/i18n'
 import { t } from '../lib/i18n'
 
@@ -27,7 +28,8 @@ import { t } from '../lib/i18n'
  * und aus demselben Grund: Die Werkstatt steht in Frankreich, und was auf der
  * Website steht, ist eine Ansage an Besucher vor Ort.
  */
-const ZONE = 'Europe/Paris'
+// Eine Zone für Anzeige und strukturierte Daten — siehe `lib/kalender/zone.ts`
+const ZONE = WERKSTATT_ZONE
 
 /** Der Tag, groß herausgestellt — daran findet man sich in einer Liste zurecht. */
 function Tagesblock({ termin, sprache }: { termin: OeffentlicherTermin; sprache: Locale }) {
@@ -93,7 +95,14 @@ export function TerminKarte({
 
   return (
     <article
-      className={`border-line flex gap-4 border bg-paper p-5 ${
+      /*
+       * Der Anker gehört zur Auszeichnung für Suchmaschinen: Dort trägt jeder
+       * Termin seine eigene Adresse (`…/termine#termin-7`), und die muss auch
+       * irgendwo ankommen. `scroll-mt-24` hält ihn unter der Kopfleiste, die
+       * fest oben steht — sonst landet die Karte darunter.
+       */
+      id={`termin-${termin.id}`}
+      className={`border-line flex scroll-mt-24 gap-4 border bg-paper p-5 ${
         // Ein abgesagter Termin bleibt stehen, tritt aber zurück — wer schon
         // hinfahren wollte, sucht genau ihn; wer plant, soll ihn nicht zählen
         termin.abgesagt ? 'opacity-60' : ''

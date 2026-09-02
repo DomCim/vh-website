@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 93,
+    datum: null,
+    titel: 'Google zeigt die Termine als Termine an',
+    punkte: [
+      {
+        text: '**Die Terminseite sagt Suchmaschinen jetzt, dass dort Termine stehen** — mit Datum, Uhrzeit und Ort, je Termin einzeln. Bisher fand Google dort eine Seite namens „Termine"; jetzt kann im Suchergebnis stehen, dass Vincent am 18. Oktober in Ettlingen ist. Für einen Markt, an dem jemand vorbeikommen soll, ist das der ganze Unterschied. Zu tun ist dafür nichts: Was im Kalender mit `#öffentlich` steht, geht von selbst mit.',
+      },
+      {
+        text: '**Ein Termin ohne Ortsangabe geht nicht mit.** Der Ort ist bei Google eine Pflichtangabe, und ein geratener wäre schlimmer als keiner — wer umsonst hinfährt, kommt nicht wieder. Der Termin steht dann weiterhin auf der Website, nur eben nicht im Suchergebnis. Wer ihn dort haben will, schreibt `#ort:` in die Notiz oder füllt das Ortsfeld des Termins.',
+      },
+      {
+        text: '**Abgesagte Termine gehen als abgesagt mit**, nicht gar nicht: Google zeigt sie dann durchgestrichen, so wie die Website es auch tut. Verschwänden sie, führte Google sie weiter als stattfindend.',
+      },
+    ],
+  },
+  {
     nummer: 92,
     datum: null,
     titel: 'Die Rechtstexte stehen vollständig und in drei Sprachen bereit',
