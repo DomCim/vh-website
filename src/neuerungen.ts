@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 92,
+    datum: null,
+    titel: 'Die Rechtstexte stehen vollständig und in drei Sprachen bereit',
+    punkte: [
+      {
+        text: '**Der Hinweis „Dieser Text ist ein Entwurf und wurde noch nicht anwaltlich geprüft" steht nicht mehr unter den Rechtstexten.** Gemeint war er für uns, gelesen hat ihn die Kundschaft — und eine Widerrufsbelehrung, die sich selbst als Entwurf bezeichnet, belehrt nicht, sondern relativiert.',
+      },
+      {
+        text: '**Impressum, Datenschutzerklärung und AGB werden jetzt mitgeliefert wie Widerruf und Versand** — in Deutsch, Französisch und Englisch. Bisher standen dort drei Platzhalter-Absätze („Bitte hier das vollständige Impressum einfügen"), und weil das Einspielen nur schreibt, wo noch nichts steht, kam der richtige Text danach nie mehr nach. Firmierung, Anschrift, RCS, SIRET, TVA-Nummer und die Schlichtungsstelle setzt der Text aus den Firmenangaben ein; was dort leer ist, steht sichtbar als `[…]` im Text, statt still zu fehlen.',
+      },
+      {
+        text: '**Zwei Sachfehler sind dabei mitgegangen.** In den AGB stand „Wir sind zur Teilnahme an einem Schlichtungsverfahren weder verpflichtet noch bereit" — das ist die deutsche Formel, und für einen Betrieb in Frankreich das Gegenteil des Erlaubten: Dort muss eine Verbraucherschlichtungsstelle benannt und der Zugang kostenlos eröffnet sein. Die Stelle steht jetzt unter den Firmenangaben und erscheint in AGB und Impressum. Außerdem stand in der französischen und englischen Fassung „67630 Lauterbourg, Frankreich" — das Land kommt jetzt in der Sprache des Textes.',
+      },
+    ],
+  },
+  {
     nummer: 91,
     datum: null,
     titel: 'Im Fuß steht, wer die Seite gebaut hat — und der Weg nach oben fährt mit',
