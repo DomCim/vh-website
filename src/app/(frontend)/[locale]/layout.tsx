@@ -10,7 +10,7 @@ import { CartProvider } from '../../../components/shop/CartProvider'
 import { getMainCategories, getSiteSettings, payloadClient } from '../../../lib/data'
 import { oeffentlicheTermine } from '../../../lib/kalender/oeffentlich'
 import { isLocale, t } from '../../../lib/i18n'
-import { alternatesFor, BASE_URL, jsonLd } from '../../../lib/seo'
+import { alternatesFor, BASE_URL, localBusinessJsonLd } from '../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,25 +113,8 @@ export default async function LocaleLayout({ children, params }: Args) {
 
   const dict = t(locale)
 
-  const orgJsonLd = jsonLd({
-    // LocalBusiness statt reiner Organization: eine Werkstatt mit Adresse,
-    // die Suchmaschinen regional zuordnen können
-    '@type': 'LocalBusiness',
-    name: settings?.siteName || 'Vincent Hellmann',
-    url: BASE_URL,
-    logo: `${BASE_URL}/logo.png`,
-    ...(settings?.contact?.phone && { telephone: settings.contact.phone }),
-    ...(settings?.contact?.email && { email: settings.contact.email }),
-    ...(settings?.contact?.address && {
-      address: { '@type': 'PostalAddress', streetAddress: settings.contact.address },
-    }),
-    ...(settings?.tagline && { description: settings.tagline }),
-    sameAs: [
-      settings?.social?.facebook,
-      settings?.social?.instagram,
-      settings?.social?.youtube,
-    ].filter(Boolean),
-  })
+  // Die Werkstatt als LocalBusiness — Marke, Betrieb dahinter und Anschrift
+  const orgJsonLd = localBusinessJsonLd(settings)
 
   return (
     <html lang={locale}>

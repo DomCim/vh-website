@@ -63,6 +63,28 @@ export function alsOrtszeit(zeitpunkt: Date, zone: string = WERKSTATT_ZONE): str
   return `${formatiert.replace(' ', 'T')}${versatz(zeitpunkt, zone)}`
 }
 
+/**
+ * Der Ort eines Termins als Anschrift.
+ *
+ * Er kommt als eine getippte Zeile — mal „Ettlingen", mal „Marktplatz 1,
+ * 76275 Ettlingen". Steht eine Postleitzahl darin, wird sie herausgelöst;
+ * steht keine da, ist die Zeile der Ortsname und nicht die Straße. Das ist
+ * der Unterschied, den Google für die örtliche Zuordnung braucht — und ein
+ * bloßes „Ettlingen" als `streetAddress` wäre schlicht falsch.
+ */
+function ortAlsAnschrift(ort: string): Record<string, string> {
+  const treffer = /^(.*?)[,\s]*\b(\d{4,5})\s+(.+)$/.exec(ort)
+  if (!treffer) return { '@type': 'PostalAddress', addressLocality: ort }
+
+  const [, strasse, plz, stadt] = treffer
+  return {
+    '@type': 'PostalAddress',
+    ...(strasse.trim() ? { streetAddress: strasse.trim() } : {}),
+    postalCode: plz,
+    addressLocality: stadt.trim(),
+  }
+}
+
 /** Ein einzelner Termin als schema.org-Event — oder `null`, wenn der Ort fehlt */
 export function terminEvent(
   termin: OeffentlicherTermin,
@@ -103,7 +125,13 @@ export function terminEvent(
       ? 'https://schema.org/EventCancelled'
       : 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    location: { '@type': 'Place', name: ort, address: ort },
+    location: { '@type': 'Place', name: ort, address: ortAlsAnschrift(ort) },
+    /*
+     * Wer dort ausstellt, ist die Werkstatt selbst — bei einem Markt oder
+     * einer Ausstellung führt sie ihre eigenen Stücke vor. Google führt das
+     * Feld als empfohlen; hier ist es schlicht wahr.
+     */
+    performer: { '@type': 'Organization', name: betrieb.name },
     ...(termin.beschreibungText ? { description: termin.beschreibungText } : {}),
     ...(termin.bild ? { image: absoluteUrl(termin.bild) } : {}),
     /*

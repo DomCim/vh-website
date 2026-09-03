@@ -261,6 +261,19 @@ export default async function ProductPage({ params }: { params: PageParams }) {
               : "https://schema.org/OutOfStock",
           url: `${BASE_URL}/${locale}${artikelPfad}`,
           /*
+           * Wer verkauft, gehört ans Angebot — und das ist der Betrieb und
+           * nicht die Marke: Der Kaufvertrag kommt mit der Next-Concept SAS
+           * zustande, genau so steht es in den AGB. Die Marke „Vincent
+           * Hellmann" steht daneben in `brand`, wo sie hingehört.
+           */
+          seller: {
+            "@type": "Organization",
+            name:
+              settings?.company?.legalName || settings?.siteName || "Vincent Hellmann",
+            ...(settings?.company?.vatId ? { vatID: settings.company.vatId } : {}),
+            url: BASE_URL,
+          },
+          /*
            * Versandkosten und Rückgabefrist gehören ans Angebot, nicht auf
            * eine Unterseite: Google zeigt beides unter dem Treffer an, und
            * ohne die Angaben bleibt dort die Zeile leer, in der bei der
