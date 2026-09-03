@@ -5,9 +5,10 @@ import type { Metadata } from 'next'
 import { Reveal, RevealItem, RevealStagger } from '../../../../components/motion/Reveal'
 import { SplitTextReveal } from '../../../../components/motion/SplitTextReveal'
 import { TerminKarte } from '../../../../components/Termine'
-import { payloadClient } from '../../../../lib/data'
+import { getSiteSettings, payloadClient } from '../../../../lib/data'
 import { isLocale, t } from '../../../../lib/i18n'
 import { oeffentlicheTermine } from '../../../../lib/kalender/oeffentlich'
+import { termineJsonLd } from '../../../../lib/kalender/terminJsonLd'
 import { alternatesFor } from '../../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -50,7 +51,10 @@ export default async function TerminePage({
   const dict = t(locale)
 
   const payload = await payloadClient()
-  const termine = await oeffentlicheTermine(payload, locale)
+  const [termine, settings] = await Promise.all([
+    oeffentlicheTermine(payload, locale),
+    getSiteSettings(locale),
+  ])
 
   /*
    * Ohne kommende Termine gibt es diese Seite nicht.
@@ -66,8 +70,25 @@ export default async function TerminePage({
    */
   if (termine.length === 0) notFound()
 
+  /*
+   * Die Termine noch einmal als `Event`-Daten für Suchmaschinen.
+   *
+   * Damit steht im Suchergebnis nicht bloß eine Seite namens „Termine",
+   * sondern der einzelne Termin mit Datum und Ort — siehe
+   * `lib/kalender/terminJsonLd.ts`. Termine ohne Ortsangabe bleiben außen
+   * vor; `location` ist Pflicht, und ein geratener Ort wäre schlimmer als
+   * keiner.
+   */
+  const eventDaten = termineJsonLd(termine, locale, {
+    name: settings?.siteName || 'Vincent Hellmann',
+  })
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      {eventDaten && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: eventDaten }} />
+      )}
+
       <SplitTextReveal
         as="h1"
         text={dict.events.title}

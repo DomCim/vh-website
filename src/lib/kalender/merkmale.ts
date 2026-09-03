@@ -246,6 +246,21 @@ export function inSprache(wert: Mehrsprachig, sprache: Locale): string | undefin
  * `<script>` in der Notiz ist dann schon Text, bevor die Sternchen an die
  * Reihe kommen.
  */
+/**
+ * Derselbe Text ohne jede Auszeichnung — für Stellen, die kein HTML vertragen.
+ *
+ * Die strukturierten Daten für Google sind so eine Stelle: Dort gehört die
+ * Beschreibung als Fließtext hinein, und ein `<strong>` darin wäre ein Fehler.
+ * Genommen wird deshalb der Rohtext, aus dem nur die Sternchen fallen — nicht
+ * das fertige HTML, das man erst wieder auseinandernehmen müsste.
+ */
+export function alsText(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .trim()
+}
+
 export function alsHtml(text: string): string {
   const sicher = text
     .replace(/&/g, '&amp;')

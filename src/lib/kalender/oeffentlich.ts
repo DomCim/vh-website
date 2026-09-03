@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 import type { Locale } from '../i18n'
-import { alsHtml, inSprache, merkmaleLesen } from './merkmale'
+import { alsHtml, alsText, inSprache, merkmaleLesen } from './merkmale'
 
 /**
  * Die Termine, die nach außen gehören.
@@ -28,6 +28,8 @@ export type OeffentlicherTermin = {
   titel: string
   /** Schon ausgezeichnet — `**fett**` und `*kursiv*` sind HTML geworden. */
   beschreibungHtml: string | null
+  /** Derselbe Text ohne Auszeichnung — für die strukturierten Daten */
+  beschreibungText: string | null
   ort: string | null
   link: string | null
   bild: string | null
@@ -93,6 +95,7 @@ export async function oeffentlicheTermine(
        */
       titel: inSprache(merkmale.titel, sprache) ?? String(doc.title ?? 'Termin'),
       beschreibungHtml: beschreibung ? alsHtml(beschreibung) : null,
+      beschreibungText: beschreibung ? alsText(beschreibung) : null,
       ort: inSprache(merkmale.ort, sprache) ?? (doc.ort ? String(doc.ort) : null),
       /*
        * Nur http und https. Ein `javascript:`-Verweis in einem Feld, das über
