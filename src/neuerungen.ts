@@ -28,8 +28,11 @@ export const NEUERUNGEN: Neuerung[] = [
   {
     nummer: 94,
     datum: null,
-    titel: 'Google kennt jetzt Postleitzahl, Ort und Land der Werkstatt',
+    titel: 'Suchmaschinen kennen jetzt den Betrieb hinter der Marke',
     punkte: [
+      {
+        text: '**In den Daten für Suchmaschinen kam die Next-Concept SAS nicht vor.** Dort stand eine Werkstatt mit Anschrift, Telefon und dem Namen „Vincent Hellmann" — und nirgends der Betrieb dahinter. Rechtlich war das kein Mangel, dafür ist das Impressum da; für eine Suchmaschine war es aber ein Name an einer Anschrift ohne Verbindung zu dem Unternehmen, das dort eingetragen ist. Jetzt steht beides da: die Marke als Name, die SAS als Firmierung, dazu TVA-Nummer und SIRET. Und am Angebot jedes Artikels steht, wer verkauft — die SAS, genau wie in den AGB.',
+      },
       {
         text: '**Die Anschrift stand in den Daten für Suchmaschinen als ein einziger Klumpen**: „24, avenue Clemenceau 67630 Lauterbourg Frankreich" in einem Feld. Googles Prüfung meldete Postleitzahl, Ort und Land als fehlend — und das sind genau die Angaben, an denen die örtliche Suche einen Betrieb einem Ort zuordnet. Jetzt gehen sie einzeln hinaus, das Land als Kürzel. Zu tun ist dafür nichts; die Anschrift bleibt in den Einstellungen, wie sie ist.',
       },

@@ -88,6 +88,67 @@ const LAENDERKUERZEL: Record<string, string> = {
   belgium: 'BE',
 }
 
+/** Die Angaben, aus denen die Unternehmensdaten entstehen */
+export type BetriebsAngaben = {
+  siteName?: string | null
+  tagline?: string | null
+  contact?: { phone?: string | null; email?: string | null; address?: string | null } | null
+  company?: { legalName?: string | null; vatId?: string | null; siret?: string | null } | null
+  social?: { facebook?: string | null; instagram?: string | null; youtube?: string | null } | null
+} | null
+
+/**
+ * Der Betrieb als `LocalBusiness` — was Suchmaschinen über die Werkstatt
+ * erfahren.
+ *
+ * **Zwei Namen, und beide gehören hin.** `name` ist die Marke, „Vincent
+ * Hellmann": Danach wird gesucht, unter dem Namen steht die Werkstatt auf
+ * jedem Stück, und er gehört ins Suchergebnis. `legalName` ist der Betrieb
+ * dahinter — Next-Concept SAS, so wie er im RCS steht und auf jeder Rechnung.
+ *
+ * Bis 09/2026 stand hier nur die Marke. Rechtlich war das kein Mangel, dafür
+ * ist das Impressum da. Für eine Suchmaschine war es aber ein Betrieb ohne
+ * Träger: eine Anschrift, eine Telefonnummer, ein Name — und keine Verbindung
+ * zu dem eingetragenen Unternehmen an derselben Anschrift. Umsatzsteuer-
+ * Nummer und SIRET stehen aus demselben Grund dabei: Sie sind der eindeutige
+ * Schlüssel auf den Betrieb und ohnehin öffentlich.
+ *
+ * Steht hier und nicht im Grundgerüst, damit es sich prüfen lässt. Was
+ * unsichtbar im Kopf der Seite steht, fällt beim Ansehen nie auf.
+ */
+export function localBusinessJsonLd(einstellungen: BetriebsAngaben): string {
+  return jsonLd({
+    // LocalBusiness statt reiner Organization: eine Werkstatt mit Anschrift,
+    // die Suchmaschinen regional zuordnen können
+    '@type': 'LocalBusiness',
+    name: einstellungen?.siteName || 'Vincent Hellmann',
+    ...(einstellungen?.company?.legalName && { legalName: einstellungen.company.legalName }),
+    ...(einstellungen?.company?.vatId && { vatID: einstellungen.company.vatId }),
+    ...(einstellungen?.company?.siret && {
+      identifier: {
+        '@type': 'PropertyValue',
+        propertyID: 'SIRET',
+        value: einstellungen.company.siret,
+      },
+    }),
+    url: BASE_URL,
+    logo: `${BASE_URL}/logo.png`,
+    // Das Logo doppelt als Bild: Google verlangt `logo` und nimmt `image`
+    image: `${BASE_URL}/logo.png`,
+    ...(einstellungen?.contact?.phone && { telephone: einstellungen.contact.phone }),
+    ...(einstellungen?.contact?.email && { email: einstellungen.contact.email }),
+    ...(einstellungen?.contact?.address && {
+      address: postalAddress(einstellungen.contact.address),
+    }),
+    ...(einstellungen?.tagline && { description: einstellungen.tagline }),
+    sameAs: [
+      einstellungen?.social?.facebook,
+      einstellungen?.social?.instagram,
+      einstellungen?.social?.youtube,
+    ].filter(Boolean),
+  })
+}
+
 export function postalAddress(text?: string | null): Record<string, string> | undefined {
   const zeilen = (text ?? '')
     .split('\n')
