@@ -84,11 +84,39 @@ test('ohne Ort gibt es keinen Eintrag', () => {
   expect(termineJsonLd([{ ...grundgeruest, ort: '   ' }], 'de', BETRIEB)).toBeNull()
 })
 
-test('der Ort steht als Place mit Anschrift', () => {
+test('ein bloßer Ortsname ist der Ort und nicht die Straße', () => {
+  // „Ettlingen" als streetAddress wäre schlicht falsch — und Google ordnet
+  // den Termin dann keinem Ort zu.
   expect(einer({})?.location).toEqual({
     '@type': 'Place',
     name: 'Ettlingen',
-    address: 'Ettlingen',
+    address: { '@type': 'PostalAddress', addressLocality: 'Ettlingen' },
+  })
+})
+
+test('steht eine Postleitzahl dabei, wird sie herausgelöst', () => {
+  expect(einer({ ort: 'Marktplatz 1, 76275 Ettlingen' })?.location).toEqual({
+    '@type': 'Place',
+    name: 'Marktplatz 1, 76275 Ettlingen',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Marktplatz 1',
+      postalCode: '76275',
+      addressLocality: 'Ettlingen',
+    },
+  })
+  // Auch ohne Straße davor
+  expect(einer({ ort: '76275 Ettlingen' })?.location.address).toEqual({
+    '@type': 'PostalAddress',
+    postalCode: '76275',
+    addressLocality: 'Ettlingen',
+  })
+})
+
+test('die Werkstatt steht als Ausstellende dabei', () => {
+  expect(einer({})?.performer).toEqual({
+    '@type': 'Organization',
+    name: 'Vincent Hellmann',
   })
 })
 

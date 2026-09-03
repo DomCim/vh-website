@@ -10,7 +10,7 @@ import { CartProvider } from '../../../components/shop/CartProvider'
 import { getMainCategories, getSiteSettings, payloadClient } from '../../../lib/data'
 import { oeffentlicheTermine } from '../../../lib/kalender/oeffentlich'
 import { isLocale, t } from '../../../lib/i18n'
-import { alternatesFor, BASE_URL, jsonLd } from '../../../lib/seo'
+import { alternatesFor, BASE_URL, jsonLd, postalAddress } from '../../../lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -122,9 +122,16 @@ export default async function LocaleLayout({ children, params }: Args) {
     logo: `${BASE_URL}/logo.png`,
     ...(settings?.contact?.phone && { telephone: settings.contact.phone }),
     ...(settings?.contact?.email && { email: settings.contact.email }),
-    ...(settings?.contact?.address && {
-      address: { '@type': 'PostalAddress', streetAddress: settings.contact.address },
-    }),
+    /*
+     * Zerlegt statt als ein Klumpen: Straße, Postleitzahl, Ort und Land
+     * einzeln (siehe `lib/seo.ts`). Vorher stand die ganze Anschrift in
+     * `streetAddress`, und Googles Prüfung meldete Postleitzahl, Ort und Land
+     * als fehlend — genau die Angaben, an denen die örtliche Suche einen
+     * Betrieb einem Ort zuordnet.
+     */
+    ...(settings?.contact?.address && { address: postalAddress(settings.contact.address) }),
+    // Das Logo doppelt als Bild: Google verlangt `logo` und nimmt `image`
+    image: `${BASE_URL}/logo.png`,
     ...(settings?.tagline && { description: settings.tagline }),
     sameAs: [
       settings?.social?.facebook,

@@ -49,6 +49,77 @@ export function absoluteUrl(pathOrUrl?: string): string | undefined {
   return pathOrUrl.startsWith('http') ? pathOrUrl : `${BASE_URL}${pathOrUrl}`
 }
 
+/**
+ * Eine getippte Anschrift in ihre Bestandteile zerlegt.
+ *
+ * **Warum das nötig wurde.** Die Anschrift stand als ein Klumpen im Feld
+ * `streetAddress`: „24, avenue Clemenceau 67630 Lauterbourg Frankreich".
+ * Googles Prüfung meldete daraufhin, dass Postleitzahl, Ort und Land fehlen —
+ * und für die örtliche Suche sind genau das die Angaben, an denen ein Betrieb
+ * einem Ort zugeordnet wird. Eine Werkstatt, die man besuchen soll, will
+ * dort gefunden werden.
+ *
+ * **Wie zerlegt wird.** Von hinten, weil das Ende einer Anschrift die feste
+ * Reihenfolge hat: zuletzt das Land, davor „Postleitzahl Ort", davor die
+ * Straße. Erkannt wird nur, was sicher erkennbar ist — passt eine Zeile nicht
+ * ins Muster, bleibt sie Teil der Straße. Damit ist der schlechteste Fall
+ * genau der Zustand von vorher und nie ein falsch einsortierter Wert: Eine
+ * erfundene Postleitzahl schickte jemanden in den falschen Ort.
+ *
+ * Das Land geht als Kürzel hinaus (`FR`, `DE`), weil schema.org es so
+ * erwartet; ein unbekanntes bleibt stehen, wie es dasteht.
+ */
+const LAENDERKUERZEL: Record<string, string> = {
+  frankreich: 'FR',
+  france: 'FR',
+  deutschland: 'DE',
+  allemagne: 'DE',
+  germany: 'DE',
+  schweiz: 'CH',
+  suisse: 'CH',
+  switzerland: 'CH',
+  österreich: 'AT',
+  autriche: 'AT',
+  austria: 'AT',
+  luxemburg: 'LU',
+  luxembourg: 'LU',
+  belgien: 'BE',
+  belgique: 'BE',
+  belgium: 'BE',
+}
+
+export function postalAddress(text?: string | null): Record<string, string> | undefined {
+  const zeilen = (text ?? '')
+    .split('\n')
+    .map((z) => z.trim())
+    .filter(Boolean)
+  if (zeilen.length === 0) return undefined
+
+  const adresse: Record<string, string> = { '@type': 'PostalAddress' }
+
+  // Das Land steht ganz unten — aber nur, wenn darüber noch etwas steht
+  if (zeilen.length > 1) {
+    const kuerzel = LAENDERKUERZEL[zeilen[zeilen.length - 1].toLocaleLowerCase('de')]
+    if (kuerzel) {
+      adresse.addressCountry = kuerzel
+      zeilen.pop()
+    }
+  }
+
+  // „67630 Lauterbourg" — vier- oder fünfstellige Zahl, dann der Ort
+  if (zeilen.length > 1) {
+    const treffer = /^(\d{4,5})\s+(.+)$/.exec(zeilen[zeilen.length - 1])
+    if (treffer) {
+      adresse.postalCode = treffer[1]
+      adresse.addressLocality = treffer[2]
+      zeilen.pop()
+    }
+  }
+
+  if (zeilen.length) adresse.streetAddress = zeilen.join(', ')
+  return adresse
+}
+
 /*
  * Wohin geliefert wird, steht seit 08/2026 in den Versandzonen
  * (`lib/versand.ts`) und wird hier hereingereicht.
