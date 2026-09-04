@@ -174,60 +174,36 @@ tragen die Adresse aus dem Stack.
 
 **Persistenz:** Uploads liegen im Volume `media` (`/app/media`), die Datenbank im Volume `dbdata`, die fertigen Sicherungen im Volume `backups` (`/app/backups`). Alle drei überleben Updates. Gesichert wird nicht von Hand, sondern über **Büro → Sicherung** (siehe unten).
 
-**Update:** Neues Image wird bei Push auf `main` gebaut → in Portainer „Re-pull image & redeploy". Migrationen laufen automatisch beim Start.
+**Update läuft automatisch, per GitOps.** Ein Push auf `main` baut beide
+Abbilder und schiebt danach den Branch `betrieb` auf denselben Stand weiter.
+Portainer ist als **Git-basierter Stack** eingerichtet und pollt genau diesen
+Branch — bewegt er sich, zieht Portainer die frischen Abbilder und rollt von
+selbst aus. Migrationen laufen automatisch beim Start. Von Hand ist hier
+nichts mehr zu tun; ein „Re-pull image & redeploy" im Portainer-Stack bleibt
+nur der Weg für den Sonderfall (siehe „Bauen, ohne auszurollen" weiter unten).
 
-**Automatisch ausrollen (optional):** Portainer bietet je Stack einen Webhook an, der genau das auslöst — er ist aber nur im Heimnetz erreichbar, GitHub kommt also nicht heran. Dazwischen steht Home Assistant, das über Nabu Casa von außen ansprechbar ist:
+**Warum ein eigener Branch und nicht gleich `main`:** Portainer pollt das
+Repository, gebaut werden die Abbilder aber erst danach. Pollte Portainer
+`main` direkt, träfe es gelegentlich genau die Lücke zwischen Push und
+fertigem Bau — es zöge dann die alten Abbilder und rührte sich erst wieder,
+wenn sich das Repository ein zweites Mal ändert. `betrieb` bewegt sich
+deshalb erst im letzten Schritt des Workflows (`.github/workflows/docker.yml`),
+wenn beide Abbilder wirklich im Regal liegen. Kein eigener Commit, nur ein
+Zeiger: `betrieb` steht immer auf einem Commit von `main`.
 
-1. In Home Assistant eine Automatisierung mit **Webhook-Auslöser** anlegen (`local_only: false`). Die Adresse ist dann `https://<ha-adresse>/api/webhook/<webhook-id>`. Steht Home Assistant nicht selbst im Internet, stattdessen einen **Cloudhook** über Nabu Casa erzeugen (`https://hooks.nabu.casa/…`) — der kommt ohne Portfreigabe aus.
-2. Als Aktion einen `shell_command` aufrufen, der den Portainer-Webhook intern anstößt:
-
-   ```yaml
-   shell_command:
-     vh_website_ausrollen: >-
-       curl -fsS -k -X POST --max-time 60
-       "https://<portainer-ip>:9443/api/stacks/webhooks/<stack-webhook-id>"
-   ```
-
-   `-k`, weil Portainer auf der IP ein selbstsigniertes Zertifikat ausliefert.
-3. In der Automatisierung eine Bedingung auf ein vereinbartes Token im Rumpf setzen — sonst würde eine durchgesickerte Webhook-Adresse allein zum Ausrollen reichen.
-4. Im GitHub-Repository unter **Settings → Secrets and variables → Actions** anlegen: `HA_DEPLOY_WEBHOOK` (die Webhook-Adresse) und `HA_DEPLOY_TOKEN` (dasselbe Token). Der letzte Schritt in `.github/workflows/docker.yml` ruft den Webhook nach jedem erfolgreichen `latest`-Build auf; ohne hinterlegte Secrets überspringt er sich stillschweigend.
-
-Der Aufruf bringt den Commit mit, und `/api/healthz` meldet unter `version` den Stand, mit dem das laufende Image gebaut wurde (aus dem Build-Argument `GIT_SHA`). Damit lässt sich in der Automatisierung warten, bis wirklich die neue Fassung antwortet, statt nur den angenommenen Auftrag zu melden — der Webhook ist ja sofort zurück, während drinnen noch migriert und gestartet wird.
-
-**Von welcher Adresse aus gefragt wird, entscheidet, ob die Prüfung taugt.**
-Home Assistant steht im selben Heimnetz wie die Container. Fragt es über die
-öffentliche Adresse (`https://vincent-hellmann.com/api/healthz`), muss der
-Router den Weg nach außen und wieder herein können — viele tun das nicht
-(Stichwort Hairpin-NAT), und dann kommt **nie** eine Antwort. Die
-Automatisierung meldet daraufhin „Ausrollen hakt", obwohl alles längst läuft;
-von außen gemessen ist zur selben Zeit alles in Ordnung.
-
-Deshalb im Heimnetz die **innere** Adresse abfragen, also den Container direkt
-über Traefik oder seine IP:
+**Welcher Stand gerade läuft**, lässt sich jederzeit nachsehen — `version`
+kommt aus dem Build-Argument `GIT_SHA`, am zuverlässigsten aus dem Heimnetz
+gegen die innere Adresse geprüft (Traefik oder Container-IP), nicht gegen die
+öffentliche — dort kann ein Router ohne Hairpin-NAT die Antwort verschlucken:
 
 ```
 http://<traefik-oder-container>/api/healthz          → {"status":"ok","db":true,"version":"…"}
 http://<traefik-oder-container>/api/office/healthz   → {"status":"ok","version":"…","rolle":"buero"}
 ```
 
-Zwei Fallen dabei, beide schon erlebt:
-
-- **Immer dieselbe Meldung** heißt: Die Prüfung erreicht die Adresse gar nicht.
-  Ein Ausrollen, das wirklich hakt, meldet die **alte** Nummer, nicht
-  „nichts". Wer „nichts" bekommt, sucht am falschen Ende.
-
-  Der erste Blick gilt dabei der Adresse in der Automatisierung selbst: Beim
-  Wechsel auf `vincent-hellmann.com` blieb dort die alte (`vh.dominikdill.com`)
-  stehen, und die Prüfung lief seither ins Leere — gemeldet wurde „Ausrollen
-  hakt", während von außen beide Hälften brav den richtigen Stand nannten.
-  Eine Adresse wechselt man an mehr Stellen, als man beim Wechseln denkt (siehe
-  „Was ein Adresswechsel mitnimmt" weiter oben) — die Ausroll-Prüfung gehört
-  dazu.
-- **Genug Geduld.** Seit Website und Büro getrennt laufen, zieht Portainer bei
-  einer Veröffentlichung zwei Abbilder und startet zwei Container. Bis beide
-  antworten, vergehen Minuten; wer nach fünf aufgibt, meldet einen Fehler, den
-  es nicht gibt. Alle fünfzehn Sekunden fragen und erst nach einer
-  Viertelstunde Alarm schlagen ist die ehrlichere Einstellung.
+Etwas Geduld gehört dazu: Seit Website und Büro getrennt laufen, zieht
+Portainer bei einer Veröffentlichung zwei Abbilder und startet zwei
+Container. Bis beide antworten, vergehen Minuten.
 
 ### Zwei Container: Website und Büro
 
@@ -273,7 +249,7 @@ curl https://vincent-hellmann.com/api/office/healthz  → Büro-Container
 
 Beide melden unter `version` den Commit, mit dem ihr Abbild gebaut wurde. Stehen dort zwei verschiedene Nummern, ist beim Ausrollen nur einer der beiden getauscht worden. Sieht die Büro-Oberfläche alt aus, ist das die erste Frage — nicht die letzte.
 
-**Update:** Beide Container ziehen dasselbe Abbild. In Portainer „Re-pull image & redeploy" auf den Stack anwenden, dann starten sie gemeinsam neu; die Migrationen laufen dabei nur im Web-Container.
+**Update:** Beide Container ziehen dasselbe Abbild und laufen dabei automatisch mit — siehe „Update läuft automatisch, per GitOps" oben. Ein manuelles „Re-pull image & redeploy" im Portainer-Stack bleibt der Weg für den Sonderfall; die Migrationen laufen dabei nur im Web-Container.
 
 ### Welche Fassung der Stack fährt
 
@@ -282,7 +258,7 @@ Es gibt zwei Wege, und sie unterscheiden sich genau in einem Punkt — ob es von
 | | Push auf `main` | Tag `v1.2.3` |
 | --- | --- | --- |
 | Gebaute Abbilder | `latest`, `sha-…` | `1.2.3`, `sha-…` |
-| Rollt sich selbst aus | ja (Webhook) | nein |
+| Rollt sich selbst aus | ja (`betrieb`-Zeiger, GitOps) | nein |
 | Zu tun | nichts | `VH_FASSUNG` setzen und neu ausrollen |
 
 Der Stack zieht `ghcr.io/domcim/vh-website:${VH_FASSUNG:-latest}`. Ohne die Variable also `latest` — den Stand von `main`, der sich nach jedem Push von selbst ausrollt.
@@ -744,7 +720,7 @@ Eingestellt wird das im Büro unter **Einstellungen → Integrationen → Takt**
 
 Wie oft ist dabei weniger wichtig, als es klingt: Der Blick auf die Uhr kostet nichts, und die Arbeiten selbst laufen höchstens einmal am Tag. Der Wartungstakt bestimmt nur, wie genau die eingestellte Sicherungszeit getroffen wird — bei 15 Minuten läuft „03:30" zwischen 03:30 und 03:45, bei 60 um 04:00. Beim Postfach zahlt sich häufiger aus, weil IMAP sich nicht von allein meldet.
 
-Beides lässt sich zusätzlich von außen anstoßen — etwa aus Home Assistant, das ohnehin das Ausrollen auslöst. Dafür (und nur dafür) gibt es `CRON_SECRET`:
+Beides lässt sich zusätzlich von außen anstoßen — etwa über einen externen Cronjob oder eine Automatisierung. Dafür (und nur dafür) gibt es `CRON_SECRET`:
 
 ```sh
 curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://vincent-hellmann.com/api/wartung
