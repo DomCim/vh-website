@@ -199,10 +199,17 @@ const nextConfig = {
    * Index steht — die Spracherkennung leitet nämlich `/objekte` zuerst auf
    * `/de/objekte` um, und genau diese Form hat Google gespeichert.
    *
-   * Die alten französischen Adressen waren übersetzt (`/fr/meubles-d-exterieur`),
-   * die heutigen sind es nicht (`/fr/moebel`). Bis das umgestellt ist, zeigen
-   * die alten französischen Adressen auf die heutigen deutschen Slugs — eine
-   * Umleitung, die funktioniert, ist besser als eine schöne, die es nicht tut.
+   * **Was hier nicht mehr steht.** `/fr/objets` war einmal eine solche alte
+   * Adresse und zeigte auf `/fr/objekte`. Seit die Kategorie Objekte ihre
+   * französische Adresse hat, ist `objets` die Adresse selbst — die Seite
+   * bedient sie mit 200. Bliebe die Umleitung stehen, drehte es sich im
+   * Kreis: Diese Regel greift vor der Seite und schickt auf `/fr/objekte`,
+   * die Seite erkennt `objets` als maßgeblich und schickt zurück.
+   *
+   * Daraus die Regel für alles, was hier noch steht: **Eine Adresse gehört
+   * entweder in diesen Block oder in die Daten, nie in beides.** Wird eine
+   * dieser Adressen in einer Sprache vergeben, fällt ihre Zeile hier weg —
+   * und zwar im Code zuerst, ausgerollt, und erst danach in den Daten.
    */
   async redirects() {
     /** Eine alte Adresse, einmal nackt und einmal je Sprache. */
@@ -226,8 +233,7 @@ const nextConfig = {
        */
       ...alt('/leuchten', '/massanfertigung'),
       // Die französischen Adressen der alten Seite
-      { source: '/fr/meubles-d-exterieur', destination: '/fr/moebel', statusCode: 301 },
-      { source: '/fr/objets', destination: '/fr/objekte', statusCode: 301 },
+      { source: '/fr/meubles-d-exterieur', destination: '/fr/mobilier', statusCode: 301 },
       { source: '/fr/lampes', destination: '/fr/massanfertigung', statusCode: 301 },
       { source: '/fr/contact', destination: '/fr/kontakt', statusCode: 301 },
       { source: '/fr/contact/mentions-legales', destination: '/fr/kontakt/impressum', statusCode: 301 },
