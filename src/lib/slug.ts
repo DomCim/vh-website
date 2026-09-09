@@ -105,40 +105,6 @@ export const slugFreigeben: CollectionBeforeChangeHook = ({ data, originalDoc })
 }
 
 /**
- * Gibt den Slug in **allen** Sprachfassungen frei, wenn etwas weggeworfen wird.
- *
- * `slugFreigeben` räumt nur die Fassung ab, in der gerade gespeichert wird —
- * mehr sieht ein beforeChange-Hook nicht. Seit die Adresse übersetzbar ist,
- * reicht das nicht: Ein weggeworfener Artikel, dessen französische Adresse
- * stehen bleibt, blockiert den Namen für den nächsten, und `autoSlug` hängt
- * dort wortlos ein `-2` an — genau der Fall, den die Freigabe verhindern soll.
- *
- * Der Vermerk im `context` verhindert, dass die Aufräumschreibungen sich
- * selbst noch einmal auslösen.
- */
-export function slugFreigebenAlleSprachen(sprachen: readonly string[]): CollectionAfterChangeHook {
-  return async ({ doc, previousDoc, req, collection, context }) => {
-    if (context?.slugFreigabe) return doc
-    if (!doc?.deletedAt || previousDoc?.deletedAt) return doc
-
-    for (const sprache of sprachen) {
-      await req.payload
-        .update({
-          collection: collection!.slug as never,
-          id: doc.id,
-          locale: sprache as never,
-          overrideAccess: true,
-          context: { slugFreigabe: true },
-          data: { slug: null } as never,
-          req,
-        })
-        .catch(() => undefined)
-    }
-    return doc
-  }
-}
-
-/**
  * Hält fest, unter welcher Adresse ein Stück einmal zu finden war.
  *
  * **Warum das sein muss.** Eine Adresse ist ein Versprechen: Sie steht in
