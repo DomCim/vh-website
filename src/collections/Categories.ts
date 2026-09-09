@@ -3,7 +3,9 @@ import { APIError } from 'payload'
 
 import { admins, anyone } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
-import { autoSlug, slugFreigeben } from '../lib/slug'
+import { adresseFeld } from '../lib/adressen'
+import { locales } from '../lib/i18n'
+import { adresseMerken, autoSlug, slugFreigeben, slugFreigebenAlleSprachen } from '../lib/slug'
 
 const indexNowKategorie = indexNowHooks((doc) => (doc.slug ? `/${doc.slug}` : null))
 
@@ -93,7 +95,14 @@ export const Categories: CollectionConfig = {
     // werden kann (siehe lib/slug.ts)
     beforeChange: [slugFreigeben, keineArtikelDarin],
     // Die Kategorieseite den Suchdiensten melden (siehe lib/indexnow.ts)
-    afterChange: indexNowKategorie.afterChange,
+    afterChange: [
+      // Siehe Products: Umleitung und Freigabe hängen an diesen beiden
+      adresseMerken('categories'),
+      slugFreigebenAlleSprachen(locales),
+      ...(Array.isArray(indexNowKategorie.afterChange)
+        ? indexNowKategorie.afterChange
+        : [indexNowKategorie.afterChange]),
+    ],
     afterDelete: indexNowKategorie.afterDelete,
     beforeDelete: [
       async ({ id, req }) => {
@@ -119,6 +128,8 @@ export const Categories: CollectionConfig = {
         description: 'z.B. "outdoor-moebel" — wird in der URL verwendet',
       },
     },
+    // Die Adresse in der jeweiligen Sprache — siehe lib/adressen.ts
+    adresseFeld(),
     {
       name: 'description',
       label: 'Beschreibung',
