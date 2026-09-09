@@ -183,6 +183,57 @@ const nextConfig = {
     return config
   },
   /**
+   * Die Adressen der alten TYPO3-Seite.
+   *
+   * Sie stehen bis heute im Index von Google, und einzelne fremde Seiten
+   * verlinken sie — etwa die Referenzliste der früheren Webagentur. Bisher
+   * liefen sie ins Leere: erst auf die richtige Domain, dort dann in einen
+   * 404. Was eine Adresse an Aufmerksamkeit mitbringt, verfällt damit.
+   *
+   * **301 und nicht 308.** Next setzt bei `permanent: true` eine 308; die
+   * versteht zwar jeder aktuelle Suchdienst, aber 301 ist der Code, den
+   * ältere Werkzeuge und jeder Mensch kennt, der ein Protokoll liest.
+   *
+   * **Zweimal je Adresse.** Ohne Sprachkürzel greift die Regel für den, der
+   * die nackte alte Adresse aufruft; mit Kürzel für alles, was inzwischen im
+   * Index steht — die Spracherkennung leitet nämlich `/objekte` zuerst auf
+   * `/de/objekte` um, und genau diese Form hat Google gespeichert.
+   *
+   * Die alten französischen Adressen waren übersetzt (`/fr/meubles-d-exterieur`),
+   * die heutigen sind es nicht (`/fr/moebel`). Bis das umgestellt ist, zeigen
+   * die alten französischen Adressen auf die heutigen deutschen Slugs — eine
+   * Umleitung, die funktioniert, ist besser als eine schöne, die es nicht tut.
+   */
+  async redirects() {
+    /** Eine alte Adresse, einmal nackt und einmal je Sprache. */
+    const alt = (von, nach) => [
+      { source: von, destination: `/de${nach}`, statusCode: 301 },
+      { source: `/:sprache(de|fr|en)${von}`, destination: `/:sprache${nach}`, statusCode: 301 },
+    ]
+
+    return [
+      // Die Kategorieseite der alten Möbelrubrik
+      ...alt('/outdoor-moebel', '/moebel'),
+      // Die vier Artikelseiten darunter, jede auf ihr heutiges Stück
+      ...alt('/outdoor-moebel/outdoor-liege-vague-von-vincent-hellmann', '/moebel/outdoor-liege-vague'),
+      ...alt('/outdoor-moebel/outdoor-sessel-der-os-kollektion-vincent-hellmann', '/moebel/outdoor-sessel-os'),
+      ...alt('/outdoor-moebel/outdoor-sofas-der-os-kollektion-vincent-hellmann', '/moebel/outdoor-sofa-os'),
+      ...alt('/outdoor-moebel/outdoor-tische-der-ot-serie-vincent-hellmann', '/moebel/outdoor-tisch-ot'),
+      /*
+       * Leuchten gibt es nicht mehr als Rubrik. Wer danach sucht, ist bei der
+       * Maßanfertigung richtig aufgehoben: Gebaut wird so etwas weiterhin,
+       * nur eben auf Anfrage.
+       */
+      ...alt('/leuchten', '/massanfertigung'),
+      // Die französischen Adressen der alten Seite
+      { source: '/fr/meubles-d-exterieur', destination: '/fr/moebel', statusCode: 301 },
+      { source: '/fr/objets', destination: '/fr/objekte', statusCode: 301 },
+      { source: '/fr/lampes', destination: '/fr/massanfertigung', statusCode: 301 },
+      { source: '/fr/contact', destination: '/fr/kontakt', statusCode: 301 },
+      { source: '/fr/contact/mentions-legales', destination: '/fr/kontakt/impressum', statusCode: 301 },
+    ]
+  },
+  /**
    * Reihenfolge ist hier entscheidend: Passen mehrere Regeln auf einen Pfad,
    * setzt Next sie der Reihe nach — die spätere überschreibt die frühere.
    * Deshalb steht der Auffangpfad oben und die Ausnahmen darunter. (Vorher
