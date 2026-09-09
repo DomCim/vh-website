@@ -8,6 +8,7 @@ import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
 import { meldungVerschicken } from '../lib/auftragsmeldung'
+import { ablageFeld, absenderFeld } from '../lib/absender'
 
 /**
  * Fertigungsaufträge — der Durchlauf eines Stücks durch die Werkstatt.
@@ -753,6 +754,11 @@ export const Jobs: CollectionConfig = {
             },
           ],
         },
+        absenderFeld(),
+        ablageFeld(
+          'Die Auftragsbestätigung, wie sie zugesagt wurde — abgelegt unter `media/belege`. ' +
+            'Sie trägt das Datum der Zusage und nicht das von heute.',
+        ),
         {
           name: 'orderDocument',
           label: 'Bestellung des Kunden (Scan)',

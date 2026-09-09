@@ -9,6 +9,7 @@ import {
   stornoVormerken,
 } from '../lib/orderHooks'
 import { liveHooks } from '../lib/liveHooks'
+import { ablageFeld, absenderFeld } from '../lib/absender'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
@@ -55,6 +56,12 @@ export const Orders: CollectionConfig = {
         readOnly: true,
       },
     },
+    absenderFeld(),
+    ablageFeld(
+      'Die Rechnung, die mit der Bestätigungsmail hinausgegangen ist — abgelegt unter ' +
+        '`media/belege`. Sie ist die einzige Kopie: Beim Kunden liegt dieselbe Datei, hier ' +
+        'liegt sie für die Aufbewahrungsfrist.',
+    ),
     {
       name: 'status',
       label: 'Status',

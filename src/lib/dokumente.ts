@@ -1,9 +1,12 @@
 import type { Payload } from 'payload'
 
+import { absenderVon } from './absender'
 import { artikelBildPfad, medienBildPfad } from './artikelbild'
+import { belegAblegen, belegLesen } from './belegablage'
 import { facturXml, type FacturXDaten } from './facturx'
+import { xmlAusPdf } from './facturxLesen'
 import { euro } from './format'
-import { rechnungPdf } from './invoice'
+import { bestellungAlsRechnung, rechnungPdf } from './invoice'
 import { lieferscheinPdf } from './lieferschein'
 import { MAHN_TITEL, type Mahnstufe, mahnungPdf } from './mahnung'
 import { firmenAngaben } from './settings'
@@ -67,6 +70,44 @@ async function firma(payload: Payload) {
   return firmenAngaben(settings)
 }
 
+/**
+ * Den abgelegten Beleg herausgeben — und beim ersten Mal ablegen.
+ *
+ * **Warum überhaupt.** Ein Beleg ist ein Gegenstand, keine Ansicht. Wird er
+ * bei jedem Abruf neu gebaut, verändert ihn alles, was sich seither geändert
+ * hat: der Briefkopf, die Vorlage, sogar das Artikelbild, das am Produkt
+ * hängt. Was der Kunde bekommen hat, wäre dann nicht mehr herstellbar.
+ *
+ * **Warum beim ersten Abruf und nicht beim Festschreiben.** Das PDF zu bauen
+ * dauert und kann scheitern — an einer fehlenden Schrift, an einem kaputten
+ * Bild. Im Speichern der Rechnung hätte das zur Folge, dass die Rechnung nicht
+ * gespeichert wird, und das wäre der schlechtere Fehler. Der erste Abruf ist
+ * ohnehin der Moment, in dem der Beleg zum ersten Mal gebraucht wird: ansehen
+ * oder verschicken. Die Firmenangaben sind da bereits eingefroren
+ * (`lib/absender.ts`), das Blatt also schon dasselbe wie beim Festschreiben.
+ *
+ * **Scheitert das Ablegen, geht der Beleg trotzdem hinaus.** Eine volle Platte
+ * darf keine Rechnung aufhalten; sie kommt dann beim nächsten Abruf in die
+ * Ablage.
+ */
+async function belegDatei(
+  abgelegt: string | null | undefined,
+  kennung: string,
+  bauen: () => Promise<Buffer>,
+  merken: (datename: string) => Promise<void>,
+): Promise<Buffer> {
+  const vorhanden = await belegLesen(abgelegt)
+  if (vorhanden) return vorhanden
+
+  const datei = await bauen()
+  try {
+    await merken(await belegAblegen(kennung, datei))
+  } catch (err) {
+    console.error('Beleg konnte nicht abgelegt werden:', err)
+  }
+  return datei
+}
+
 /** Adresse aus einem verknüpften Geschäftspartner, sonst leer */
 async function partnerMail(payload: Payload, id: unknown): Promise<string | null> {
   const nummer = typeof id === 'object' ? (id as { id?: number })?.id : id
@@ -81,36 +122,61 @@ export async function angebotDokument(payload: Payload, id: string | number): Pr
   const a = await payload.findByID({ collection: 'quotes', id, depth: 0, overrideAccess: true })
   if (!a?.quoteNumber) throw new Error('entwurf')
 
-  const datei = await rechnungPdf(
-    {
-      art: 'angebot',
-      nummer: a.quoteNumber,
-      datum: a.issueDate,
-      gueltigBis: a.validUntil,
-      fertigungszeit: a.productionTime,
-      preiseSind: 'netto',
-      empfaenger: {
-        name: a.customerName,
-        anschrift: (a.customerAddress ?? '').split('\n').filter(Boolean),
+  // Einmal festhalten: In der Funktion unten weiß TypeScript nicht mehr, dass
+  // die Prüfung oben die Nummer schon ausgeschlossen hat.
+  const nummer = a.quoteNumber
+  const angaben = await absenderVon(payload, a.absender)
+
+  /*
+   * Gebaut wird nur, wenn nichts abgelegt ist — deshalb steckt das Blatt in
+   * einer Funktion und nicht in einer Zuweisung. Die Bilder der Positionen
+   * kommen aus der Datenbank; das ist Arbeit, die für ein Angebot, das
+   * längst als PDF daliegt, niemand mehr tun muss.
+   */
+  const bauen = async () =>
+    rechnungPdf(
+      {
+        art: 'angebot',
+        nummer,
+        datum: a.issueDate,
+        gueltigBis: a.validUntil,
+        fertigungszeit: a.productionTime,
+        preiseSind: 'netto',
+        empfaenger: {
+          name: a.customerName,
+          anschrift: (a.customerAddress ?? '').split('\n').filter(Boolean),
+        },
+        positionen: await Promise.all(
+          (a.items ?? []).map(async (p) => ({
+            bezeichnung: p.description,
+            zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
+            menge: p.quantity,
+            einzelpreis: p.unitPrice,
+            steuersatz: p.vatRate,
+            bild: await artikelBildPfad(payload, p.product),
+          })),
+        ),
+        rabatt: a.discountTotal
+          ? { bezeichnung: a.discountReason || 'Nachlass', betrag: a.discountTotal }
+          : null,
+        fassung: a.revision,
+        hinweis: a.note,
       },
-      positionen: await Promise.all(
-        (a.items ?? []).map(async (p) => ({
-          bezeichnung: p.description,
-          zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-          menge: p.quantity,
-          einzelpreis: p.unitPrice,
-          steuersatz: p.vatRate,
-          bild: await artikelBildPfad(payload, p.product),
-        })),
-      ),
-      rabatt: a.discountTotal
-        ? { bezeichnung: a.discountReason || 'Nachlass', betrag: a.discountTotal }
-        : null,
-      fassung: a.revision,
-      hinweis: a.note,
-    },
-    await firma(payload),
-  )
+      angaben,
+    )
+
+  // Die Fassung gehört in den Dateinamen: Im Ordner liegen sonst zwei Blätter
+  // derselben Nummer nebeneinander, ohne dass man sie unterscheiden könnte.
+  const fassungsKennung = `${nummer}${(a.revision ?? 1) > 1 ? `-F${a.revision}` : ''}`
+
+  const datei = await belegDatei(a.pdfAblage, fassungsKennung, bauen, async (name) => {
+    await payload.update({
+      collection: 'quotes',
+      id: a.id,
+      overrideAccess: true,
+      data: { pdfAblage: name },
+    })
+  })
 
   const fassung = (a.revision ?? 1) > 1 ? ` (Fassung ${a.revision})` : ''
   return {
@@ -208,7 +274,14 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
   })
   if (!r?.invoiceNumber) throw new Error('entwurf')
 
-  const angaben = await firma(payload)
+  /*
+   * Die eigenen Angaben aus der Abschrift am Beleg, nicht aus den heutigen
+   * Einstellungen. Sie stehen auf dem Blatt, im GiroCode und in der
+   * eingebetteten Factur-X-XML — siehe `lib/absender.ts`.
+   */
+  const angaben = await absenderVon(payload, r.absender)
+  // Siehe oben beim Angebot: die Nummer einmal festhalten.
+  const nummer = r.invoiceNumber
 
   /*
    * Eine Stornorechnung ist dasselbe Blatt mit anderem Kopf: Sie heißt
@@ -229,38 +302,53 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
         .catch(() => null)
     : null
 
-  const datei = await rechnungPdf(
-    {
-      art: original ? 'storno' : 'rechnung',
-      storniert: original
-        ? { nummer: original.invoiceNumber ?? '', datum: original.issueDate }
-        : null,
-      nummer: r.invoiceNumber,
-      datum: r.issueDate,
-      faelligAm: r.dueDate,
-      preiseSind: 'netto',
-      empfaenger: {
-        name: r.customerName,
-        anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+  const bauen = async () =>
+    rechnungPdf(
+      {
+        art: original ? 'storno' : 'rechnung',
+        storniert: original
+          ? { nummer: original.invoiceNumber ?? '', datum: original.issueDate }
+          : null,
+        nummer,
+        datum: r.issueDate,
+        faelligAm: r.dueDate,
+        preiseSind: 'netto',
+        empfaenger: {
+          name: r.customerName,
+          anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+        },
+        positionen: await Promise.all(
+          (r.items ?? []).map(async (p) => ({
+            bezeichnung: p.description,
+            zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
+            menge: p.quantity,
+            einzelpreis: p.unitPrice,
+            steuersatz: p.vatRate,
+            bild: await artikelBildPfad(payload, p.product),
+          })),
+        ),
+        rabatt: r.discountTotal
+          ? { bezeichnung: r.discountReason || 'Nachlass', betrag: r.discountTotal }
+          : null,
+        hinweis: r.note,
+        reverseCharge: Boolean(r.reverseCharge),
+        facturx: facturxAusRechnung(r, angaben),
       },
-      positionen: await Promise.all(
-        (r.items ?? []).map(async (p) => ({
-          bezeichnung: p.description,
-          zusatz: p.unit && p.unit !== 'Stück' ? p.unit : null,
-          menge: p.quantity,
-          einzelpreis: p.unitPrice,
-          steuersatz: p.vatRate,
-          bild: await artikelBildPfad(payload, p.product),
-        })),
-      ),
-      rabatt: r.discountTotal
-        ? { bezeichnung: r.discountReason || 'Nachlass', betrag: r.discountTotal }
-        : null,
-      hinweis: r.note,
-      reverseCharge: Boolean(r.reverseCharge),
-      facturx: facturxAusRechnung(r, angaben),
+      angaben,
+    )
+
+  const datei = await belegDatei(
+    r.pdfAblage,
+    alsDateiname(r.invoiceNumber),
+    bauen,
+    async (name) => {
+      await payload.update({
+        collection: 'outgoing-invoices',
+        id: r.id,
+        overrideAccess: true,
+        data: { pdfAblage: name },
+      })
     },
-    angaben,
   )
 
   if (original) {
@@ -317,24 +405,78 @@ export async function rechnungFacturX(
   })) as Record<string, any>
   if (!r?.invoiceNumber) throw new Error('entwurf')
 
-  const angaben = await firma(payload)
-  return {
-    xml: facturXml(facturxAusRechnung(r, angaben), angaben),
-    dateiname: `${alsDateiname(r.invoiceNumber)}-factur-x.xml`,
-  }
+  const dateiname = `${alsDateiname(r.invoiceNumber)}-factur-x.xml`
+
+  /*
+   * Zuerst die XML aus dem abgelegten PDF holen.
+   *
+   * Sie ist der rechtlich maßgebliche Teil der Rechnung, und der Empfänger
+   * prüft sie gegen das Bild daneben. Würde sie hier neu gerechnet, während
+   * das PDF aus der Ablage kommt, könnten beide auseinanderlaufen — genau der
+   * Widerspruch, an dem jede Empfängerplattform zuerst hängen bleibt. Also
+   * wird herausgegeben, was eingebettet ist.
+   */
+  const abgelegt = await belegLesen(r.pdfAblage)
+  const eingebettet = abgelegt ? xmlAusPdf(abgelegt) : null
+  if (eingebettet) return { xml: eingebettet, dateiname }
+
+  const angaben = await absenderVon(payload, r.absender)
+  return { xml: facturXml(facturxAusRechnung(r, angaben), angaben), dateiname }
 }
 
 /**
- * Die nächste Mahnstufe zu einer offenen Rechnung.
+ * Die Rechnung zu einer Shop-Bestellung.
  *
- * Welche Stufe dran ist, ergibt sich aus dem, was schon verschickt wurde —
+ * Sie entsteht einmal, beim Eingang der Zahlung, und geht als Anhang der
+ * Bestätigungsmail hinaus (`lib/orderHooks.ts`). Seit dieser Fassung bleibt
+ * dieselbe Datei im Haus — vorher lag sie ausschließlich im Postfach des
+ * Kunden, obwohl sie acht Jahre aufzubewahren ist.
+ *
+ * Für Bestellungen von vorher gibt es nichts abzuholen. Dann wird das Blatt
+ * neu gebaut, aus der Abschrift falls vorhanden und sonst aus den heutigen
+ * Einstellungen. Das ist eine Annäherung und keine Kopie — mehr ist für die
+ * Zeit vor der Ablage nicht zu haben.
+ */
+export async function bestellungRechnung(
+  payload: Payload,
+  id: string | number,
+): Promise<{ datei: Buffer; dateiname: string }> {
+  const o = (await payload.findByID({
+    collection: 'orders',
+    id,
+    depth: 0,
+    overrideAccess: true,
+  })) as Record<string, any>
+  if (!o) throw new Error('nicht-gefunden')
+
+  const dateiname = `Rechnung-${o.orderNumber}.pdf`
+  const abgelegt = await belegLesen(o.pdfAblage)
+  if (abgelegt) return { datei: abgelegt, dateiname }
+
+  const angaben = await absenderVon(payload, o.absender)
+  return { datei: await bestellungAlsRechnung(o as never, angaben), dateiname }
+}
+
+/**
+ * Eine Mahnung zu einer Rechnung — die nächste Stufe oder eine verschickte.
+ *
+ * **Die nächste Stufe** ergibt sich aus dem, was schon hinausgegangen ist;
  * niemand muss sich merken, ob die Erinnerung raus war. Die Frist ist bewusst
  * kurz (zehn Tage bei der Erinnerung, sieben danach): Eine Mahnung ohne Datum
  * ist eine Bitte.
+ *
+ * **Eine verschickte Stufe** (`zeile`) kommt so wieder heraus, wie sie
+ * hinausgegangen ist. Das ging vorher gar nicht: Stufe, Frist und Pauschale
+ * wurden bei jedem Aufruf neu gerechnet. War die Erinnerung raus, lieferte
+ * derselbe Knopf die erste Mahnung mit einer neuen Frist — und das verschickte
+ * Schreiben war nicht mehr herstellbar. Ausgerechnet dort, wo die Frist der
+ * ganze Punkt ist: An ihr hängt der Verzug.
  */
 export async function mahnungDokument(
   payload: Payload,
   id: string | number,
+  /** Die wievielte verschickte Mahnung (ab 0). Ohne Angabe: die nächste Stufe. */
+  zeile?: number,
 ): Promise<Dokument> {
   const r = await payload.findByID({
     collection: 'outgoing-invoices',
@@ -343,42 +485,94 @@ export async function mahnungDokument(
     overrideAccess: true,
   })
   if (!r?.invoiceNumber) throw new Error('entwurf')
-  if (r.status === 'bezahlt' || r.status === 'storniert') throw new Error('nicht-offen')
 
-  const bisher = (r.reminders ?? []).length
-  const stufe = Math.min(bisher + 1, 3) as Mahnstufe
+  type Mahnzeile = {
+    level?: number | null
+    sentAt?: string | null
+    lateFee?: number | null
+    fristBis?: string | null
+    pdfAblage?: string | null
+    id?: string | null
+  }
+  const mahnungen = (r.reminders ?? []) as Mahnzeile[]
+  const verschickt = typeof zeile === 'number' ? mahnungen[zeile] : null
+  if (typeof zeile === 'number' && !verschickt) throw new Error('nicht-gefunden')
 
-  const angaben = await firma(payload)
+  /*
+   * Eine neue Mahnung gibt es nur zu einer offenen Rechnung. Eine verschickte
+   * dagegen jederzeit, auch nach der Zahlung: Was damals gefordert wurde, ist
+   * eine Tatsache und muss belegbar bleiben — im Zweifel vor Gericht.
+   */
+  if (!verschickt && (r.status === 'bezahlt' || r.status === 'storniert')) {
+    throw new Error('nicht-offen')
+  }
+
+  const stufe = (
+    verschickt
+      ? Math.min(Math.max(verschickt.level ?? 1, 1), 3)
+      : Math.min(mahnungen.length + 1, 3)
+  ) as Mahnstufe
+
+  const angaben = await absenderVon(payload, r.absender)
   // Erst ab der zweiten Stufe: Die Pauschale steht dem Betrieb zwar ab Verzug
   // zu, aber eine freundliche Erinnerung mit Gebühr ist keine freundliche
   // Erinnerung mehr.
-  const pauschale = stufe >= 2 ? 40 : 0
+  const pauschale = verschickt ? (verschickt.lateFee ?? 0) : stufe >= 2 ? 40 : 0
 
-  const frist = new Date()
-  frist.setDate(frist.getDate() + (stufe === 1 ? 10 : 7))
-
-  const datei = await mahnungPdf(
-    {
-      stufe,
-      rechnungsnummer: r.invoiceNumber,
-      rechnungsdatum: r.issueDate,
-      faelligAm: r.dueDate,
-      betrag: r.total ?? 0,
-      pauschale,
-      fristBis: frist,
-      empfaenger: {
-        name: r.customerName,
-        anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
-      },
-    },
-    angaben,
-  )
+  const frist = verschickt?.fristBis ? new Date(verschickt.fristBis) : new Date()
+  if (!verschickt?.fristBis) frist.setDate(frist.getDate() + (stufe === 1 ? 10 : 7))
 
   const titel = MAHN_TITEL[stufe]
+  // Siehe oben beim Angebot: die Nummer einmal festhalten.
+  const nummer = r.invoiceNumber
+  const dateiname = `${titel.replace(/ /g, '-')}-${alsDateiname(nummer)}.pdf`
+  const kennung = dateiname.replace(/\.pdf$/, '')
+
+  const bauen = async () =>
+    mahnungPdf(
+      {
+        stufe,
+        rechnungsnummer: nummer,
+        rechnungsdatum: r.issueDate,
+        faelligAm: r.dueDate,
+        betrag: r.total ?? 0,
+        pauschale,
+        fristBis: frist,
+        empfaenger: {
+          name: r.customerName,
+          anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+        },
+      },
+      angaben,
+    )
+
+  /*
+   * Abgelegt wird nur, was auch belegt ist.
+   *
+   * Mahnzeilen aus der Zeit vor dieser Umstellung führen keine Frist mit. Ihr
+   * Schreiben lässt sich deshalb nur annähern — mit einer Frist von heute an
+   * gerechnet, die so nie verschickt wurde. Das darf man ansehen, aber nicht
+   * ablegen: Sonst stünde eine geratene Frist für immer als das Schreiben da,
+   * das hinausgegangen ist.
+   */
+  const datei = !verschickt
+    ? await bauen()
+    : !verschickt.fristBis
+    ? await bauen()
+    : await belegDatei(verschickt.pdfAblage, kennung, bauen, async (name) => {
+        await payload.update({
+          collection: 'outgoing-invoices',
+          id: r.id,
+          overrideAccess: true,
+          data: {
+            reminders: mahnungen.map((m, n) => (n === zeile ? { ...m, pdfAblage: name } : m)),
+          },
+        })
+      })
 
   return {
     datei,
-    dateiname: `${titel.replace(/ /g, '-')}-${alsDateiname(r.invoiceNumber)}.pdf`,
+    dateiname,
     betreff: `${titel} zur Rechnung ${r.invoiceNumber}`,
     an: await partnerMail(payload, r.customer),
     text:
@@ -409,19 +603,39 @@ export async function mahnungDokument(
           : '',
       },
     },
-    nachSenden: async () => {
-      await payload.update({
-        collection: 'outgoing-invoices',
-        id: r.id,
-        overrideAccess: true,
-        data: {
-          reminders: [
-            ...(r.reminders ?? []),
-            { level: stufe, sentAt: new Date().toISOString(), lateFee: pauschale || undefined },
-          ],
+    // Eine verschickte Mahnung wird beim Ansehen nicht noch einmal gezählt.
+    nachSenden: verschickt
+      ? undefined
+      : async () => {
+          /*
+           * Das Schreiben kommt in die Ablage, und die Zeile hält fest, was
+           * darin steht: Stufe, Frist und Pauschale. Erst zusammen ergibt das
+           * ein Schreiben, das sich in drei Jahren noch herstellen lässt.
+           */
+          let pdfAblage: string | undefined
+          try {
+            pdfAblage = await belegAblegen(kennung, datei)
+          } catch (err) {
+            console.error('Mahnung konnte nicht abgelegt werden:', err)
+          }
+          await payload.update({
+            collection: 'outgoing-invoices',
+            id: r.id,
+            overrideAccess: true,
+            data: {
+              reminders: [
+                ...mahnungen,
+                {
+                  level: stufe,
+                  sentAt: new Date().toISOString(),
+                  lateFee: pauschale || undefined,
+                  fristBis: frist.toISOString(),
+                  pdfAblage,
+                },
+              ],
+            },
+          })
         },
-      })
-    },
   }
 }
 
@@ -475,34 +689,64 @@ export async function bestaetigungDokument(
     .filter(Boolean)
     .join(' · ')
 
-  const datei = await rechnungPdf(
-    {
-      art: 'angebot',
-      nummer: `Auftragsbestätigung ${auftrag.jobNumber}`,
-      datum: new Date().toISOString(),
-      fertigungszeit: angebot?.productionTime,
-      preiseSind: 'netto',
-      empfaenger: {
-        name: auftrag.customerName,
-        anschrift: (angebot?.customerAddress ?? '').split('\n').filter(Boolean),
+  /*
+   * Das Datum der Zusage, nicht das von heute.
+   *
+   * Vorher stand hier `new Date()`. Wer die Bestätigung Wochen später noch
+   * einmal öffnete, bekam ein anderes Blatt als der Kunde in der Hand hält —
+   * und bei einer Zusage ist das Datum der Kern der Aussage.
+   */
+  const zugesagt = auftrag.confirmedAt ?? new Date().toISOString()
+  const angaben = await absenderVon(payload, auftrag.absender)
+
+  const bauen = async () =>
+    rechnungPdf(
+      {
+        art: 'angebot',
+        nummer: `Auftragsbestätigung ${auftrag.jobNumber}`,
+        datum: zugesagt,
+        fertigungszeit: angebot?.productionTime,
+        preiseSind: 'netto',
+        empfaenger: {
+          name: auftrag.customerName,
+          anschrift: (angebot?.customerAddress ?? '').split('\n').filter(Boolean),
+        },
+        positionen,
+        rabatt: angebot?.discountTotal
+          ? { bezeichnung: angebot.discountReason || 'Nachlass', betrag: angebot.discountTotal }
+          : null,
+        hinweis: [bezug, auftrag.notes].filter(Boolean).join('\n'),
       },
-      positionen,
-      rabatt: angebot?.discountTotal
-        ? { bezeichnung: angebot.discountReason || 'Nachlass', betrag: angebot.discountTotal }
-        : null,
-      hinweis: [bezug, auftrag.notes].filter(Boolean).join('\n'),
+      angaben,
+    )
+
+  const datei = await belegDatei(
+    auftrag.pdfAblage,
+    `Auftragsbestaetigung-${auftrag.jobNumber}`,
+    bauen,
+    async (name) => {
+      await payload.update({
+        collection: 'jobs',
+        id: auftrag.id,
+        overrideAccess: true,
+        data: { pdfAblage: name },
+      })
     },
-    await firma(payload),
   )
 
-  // Erst nach erfolgreichem Erzeugen festhalten, wann zugesagt wurde
+  /*
+   * Erst nach erfolgreichem Erzeugen festhalten, wann zugesagt wurde — und
+   * mit demselben Zeitpunkt, der oben auf dem Blatt steht. Dazu die
+   * Firmenangaben als Abschrift: Ab jetzt ist die Bestätigung eine Zusage und
+   * kein Entwurf mehr, und sie soll in zwei Jahren dasselbe sagen.
+   */
   if (!auftrag.confirmedAt) {
     await payload
       .update({
         collection: 'jobs',
         id: auftrag.id,
         overrideAccess: true,
-        data: { confirmedAt: new Date().toISOString() },
+        data: { confirmedAt: zugesagt, absender: angaben },
       })
       .catch(() => undefined)
   }

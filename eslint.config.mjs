@@ -12,6 +12,13 @@ const config = [
     ignores: [
       'node_modules/**',
       '.next/**',
+      /*
+       * Arbeitskopien unter `.claude/worktrees` sind derselbe Quelltext ein
+       * zweites Mal. Ohne diese Zeile prüft `pnpm lint` jede vorhandene
+       * Arbeitskopie mit und scheitert an Meldungen aus einem Zweig, an dem
+       * gerade niemand arbeitet.
+       */
+      '.claude/**',
       'media/**',
       'next-env.d.ts',
       'src/payload-types.ts',
