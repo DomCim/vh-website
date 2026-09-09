@@ -104,7 +104,7 @@ export function registerNews(server: McpServer) {
       inputSchema: {
         titel: z.string(),
         teaser: z.string().describe('Kurztext für Übersicht und Social-Media-Post'),
-        inhalt: z.string().describe('Fließtext; Absätze durch Leerzeilen'),
+        inhalt: z.string().describe('Fließtext; Absätze durch Leerzeilen. Auszeichnung: `## Überschrift`, `### Kleinere`, `- Punkt`, `**fett**` — dieselbe, die beim Lesen zurückkommt'),
         bildId: z.number().describe('Media-ID des Titelbilds (siehe medien_liste)'),
         slug: z.string().optional().describe('URL-Pfad; leer = automatisch aus dem Titel'),
         rubrik: z.enum(['news', 'ratgeber']).optional().describe('Standard: news'),

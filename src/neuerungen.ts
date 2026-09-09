@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 102,
+    datum: null,
+    titel: 'Texte behalten ihre Auszeichnung, wenn der Assistent sie anfasst',
+    punkte: [
+      {
+        text: '**Beschreibungen verloren ihre Fettungen, wenn der Assistent sie überarbeitete.** Er las sie über die Werkzeuge, und dabei fielen Fettungen weg und die Punkte einer Aufzählung klebten aneinander. Der Text sah kaputt aus, war es aber nicht — kaputt war das Lesen. Wer ihn daraufhin „richtete", löschte die Auszeichnung dann wirklich. Am Dubbe Stehtisch ist das einmal passiert und wurde wieder hergestellt.',
+      },
+      {
+        text: '**Ab jetzt kommt heraus, was auch hineingeht:** Zwischenüberschriften, Aufzählungen und Fettes. Damit ist es gleich, ob jemand die Seite ansieht oder der Assistent den Text abfragt — und eine Übersetzung behält die Gliederung des Originals, statt sie stillschweigend einzuebnen.',
+      },
+    ],
+  },
+  {
     nummer: 101,
     datum: null,
     titel: 'Das Sortiment heißt jetzt in jeder Sprache, wie es dort heißt',

@@ -107,7 +107,7 @@ export function registerReferenzen(server: McpServer) {
         bildIds: z.array(z.number()).min(1).describe('Media-IDs, mindestens eine (Pflichtfeld)'),
         slug: z.string().optional().describe('URL-Pfad; leer = automatisch aus dem Titel'),
         kurzbeschreibung: z.string().optional().describe('Teaser für die Übersicht'),
-        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen'),
+        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen. Auszeichnung: `## Überschrift`, `### Kleinere`, `- Punkt`, `**fett**` — dieselbe, die beim Lesen zurückkommt'),
         auftraggeber: z.string().optional().describe('Auftraggeber oder Ort'),
         jahr: z.number().int().min(2000).max(2100).optional(),
         produktSlugs: z
