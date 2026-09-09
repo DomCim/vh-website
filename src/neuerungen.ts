@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 98,
+    datum: null,
+    titel: 'Die Adressen der alten Website führen wieder irgendwohin',
+    punkte: [
+      {
+        text: '**Die alte TYPO3-Seite steht bis heute bei Google** — mit Adressen wie `/outdoor-moebel` oder `/objekte`, die es auf der neuen Seite nicht mehr gibt. Wer darüber kam, landete in einer Fehlermeldung. Jetzt führt jede dieser Adressen dauerhaft auf die passende neue Seite: die Möbelrubrik auf `/moebel`, die vier alten Artikelseiten auf ihr heutiges Stück, die Leuchten auf die Maßanfertigung. Damit kommt die Aufmerksamkeit, die diese Adressen im Netz noch haben, auch an.',
+      },
+      {
+        text: 'Ebenso die alten französischen Adressen (`/fr/meubles-d-exterieur`, `/fr/objets`, `/fr/contact`). Zu tun ist nichts.',
+      },
+    ],
+  },
+  {
     nummer: 95,
     datum: null,
     titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
