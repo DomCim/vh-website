@@ -4,8 +4,7 @@ import { APIError } from 'payload'
 import { admins, anyone } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
 import { adresseFeld } from '../lib/adressen'
-import { locales } from '../lib/i18n'
-import { adresseMerken, autoSlug, slugFreigeben, slugFreigebenAlleSprachen } from '../lib/slug'
+import { adresseMerken, autoSlug, slugFreigeben } from '../lib/slug'
 
 const indexNowKategorie = indexNowHooks((doc) => (doc.slug ? `/${doc.slug}` : null))
 
@@ -98,7 +97,6 @@ export const Categories: CollectionConfig = {
     afterChange: [
       // Siehe Products: Umleitung und Freigabe hängen an diesen beiden
       adresseMerken('categories'),
-      slugFreigebenAlleSprachen(locales),
       ...(Array.isArray(indexNowKategorie.afterChange)
         ? indexNowKategorie.afterChange
         : [indexNowKategorie.afterChange]),

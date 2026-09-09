@@ -43,6 +43,15 @@ import { versandzonen } from "../../../../../lib/versand";
 
 export const dynamic = "force-dynamic";
 
+/*
+ * Interne Artikel existieren nach außen nicht — siehe `Products.intern`.
+ *
+ * Der Filter gehört an die Abfrage und nicht auf die Seite: Sie füttert auch
+ * die Metadaten, und sonst stünde der Titel eines internen Stücks im Kopf der
+ * Seite, während der Rumpf 404 sagt.
+ */
+const NUR_OEFFENTLICH = { intern: { not_equals: true } };
+
 type PageParams = Promise<{
   locale: string;
   categorySlug: string;
@@ -99,7 +108,7 @@ export async function generateMetadata({
   const { locale, categorySlug, itemSlug } = await params;
   if (!isLocale(locale)) return {};
   const payload = await pcFuerAdressen();
-  const fund = await findeNachAdresse(payload, "products", itemSlug, locale);
+  const fund = await findeNachAdresse(payload, "products", itemSlug, locale, NUR_OEFFENTLICH);
   if (!fund) return {};
   const product = fund.doc as unknown as NonNullable<
     Awaited<ReturnType<typeof getProductBySlug>>
@@ -137,9 +146,19 @@ export default async function ProductPage({ params }: { params: PageParams }) {
   const dict = t(locale);
 
   const payloadFuerAdressen = await pcFuerAdressen();
+  /*
+   * Die Kategorie im Pfad darf falsch sein — der Artikel entscheidet.
+   *
+   * Vorher gab es hier einen 404, sobald die Kategorie unbekannt war. Das traf
+   * auch `/de/kollektion/<artikel>`: Genau diesen Pfad benutzt der
+   * Merchant-Feed als Rückfall für ein Stück ohne Kategorie, und ein
+   * Suchdienst, der ihn ausprobiert, fand nichts. Jetzt zählt, ob es den
+   * **Artikel** gibt; die Kategorie wird darunter geradegezogen.
+   */
   const katFund = await findeNachAdresse(payloadFuerAdressen, "categories", categorySlug, locale);
-  if (!katFund) notFound();
-  const category = katFund.doc as unknown as { id: number; name: string };
+  const category = katFund
+    ? (katFund.doc as unknown as { id: number; name: string })
+    : null;
 
   /*
    * Gerufen werden kann der Artikel unter seiner heutigen Adresse, unter dem
@@ -147,7 +166,13 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    * Die Umleitung setzt weiter unten ein, zusammen mit der auf die richtige
    * Kategorie: ein Sprung statt zwei.
    */
-  const artFund = await findeNachAdresse(payloadFuerAdressen, "products", itemSlug, locale);
+  const artFund = await findeNachAdresse(
+    payloadFuerAdressen,
+    "products",
+    itemSlug,
+    locale,
+    NUR_OEFFENTLICH,
+  );
   if (!artFund) notFound();
   const product = artFund.doc as unknown as NonNullable<
     Awaited<ReturnType<typeof getProductBySlug>>
@@ -168,15 +193,17 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    */
   const eigeneKategorieId =
     typeof product.category === "object" && product.category
-      ? ((product.category as { id?: number }).id ?? category.id)
-      : ((product.category as number | null) ?? category.id);
+      ? ((product.category as { id?: number }).id ?? category?.id)
+      : ((product.category as number | null) ?? category?.id);
+  if (!eigeneKategorieId) notFound();
   const katAdressen = await adressenFuer(
     payloadFuerAdressen,
     "categories",
     [eigeneKategorieId],
     locale,
   );
-  const kanonischeKategorie = katAdressen.get(String(eigeneKategorieId)) ?? katFund.kanonisch;
+  const kanonischeKategorie =
+    katAdressen.get(String(eigeneKategorieId)) ?? katFund?.kanonisch ?? categorySlug;
   const artikelPfad = `/${kanonischeKategorie}/${artFund.kanonisch}`;
 
   /*

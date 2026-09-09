@@ -3,8 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { admins, anyoneAusserIntern } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
 import { adresseFeld } from '../lib/adressen'
-import { locales } from '../lib/i18n'
-import { adresseMerken, autoSlug, slugFreigeben, slugFreigebenAlleSprachen } from '../lib/slug'
+import { adresseMerken, autoSlug, slugFreigeben } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
 
@@ -62,7 +61,6 @@ export const Products: CollectionConfig = {
        * hängen und blockierte den Namen — siehe lib/slug.ts.
        */
       adresseMerken('products'),
-      slugFreigebenAlleSprachen(locales),
       ...liveHooks('artikel').afterChange,
       ...indexNowArtikel.afterChange,
     ],
