@@ -58,6 +58,35 @@ export function registerAdressen(server: McpServer) {
       )
       if (!stueck) return fehler(`Unter "${slug}" gibt es nichts in ${bereich}.`)
 
+      /*
+       * Eine Adresse braucht eine Sprachfassung.
+       *
+       * Payload legt übersetzbare Felder in einer eigenen Tabelle ab, eine
+       * Zeile je Sprache — und in dieser Zeile ist der Titel Pflicht. Wer
+       * einem Artikel ohne französische Fassung eine französische Adresse
+       * geben will, bekommt deshalb eine Fehlermeldung über den Titel, die
+       * niemand versteht. Die Reihenfolge ist ohnehin die richtige: Eine
+       * französische Adresse an einer Seite, die noch deutschen Text zeigt,
+       * hilft niemandem.
+       */
+      const alleFassungen = (await payload.findByID({
+        collection: sammlung,
+        id: stueck.id,
+        locale: 'all' as never,
+        depth: 0,
+        overrideAccess: true,
+      })) as unknown as Record<string, unknown>
+      const bezeichnungen = (alleFassungen.title ?? alleFassungen.name) as
+        | Record<string, string>
+        | undefined
+      if (locale !== 'de' && !bezeichnungen?.[locale as string]?.trim()) {
+        return fehler(
+          `"${slug}" hat noch keine ${String(locale).toUpperCase()}-Fassung. ` +
+            `Erst den Text übersetzen (produkt_aendern bzw. kategorie_aendern mit sprache: "${locale}"), ` +
+            'dann die Adresse setzen.',
+        )
+      }
+
       const sauber = adresseSaeubern(adresse)
 
       /*
@@ -138,6 +167,14 @@ export function registerAdressen(server: McpServer) {
         Artikel: [],
         Kategorie: [],
       }
+      /*
+       * Was noch gar keine Sprachfassung hat, ist keine Adressarbeit, sondern
+       * Übersetzungsarbeit — und muss zuerst dran sein.
+       */
+      const ohneFassung: Record<string, { slug: string; bezeichnung: string }[]> = {
+        Artikel: [],
+        Kategorie: [],
+      }
       const gesetzt: Record<string, { slug: string; adresse: string }[]> = {
         Artikel: [],
         Kategorie: [],
@@ -161,20 +198,25 @@ export function registerAdressen(server: McpServer) {
           const bezeichnung =
             typeof name === 'string' ? name : (name.de ?? Object.values(name)[0] ?? slug)
           if (!slug) continue
-          if (eigene === slug) offen[bereich].push({ slug, bezeichnung })
+          const hatFassung =
+            typeof name === 'object' && name ? Boolean(name[locale]?.trim()) : false
+          if (!hatFassung) ohneFassung[bereich].push({ slug, bezeichnung })
+          else if (eigene === slug) offen[bereich].push({ slug, bezeichnung })
           else gesetzt[bereich].push({ slug, adresse: eigene })
         }
       }
 
       const anzahlOffen = offen.Artikel.length + offen.Kategorie.length
+      const anzahlOhne = ohneFassung.Artikel.length + ohneFassung.Kategorie.length
       return ok({
         sprache: locale,
         nochDeutsch: anzahlOffen,
         offen,
+        ohneSprachfassung: anzahlOhne > 0 ? ohneFassung : undefined,
         bereitsGesetzt: gesetzt,
         hinweis:
           anzahlOffen > 0
-            ? 'Nachtragen über adresse_setzen mit bereich, slug, sprache und adresse. Erst die Kategorien, dann die Artikel — der Pfad besteht aus beiden.'
+            ? 'Nachtragen über adresse_setzen mit bereich, slug, sprache und adresse. Erst die Kategorien, dann die Artikel — der Pfad besteht aus beiden. Was unter „ohneSprachfassung" steht, muss zuerst übersetzt werden.'
             : 'Alle Adressen sind in dieser Sprache eigenständig.',
       })
     },

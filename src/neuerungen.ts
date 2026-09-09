@@ -43,6 +43,9 @@ export const NEUERUNGEN: Neuerung[] = [
         text: 'Auch die Sitemap, die Sprachverweise für Suchmaschinen und der Produktdatenfeed für Google nennen ab sofort je Sprache die richtige Adresse.',
       },
       {
+        text: '**Eine Adresse braucht eine Sprachfassung.** Ein Artikel, der noch gar keinen französischen Text hat, bekommt auch keine französische Adresse — die Verwaltung nimmt sie nicht an, und sinnvoll wäre sie ohnehin nicht: eine französische Adresse an einer Seite, die deutschen Text zeigt, hilft niemandem. Erst übersetzen, dann die Adresse. Wer es andersherum versucht, bekommt das gesagt statt einer Fehlermeldung über ein Feld, das er gar nicht angefasst hat.',
+      },
+      {
         text: '**Im Assistenten:** `adressen_pruefen` zeigt, was in einer Sprache noch die deutsche Adresse trägt, `adresse_setzen` ändert sie, `adressen_lesen` zeigt alle Fassungen samt früherer Adressen. Ein eigenes Werkzeug und kein Feld nebenbei — eine Adresse zu ändern ist kein Textkorrektur, sondern ein Eingriff in etwas, das andere Leute in der Hand haben.',
       },
     ],
