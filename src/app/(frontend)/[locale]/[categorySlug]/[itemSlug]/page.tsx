@@ -254,7 +254,25 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           "@type": "Offer",
           priceCurrency: "EUR",
           price: aktion ? mitRabatt(minPrice, aktion.prozent) : minPrice,
-          ...(aktion ? { priceValidUntil: String(aktion.giltBis).slice(0, 10) } : {}),
+          /*
+           * Wie lange der Preis trägt.
+           *
+           * Läuft eine Aktion, endet er mit ihr. Sonst steht hier ein Jahr ab
+           * heute: Google beanstandet ein fehlendes `priceValidUntil` als
+           * unvollständige Angabe, ein Datum in der Vergangenheit lässt die
+           * Auszeichnung sogar ganz wegfallen. Ein Jahr ist die übliche
+           * Zusage und für Ware, die einzeln gebaut wird, ehrlich: Länger
+           * will sich niemand festlegen.
+           */
+          priceValidUntil: aktion
+            ? String(aktion.giltBis).slice(0, 10)
+            : new Date(Date.now() + 365 * 86_400_000).toISOString().slice(0, 10),
+          /*
+           * Neuware — das steht nicht von selbst da. Ohne die Angabe meldet
+           * die Search Console ein fehlendes Feld, und im Shopping-Ergebnis
+           * fehlt die Zeile, in der bei anderen „Neu" steht.
+           */
+          itemCondition: "https://schema.org/NewCondition",
           availability:
             product.available !== false
               ? "https://schema.org/InStock"

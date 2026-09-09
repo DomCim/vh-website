@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 99,
+    datum: null,
+    titel: 'Die Kollektion hat jetzt eine eigene Seite',
+    punkte: [
+      {
+        text: '**Unter jedem Suchergebnis zeigt Google den Weg zur Seite an** — bei einem Artikel fing der mit „Kollektion" an, und diese Station führte ins Nichts: Die Seite `/kollektion` gab es gar nicht. Jetzt gibt es sie, und sie ist mehr als ein Lückenfüller: alle Rubriken und darunter jedes Stück auf einem Blatt. Wer den Namen kennt, aber noch nicht weiß, ob er Möbel, Feuer oder Objekte will, landet dort richtig.',
+      },
+      {
+        text: '**Am Artikel stehen zwei Angaben mehr für Google:** dass es sich um Neuware handelt, und wie lange der Preis gilt. Beides hatte die Search Console als fehlend gemeldet. Läuft eine Aktion, endet die Preiszusage mit ihr, sonst gilt sie ein Jahr.',
+      },
+    ],
+  },
+  {
     nummer: 95,
     datum: null,
     titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
