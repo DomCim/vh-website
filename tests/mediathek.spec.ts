@@ -89,7 +89,18 @@ test.describe('Mediathek', () => {
       expect(liste.status()).not.toBe(200)
 
       // … mit Anmeldung selbstverständlich schon, sonst wäre das Büro blind
-      const mitAnmeldung = await request.get(`${BASIS}/api/media?limit=1&depth=0`, { headers: kopf })
+      /*
+       * Ausdrücklich ein **öffentliches** Bild.
+       *
+       * Vorher wurde einfach der erste Datensatz genommen. Sobald aber
+       * irgendetwas Internes zuletzt hochgeladen wurde — ein Übergabefoto aus
+       * einem früheren Prüflauf genügt —, war der erste Datensatz intern, und
+       * die Prüfung scheiterte an ihrer eigenen Annahme statt an einem Fehler.
+       */
+      const mitAnmeldung = await request.get(
+        `${BASIS}/api/media?limit=1&depth=0&where[intern][not_equals]=true`,
+        { headers: kopf },
+      )
       expect(mitAnmeldung.ok()).toBeTruthy()
       const bild = (await mitAnmeldung.json()).docs?.[0]
 
