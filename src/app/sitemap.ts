@@ -83,6 +83,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const result: MetadataRoute.Sitemap = [
     ...entries('', undefined, 1),
+    // Die Übersicht über das ganze Sortiment — zugleich erste Station in
+    // jedem Brotkrumen (siehe [locale]/kollektion/page.tsx)
+    ...entries('/kollektion', undefined, 0.8),
     ...entries('/news', undefined, 0.8),
     ...entries('/projekte', undefined, 0.7),
     ...entries('/ueber-uns', undefined, 0.6),

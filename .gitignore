@@ -41,3 +41,7 @@ pnpm-debug.log*
 .vscode/
 *.code-workspace
 .mcp.json
+
+# Arbeitskopien, die Claude Code unter .claude/worktrees anlegt — derselbe
+# Quelltext ein zweites Mal, gehört nicht in den Verlauf.
+/.claude/worktrees/
