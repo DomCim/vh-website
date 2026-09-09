@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 96,
+    datum: null,
+    titel: 'Die Bilder stehen jetzt in der Sitemap',
+    punkte: [
+      {
+        text: '**Die Bildersuche fand die Fotos bisher nur zufällig.** In der Sitemap standen die Seiten, aber kein einziges Bild — und was im Karussell erst durch das Nachladen sichtbar wird, sieht ein Suchdienst sonst nie. Jetzt steht zu jedem Artikel, jedem Projekt und jedem Beitrag dabei, welche Bilder dazugehören. Für einen Betrieb, dessen Ware man ansieht und dann haben will, ist die Bildersuche ein eigener Weg zur Kundschaft.',
+      },
+      {
+        text: '**Was dabei hilft, sind Alternativtexte.** Ein Bild ohne Alternativtext ist für die Bildersuche ein Bild ohne Beschriftung; sie kann es zeigen, weiß aber nicht wozu. Die Texte stehen in der Mediathek am Bild und lassen sich dort nachtragen.',
+      },
+    ],
+  },
+  {
     nummer: 95,
     datum: null,
     titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
