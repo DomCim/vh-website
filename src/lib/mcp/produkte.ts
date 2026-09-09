@@ -134,7 +134,7 @@ export function registerProdukte(server: McpServer) {
           .optional()
           .describe('Versandkosten pro Stück in EUR (0 = versandkostenfrei)'),
         kurzbeschreibung: z.string().optional(),
-        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen'),
+        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen. Auszeichnung: `## Überschrift`, `### Kleinere`, `- Punkt`, `**fett**` — dieselbe, die beim Lesen zurückkommt'),
         kategorieSlug: z.string().optional(),
         fertigungszeit: z
           .string()
@@ -317,7 +317,7 @@ export function registerProdukte(server: McpServer) {
         preis: z.number().nonnegative().optional(),
         versandkosten: z.number().nonnegative().optional().describe('Versandkosten pro Stück in EUR'),
         kurzbeschreibung: z.string().optional(),
-        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen'),
+        beschreibung: z.string().optional().describe('Fließtext; Absätze durch Leerzeilen. Auszeichnung: `## Überschrift`, `### Kleinere`, `- Punkt`, `**fett**` — dieselbe, die beim Lesen zurückkommt'),
         fertigungszeit: z.string().optional().describe('z.B. "3–4 Wochen"'),
         ausDerWerkstatt: z.boolean().optional().describe('true = fertiges Stück, sofort lieferbar'),
         nurAufAnfrage: z.boolean().optional(),

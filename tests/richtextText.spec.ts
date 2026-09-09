@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 import { expect, test } from '@playwright/test'
 
 import { richTextZuText, textZuRichText } from '../src/lib/richtextText'
@@ -71,4 +74,34 @@ test('Ein leerer Text ergibt einen leeren Absatz, keinen kaputten Baum', () => {
 test('Reine Absätze bleiben reine Absätze', () => {
   const prosa = 'Erster Absatz.\n\nZweiter Absatz mit einem Bindestrich - mitten im Satz.'
   expect(richTextZuText(textZuRichText(prosa))).toBe(prosa)
+})
+
+/**
+ * Es darf nur **eine** Umwandlung geben.
+ *
+ * Es gab einmal eine zweite, in `lib/mcp/helpers.ts`, unter demselben Namen:
+ * Sie gab nur den nackten Text heraus, ohne Fettungen und mit
+ * aneinandergeklebten Listenpunkten. Was über die Werkzeuge gelesen wurde, sah
+ * damit kaputt aus, obwohl es heil war — und wer es daraufhin „richtete" und
+ * zurückschrieb, löschte die Auszeichnung dann wirklich. Genau so ist einmal
+ * eine Artikelbeschreibung im laufenden Betrieb um ihre Fettungen gekommen.
+ *
+ * Eine zweite Umwandlung fällt niemandem auf, solange beide denselben Namen
+ * tragen. Deshalb hier festgehalten.
+ */
+test('die MCP-Werkzeuge lesen Richtext mit derselben Umwandlung', () => {
+  const ordner = path.join(process.cwd(), 'src/lib/mcp')
+  const quelle = fs
+    .readdirSync(ordner)
+    .filter((d) => d.endsWith('.ts'))
+    .map((d) => fs.readFileSync(path.join(ordner, d), 'utf8'))
+    .join('\n')
+
+  expect(quelle, 'keine zweite Umwandlung neben lib/richtextText.ts').not.toMatch(
+    /function richTextZuText/,
+  )
+  expect(
+    fs.readFileSync(path.join(ordner, 'helpers.ts'), 'utf8'),
+    'helpers.ts holt die Umwandlung aus lib/richtextText.ts',
+  ).toMatch(/import \{ richTextZuText \} from '\.\.\/richtextText'/)
 })

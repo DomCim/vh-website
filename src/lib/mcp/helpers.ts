@@ -3,6 +3,7 @@ import type { createMcpHandler } from 'mcp-handler'
 import { getPayload, type CollectionSlug, type Payload } from 'payload'
 import { z } from 'zod'
 
+import { richTextZuText } from '../richtextText'
 import { slugify } from '../slug'
 import { freigabePruefen, type Freigabestand } from './leitplanken'
 
@@ -88,19 +89,27 @@ export async function findeNachSlug<T = Record<string, unknown>>(
   return (docs[0] as T) ?? null
 }
 
-/** Lexical-Richtext wieder in lesbaren Fließtext zurückverwandeln */
-export function richTextZuText(value: unknown): string {
-  const sammle = (node: unknown): string => {
-    if (!node || typeof node !== 'object') return ''
-    const n = node as { type?: string; text?: string; children?: unknown[] }
-    if (typeof n.text === 'string') return n.text
-    if (!Array.isArray(n.children)) return ''
-    const inner = n.children.map(sammle).join('')
-    return n.type === 'paragraph' || n.type === 'heading' ? `${inner}\n\n` : inner
-  }
-  const root = (value as { root?: unknown } | null)?.root
-  return root ? sammle(root).trim() : ''
-}
+/**
+ * Richtext lesbar herausgeben — mit derselben Auszeichnung, die beim
+ * Schreiben angenommen wird.
+ *
+ * **Hier stand einmal eine eigene Umwandlung, und die hat Schaden angerichtet.**
+ * Sie gab nur den nackten Text zurück: Fettungen fielen weg, und die Punkte
+ * einer Aufzählung klebten ohne Trennzeichen aneinander
+ * („…witterungsbeständigMassive Holz-Tischplatte…"). Das sah nach kaputten
+ * Daten aus, war aber heil — kaputt war das Lesen. Wer daraufhin den Text
+ * „richtete" und zurückschrieb, hat die Auszeichnung dann wirklich gelöscht;
+ * einmal passiert, an einer Artikelbeschreibung im laufenden Betrieb.
+ *
+ * Dieselbe Falle steckt im Übersetzen: Eine Fassung, die aus dem entschärften
+ * Text entsteht, hat keine Fettungen mehr — und es fällt niemandem auf, weil
+ * die Kontrolle wieder durch dasselbe Werkzeug läuft.
+ *
+ * Deshalb dieselbe Umwandlung wie überall sonst. Sie ist verlustfrei in beide
+ * Richtungen, und eine Prüfung hält das fest. Damit ist es gleich, ob jemand
+ * die Seite ansieht oder das Werkzeug fragt.
+ */
+export { richTextZuText }
 
 /**
  * Werkzeuge, die nur lesen — erkennbar an der Namenskonvention.
