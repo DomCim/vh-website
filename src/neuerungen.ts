@@ -26,6 +26,19 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 97,
+    datum: null,
+    titel: 'Artikel mit Farbauswahl lassen sich wieder übersetzen',
+    punkte: [
+      {
+        text: '**Ein Artikel mit Farboptionen ließ sich über den Assistenten gar nicht übersetzen.** Beim Anlegen einer französischen oder englischen Fassung prüft die Verwaltung das ganze Blatt: Titel, Variantenbezeichnungen **und** Farbnamen sind Pflicht und alle drei übersetzbar. Das Werkzeug für die Texte kannte die Farbnamen aber nicht, das Werkzeug für die Farben nicht den Titel — jeder Weg endete mit einer Fehlermeldung über Felder, die man gar nicht angefasst hatte. Jetzt gehen alle drei in einem Zug mit. Aufgefallen am Dubbe Stehtisch, der in drei RAL-Farben zu haben ist.',
+      },
+      {
+        text: 'Das hinterlegte Farbbild bleibt dabei, wo es war. Wer ein Bild wirklich austauschen will, nimmt weiter das Werkzeug für Varianten und Farben.',
+      },
+    ],
+  },
+  {
     nummer: 95,
     datum: null,
     titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',

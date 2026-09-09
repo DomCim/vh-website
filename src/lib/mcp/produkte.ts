@@ -122,7 +122,7 @@ export function registerProdukte(server: McpServer) {
     'produkt_aendern',
     {
       description:
-        'Ändert ein Produkt (nur die angegebenen Felder). Preisänderungen wirken sofort im Shop. Mit sprache=fr/en werden die übersetzbaren Felder (Titel, Kurzbeschreibung, Beschreibung, Fertigungszeit) in dieser Sprache gesetzt; alle übrigen Felder gelten sprachübergreifend. Bei einem Produkt mit Varianten müssen deren Bezeichnungen in derselben Sprachfassung mitgegeben werden — dafür ist "varianten" da.',
+        'Ändert ein Produkt (nur die angegebenen Felder). Preisänderungen wirken sofort im Shop. Mit sprache=fr/en werden die übersetzbaren Felder (Titel, Kurzbeschreibung, Beschreibung, Fertigungszeit) in dieser Sprache gesetzt; alle übrigen Felder gelten sprachübergreifend. Bei einem Produkt mit Varianten oder Farboptionen müssen deren Bezeichnungen in derselben Sprachfassung mitgegeben werden — dafür sind "varianten" und "farboptionen" da.',
       inputSchema: {
         slug: z.string().describe('Slug des Produkts, z.B. outdoor-sofa-os'),
         sprache,
@@ -170,6 +170,15 @@ export function registerProdukte(server: McpServer) {
          * Beides in einem Aufruf löst das. Für ein Produkt ohne Varianten
          * ändert sich nichts, und wer nur umbenennen will, nimmt weiterhin
          * produkt_varianten_setzen.
+         *
+         * **Für die Farbnamen gilt dasselbe — und das stand hier zunächst
+         * nicht.** Der Dubbe Stehtisch hat drei Farboptionen, und deren Name
+         * ist genauso Pflicht und genauso übersetzbar. Also lief die Klemme
+         * ein zweites Mal auf: produkt_aendern scheiterte an „Farboptionen 1
+         * > Farbname", produkt_varianten_setzen weiterhin am Titel. Die
+         * Lehre von den Varianten war da, sie war nur nicht zu Ende
+         * angewendet. Wer ein Pflichtfeld übersetzbar macht, muss es überall
+         * dorthin durchreichen, wo eine Sprachfassung entstehen kann.
          */
         varianten: z
           .array(
@@ -190,6 +199,26 @@ export function registerProdukte(server: McpServer) {
           .describe(
             'Nötig, wenn das Produkt Varianten hat und diese Sprachfassung neu angelegt wird',
           ),
+        farboptionen: z
+          .array(
+            z.object({
+              name: z.string(),
+              hex: z.string().optional(),
+              kennung: z
+                .string()
+                .optional()
+                .describe(
+                  'Die Kennung einer bestehenden Farbe (aus produkt_lesen). Damit bleibt sie ' +
+                    'beim Umbenennen oder Übersetzen dieselbe — daran hängt ihr Bild.',
+                ),
+            }),
+          )
+          .optional()
+          .describe(
+            'Nötig, wenn das Produkt Farboptionen hat und diese Sprachfassung neu angelegt ' +
+              'wird. Das hinterlegte Farbbild bleibt erhalten; zum Ändern eines Bildes ist ' +
+              'produkt_varianten_setzen da.',
+          ),
       },
     },
     async ({
@@ -209,11 +238,13 @@ export function registerProdukte(server: McpServer) {
       aufStartseite,
       reihenfolge,
       varianten,
+      farboptionen,
     }) => {
       const payload = await db()
       const produkt = await findeNachSlug<{
         id: number
         variants?: { id?: string | null; title?: string | null }[] | null
+        colorOptions?: { id?: string | null; name?: string | null; image?: unknown }[] | null
       }>(payload, 'products', slug, { locale })
       if (!produkt) return fehler(`Produkt "${slug}" nicht gefunden`)
 
@@ -248,6 +279,19 @@ export function registerProdukte(server: McpServer) {
               ...(v.id ? { id: v.id } : {}),
               title: v.titel,
               price: v.preis,
+            })),
+          }),
+          /*
+           * Farben behalten ihre Kennung und damit ihr Bild — siehe
+           * `farbenZuordnen`. Ein Bild wird hier nie gesetzt: Beim Übersetzen
+           * ändert sich der Name, nicht das Foto.
+           */
+          ...(farboptionen !== undefined && {
+            colorOptions: farbenZuordnen(produkt.colorOptions ?? [], farboptionen).map((c) => ({
+              name: c.name,
+              hex: c.hex,
+              ...(c.id ? { id: c.id } : {}),
+              image: c.image as number | null | undefined,
             })),
           }),
         },
