@@ -64,9 +64,9 @@
 # Beim Umzug vom alten Stack: erst den alten Stack löschen (die Volumes
 # bleiben dabei liegen), dann diesen unter EXAKT demselben Namen anlegen —
 # die Volumes heißen <Stackname>_media, _dbdata, _backups und docken nur bei
-# gleichem Namen wieder an. Danach kann der HA-Webhook weg: In den
-# GitHub-Secrets HA_DEPLOY_WEBHOOK entfernen, der Workflow überspringt den
-# Schritt dann von selbst.
+# gleichem Namen wieder an. Der frühere Umweg über einen Home-Assistant-
+# Webhook ist mit dem Umzug hierher entfallen (kein GitHub-Secret mehr,
+# kein eigener Schritt im Workflow).
 services:
   web:
     # Zwei Abbilder aus demselben Quelltext: Dieses hier enthält Website, Shop

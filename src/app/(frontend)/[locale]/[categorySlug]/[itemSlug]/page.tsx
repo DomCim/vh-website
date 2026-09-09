@@ -12,12 +12,17 @@ import { MassanfertigungHinweis } from "../../../../../components/Massanfertigun
 import { Reveal } from "../../../../../components/motion/Reveal";
 import { RichText } from "../../../../../components/RichText";
 import { ProductDetail } from "../../../../../components/shop/ProductDetail";
+import {
+  adressenAllerSprachen,
+  adressenFuer,
+  findeNachAdresse,
+} from "../../../../../lib/adressen";
 import { aktionFuerArtikel, mitRabatt } from "../../../../../lib/aktionspreis";
 import { bildKennung, galerieErgaenzen } from "../../../../../lib/artikelbilder";
 import {
-  getCategoryBySlug,
   getPreisaktionen,
   getProductBySlug,
+  payloadClient as pcFuerAdressen,
   getProjectsForProduct,
   getSiteSettings,
   getTestimonialsForProduct,
@@ -25,10 +30,10 @@ import {
   mediaUrl,
   payloadClient,
 } from "../../../../../lib/data";
-import { isLocale, t } from "../../../../../lib/i18n";
+import { isLocale, type Locale, locales, t } from "../../../../../lib/i18n";
 import {
   absoluteUrl,
-  alternatesFor,
+  alternatesFuer,
   BASE_URL,
   breadcrumbJsonLd,
   jsonLd,
@@ -38,11 +43,62 @@ import { versandzonen } from "../../../../../lib/versand";
 
 export const dynamic = "force-dynamic";
 
+/*
+ * Interne Artikel existieren nach außen nicht — siehe `Products.intern`.
+ *
+ * Der Filter gehört an die Abfrage und nicht auf die Seite: Sie füttert auch
+ * die Metadaten, und sonst stünde der Titel eines internen Stücks im Kopf der
+ * Seite, während der Rumpf 404 sagt.
+ */
+const NUR_OEFFENTLICH = { intern: { not_equals: true } };
+
 type PageParams = Promise<{
   locale: string;
   categorySlug: string;
   itemSlug: string;
 }>;
+
+/**
+ * Die Pfade dieses Artikels in allen drei Sprachen.
+ *
+ * Seit jede Sprache ihre eigene Adresse haben kann — für den Artikel **und**
+ * für seine Kategorie —, lässt sich der französische Pfad nicht mehr aus dem
+ * deutschen ableiten. Beides wird deshalb einmal über alle Sprachen geholt und
+ * zusammengesetzt.
+ */
+async function alternatePfade(
+  payload: Awaited<ReturnType<typeof pcFuerAdressen>>,
+  product: { id: number; category?: unknown },
+  locale: Locale,
+  rueckfallKategorie: string,
+) {
+  const kategorieId =
+    typeof product.category === "object" && product.category
+      ? ((product.category as { id?: number }).id ?? null)
+      : (product.category as number | null);
+
+  const [artikel, kategorie] = await Promise.all([
+    payload
+      .findByID({ collection: "products", id: product.id, locale: "all" as never, depth: 0, overrideAccess: true })
+      .catch(() => null),
+    kategorieId
+      ? payload
+          .findByID({ collection: "categories", id: kategorieId, locale: "all" as never, depth: 0, overrideAccess: true })
+          .catch(() => null)
+      : null,
+  ]);
+  if (!artikel) return undefined;
+
+  const artikelAdressen = adressenAllerSprachen(artikel as unknown as Record<string, unknown>);
+  const katAdressen = kategorie
+    ? adressenAllerSprachen(kategorie as unknown as Record<string, unknown>)
+    : null;
+
+  const pfade = Object.fromEntries(
+    locales.map((l) => [l, `/${katAdressen?.[l] ?? rueckfallKategorie}/${artikelAdressen[l]}`]),
+  ) as Record<Locale, string>;
+  return alternatesFuer(locale, pfade);
+}
 
 export async function generateMetadata({
   params,
@@ -51,8 +107,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, categorySlug, itemSlug } = await params;
   if (!isLocale(locale)) return {};
-  const product = await getProductBySlug(itemSlug, locale);
-  if (!product) return {};
+  const payload = await pcFuerAdressen();
+  const fund = await findeNachAdresse(payload, "products", itemSlug, locale, NUR_OEFFENTLICH);
+  if (!fund) return {};
+  const product = fund.doc as unknown as NonNullable<
+    Awaited<ReturnType<typeof getProductBySlug>>
+  >;
   const image = absoluteUrl(mediaUrl(product.images?.[0], "large"));
   /*
    * Die maßgebliche Adresse kommt vom Artikel, nicht aus dem Aufruf.
@@ -71,7 +131,7 @@ export async function generateMetadata({
   return {
     title: product.title,
     description: product.shortDescription || undefined,
-    alternates: alternatesFor(locale, `/${eigeneKategorie}/${itemSlug}`),
+    alternates: await alternatePfade(payload, product, locale, eigeneKategorie),
     openGraph: {
       title: product.title,
       description: product.shortDescription || undefined,
@@ -85,11 +145,38 @@ export default async function ProductPage({ params }: { params: PageParams }) {
   if (!isLocale(locale)) notFound();
   const dict = t(locale);
 
-  const category = await getCategoryBySlug(categorySlug, locale);
-  if (!category) notFound();
+  const payloadFuerAdressen = await pcFuerAdressen();
+  /*
+   * Die Kategorie im Pfad darf falsch sein — der Artikel entscheidet.
+   *
+   * Vorher gab es hier einen 404, sobald die Kategorie unbekannt war. Das traf
+   * auch `/de/kollektion/<artikel>`: Genau diesen Pfad benutzt der
+   * Merchant-Feed als Rückfall für ein Stück ohne Kategorie, und ein
+   * Suchdienst, der ihn ausprobiert, fand nichts. Jetzt zählt, ob es den
+   * **Artikel** gibt; die Kategorie wird darunter geradegezogen.
+   */
+  const katFund = await findeNachAdresse(payloadFuerAdressen, "categories", categorySlug, locale);
+  const category = katFund
+    ? (katFund.doc as unknown as { id: number; name: string })
+    : null;
 
-  const product = await getProductBySlug(itemSlug, locale);
-  if (!product) notFound();
+  /*
+   * Gerufen werden kann der Artikel unter seiner heutigen Adresse, unter dem
+   * Slug oder unter einer, die er einmal trug — `findeNachAdresse` klärt das.
+   * Die Umleitung setzt weiter unten ein, zusammen mit der auf die richtige
+   * Kategorie: ein Sprung statt zwei.
+   */
+  const artFund = await findeNachAdresse(
+    payloadFuerAdressen,
+    "products",
+    itemSlug,
+    locale,
+    NUR_OEFFENTLICH,
+  );
+  if (!artFund) notFound();
+  const product = artFund.doc as unknown as NonNullable<
+    Awaited<ReturnType<typeof getProductBySlug>>
+  >;
 
   /*
    * Wohin geliefert wird, kommt aus den Versandzonen — derselben Quelle, aus
@@ -104,11 +191,20 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    * Auszeichnungen: Was Google als Adresse des Artikels und als Weg dorthin
    * bekommt, muss dieselbe sein, die oben als maßgeblich steht.
    */
-  const kanonischeKategorie =
+  const eigeneKategorieId =
     typeof product.category === "object" && product.category
-      ? ((product.category as { slug?: string }).slug ?? categorySlug)
-      : categorySlug;
-  const artikelPfad = `/${kanonischeKategorie}/${itemSlug}`;
+      ? ((product.category as { id?: number }).id ?? category?.id)
+      : ((product.category as number | null) ?? category?.id);
+  if (!eigeneKategorieId) notFound();
+  const katAdressen = await adressenFuer(
+    payloadFuerAdressen,
+    "categories",
+    [eigeneKategorieId],
+    locale,
+  );
+  const kanonischeKategorie =
+    katAdressen.get(String(eigeneKategorieId)) ?? katFund?.kanonisch ?? categorySlug;
+  const artikelPfad = `/${kanonischeKategorie}/${artFund.kanonisch}`;
 
   /*
    * Falsche Kategorie in der Adresse? Dann dorthin, wo der Artikel wirklich
@@ -129,7 +225,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    * in fremden Verweisen. Ein 404 verlöre sie; die dauerhafte Umleitung führt
    * den Besucher ans Ziel und sagt Google zugleich, welche Adresse gilt.
    */
-  if (kanonischeKategorie !== categorySlug) {
+  if (kanonischeKategorie !== categorySlug || artFund.kanonisch !== itemSlug) {
     permanentRedirect(`/${locale}${artikelPfad}`);
   }
 
@@ -254,7 +350,25 @@ export default async function ProductPage({ params }: { params: PageParams }) {
           "@type": "Offer",
           priceCurrency: "EUR",
           price: aktion ? mitRabatt(minPrice, aktion.prozent) : minPrice,
-          ...(aktion ? { priceValidUntil: String(aktion.giltBis).slice(0, 10) } : {}),
+          /*
+           * Wie lange der Preis trägt.
+           *
+           * Läuft eine Aktion, endet er mit ihr. Sonst steht hier ein Jahr ab
+           * heute: Google beanstandet ein fehlendes `priceValidUntil` als
+           * unvollständige Angabe, ein Datum in der Vergangenheit lässt die
+           * Auszeichnung sogar ganz wegfallen. Ein Jahr ist die übliche
+           * Zusage und für Ware, die einzeln gebaut wird, ehrlich: Länger
+           * will sich niemand festlegen.
+           */
+          priceValidUntil: aktion
+            ? String(aktion.giltBis).slice(0, 10)
+            : new Date(Date.now() + 365 * 86_400_000).toISOString().slice(0, 10),
+          /*
+           * Neuware — das steht nicht von selbst da. Ohne die Angabe meldet
+           * die Search Console ein fehlendes Feld, und im Shopping-Ergebnis
+           * fehlt die Zeile, in der bei anderen „Neu" steht.
+           */
+          itemCondition: "https://schema.org/NewCondition",
           availability:
             product.available !== false
               ? "https://schema.org/InStock"

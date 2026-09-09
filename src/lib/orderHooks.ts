@@ -5,6 +5,7 @@ import type {
   PayloadRequest,
 } from 'payload'
 
+import { belegAblegen } from './belegablage'
 import { bestellungAlsRechnung } from './invoice'
 import { dateienZurBestellung, downloadBis, downloadLink } from './digitaleware'
 import {
@@ -58,13 +59,34 @@ export async function markOrderPaid(
     // Rechnung als PDF anhängen — schlägt das fehl, geht die Mail trotzdem raus
     let anhang: { filename: string; content: Buffer; contentType: string }[] | undefined
     try {
-      anhang = [
-        {
-          filename: `Rechnung-${order.orderNumber}.pdf`,
-          content: await bestellungAlsRechnung(order, company),
-          contentType: 'application/pdf',
-        },
-      ]
+      const dateiname = `Rechnung-${order.orderNumber}.pdf`
+      const pdf = await bestellungAlsRechnung(order, company)
+      anhang = [{ filename: dateiname, content: pdf, contentType: 'application/pdf' }]
+
+      /*
+       * Dieselbe Datei bleibt im Haus.
+       *
+       * Sie ging bisher nur hinaus: Was der Kunde bekommen hat, lag danach
+       * ausschließlich in seinem Postfach — das Mailprotokoll merkt sich nur
+       * den Dateinamen. Für eine Rechnung ist das zu wenig, sie ist acht
+       * Jahre aufzubewahren. Dazu die Firmenangaben, aus denen sie gezeichnet
+       * wurde: Ohne sie ließe sich das Blatt später nicht einmal annähern.
+       *
+       * Scheitert das Ablegen, geht die Bestätigung trotzdem hinaus — eine
+       * bezahlte Bestellung darf nicht an der Ablage hängen bleiben.
+       */
+      try {
+        const pdfAblage = await belegAblegen(`Rechnung-${order.orderNumber}`, pdf)
+        await payload.update({
+          collection: 'orders',
+          id: orderId,
+          overrideAccess: true,
+          data: { pdfAblage, absender: company } as never,
+          context: { skipShippedMail: true },
+        })
+      } catch (err) {
+        payload.logger.error({ err }, `Rechnung ${order.orderNumber} konnte nicht abgelegt werden`)
+      }
     } catch (err) {
       payload.logger.error({ err }, `Rechnung für ${order.orderNumber} konnte nicht erzeugt werden`)
     }

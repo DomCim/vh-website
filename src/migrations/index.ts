@@ -71,6 +71,8 @@ import * as migration_20260828_101253_postfach_belege from './20260828_101253_po
 import * as migration_20260828_124256_mediathek_intern from './20260828_124256_mediathek_intern';
 import * as migration_20260828_170818_schrittzeit from './20260828_170818_schrittzeit';
 import * as migration_20260830_112216_termine_kalender from './20260830_112216_termine_kalender';
+import * as migration_20260909_063951_belege_einfrieren from './20260909_063951_belege_einfrieren';
+import * as migration_20260909_192704_adressen_je_sprache from './20260909_192704_adressen_je_sprache';
 
 export const migrations = [
   {
@@ -436,6 +438,16 @@ export const migrations = [
   {
     up: migration_20260830_112216_termine_kalender.up,
     down: migration_20260830_112216_termine_kalender.down,
-    name: '20260830_112216_termine_kalender'
+    name: '20260830_112216_termine_kalender',
+  },
+  {
+    up: migration_20260909_063951_belege_einfrieren.up,
+    down: migration_20260909_063951_belege_einfrieren.down,
+    name: '20260909_063951_belege_einfrieren',
+  },
+  {
+    up: migration_20260909_192704_adressen_je_sprache.up,
+    down: migration_20260909_192704_adressen_je_sprache.down,
+    name: '20260909_192704_adressen_je_sprache'
   },
 ];

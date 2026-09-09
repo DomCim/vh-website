@@ -201,8 +201,8 @@ jobs:
   # ── Ausrollen ──────────────────────────────────────────────────────────────
   #
   # Ein eigener Auftrag, weil er genau einmal laufen darf. In der Matrix oben
-  # liefe er je Hälfte einmal — zwei Webhooks für ein Ausrollen, und das Ganze
-  # ohne Not zweimal.
+  # liefe er je Hälfte einmal — der Betriebszeiger dürfte sich aber nur einmal
+  # bewegen, sonst schöbe der zweite Lauf den ersten wieder zurück.
   #
   # `success` deckt auch den Fall ab, dass nur eine Hälfte gebaut und die
   # andere übersprungen wurde. Wurde gar nichts gebaut — etwa weil nur
@@ -225,8 +225,16 @@ jobs:
       # Von Hand angestoßen: das Auswahlfeld oben. Beim Merge nach main lässt
       # sich dagegen nichts mitgeben — dort steht die Bremse im Text des
       # Commits. Wer `[kein-ausrollen]` in die Merge-Nachricht schreibt, baut
-      # `latest`, ohne dass es gleich live geht; ausgerollt wird dann später
-      # von Hand über den Portainer-Stack.
+      # `latest`, ohne dass `betrieb` sich mitbewegt — Portainer sieht dann
+      # keine Änderung und rollt nichts aus. Nachholen geht über einen
+      # erneuten „Run workflow" auf demselben Stand, diesmal mit „ja".
+      #
+      # Beide Bremsen wirken nur auf `betrieb`, nicht auf das Abbild selbst:
+      # `latest` wird oben (Auftrag `bauen`) unabhängig davon getaggt, sobald
+      # von `main` gebaut wird. Wer den Portainer-Stack aus anderem Anlass von
+      # Hand neu ausrollt, während ein zurückgehaltener Bau als `latest` in
+      # der Registry liegt, holt sich damit genau diesen Bau — verfrüht und
+      # ohne dass `betrieb` je bewegt wurde.
 
       # ── Der Betriebszeiger ─────────────────────────────────────────────
       #
@@ -252,47 +260,3 @@ jobs:
         run: |
           git push --force origin "HEAD:refs/heads/betrieb"
           echo "betrieb steht jetzt auf ${GITHUB_SHA:0:7} — Portainer holt sich das beim nächsten Poll."
-
-      - name: Ausrollen anstoßen (über Home Assistant)
-        env:
-          HA_DEPLOY_WEBHOOK: ${{ secrets.HA_DEPLOY_WEBHOOK }}
-          HA_DEPLOY_TOKEN: ${{ secrets.HA_DEPLOY_TOKEN }}
-        run: |
-          if [ -z "$HA_DEPLOY_WEBHOOK" ]; then
-            echo "Kein Webhook hinterlegt — Ausrollen übersprungen."
-            exit 0
-          fi
-
-          # Beim Einfügen in die GitHub-Oberfläche rutscht leicht ein
-          # Zeilenumbruch mit hinein; curl weist die Adresse dann rundheraus ab
-          ziel=$(printf '%s' "$HA_DEPLOY_WEBHOOK" | tr -d '[:space:]')
-          geheim=$(printf '%s' "$HA_DEPLOY_TOKEN" | tr -d '[:space:]')
-
-          # Die Adresse selbst gehört nicht ins Protokoll — sie ist der
-          # Schlüssel. Die Länge reicht, um einen Fehlgriff zu erkennen.
-          echo "Adresse: ${#ziel} Zeichen"
-          case "$ziel" in
-            https://*) ;;
-            *) echo "::error::Die Webhook-Adresse beginnt nicht mit https:// — vermutlich beim Kopieren verstümmelt."; exit 1 ;;
-          esac
-
-          # `web` und `buero` sagen Home Assistant, welche Hälfte gebaut
-          # wurde. Ohne das wartete die Automatisierung nach einem reinen
-          # Büro-Bau sechs Minuten auf eine Website-Fassung, die nie kommt —
-          # und meldete dann fälschlich „Ausrollen hakt".
-          antwort=$(mktemp)
-          code=$(curl -sS -o "$antwort" -w '%{http_code}' --max-time 30 \
-            -X POST "$ziel" \
-            -H 'Content-Type: application/json' \
-            -d "{\"token\":\"$geheim\",\"quelle\":\"github\",\"commit\":\"${GITHUB_SHA:0:7}\",\"web\":${{ needs.aenderungen.outputs.web }},\"buero\":${{ needs.aenderungen.outputs.buero }}}") || {
-              echo "::error::curl kam nicht durch — Adresse prüfen."
-              exit 1
-            }
-
-          echo "Antwort: HTTP $code"
-          head -c 300 "$antwort" || true
-          if [ "$code" != "200" ] && [ "$code" != "204" ]; then
-            echo "::error::Home Assistant hat den Webhook nicht angenommen (HTTP $code)."
-            exit 1
-          fi
-          echo "Ausrollen angestoßen."

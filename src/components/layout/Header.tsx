@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 
-import type { Locale } from '../../lib/i18n'
+import { type Locale, locales } from '../../lib/i18n'
 import { CartLink } from '../shop/CartLink'
 import { SprachWahl } from './SprachWahl'
 import { Logo } from './Logo'
@@ -122,8 +122,43 @@ export function Header({
   ]
 
   // Sprachumschalter: gleicher Pfad in der jeweils anderen Sprache
+  /*
+   * Wohin die Sprachwahl führt.
+   *
+   * Bis hierher wurde nur das Kürzel im Pfad ausgetauscht — das stimmt,
+   * solange die Adresse in allen drei Sprachen gleich lautet. Seit Artikel und
+   * Kategorien eigene Adressen je Sprache haben können, führt das ins Leere:
+   * Aus `/de/moebel/outdoor-sofa-os` würde `/fr/moebel/outdoor-sofa-os`,
+   * obwohl das Stück dort `mobilier/canape-os` heißt.
+   *
+   * Die richtigen Adressen stehen bereits im Kopf der Seite — als
+   * `link rel="alternate" hreflang="…"`, dieselben, die auch Google liest.
+   * Sie ein zweites Mal durch die Anwendung zu reichen hieße, zwei Quellen zu
+   * pflegen, die auseinanderlaufen können; deshalb werden sie von dort
+   * genommen. Fehlen sie — auf Seiten ohne eigene Adresse —, bleibt es beim
+   * Austausch des Kürzels.
+   */
+  const [alternativen, setAlternativen] = useState<Partial<Record<Locale, string>>>({})
+  useEffect(() => {
+    const gefunden: Partial<Record<Locale, string>> = {}
+    for (const code of locales) {
+      const verweis = document.querySelector<HTMLLinkElement>(
+        `link[rel="alternate"][hreflang="${code}"]`,
+      )
+      if (!verweis?.href) continue
+      try {
+        gefunden[code as Locale] = new URL(verweis.href).pathname
+      } catch {
+        // Eine unbrauchbare Adresse im Kopf ist kein Grund, die Wahl zu verlieren
+      }
+    }
+    setAlternativen(gefunden)
+  }, [pathname])
+
   const pathFor = (target: Locale) =>
-    pathname?.replace(new RegExp(`^/${locale}(?=/|$)`), `/${target}`) || `/${target}`
+    alternativen[target] ||
+    pathname?.replace(new RegExp(`^/${locale}(?=/|$)`), `/${target}`) ||
+    `/${target}`
 
   const isActive = (href: string) =>
     pathname === href || (pathname?.startsWith(`${href}/`) ?? false)

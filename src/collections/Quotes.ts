@@ -5,6 +5,7 @@ import { betraege } from '../lib/betraege'
 import { ANGEBOT_STATUS } from '../lib/listen'
 import { naechsteAngebotsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
+import { ablageFeld, absenderAbschrift, absenderFeld } from '../lib/absender'
 
 /**
  * Angebote fürs Projektgeschäft.
@@ -60,6 +61,10 @@ export const Quotes: CollectionConfig = {
           data.quoteNumber = await naechsteAngebotsnummer(req.payload)
           if (!data.issueDate) data.issueDate = new Date().toISOString()
           data.revision = 1
+          // Die eigenen Angaben werden mit der Nummer abgeschrieben — siehe
+          // `lib/absender.ts`. Ein Angebot, das beim Kunden liegt, soll nach
+          // einem Umzug nicht plötzlich eine andere Anschrift zeigen.
+          data.absender = await absenderAbschrift(req.payload, req)
         }
 
         // Nachverhandelt: Die Nummer bleibt — darunter führt der Kunde das
@@ -72,6 +77,14 @@ export const Quotes: CollectionConfig = {
           if (geaendert) {
             data.revision = (originalDoc.revision ?? 1) + 1
             data.revisedAt = new Date().toISOString()
+            /*
+             * Eine neue Fassung ist ein neues Blatt: Sie bekommt den heutigen
+             * Briefkopf, und das abgelegte PDF der vorigen Fassung gilt nicht
+             * mehr für sie. Es fällt hier heraus, damit die neue Fassung beim
+             * ersten Abruf gebaut und abgelegt wird.
+             */
+            data.absender = await absenderAbschrift(req.payload, req)
+            data.pdfAblage = null
           }
         }
         return data
@@ -87,6 +100,11 @@ export const Quotes: CollectionConfig = {
       index: true,
       admin: { readOnly: true, position: 'sidebar' },
     },
+    absenderFeld(),
+    ablageFeld(
+      'Die verschickte Fassung, abgelegt unter `media/belege`. Eine nachverhandelte ' +
+        'Fassung bekommt ein eigenes Blatt.',
+    ),
     {
       name: 'status',
       label: 'Status',

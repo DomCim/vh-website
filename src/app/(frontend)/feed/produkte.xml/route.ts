@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { bildQuellen, type BildQuelle } from '../../../../components/Bild'
+import { adressenFuer } from '../../../../lib/adressen'
 import { aktionFuerArtikel, mitRabatt, type Preisaktion } from '../../../../lib/aktionspreis'
 import { payloadClient } from '../../../../lib/data'
 import { EURO_LAENDER, versandJeStueck, versandzonen } from '../../../../lib/versand'
@@ -145,12 +146,40 @@ export async function GET(req: Request) {
         ),
     )
 
+  /*
+   * Die Adressen in der Sprache dieses Feeds.
+   *
+   * Der Feed wird je Sprache abgerufen (`?sprache=fr`), und seit jede Sprache
+   * eine eigene Adresse haben kann, lässt sich der Link nicht mehr aus dem
+   * Slug zusammensetzen. Ein Link, der auf eine Umleitung zeigt, ist im
+   * Merchant Center kein Fehler, aber eine unnötige Station — und wenn Google
+   * dort etwas anderes findet als im Feed steht, beanstandet es das.
+   */
+  const artikelAdressen = await adressenFuer(
+    payload,
+    'products',
+    docs.map((p) => p.id),
+    locale,
+  )
+  const kategorieIds = [
+    ...new Set(
+      docs
+        .map((p) => (typeof p.category === 'object' ? p.category?.id : p.category))
+        .filter((id): id is number => typeof id === 'number'),
+    ),
+  ]
+  const kategorieAdressen = await adressenFuer(payload, 'categories', kategorieIds, locale)
+
   const eintraege: string[] = []
 
   for (const p of docs as unknown as Record<string, any>[]) {
     const kategorie = typeof p.category === 'object' ? p.category : null
     const aktion = aktionFuerArtikel({ id: p.id, categoryId: kategorie?.id ?? p.category }, aktionen)
-    const pfad = `/${locale}/${kategorie?.slug ?? 'kollektion'}/${p.slug}`
+    const kategorieAdresse = kategorie
+      ? (kategorieAdressen.get(String(kategorie.id)) ?? kategorie.slug)
+      : 'kollektion'
+    const artikelAdresse = artikelAdressen.get(String(p.id)) ?? p.slug
+    const pfad = `/${locale}/${kategorieAdresse}/${artikelAdresse}`
     /*
      * Der Zuschnitt und nicht das Original.
      *

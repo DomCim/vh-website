@@ -5,6 +5,7 @@ import { hatRecht } from '../lib/rechte'
 import { geplanteStufen } from '../lib/anzahlung'
 import { RECHNUNG_STATUS, RECHNUNG_STUFEN } from '../lib/listen'
 import { betraege } from '../lib/betraege'
+import { ablageFeld, absenderAbschrift, absenderFeld } from '../lib/absender'
 import { naechsteRechnungsBasis, naechsteRechnungsnummer, stufenNummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { markOrderPaid } from '../lib/orderHooks'
@@ -232,6 +233,16 @@ export const OutgoingInvoices: CollectionConfig = {
             ? await stufenNummerVergeben(req.payload, auftragId, req)
             : await naechsteRechnungsnummer(req.payload)
 
+          /*
+           * Mit der Nummer werden die eigenen Firmenangaben abgeschrieben.
+           *
+           * Ab hier ist die Rechnung ein Beleg und keine Absicht mehr. Was
+           * darauf steht — Anschrift, USt-IdNr, SIRET, IBAN, Zahlungsziel —,
+           * gilt für diesen Tag und darf sich nicht mehr mitbewegen, wenn der
+           * Betrieb umzieht oder die Bank wechselt. Siehe `lib/absender.ts`.
+           */
+          data.absender = await absenderAbschrift(req.payload, req)
+
           // Zahlungsziel je Stufe — an der Rechnung bleibt es änderbar
           if (!data.dueDate && gestuft) {
             data.dueDate = await faelligAm(req.payload, stufe, data.issueDate, req)
@@ -254,6 +265,11 @@ export const OutgoingInvoices: CollectionConfig = {
         description: 'Wird beim Festschreiben automatisch und lückenlos vergeben.',
       },
     },
+    absenderFeld(),
+    ablageFeld(
+      'Wird beim Festschreiben einmal gebaut und liegt unter `media/belege`. ' +
+        'Angesehen und verschickt wird diese Datei — erzeugt wird nur, wenn keine da ist.',
+    ),
     {
       /*
        * Welche Stufe der Zahlung diese Rechnung ist.
@@ -510,6 +526,21 @@ export const OutgoingInvoices: CollectionConfig = {
         },
         { name: 'sentAt', label: 'Verschickt am', type: 'date' },
         { name: 'lateFee', label: 'Pauschale (EUR)', type: 'number' },
+        /*
+         * Die gesetzte Frist gehört an die Zeile und nicht in die Rechnung.
+         *
+         * Sie wurde bisher beim Bauen als „heute + zehn Tage" gerechnet. Wer
+         * die verschickte Mahnung eine Woche später noch einmal öffnete, sah
+         * eine andere Frist als der Kunde auf seinem Blatt — bei genau dem
+         * Schreiben, bei dem die Frist der ganze Punkt ist.
+         */
+        { name: 'fristBis', label: 'Frist bis', type: 'date' },
+        {
+          name: 'pdfAblage',
+          label: 'Abgelegtes PDF',
+          type: 'text',
+          admin: { description: 'Das Schreiben, das tatsächlich hinausgegangen ist.' },
+        },
       ],
     },
     {

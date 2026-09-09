@@ -26,6 +26,111 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 100,
+    datum: null,
+    titel: 'Französische Adressen dürfen jetzt französisch heißen',
+    punkte: [
+      {
+        text: '**Die französischen Seiten trugen deutsche Wörter im Pfad** — `/fr/moebel/outdoor-sofa-os`. Wer in Frankreich sucht, tippt aber „canapé" und nicht „moebel", und die Adresse ist eines der Signale, an denen eine Suchmaschine erkennt, worum es geht. Ab jetzt kann jeder Artikel und jede Kategorie **je Sprache eine eigene Adresse** bekommen. Solange keine gesetzt ist, bleibt alles wie bisher.',
+      },
+      {
+        text: '**Die Umleitung entsteht von selbst.** Wird eine Adresse geändert, merkt sich das Haus die alte und leitet dauerhaft auf die neue weiter — auch wenn jemand die Änderung im Admin macht. Niemand muss an eine Umleitung denken, und kein Lesezeichen läuft ins Leere. Dasselbe gilt, wenn jemand einen französischen Link mit deutscher Adresse weitergibt: Statt einer Fehlermeldung kommt die richtige Seite.',
+      },
+      {
+        text: '**Die Sprachwahl oben rechts folgt der richtigen Adresse.** Sie tauschte bisher nur das Sprachkürzel im Pfad aus; das hätte mit eigenen Adressen ins Nichts geführt.',
+      },
+      {
+        text: 'Auch die Sitemap, die Sprachverweise für Suchmaschinen und der Produktdatenfeed für Google nennen ab sofort je Sprache die richtige Adresse.',
+      },
+      {
+        text: '**Eine Adresse braucht eine Sprachfassung.** Ein Artikel, der noch gar keinen französischen Text hat, bekommt auch keine französische Adresse — die Verwaltung nimmt sie nicht an, und sinnvoll wäre sie ohnehin nicht: eine französische Adresse an einer Seite, die deutschen Text zeigt, hilft niemandem. Erst übersetzen, dann die Adresse. Wer es andersherum versucht, bekommt das gesagt statt einer Fehlermeldung über ein Feld, das er gar nicht angefasst hat.',
+      },
+      {
+        text: '**Im Assistenten:** `adressen_pruefen` zeigt, was in einer Sprache noch die deutsche Adresse trägt, `adresse_setzen` ändert sie, `adressen_lesen` zeigt alle Fassungen samt früherer Adressen. Ein eigenes Werkzeug und kein Feld nebenbei — eine Adresse zu ändern ist kein Textkorrektur, sondern ein Eingriff in etwas, das andere Leute in der Hand haben.',
+      },
+    ],
+  },
+  {
+    nummer: 99,
+    datum: null,
+    titel: 'Die Kollektion hat jetzt eine eigene Seite',
+    punkte: [
+      {
+        text: '**Unter jedem Suchergebnis zeigt Google den Weg zur Seite an** — bei einem Artikel fing der mit „Kollektion" an, und diese Station führte ins Nichts: Die Seite `/kollektion` gab es gar nicht. Jetzt gibt es sie, und sie ist mehr als ein Lückenfüller: alle Rubriken und darunter jedes Stück auf einem Blatt. Wer den Namen kennt, aber noch nicht weiß, ob er Möbel, Feuer oder Objekte will, landet dort richtig.',
+      },
+      {
+        text: '**Am Artikel stehen zwei Angaben mehr für Google:** dass es sich um Neuware handelt, und wie lange der Preis gilt. Beides hatte die Search Console als fehlend gemeldet. Läuft eine Aktion, endet die Preiszusage mit ihr, sonst gilt sie ein Jahr.',
+      },
+    ],
+  },
+  {
+    nummer: 98,
+    datum: null,
+    titel: 'Die Adressen der alten Website führen wieder irgendwohin',
+    punkte: [
+      {
+        text: '**Die alte TYPO3-Seite steht bis heute bei Google** — mit Adressen wie `/outdoor-moebel` oder `/objekte`, die es auf der neuen Seite nicht mehr gibt. Wer darüber kam, landete in einer Fehlermeldung. Jetzt führt jede dieser Adressen dauerhaft auf die passende neue Seite: die Möbelrubrik auf `/moebel`, die vier alten Artikelseiten auf ihr heutiges Stück, die Leuchten auf die Maßanfertigung. Damit kommt die Aufmerksamkeit, die diese Adressen im Netz noch haben, auch an.',
+      },
+      {
+        text: 'Ebenso die alten französischen Adressen (`/fr/meubles-d-exterieur`, `/fr/objets`, `/fr/contact`). Zu tun ist nichts.',
+      },
+    ],
+  },
+  {
+    nummer: 97,
+    datum: null,
+    titel: 'Artikel mit Farbauswahl lassen sich wieder übersetzen',
+    punkte: [
+      {
+        text: '**Ein Artikel mit Farboptionen ließ sich über den Assistenten gar nicht übersetzen.** Beim Anlegen einer französischen oder englischen Fassung prüft die Verwaltung das ganze Blatt: Titel, Variantenbezeichnungen **und** Farbnamen sind Pflicht und alle drei übersetzbar. Das Werkzeug für die Texte kannte die Farbnamen aber nicht, das Werkzeug für die Farben nicht den Titel — jeder Weg endete mit einer Fehlermeldung über Felder, die man gar nicht angefasst hatte. Jetzt gehen alle drei in einem Zug mit. Aufgefallen am Dubbe Stehtisch, der in drei RAL-Farben zu haben ist.',
+      },
+      {
+        text: 'Das hinterlegte Farbbild bleibt dabei, wo es war. Wer ein Bild wirklich austauschen will, nimmt weiter das Werkzeug für Varianten und Farben.',
+      },
+    ],
+  },
+  {
+    nummer: 96,
+    datum: null,
+    titel: 'Die Bilder stehen jetzt in der Sitemap',
+    punkte: [
+      {
+        text: '**Die Bildersuche fand die Fotos bisher nur zufällig.** In der Sitemap standen die Seiten, aber kein einziges Bild — und was im Karussell erst durch das Nachladen sichtbar wird, sieht ein Suchdienst sonst nie. Jetzt steht zu jedem Artikel, jedem Projekt und jedem Beitrag dabei, welche Bilder dazugehören. Für einen Betrieb, dessen Ware man ansieht und dann haben will, ist die Bildersuche ein eigener Weg zur Kundschaft.',
+      },
+      {
+        text: '**Was dabei hilft, sind Alternativtexte.** Ein Bild ohne Alternativtext ist für die Bildersuche ein Bild ohne Beschriftung; sie kann es zeigen, weiß aber nicht wozu. Die Texte stehen in der Mediathek am Bild und lassen sich dort nachtragen.',
+      },
+    ],
+  },
+  {
+    nummer: 95,
+    datum: null,
+    titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
+    punkte: [
+      {
+        text: '**Bis jetzt entstand jede Rechnung neu, sobald jemand sie ansah.** Sie wurde aus dem Datensatz und den heutigen Einstellungen gebaut. Das heißt: Eine Rechnung aus dem vorletzten Jahr, heute geöffnet, trug die Anschrift von heute, die Bankverbindung von heute und jede Verbesserung am Layout, die seither eingebaut wurde. Beim Kunden liegt aber ein anderes Blatt. Bei einer elektronischen Rechnung wiegt das doppelt, denn dieselben Angaben stehen in der eingebetteten Datei, und die ist der Teil, der rechtlich zählt.',
+      },
+      {
+        text: '**Ab jetzt wird beim Festschreiben abgeschrieben, was gilt** — Anschrift, Rechtsform, SIRET, USt-IdNr, Bankverbindung, Zahlungsziel und Verzugshinweis. Der Beleg wird daraus gezeichnet. Ein Umzug, ein Bankwechsel oder eine neue Rechtsform gelten damit ab dem Tag, an dem sie eingetragen werden, und nicht rückwirkend für alles, was schon hinausgegangen ist.',
+      },
+      {
+        text: '**Jeder fertige Beleg liegt außerdem als Datei.** Rechnung, Angebot, Auftragsbestätigung und Mahnung werden einmal gebaut und abgelegt; angesehen und verschickt wird ab dann diese Datei. Sie liegt bei den Bildern und geht damit jede Nacht mit in die Sicherung. Gelöscht wird dort nichts — die Aufbewahrungsfrist läuft acht Jahre.',
+      },
+      {
+        text: '**Auch die Rechnung zu einer Shop-Bestellung bleibt im Haus.** Sie ging bisher nur als Anhang der Bestätigungsmail hinaus; im Büro war sie nirgends zu öffnen, und das Mailprotokoll merkte sich nur den Dateinamen. Damit lag die einzige Kopie im Postfach der Kundschaft. Jetzt liegt dieselbe Datei in der Ablage, und an der Bestellung steht „Rechnung als PDF". Bei Bestellungen von früher wird das Blatt neu gebaut — das ist eine Annäherung, keine Kopie.',
+      },
+      {
+        text: '**Die verschickten Mahnungen lassen sich nachlesen.** In der Rechnung führt jede Zeile unter „Bereits verschickt" auf genau das Schreiben, das damals hinausging, mit seiner Stufe und seiner Frist. Vorher ging das nicht: Stufe und Frist wurden bei jedem Öffnen neu gerechnet, nach der Erinnerung kam dieselbe Schaltfläche mit der ersten Mahnung und einer neuen Frist heraus. An der Frist hängt der Verzug, also steht sie jetzt fest.',
+      },
+      {
+        text: '**Die Auftragsbestätigung trägt das Datum der Zusage** und nicht mehr das von heute.',
+      },
+      {
+        text: 'Zu tun ist dafür nichts. Belege, die vor dieser Fassung entstanden sind, behalten den Stand, den sie heute zeigen — was damals wirklich auf dem Papier stand, weiß niemand mehr, aber ab jetzt bewegt es sich nicht weiter.',
+      },
+    ],
+  },
+  {
     nummer: 94,
     datum: null,
     titel: 'Suchmaschinen kennen jetzt den Betrieb hinter der Marke',

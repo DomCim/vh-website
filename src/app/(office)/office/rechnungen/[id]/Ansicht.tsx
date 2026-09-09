@@ -28,7 +28,11 @@ type Posten = {
   product?: unknown
 }
 
-type Mahnung = { level?: number | null; sentAt?: string | null }
+type Mahnung = {
+  level?: number | null
+  sentAt?: string | null
+  fristBis?: string | null
+}
 
 type Rechnung = {
   id: number | string
@@ -120,14 +124,27 @@ export function RechnungAnsicht() {
           {mahnungen.length > 0 && (
             <p className="buero-unterzeile" style={{ marginTop: '-.6rem' }}>
               Bereits verschickt:{' '}
-              {mahnungen
-                .map(
-                  (m) =>
-                    `${MAHN_TITEL[(m.level ?? 1) as 1 | 2 | 3]} am ${new Date(
-                      m.sentAt ?? '',
-                    ).toLocaleDateString('de-DE')}`,
-                )
-                .join(' · ')}
+              {/*
+                * Jede Zeile führt auf das Schreiben, das damals hinausgegangen
+                * ist — mit seiner Stufe und seiner Frist, nicht mit der von
+                * heute. Ein Klick löst keine neue Mahnung aus.
+                */}
+              {mahnungen.map((m, i) => (
+                <span key={i}>
+                  {i > 0 && ' · '}
+                  <a
+                    href={`/api/office/rechnung/${r.id}/mahnung?zeile=${i}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {MAHN_TITEL[(m.level ?? 1) as 1 | 2 | 3]} am{' '}
+                    {new Date(m.sentAt ?? '').toLocaleDateString('de-DE')}
+                  </a>
+                  {m.fristBis
+                    ? `, Frist bis ${new Date(m.fristBis).toLocaleDateString('de-DE')}`
+                    : ''}
+                </span>
+              ))}
             </p>
           )}
           {fehlt.length > 0 && (

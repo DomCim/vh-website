@@ -78,6 +78,33 @@ export async function getProductsByCategory(categoryIds: (number | string)[], lo
   return docs
 }
 
+/**
+ * Alle Artikel des Hauses, ohne Rücksicht auf die Kategorie.
+ *
+ * Für die Kollektionsseite: Sie zeigt das ganze Sortiment auf einem Blatt.
+ * Der Weg über `getProductsByCategory` ginge auch, verlangte aber, vorher
+ * jede Kategorie einzusammeln — und ein Artikel ohne Kategorie fiele dabei
+ * heraus, obwohl es ihn gibt.
+ */
+export async function getAllProducts(locale: Locale) {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'products',
+    where: {
+      and: [
+        { available: { equals: true } },
+        // Interne Artikel existieren nach außen nicht — siehe Products.intern
+        { intern: { not_equals: true } },
+      ],
+    },
+    sort: 'order',
+    locale,
+    limit: 200,
+    depth: 1,
+  })
+  return docs
+}
+
 export async function getProductBySlug(slug: string, locale: Locale) {
   const payload = await payloadClient()
   const { docs } = await payload.find({

@@ -2,7 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyoneAusserIntern } from '../access'
 import { indexNowHooks } from '../lib/indexnow'
-import { autoSlug, slugFreigeben } from '../lib/slug'
+import { adresseFeld } from '../lib/adressen'
+import { adresseMerken, autoSlug, slugFreigeben } from '../lib/slug'
 import { liveHooks } from '../lib/liveHooks'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
 
@@ -52,7 +53,17 @@ export const Products: CollectionConfig = {
     beforeChange: [slugFreigeben],
     // Offene Büro-Seiten über Änderungen unterrichten, und die Suchdienste
     // über die öffentliche Artikelseite (siehe lib/indexnow.ts)
-    afterChange: [...liveHooks('artikel').afterChange, ...indexNowArtikel.afterChange],
+    afterChange: [
+      /*
+       * Umbenannte Adressen merken und beim Wegwerfen alle Sprachfassungen
+       * freigeben. Ohne den ersten Haken entstünde keine Umleitung, ohne den
+       * zweiten bliebe eine französische Adresse an einem weggeworfenen Stück
+       * hängen und blockierte den Namen — siehe lib/slug.ts.
+       */
+      adresseMerken('products'),
+      ...liveHooks('artikel').afterChange,
+      ...indexNowArtikel.afterChange,
+    ],
     afterDelete: [...liveHooks('artikel').afterDelete, ...indexNowArtikel.afterDelete],
   },
   fields: [
@@ -73,6 +84,8 @@ export const Products: CollectionConfig = {
         description: 'Leer lassen = wird automatisch aus dem Titel erzeugt',
       },
     },
+    // Die Adresse in der jeweiligen Sprache — siehe lib/adressen.ts
+    adresseFeld(),
     {
       name: 'category',
       label: 'Kategorie',

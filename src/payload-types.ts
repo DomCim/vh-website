@@ -67,6 +67,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'address-history': AddressHistory;
     products: Product;
     categories: Category;
     news: News;
@@ -110,6 +111,7 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    'address-history': AddressHistorySelect<false> | AddressHistorySelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     news: NewsSelect<false> | NewsSelect<true>;
@@ -212,6 +214,25 @@ export interface UserAuthOperations {
       };
 }
 /**
+ * Wird automatisch geschrieben, wenn eine Adresse geändert wird. Wer eine alte Adresse aufruft, wird von hier aus weitergeleitet.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "address-history".
+ */
+export interface AddressHistory {
+  id: number;
+  bereich: 'products' | 'categories' | 'news' | 'projects';
+  sprache: 'de' | 'fr' | 'en';
+  /**
+   * Nur der Slug, ohne Sprachkürzel und ohne Kategorie.
+   */
+  adresse: string;
+  dokument: number;
+  seit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
  */
@@ -222,6 +243,10 @@ export interface Product {
    * Leer lassen = wird automatisch aus dem Titel erzeugt
    */
   slug?: string | null;
+  /**
+   * Leer lassen = es gilt der Slug. Sonst der Pfad in dieser Sprache, z.B. "canape-os". Beim Ändern entsteht die Umleitung von der alten Adresse automatisch.
+   */
+  adresse?: string | null;
   category: number | Category;
   images: (number | Media)[];
   shortDescription?: string | null;
@@ -424,6 +449,10 @@ export interface Category {
    * z.B. "outdoor-moebel" — wird in der URL verwendet
    */
   slug?: string | null;
+  /**
+   * Leer lassen = es gilt der Slug. Sonst der Pfad in dieser Sprache, z.B. "canape-os". Beim Ändern entsteht die Umleitung von der alten Adresse automatisch.
+   */
+  adresse?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
   /**
@@ -772,6 +801,22 @@ export interface Promotion {
 export interface Order {
   id: number;
   orderNumber: string;
+  /**
+   * Abschrift der eigenen Anschrift, Steuernummern und Bankverbindung zu dem Zeitpunkt, an dem der Beleg festgeschrieben wurde. Der Beleg wird daraus gezeichnet und ändert sich deshalb nicht mehr, wenn die Einstellungen sich ändern.
+   */
+  absender?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Die Rechnung, die mit der Bestätigungsmail hinausgegangen ist — abgelegt unter `media/belege`. Sie ist die einzige Kopie: Beim Kunden liegt dieselbe Datei, hier liegt sie für die Aufbewahrungsfrist.
+   */
+  pdfAblage?: string | null;
   status: 'pending' | 'paid' | 'inProduction' | 'shipped' | 'cancelled';
   /**
    * Wird beim Stornieren automatisch angelegt. Für Widerruf und Reklamation von Hand ausfüllen.
@@ -1136,6 +1181,22 @@ export interface Job {
    */
   confirmedAt?: string | null;
   /**
+   * Abschrift der eigenen Anschrift, Steuernummern und Bankverbindung zu dem Zeitpunkt, an dem der Beleg festgeschrieben wurde. Der Beleg wird daraus gezeichnet und ändert sich deshalb nicht mehr, wenn die Einstellungen sich ändern.
+   */
+  absender?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Die Auftragsbestätigung, wie sie zugesagt wurde — abgelegt unter `media/belege`. Sie trägt das Datum der Zusage und nicht das von heute.
+   */
+  pdfAblage?: string | null;
+  /**
    * Bestellschein, Mail-Ausdruck oder Auftragsschreiben.
    */
   orderDocument?: (number | null) | Media;
@@ -1160,6 +1221,22 @@ export interface Job {
 export interface Quote {
   id: number;
   quoteNumber?: string | null;
+  /**
+   * Abschrift der eigenen Anschrift, Steuernummern und Bankverbindung zu dem Zeitpunkt, an dem der Beleg festgeschrieben wurde. Der Beleg wird daraus gezeichnet und ändert sich deshalb nicht mehr, wenn die Einstellungen sich ändern.
+   */
+  absender?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Die verschickte Fassung, abgelegt unter `media/belege`. Eine nachverhandelte Fassung bekommt ein eigenes Blatt.
+   */
+  pdfAblage?: string | null;
   status: 'entwurf' | 'versendet' | 'angenommen' | 'abgelehnt';
   title?: string | null;
   customer?: (number | null) | Contact;
@@ -1237,6 +1314,22 @@ export interface OutgoingInvoice {
    */
   invoiceNumber?: string | null;
   /**
+   * Abschrift der eigenen Anschrift, Steuernummern und Bankverbindung zu dem Zeitpunkt, an dem der Beleg festgeschrieben wurde. Der Beleg wird daraus gezeichnet und ändert sich deshalb nicht mehr, wenn die Einstellungen sich ändern.
+   */
+  absender?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Wird beim Festschreiben einmal gebaut und liegt unter `media/belege`. Angesehen und verschickt wird diese Datei — erzeugt wird nur, wenn keine da ist.
+   */
+  pdfAblage?: string | null;
+  /**
    * Bei Zahlung in Stufen — sonst bleibt es bei „Vollständige Rechnung".
    */
   stufe?: ('vollstaendig' | 'anzahlung' | 'zwischen' | 'schluss') | null;
@@ -1308,6 +1401,11 @@ export interface OutgoingInvoice {
         level?: number | null;
         sentAt?: string | null;
         lateFee?: number | null;
+        fristBis?: string | null;
+        /**
+         * Das Schreiben, das tatsächlich hinausgegangen ist.
+         */
+        pdfAblage?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1967,6 +2065,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'address-history';
+        value: number | AddressHistory;
+      } | null)
+    | ({
         relationTo: 'products';
         value: number | Product;
       } | null)
@@ -2154,11 +2256,25 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "address-history_select".
+ */
+export interface AddressHistorySelect<T extends boolean = true> {
+  bereich?: T;
+  sprache?: T;
+  adresse?: T;
+  dokument?: T;
+  seit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  adresse?: T;
   category?: T;
   images?: T;
   shortDescription?: T;
@@ -2271,6 +2387,7 @@ export interface ProductsSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  adresse?: T;
   description?: T;
   image?: T;
   parent?: T;
@@ -2368,6 +2485,8 @@ export interface PromotionsSelect<T extends boolean = true> {
  */
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
+  absender?: T;
+  pdfAblage?: T;
   status?: T;
   rueckgabe?:
     | T
@@ -2589,6 +2708,8 @@ export interface ExpensesSelect<T extends boolean = true> {
  */
 export interface QuotesSelect<T extends boolean = true> {
   quoteNumber?: T;
+  absender?: T;
+  pdfAblage?: T;
   status?: T;
   title?: T;
   customer?: T;
@@ -2734,6 +2855,8 @@ export interface JobsSelect<T extends boolean = true> {
   customerOrderRef?: T;
   orderedAt?: T;
   confirmedAt?: T;
+  absender?: T;
+  pdfAblage?: T;
   orderDocument?: T;
   rechnungsBasis?: T;
   stufenGesamt?: T;
@@ -2749,6 +2872,8 @@ export interface JobsSelect<T extends boolean = true> {
  */
 export interface OutgoingInvoicesSelect<T extends boolean = true> {
   invoiceNumber?: T;
+  absender?: T;
+  pdfAblage?: T;
   stufe?: T;
   auftrag?: T;
   status?: T;
@@ -2789,6 +2914,8 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
         level?: T;
         sentAt?: T;
         lateFee?: T;
+        fristBis?: T;
+        pdfAblage?: T;
         id?: T;
       };
   reverseCharge?: T;

@@ -14,6 +14,24 @@ export function alternatesFor(locale: Locale, path: string) {
 }
 
 /**
+ * Dieselbe Angabe, wenn jede Sprache ihre eigene Adresse hat.
+ *
+ * `alternatesFor` setzt denselben Pfad für alle drei Sprachen zusammen — das
+ * stimmt, solange die Adresse überall gleich lautet. Sobald der französischen
+ * Fassung eine eigene Adresse gegeben wird, führt der so gebaute Verweis ins
+ * Leere. Hier kommt deshalb je Sprache ein fertiger Pfad herein.
+ */
+export function alternatesFuer(locale: Locale, pfade: Record<Locale, string>) {
+  return {
+    canonical: `${BASE_URL}/${locale}${pfade[locale]}`,
+    languages: {
+      ...Object.fromEntries(locales.map((l) => [l, `${BASE_URL}/${l}${pfade[l]}`])),
+      'x-default': `${BASE_URL}/de${pfade.de}`,
+    },
+  }
+}
+
+/**
  * Der Brotkrumen-Pfad für das Suchergebnis.
  *
  * Google zeigt darüber statt der nackten Adresse den Weg an

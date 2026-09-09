@@ -117,6 +117,11 @@ services:
   plausible:
     image: ghcr.io/plausible/community-edition:v3.0.1
     restart: unless-stopped
+    # PID 1 wäre sonst `sh -c "…"` selbst — ohne eigenen Signal-Handler
+    # ignoriert der Kernel SIGTERM dort, `docker stop` liefe immer in die
+    # volle Frist und endete im SIGKILL. Mit Tini als echter PID 1 bekommt
+    # der eigentliche Plausible-Prozess das Signal ganz regulär.
+    init: true
     depends_on:
       plausible_db:
         condition: service_healthy

@@ -33,6 +33,17 @@ const de = {
     discover: 'Entdecken',
     marquee: ['Stahl', 'Handwerk', 'Design', 'Unikate', 'Maßanfertigung'],
   },
+  /**
+   * Die Kollektionsseite — die Übersicht über alles, was es gibt.
+   *
+   * Sie ist zugleich die erste Station in jedem Brotkrumen und deshalb der
+   * Ort, an dem jemand landet, der noch nicht weiß, wonach er sucht.
+   */
+  collection: {
+    intro:
+      'Jedes Stück entsteht einzeln in der eigenen Werkstatt — aus Stahl, von Hand geschweißt und auf Jahrzehnte gedacht. Hier steht alles nebeneinander: Möbel für draußen, Feuerstellen, Pflanzgefäße und Objekte.',
+    allItems: 'Alle Stücke',
+  },
   product: {
     addToCart: 'In den Warenkorb',
     added: 'Hinzugefügt ✓',
@@ -484,6 +495,11 @@ const fr: Dictionary = {
     discover: 'Découvrir',
     marquee: ['Acier', 'Artisanat', 'Design', 'Pièces uniques', 'Sur mesure'],
   },
+  collection: {
+    intro:
+      'Chaque pièce naît une à une dans notre propre atelier — en acier, soudée à la main et pensée pour durer des décennies. Tout est réuni ici : mobilier d’extérieur, foyers, bacs à plantes et objets.',
+    allItems: 'Toutes les pièces',
+  },
   product: {
     addToCart: 'Ajouter au panier',
     added: 'Ajouté ✓',
@@ -923,6 +939,11 @@ const en: Dictionary = {
     galleryTitle: 'Inside the workshop',
     discover: 'Discover',
     marquee: ['Steel', 'Craftsmanship', 'Design', 'One-of-a-kind', 'Made to measure'],
+  },
+  collection: {
+    intro:
+      'Every piece is made one at a time in our own workshop — steel, welded by hand and built to last for decades. Here it all stands side by side: outdoor furniture, fire pits, planters and objects.',
+    allItems: 'All pieces',
   },
   product: {
     addToCart: 'Add to cart',
