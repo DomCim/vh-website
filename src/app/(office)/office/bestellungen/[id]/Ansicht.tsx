@@ -106,6 +106,24 @@ export function BestellungAnsicht() {
         </p>
       )}
 
+      {/*
+        * Die Rechnung, die mit der Bestätigungsmail hinausging. Seit sie
+        * abgelegt wird, ist es genau dieselbe Datei; für ältere Bestellungen
+        * wird sie neu gebaut und ist damit eine Annäherung.
+        */}
+      {o.status !== 'pending' && (
+        <p className="buero-unterzeile">
+          <a
+            href={`/api/office/bestellung/${o.id}/rechnung`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ textDecoration: 'underline' }}
+          >
+            Rechnung als PDF
+          </a>
+        </p>
+      )}
+
       <h2>Positionen</h2>
       <div className="buero-liste">
         {(o.items ?? []).map((p, i) => (

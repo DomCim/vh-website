@@ -26,6 +26,34 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 95,
+    datum: null,
+    titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
+    punkte: [
+      {
+        text: '**Bis jetzt entstand jede Rechnung neu, sobald jemand sie ansah.** Sie wurde aus dem Datensatz und den heutigen Einstellungen gebaut. Das heißt: Eine Rechnung aus dem vorletzten Jahr, heute geöffnet, trug die Anschrift von heute, die Bankverbindung von heute und jede Verbesserung am Layout, die seither eingebaut wurde. Beim Kunden liegt aber ein anderes Blatt. Bei einer elektronischen Rechnung wiegt das doppelt, denn dieselben Angaben stehen in der eingebetteten Datei, und die ist der Teil, der rechtlich zählt.',
+      },
+      {
+        text: '**Ab jetzt wird beim Festschreiben abgeschrieben, was gilt** — Anschrift, Rechtsform, SIRET, USt-IdNr, Bankverbindung, Zahlungsziel und Verzugshinweis. Der Beleg wird daraus gezeichnet. Ein Umzug, ein Bankwechsel oder eine neue Rechtsform gelten damit ab dem Tag, an dem sie eingetragen werden, und nicht rückwirkend für alles, was schon hinausgegangen ist.',
+      },
+      {
+        text: '**Jeder fertige Beleg liegt außerdem als Datei.** Rechnung, Angebot, Auftragsbestätigung und Mahnung werden einmal gebaut und abgelegt; angesehen und verschickt wird ab dann diese Datei. Sie liegt bei den Bildern und geht damit jede Nacht mit in die Sicherung. Gelöscht wird dort nichts — die Aufbewahrungsfrist läuft acht Jahre.',
+      },
+      {
+        text: '**Auch die Rechnung zu einer Shop-Bestellung bleibt im Haus.** Sie ging bisher nur als Anhang der Bestätigungsmail hinaus; im Büro war sie nirgends zu öffnen, und das Mailprotokoll merkte sich nur den Dateinamen. Damit lag die einzige Kopie im Postfach der Kundschaft. Jetzt liegt dieselbe Datei in der Ablage, und an der Bestellung steht „Rechnung als PDF". Bei Bestellungen von früher wird das Blatt neu gebaut — das ist eine Annäherung, keine Kopie.',
+      },
+      {
+        text: '**Die verschickten Mahnungen lassen sich nachlesen.** In der Rechnung führt jede Zeile unter „Bereits verschickt" auf genau das Schreiben, das damals hinausging, mit seiner Stufe und seiner Frist. Vorher ging das nicht: Stufe und Frist wurden bei jedem Öffnen neu gerechnet, nach der Erinnerung kam dieselbe Schaltfläche mit der ersten Mahnung und einer neuen Frist heraus. An der Frist hängt der Verzug, also steht sie jetzt fest.',
+      },
+      {
+        text: '**Die Auftragsbestätigung trägt das Datum der Zusage** und nicht mehr das von heute.',
+      },
+      {
+        text: 'Zu tun ist dafür nichts. Belege, die vor dieser Fassung entstanden sind, behalten den Stand, den sie heute zeigen — was damals wirklich auf dem Papier stand, weiß niemand mehr, aber ab jetzt bewegt es sich nicht weiter.',
+      },
+    ],
+  },
+  {
     nummer: 94,
     datum: null,
     titel: 'Suchmaschinen kennen jetzt den Betrieb hinter der Marke',
