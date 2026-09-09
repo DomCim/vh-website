@@ -12,12 +12,17 @@ import { MassanfertigungHinweis } from "../../../../../components/Massanfertigun
 import { Reveal } from "../../../../../components/motion/Reveal";
 import { RichText } from "../../../../../components/RichText";
 import { ProductDetail } from "../../../../../components/shop/ProductDetail";
+import {
+  adressenAllerSprachen,
+  adressenFuer,
+  findeNachAdresse,
+} from "../../../../../lib/adressen";
 import { aktionFuerArtikel, mitRabatt } from "../../../../../lib/aktionspreis";
 import { bildKennung, galerieErgaenzen } from "../../../../../lib/artikelbilder";
 import {
-  getCategoryBySlug,
   getPreisaktionen,
   getProductBySlug,
+  payloadClient as pcFuerAdressen,
   getProjectsForProduct,
   getSiteSettings,
   getTestimonialsForProduct,
@@ -25,10 +30,10 @@ import {
   mediaUrl,
   payloadClient,
 } from "../../../../../lib/data";
-import { isLocale, t } from "../../../../../lib/i18n";
+import { isLocale, type Locale, locales, t } from "../../../../../lib/i18n";
 import {
   absoluteUrl,
-  alternatesFor,
+  alternatesFuer,
   BASE_URL,
   breadcrumbJsonLd,
   jsonLd,
@@ -44,6 +49,48 @@ type PageParams = Promise<{
   itemSlug: string;
 }>;
 
+/**
+ * Die Pfade dieses Artikels in allen drei Sprachen.
+ *
+ * Seit jede Sprache ihre eigene Adresse haben kann — für den Artikel **und**
+ * für seine Kategorie —, lässt sich der französische Pfad nicht mehr aus dem
+ * deutschen ableiten. Beides wird deshalb einmal über alle Sprachen geholt und
+ * zusammengesetzt.
+ */
+async function alternatePfade(
+  payload: Awaited<ReturnType<typeof pcFuerAdressen>>,
+  product: { id: number; category?: unknown },
+  locale: Locale,
+  rueckfallKategorie: string,
+) {
+  const kategorieId =
+    typeof product.category === "object" && product.category
+      ? ((product.category as { id?: number }).id ?? null)
+      : (product.category as number | null);
+
+  const [artikel, kategorie] = await Promise.all([
+    payload
+      .findByID({ collection: "products", id: product.id, locale: "all" as never, depth: 0, overrideAccess: true })
+      .catch(() => null),
+    kategorieId
+      ? payload
+          .findByID({ collection: "categories", id: kategorieId, locale: "all" as never, depth: 0, overrideAccess: true })
+          .catch(() => null)
+      : null,
+  ]);
+  if (!artikel) return undefined;
+
+  const artikelAdressen = adressenAllerSprachen(artikel as unknown as Record<string, unknown>);
+  const katAdressen = kategorie
+    ? adressenAllerSprachen(kategorie as unknown as Record<string, unknown>)
+    : null;
+
+  const pfade = Object.fromEntries(
+    locales.map((l) => [l, `/${katAdressen?.[l] ?? rueckfallKategorie}/${artikelAdressen[l]}`]),
+  ) as Record<Locale, string>;
+  return alternatesFuer(locale, pfade);
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -51,8 +98,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, categorySlug, itemSlug } = await params;
   if (!isLocale(locale)) return {};
-  const product = await getProductBySlug(itemSlug, locale);
-  if (!product) return {};
+  const payload = await pcFuerAdressen();
+  const fund = await findeNachAdresse(payload, "products", itemSlug, locale);
+  if (!fund) return {};
+  const product = fund.doc as unknown as NonNullable<
+    Awaited<ReturnType<typeof getProductBySlug>>
+  >;
   const image = absoluteUrl(mediaUrl(product.images?.[0], "large"));
   /*
    * Die maßgebliche Adresse kommt vom Artikel, nicht aus dem Aufruf.
@@ -71,7 +122,7 @@ export async function generateMetadata({
   return {
     title: product.title,
     description: product.shortDescription || undefined,
-    alternates: alternatesFor(locale, `/${eigeneKategorie}/${itemSlug}`),
+    alternates: await alternatePfade(payload, product, locale, eigeneKategorie),
     openGraph: {
       title: product.title,
       description: product.shortDescription || undefined,
@@ -85,11 +136,22 @@ export default async function ProductPage({ params }: { params: PageParams }) {
   if (!isLocale(locale)) notFound();
   const dict = t(locale);
 
-  const category = await getCategoryBySlug(categorySlug, locale);
-  if (!category) notFound();
+  const payloadFuerAdressen = await pcFuerAdressen();
+  const katFund = await findeNachAdresse(payloadFuerAdressen, "categories", categorySlug, locale);
+  if (!katFund) notFound();
+  const category = katFund.doc as unknown as { id: number; name: string };
 
-  const product = await getProductBySlug(itemSlug, locale);
-  if (!product) notFound();
+  /*
+   * Gerufen werden kann der Artikel unter seiner heutigen Adresse, unter dem
+   * Slug oder unter einer, die er einmal trug — `findeNachAdresse` klärt das.
+   * Die Umleitung setzt weiter unten ein, zusammen mit der auf die richtige
+   * Kategorie: ein Sprung statt zwei.
+   */
+  const artFund = await findeNachAdresse(payloadFuerAdressen, "products", itemSlug, locale);
+  if (!artFund) notFound();
+  const product = artFund.doc as unknown as NonNullable<
+    Awaited<ReturnType<typeof getProductBySlug>>
+  >;
 
   /*
    * Wohin geliefert wird, kommt aus den Versandzonen — derselben Quelle, aus
@@ -104,11 +166,18 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    * Auszeichnungen: Was Google als Adresse des Artikels und als Weg dorthin
    * bekommt, muss dieselbe sein, die oben als maßgeblich steht.
    */
-  const kanonischeKategorie =
+  const eigeneKategorieId =
     typeof product.category === "object" && product.category
-      ? ((product.category as { slug?: string }).slug ?? categorySlug)
-      : categorySlug;
-  const artikelPfad = `/${kanonischeKategorie}/${itemSlug}`;
+      ? ((product.category as { id?: number }).id ?? category.id)
+      : ((product.category as number | null) ?? category.id);
+  const katAdressen = await adressenFuer(
+    payloadFuerAdressen,
+    "categories",
+    [eigeneKategorieId],
+    locale,
+  );
+  const kanonischeKategorie = katAdressen.get(String(eigeneKategorieId)) ?? katFund.kanonisch;
+  const artikelPfad = `/${kanonischeKategorie}/${artFund.kanonisch}`;
 
   /*
    * Falsche Kategorie in der Adresse? Dann dorthin, wo der Artikel wirklich
@@ -129,7 +198,7 @@ export default async function ProductPage({ params }: { params: PageParams }) {
    * in fremden Verweisen. Ein 404 verlöre sie; die dauerhafte Umleitung führt
    * den Besucher ans Ziel und sagt Google zugleich, welche Adresse gilt.
    */
-  if (kanonischeKategorie !== categorySlug) {
+  if (kanonischeKategorie !== categorySlug || artFund.kanonisch !== itemSlug) {
     permanentRedirect(`/${locale}${artikelPfad}`);
   }
 

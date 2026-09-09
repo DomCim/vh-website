@@ -1,12 +1,37 @@
 import type { MetadataRoute } from 'next'
 
+import { adressenAllerSprachen } from '../lib/adressen'
 import { payloadClient } from '../lib/data'
-import { defaultLocale, locales } from '../lib/i18n'
+import { defaultLocale, type Locale, locales } from '../lib/i18n'
 import { oeffentlicheTermine } from '../lib/kalender/oeffentlich'
 
 export const dynamic = 'force-dynamic'
 
 const BASE = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+/**
+ * Ein Eintrag je Sprache, wenn jede ihre eigene Adresse hat.
+ *
+ * `entries` setzt denselben Pfad für alle drei Sprachen — richtig, solange die
+ * Adresse überall gleich lautet. Für Artikel und Kategorien gilt das nicht
+ * mehr: Dort kann die französische Fassung `canape-os` heißen, wo die deutsche
+ * `outdoor-sofa-os` heißt. Stünde hier der deutsche Pfad unter `/fr/`, meldete
+ * die Search Console lauter Fehler — und die französische Seite fehlte im
+ * Index.
+ */
+function eintraegeJeSprache(
+  pfade: Record<Locale, string>,
+  lastModified?: string | Date,
+  priority = 0.7,
+): MetadataRoute.Sitemap {
+  const languages = Object.fromEntries(locales.map((l) => [l, `${BASE}/${l}${pfade[l]}`]))
+  return locales.map((l) => ({
+    url: `${BASE}/${l}${pfade[l]}`,
+    lastModified: lastModified ? new Date(lastModified) : undefined,
+    alternates: { languages },
+    priority,
+  }))
+}
 
 /** Ein Eintrag pro Sprache inkl. hreflang-Alternates */
 function entries(
@@ -27,13 +52,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const payload = await payloadClient()
 
   const [categories, products, news, projects, termine] = await Promise.all([
-    payload.find({ collection: 'categories', limit: 200, depth: 0 }),
+    // Über alle Sprachen, damit die eigenen Adressen mitkommen
+    payload.find({ collection: 'categories', limit: 200, depth: 0, locale: 'all' as never }),
     payload.find({
       collection: 'products',
       // Interne Artikel existieren nach außen nicht — siehe Products.intern
       where: { and: [{ available: { equals: true } }, { intern: { not_equals: true } }] },
       limit: 500,
       depth: 1,
+      locale: 'all' as never,
     }),
     payload.find({
       collection: 'news',
@@ -69,12 +96,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     result.push(...entries(`/projekte/${p.slug}`, p.updatedAt, 0.6))
   }
 
+  /*
+   * Die Adressen der Kategorien einmal je Sprache — die Artikel darunter
+   * brauchen sie für ihren eigenen Pfad.
+   */
+  const kategorieAdressen = new Map<string, Record<Locale, string>>()
   for (const c of categories.docs) {
-    result.push(...entries(`/${c.slug}`, c.updatedAt, 0.8))
+    const pfade = adressenAllerSprachen(c as unknown as Record<string, unknown>)
+    kategorieAdressen.set(String(c.id), pfade)
+    result.push(
+      ...eintraegeJeSprache(
+        Object.fromEntries(locales.map((l) => [l, `/${pfade[l]}`])) as Record<Locale, string>,
+        c.updatedAt,
+        0.8,
+      ),
+    )
   }
+
   for (const p of products.docs) {
-    const categorySlug = typeof p.category === 'object' ? p.category?.slug : undefined
-    if (categorySlug) result.push(...entries(`/${categorySlug}/${p.slug}`, p.updatedAt, 0.9))
+    const kategorieId = typeof p.category === 'object' ? p.category?.id : p.category
+    const katPfade = kategorieId ? kategorieAdressen.get(String(kategorieId)) : undefined
+    if (!katPfade) continue
+    const artikelPfade = adressenAllerSprachen(p as unknown as Record<string, unknown>)
+    result.push(
+      ...eintraegeJeSprache(
+        Object.fromEntries(locales.map((l) => [l, `/${katPfade[l]}/${artikelPfade[l]}`])) as Record<
+          Locale,
+          string
+        >,
+        p.updatedAt,
+        0.9,
+      ),
+    )
   }
   for (const n of news.docs) {
     result.push(...entries(`/news/${n.slug}`, n.updatedAt, 0.6))

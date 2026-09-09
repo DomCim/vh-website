@@ -10,6 +10,7 @@ import { fr } from '@payloadcms/translations/languages/fr'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { AddressHistory } from './collections/AddressHistory'
 import { Appointments } from './collections/Appointments'
 import { BankTransactions } from './collections/BankTransactions'
 import { Categories } from './collections/Categories'
@@ -81,6 +82,7 @@ export default buildConfig({
     },
   },
   collections: [
+    AddressHistory,
     Products,
     Categories,
     News,

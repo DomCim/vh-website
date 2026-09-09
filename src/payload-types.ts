@@ -67,6 +67,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'address-history': AddressHistory;
     products: Product;
     categories: Category;
     news: News;
@@ -110,6 +111,7 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    'address-history': AddressHistorySelect<false> | AddressHistorySelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     news: NewsSelect<false> | NewsSelect<true>;
@@ -212,6 +214,25 @@ export interface UserAuthOperations {
       };
 }
 /**
+ * Wird automatisch geschrieben, wenn eine Adresse geändert wird. Wer eine alte Adresse aufruft, wird von hier aus weitergeleitet.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "address-history".
+ */
+export interface AddressHistory {
+  id: number;
+  bereich: 'products' | 'categories' | 'news' | 'projects';
+  sprache: 'de' | 'fr' | 'en';
+  /**
+   * Nur der Slug, ohne Sprachkürzel und ohne Kategorie.
+   */
+  adresse: string;
+  dokument: number;
+  seit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
  */
@@ -222,6 +243,10 @@ export interface Product {
    * Leer lassen = wird automatisch aus dem Titel erzeugt
    */
   slug?: string | null;
+  /**
+   * Leer lassen = es gilt der Slug. Sonst der Pfad in dieser Sprache, z.B. "canape-os". Beim Ändern entsteht die Umleitung von der alten Adresse automatisch.
+   */
+  adresse?: string | null;
   category: number | Category;
   images: (number | Media)[];
   shortDescription?: string | null;
@@ -424,6 +449,10 @@ export interface Category {
    * z.B. "outdoor-moebel" — wird in der URL verwendet
    */
   slug?: string | null;
+  /**
+   * Leer lassen = es gilt der Slug. Sonst der Pfad in dieser Sprache, z.B. "canape-os". Beim Ändern entsteht die Umleitung von der alten Adresse automatisch.
+   */
+  adresse?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
   /**
@@ -2036,6 +2065,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'address-history';
+        value: number | AddressHistory;
+      } | null)
+    | ({
         relationTo: 'products';
         value: number | Product;
       } | null)
@@ -2223,11 +2256,25 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "address-history_select".
+ */
+export interface AddressHistorySelect<T extends boolean = true> {
+  bereich?: T;
+  sprache?: T;
+  adresse?: T;
+  dokument?: T;
+  seit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  adresse?: T;
   category?: T;
   images?: T;
   shortDescription?: T;
@@ -2340,6 +2387,7 @@ export interface ProductsSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  adresse?: T;
   description?: T;
   image?: T;
   parent?: T;

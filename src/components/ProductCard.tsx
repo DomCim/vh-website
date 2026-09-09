@@ -22,6 +22,7 @@ export function ProductCard({
   locale,
   labels,
   aktion,
+  pfad,
 }: {
   product: Product;
   categorySlug: string;
@@ -29,6 +30,15 @@ export function ProductCard({
   labels: { from: string; onRequest: string; instead: string };
   /** Läuft für diesen Artikel gerade eine Aktion? */
   aktion?: Preisaktion | null;
+  /**
+   * Der fertige Pfad, wenn der Aufrufer ihn kennt.
+   *
+   * Seit jede Sprache eine eigene Adresse haben kann, lässt er sich hier nicht
+   * mehr aus dem Slug zusammensetzen: In der französischen Fassung heißt
+   * derselbe Artikel unter Umständen anders. Wer eine Liste zeigt, hat die
+   * Adressen ohnehin schon zur Hand (`adressenFuer`) und reicht sie durch.
+   */
+  pfad?: string;
 }) {
   const image = product.images?.[0];
   const prices = [
@@ -45,7 +55,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/${locale}/${categorySlug}/${product.slug}`}
+      href={pfad ?? `/${locale}/${categorySlug}/${product.slug}`}
       className="group border-line block border bg-paper transition-shadow hover:shadow-lg"
     >
       <div className="bg-paper-soft relative aspect-[4/3] overflow-hidden">

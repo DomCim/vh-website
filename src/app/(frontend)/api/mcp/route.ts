@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto'
 import { createMcpHandler } from 'mcp-handler'
 
+import { registerAdressen } from '../../../../lib/mcp/adressen'
 import { registerAktionen } from '../../../../lib/mcp/aktionen'
 import { registerAnalyse } from '../../../../lib/mcp/analyse'
 import { registerAnfragen } from '../../../../lib/mcp/anfragen'
@@ -67,6 +68,7 @@ function alleWerkzeuge(server: McpServer) {
   registerKundenstimmen(server)
   registerFaq(server)
   registerNews(server)
+  registerAdressen(server)
   registerAktionen(server)
   registerBestellungen(server)
   registerAnfragen(server)

@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 100,
+    datum: null,
+    titel: 'Französische Adressen dürfen jetzt französisch heißen',
+    punkte: [
+      {
+        text: '**Die französischen Seiten trugen deutsche Wörter im Pfad** — `/fr/moebel/outdoor-sofa-os`. Wer in Frankreich sucht, tippt aber „canapé" und nicht „moebel", und die Adresse ist eines der Signale, an denen eine Suchmaschine erkennt, worum es geht. Ab jetzt kann jeder Artikel und jede Kategorie **je Sprache eine eigene Adresse** bekommen. Solange keine gesetzt ist, bleibt alles wie bisher.',
+      },
+      {
+        text: '**Die Umleitung entsteht von selbst.** Wird eine Adresse geändert, merkt sich das Haus die alte und leitet dauerhaft auf die neue weiter — auch wenn jemand die Änderung im Admin macht. Niemand muss an eine Umleitung denken, und kein Lesezeichen läuft ins Leere. Dasselbe gilt, wenn jemand einen französischen Link mit deutscher Adresse weitergibt: Statt einer Fehlermeldung kommt die richtige Seite.',
+      },
+      {
+        text: '**Die Sprachwahl oben rechts folgt der richtigen Adresse.** Sie tauschte bisher nur das Sprachkürzel im Pfad aus; das hätte mit eigenen Adressen ins Nichts geführt.',
+      },
+      {
+        text: 'Auch die Sitemap, die Sprachverweise für Suchmaschinen und der Produktdatenfeed für Google nennen ab sofort je Sprache die richtige Adresse.',
+      },
+      {
+        text: '**Im Assistenten:** `adressen_pruefen` zeigt, was in einer Sprache noch die deutsche Adresse trägt, `adresse_setzen` ändert sie, `adressen_lesen` zeigt alle Fassungen samt früherer Adressen. Ein eigenes Werkzeug und kein Feld nebenbei — eine Adresse zu ändern ist kein Textkorrektur, sondern ein Eingriff in etwas, das andere Leute in der Hand haben.',
+      },
+    ],
+  },
+  {
     nummer: 95,
     datum: null,
     titel: 'Ein Beleg bleibt, wie er war — auch in acht Jahren',
