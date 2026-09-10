@@ -6,6 +6,7 @@ import { geplanteStufen } from '../lib/anzahlung'
 import { RECHNUNG_STATUS, RECHNUNG_STUFEN } from '../lib/listen'
 import { betraege } from '../lib/betraege'
 import { ablageFeld, absenderAbschrift, absenderFeld } from '../lib/absender'
+import { kundenAbschrift } from '../lib/kundenabschrift'
 import { naechsteRechnungsBasis, naechsteRechnungsnummer, stufenNummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { markOrderPaid } from '../lib/orderHooks'
@@ -242,6 +243,34 @@ export const OutgoingInvoices: CollectionConfig = {
            * Betrieb umzieht oder die Bank wechselt. Siehe `lib/absender.ts`.
            */
           data.absender = await absenderAbschrift(req.payload, req)
+
+          /*
+           * Und dasselbe für den Empfänger — aber nur, was noch fehlt.
+           *
+           * Der Entwurf entsteht oft Wochen vorher, und die Nummer des Kunden
+           * kommt manchmal erst danach dazu. Genau so ist einmal eine Rechnung
+           * ohne die USt-IdNr des Empfängers hinausgegangen: Sie stand beim
+           * Anlegen noch nicht am Geschäftspartner, wurde später nachgetragen,
+           * und der Entwurf wusste nichts davon. Eine gestellte Rechnung lässt
+           * sich nicht mehr ändern — sie musste storniert und neu geschrieben
+           * werden.
+           *
+           * Getippte Angaben bleiben unangetastet; ergänzt wird nur Leeres.
+           */
+          Object.assign(
+            data,
+            await kundenAbschrift(
+              req.payload,
+              data.customer ?? originalDoc?.customer,
+              {
+                customerName: (data.customerName ?? originalDoc?.customerName) || '',
+                customerAddress: (data.customerAddress ?? originalDoc?.customerAddress) || '',
+                customerSiret: (data.customerSiret ?? originalDoc?.customerSiret) || '',
+                customerVatId: (data.customerVatId ?? originalDoc?.customerVatId) || '',
+              },
+              req,
+            ),
+          )
 
           // Zahlungsziel je Stufe — an der Rechnung bleibt es änderbar
           if (!data.dueDate && gestuft) {

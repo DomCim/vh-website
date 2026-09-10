@@ -26,6 +26,38 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 105,
+    datum: null,
+    titel: 'Die Rechnung nimmt die Angaben des Kunden mit',
+    punkte: [
+      {
+        text: '**Eine Rechnung aus einem Auftrag trug bisher nur den Namen des Kunden.** Anschrift, SIRET und USt-IdNr blieben leer — die füllte allein das Rechnungsformular, und auch nur, wenn dort jemand von Hand den Geschäftspartner auswählte. Ab jetzt kommen sie mit, gleich ob die Rechnung über den Knopf am Auftrag entsteht oder als Anzahlung, Zwischen- oder Schlussrechnung.',
+      },
+      {
+        text: '**Beim Festschreiben wird nachgeholt, was noch fehlt.** Ein Entwurf entsteht oft Wochen vorher, und die Steuernummer kommt manchmal erst danach an den Geschäftspartner. Steht beim Festschreiben eine Angabe am Kunden, die auf der Rechnung fehlt, wird sie übernommen. Von Hand Eingetragenes bleibt unangetastet.',
+      },
+      {
+        text: '**Vor dem Festschreiben steht ein Hinweis, wenn keine USt-IdNr hinterlegt ist** — und zwar als Hinweis, nicht als Sperre. Kleingewerbe und Privatkundschaft haben keine, und eine Rechnung, die sich nicht stellen lässt, wäre schlimmer als eine ohne Nummer. Ist gar kein Geschäftspartner ausgewählt, sagt der Hinweis das: Dann kommt von den Angaben nichts von selbst mit.',
+      },
+    ],
+  },
+  {
+    nummer: 104,
+    datum: null,
+    titel: 'Aufträge duplizieren, Ablaufschritte vorschlagen',
+    punkte: [
+      {
+        text: '**Nach einem Storno kommt der Knopf „Rechnung aus dem Auftrag erstellen" zurück.** Bisher verschwand er für immer, sobald einmal eine Rechnung am Auftrag hing — und nach einem Storno hängen dort zwei: das stornierte Original und die Gegenrechnung. Beide bleiben stehen, weil eine gestellte Rechnung nie gelöscht wird. Gezählt wird ab jetzt nur, was noch gilt. Steht keine gültige Rechnung mehr am Auftrag, lässt sich von dort eine neue anlegen.',
+      },
+      {
+        text: '**Ein Auftrag lässt sich duplizieren.** Der Knopf steht oben am Auftrag und öffnet das Neu-Formular, in dem Positionen, Material, Ablauf, Zahlplan und die geplante Fertigungszeit schon stehen. **Kunde und Bezeichnung bleiben leer** — ein Duplikat entsteht meist für jemand anderen, und ein stehengebliebener fremder Name auf einem Lieferschein ist teurer als ein leeres Feld. Angelegt wird erst beim Speichern.',
+      },
+      {
+        text: '**Im Ablauf schlägt das Büro Schritte vor, die es schon kennt.** Wer `PC` tippt, bekommt `PC - Konstruktion` angeboten; wird der Vorschlag übernommen, stehen auch die Minuten, der Dienstleister, seine Kosten und die Vorlauftage da. Ein Schritt, an dem schon etwas eingetragen ist, wird dabei nicht überschrieben. Die Vorschläge kommen aus den eigenen Aufträgen und den Abläufen an den Artikeln — sie stehen deshalb auch ohne Netz.',
+      },
+    ],
+  },
+  {
     nummer: 103,
     datum: null,
     titel: 'Wer sich verirrt, kommt jetzt weiter',
