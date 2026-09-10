@@ -38,7 +38,22 @@ export type RechnungsDaten = {
   datum?: string | null
   faelligAm?: string | null
   preiseSind: 'brutto' | 'netto'
-  empfaenger: { name?: string | null; anschrift?: string[]; email?: string | null }
+  empfaenger: {
+    name?: string | null
+    anschrift?: string[]
+    email?: string | null
+    /*
+     * Die Steuernummern des Empfängers gehören aufs Blatt, nicht nur in den
+     * maschinenlesbaren Anhang. Bei Reverse Charge ist die USt-IdNr des
+     * Kunden Pflicht: Ohne sie ist die Rechnung angreifbar, und der Kunde
+     * bekommt Ärger beim Vorsteuerabzug. Sie stand bisher ausschließlich in
+     * der Factur-X-Datei — dort liest sie kein Mensch und kein
+     * Betriebsprüfer, der ein Papier in der Hand hält.
+     */
+    umsatzsteuerId?: string | null
+    /** SIRET — für die elektronische Rechnung Pflicht bei Firmenkundschaft */
+    kennung?: string | null
+  }
   positionen: RechnungsPosition[]
   /** Zusätzliche Zeilen wie Versand oder Rabatt (brutto bzw. netto wie oben) */
   zusatzzeilen?: { bezeichnung: string; betrag: number; steuersatz: number }[]
@@ -244,6 +259,10 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   if (daten.empfaenger.name) doc.text(daten.empfaenger.name)
   for (const zeile of daten.empfaenger.anschrift ?? []) if (zeile) doc.text(zeile)
   if (daten.empfaenger.email) doc.text(daten.empfaenger.email)
+  if (daten.empfaenger.kennung) doc.text(`SIRET: ${daten.empfaenger.kennung}`)
+  if (daten.empfaenger.umsatzsteuerId) {
+    doc.text(`USt-IdNr.: ${daten.empfaenger.umsatzsteuerId}`)
+  }
 
   // ── Positionen ────────────────────────────────────────────────────────────
   doc.moveDown(1.2)

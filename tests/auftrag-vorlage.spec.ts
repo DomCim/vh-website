@@ -1,9 +1,17 @@
+import fs from 'fs'
+import path from 'path'
+
 import { expect, test } from '@playwright/test'
 
 import { unberuehrt, vorschlaegeAus } from '../src/lib/buero/ablaufvorschlaege'
 import { werteAusVorlage } from '../src/lib/buero/auftragVorlage'
 import { anschriftAus } from '../src/lib/kundenabschrift'
-import { giltNoch, GILT_NOCH_WHERE } from '../src/lib/zahlungsstand'
+import {
+  eingegangen,
+  giltNoch,
+  GILT_NOCH_WHERE,
+  offenerBetrag,
+} from '../src/lib/zahlungsstand'
 
 /**
  * Auftrag duplizieren, Ablaufschritte vorschlagen — und der Storno dazwischen.
@@ -169,5 +177,59 @@ test.describe('Die Angaben des Kunden auf der Rechnung', () => {
       'Lauterbourg\nFrankreich',
     )
     expect(anschriftAus({})).toBe('')
+  })
+})
+
+test.describe('Die Zahlen nach einem Storno', () => {
+  /*
+   * Aus dem Büro gemeldet, mit Bild: Ein Auftrag über 180 € meldete
+   * „-180,00 € eingegangen · 360,00 € stehen noch aus". Die Gegenrechnung
+   * trägt „bezahlt" und einen negativen Betrag; das stornierte Original steht
+   * auf „storniert" und zählte nie mit. Übrig blieb die halbe Rechnung mit
+   * umgedrehtem Vorzeichen.
+   */
+  const stufen = { anzahlung: 0, zwischen: 0, schluss: 180 }
+  const storniertesPaar = [
+    { status: 'storniert', netto: 180 },
+    { status: 'bezahlt', netto: -180, stornoVon: 2 },
+  ]
+
+  test('ein Storno hebt sich auf, statt die Summe zu verdrehen', () => {
+    expect(eingegangen(storniertesPaar), 'nichts eingegangen, nichts abgeflossen').toBe(0)
+    expect(offenerBetrag(stufen, storniertesPaar), 'der volle Auftragswert steht aus').toBe(180)
+  })
+
+  test('eine bezahlte Rechnung zählt weiter', () => {
+    const bezahlt = [{ status: 'bezahlt', netto: 180 }]
+    expect(eingegangen(bezahlt)).toBe(180)
+    expect(offenerBetrag(stufen, bezahlt)).toBe(0)
+  })
+
+  test('neben dem stornierten Paar zählt die neue Rechnung', () => {
+    // Der Normalfall nach der Behebung: storniert, neu geschrieben, bezahlt.
+    const alles = [...storniertesPaar, { status: 'bezahlt', netto: 180 }]
+    expect(eingegangen(alles)).toBe(180)
+    expect(offenerBetrag(stufen, alles)).toBe(0)
+  })
+})
+
+test.describe('Die Steuernummern des Kunden auf dem Papier', () => {
+  /*
+   * Bei Reverse Charge ist die USt-IdNr des Empfängers Pflicht. Sie stand
+   * bisher ausschließlich im maschinenlesbaren Anhang der Factur-X-Datei —
+   * dort liest sie kein Mensch, der ein Papier in der Hand hält, und kein
+   * Kunde, der seinen Vorsteuerabzug belegen will.
+   */
+  test('der Empfängerblock des PDF kennt USt-IdNr und SIRET', () => {
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'src/lib/invoice.ts'), 'utf8')
+    expect(quelle, 'die USt-IdNr wird gedruckt').toContain('USt-IdNr.:')
+    expect(quelle, 'der SIRET wird gedruckt').toContain('SIRET:')
+  })
+
+  test('die Rechnung reicht beide Angaben an den Druck weiter', () => {
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'src/lib/dokumente.ts'), 'utf8')
+    // Ohne diese Zeilen bliebe der Block leer, so richtig der Druck auch wäre
+    expect(quelle).toMatch(/umsatzsteuerId:\s*r\.customerVatId/)
+    expect(quelle).toMatch(/kennung:\s*r\.customerSiret/)
   })
 })

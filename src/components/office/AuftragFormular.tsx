@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { VersandKnopf } from './VersandKnopf'
 import { AUFTRAG_STATUS } from '../../lib/listen'
@@ -77,6 +77,9 @@ export type AuftragWerte = {
 
 export type PostenAuswahl = { id: number; name: string; unit: string; quantity: number }
 
+/** Ein Artikel, wie ihn die Vorschlagsliste der Positionen braucht */
+type ArtikelVorschlag = { id: number | string; title?: string | null; intern?: boolean | null }
+
 const nurTag = (v?: string | null) => (v ? String(v).slice(0, 10) : '')
 
 const STATUS = AUFTRAG_STATUS.map((s) => ({ wert: s.value, text: s.label }))
@@ -110,6 +113,47 @@ export function AuftragFormular({
   // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
   /* Schon einmal benutzte Ablaufschritte — kommen aus dem Bestand im Gerät. */
   const ablaufVorschlaege = useAblaufVorschlaege()
+
+  /*
+   * Vorhandene Artikel als Vorschlag beim Tippen einer Position.
+   *
+   * Wer aus einem Angebot kommt, hat die Verknüpfung längst; wer den Auftrag
+   * von Hand anlegt, tippte die Bezeichnung bisher neu und suchte den Artikel
+   * danach im Ausklappfeld daneben — oder eben nicht, und dann stand dasselbe
+   * Stück zum dritten Mal unter einem leicht anderen Namen da.
+   *
+   * **Interne sind dabei**, und zwar ausdrücklich: Genau die Lohnarbeits-
+   * Vorlagen will man wiederfinden. Sie tragen in der Liste den Zusatz
+   * „intern", damit niemand glaubt, er verlinke etwas Öffentliches.
+   */
+  const alleArtikel = useBestand<ArtikelVorschlag>('artikel')
+  const artikelVorschlaege = useMemo(
+    () =>
+      [...alleArtikel]
+        .filter((a) => (a.title ?? '').trim())
+        .sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '', 'de')),
+    [alleArtikel],
+  )
+  const artikelListeId = React.useId()
+
+  /*
+   * Trifft die Eingabe genau einen Artikel, wird er gleich verknüpft — dann
+   * steht sein Bild auf den Papieren und der nächste gleiche Auftrag findet
+   * Stückliste und Ablauf. Getippt wird trotzdem frei: Wer etwas Neues
+   * schreibt, wird nicht aufgehalten.
+   */
+  const positionSetzen = (i: number, text: string) => {
+    const treffer = artikelVorschlaege.find(
+      (a) => (a.title ?? '').toLocaleLowerCase('de') === text.trim().toLocaleLowerCase('de'),
+    )
+    setzen({
+      positions: (w.positions ?? []).map((x, idx) =>
+        idx === i
+          ? { ...x, description: text, ...(treffer && !x.product ? { product: Number(treffer.id) } : {}) }
+          : x,
+      ),
+    })
+  }
 
   const entwurf = useEntwurf(`auftraege:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
@@ -388,19 +432,22 @@ export function AuftragFormular({
       )}
 
       <h2>Was gefertigt wird</h2>
+      {artikelVorschlaege.length > 0 && (
+        <datalist id={artikelListeId}>
+          {artikelVorschlaege.map((a) => (
+            <option key={a.id} value={a.title ?? ''} label={a.intern ? 'intern' : undefined} />
+          ))}
+        </datalist>
+      )}
       {(w.positions ?? []).map((p, i) => (
-        <div key={i} className="buero-reihe">
+        <div key={i}>
+        <div className="buero-reihe">
           <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
             <span>Beschreibung</span>
             <input
               value={p.description}
-              onChange={(e) =>
-                setzen({
-                  positions: (w.positions ?? []).map((x, idx) =>
-                    idx === i ? { ...x, description: e.target.value } : x,
-                  ),
-                })
-              }
+              list={artikelVorschlaege.length ? artikelListeId : undefined}
+              onChange={(e) => positionSetzen(i, e.target.value)}
             />
           </label>
           <ArtikelBezug
@@ -453,6 +500,28 @@ export function AuftragFormular({
             />
           </label>
         </div>
+        {/*
+          * Ablegen je Position, nicht je Auftrag.
+          *
+          * Vorher stand hier ein Knopf für den ganzen Auftrag: Er machte
+          * einen Artikel mit der Auftragsbezeichnung und hängte ihn an die
+          * erste Position. Ein Auftrag über „Auflagebacken" und
+          * „Anschlagblech" sind aber zwei Stücke und zwei Vorlagen.
+          *
+          * Gezeigt nur an einem gespeicherten Auftrag und nur, solange diese
+          * Position auf keinen Artikel zeigt — sonst gibt es nichts abzulegen.
+          */}
+        {w.id && !p.product && (p.description ?? '').trim() && (
+          <div style={{ margin: '-.4rem 0 .9rem' }}>
+            <AlsArtikelDialog
+              auftragId={w.id}
+              position={i}
+              bezeichnung={p.description ?? ''}
+              einzige={(w.positions ?? []).length === 1}
+            />
+          </div>
+        )}
+        </div>
       ))}
       <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
         <button
@@ -464,14 +533,6 @@ export function AuftragFormular({
         >
           Position hinzufügen
         </button>
-        {/*
-          * Nur an einem gespeicherten Auftrag, dessen Positionen noch auf
-          * keinen Artikel zeigen: Sonst gibt es nichts abzulegen — die
-          * Vorlage existiert dann schon.
-          */}
-        {w.id && !(w.positions ?? []).some((p) => p.product) && (
-          <AlsArtikelDialog auftragId={w.id} />
-        )}
       </div>
 
       {/*
@@ -644,7 +705,19 @@ export function AuftragFormular({
  * entgegennimmt. Der Server hat den Doppel-Riegel — zweimal getippt gibt
  * keinen zweiten Artikel.
  */
-function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
+function AlsArtikelDialog({
+  auftragId,
+  position,
+  bezeichnung,
+  einzige,
+}: {
+  auftragId: number | string
+  /** Welche Position abgelegt wird — der Artikel trägt ihre Beschreibung */
+  position: number
+  bezeichnung: string
+  /** Hat der Auftrag nur diese eine Position? Dann ist die Vorlage eindeutig. */
+  einzige: boolean
+}) {
   const medien = useBestand<{ id: number | string; alt?: string | null; filename?: string | null }>(
     'medien',
   )
@@ -655,6 +728,13 @@ function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [fertig, setFertig] = useState(false)
+  const [intern, setIntern] = useState(true)
+  /*
+   * Bei einer einzigen Position ist klar, wozu Material und Ablauf gehören —
+   * dann an. Bei mehreren wäre es geraten, und geraten wird nicht: Das Büro
+   * hakt es an der Position an, die die Hauptsache ist.
+   */
+  const [mitVorlage, setMitVorlage] = useState(einzige)
 
   async function oeffnen() {
     setOffen(true)
@@ -674,13 +754,25 @@ function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
       const r = await fetch('/api/office/auftrag', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aktion: 'alsArtikel', id: auftragId, kategorie, bild }),
+        body: JSON.stringify({
+          aktion: 'alsArtikel',
+          id: auftragId,
+          position,
+          kategorie,
+          bild,
+          intern,
+          mitVorlage,
+        }),
       })
-      if (r.status === 409) setMeldung('Eine Position zeigt schon auf einen Artikel.')
+      if (r.status === 409) setMeldung('Diese Position zeigt schon auf einen Artikel.')
       else if (!r.ok) setMeldung('Das hat nicht geklappt.')
       else {
         setFertig(true)
-        setMeldung('Abgelegt — Stückliste, Ablauf und Zeit sind jetzt Vorlage am Artikel.')
+        setMeldung(
+          mitVorlage
+            ? `Abgelegt als ${intern ? 'interner' : 'öffentlicher'} Artikel — Stückliste, Ablauf und Zeit sind jetzt Vorlage.`
+            : `Abgelegt als ${intern ? 'interner' : 'öffentlicher'} Artikel.`,
+        )
       }
     } catch {
       setMeldung('Das hat nicht geklappt — dafür braucht es Netz.')
@@ -691,7 +783,12 @@ function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
 
   if (!offen) {
     return (
-      <button type="button" className="buero-knopf leise" onClick={() => void oeffnen()}>
+      <button
+        type="button"
+        className="buero-knopf leise schmal"
+        onClick={() => void oeffnen()}
+        title={`„${bezeichnung || 'diese Position'}" als Artikel ablegen`}
+      >
         Als Artikel ablegen
       </button>
     )
@@ -700,6 +797,13 @@ function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
   return (
     <div style={{ flexBasis: '100%' }}>
       <Rueckmeldung text={meldung} />
+      {!fertig && !einzige && (
+        <p className="buero-unterzeile">
+          Stückliste und Ablauf gehören dem ganzen Auftrag. Bei mehreren Positionen sagen die
+          Daten nicht, welches Material zu welchem Stück gehört — hake es an der Position an, die
+          die Hauptsache ist.
+        </p>
+      )}
       {!fertig && (
         <div className="buero-reihe" style={{ alignItems: 'end' }}>
           <label className="buero-feld">
@@ -730,6 +834,24 @@ function AlsArtikelDialog({ auftragId }: { auftragId: number | string }) {
                   </option>
                 ))}
             </select>
+          </label>
+          <label className="buero-feld" style={{ justifyContent: 'end' }}>
+            <span>Sichtbarkeit</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', padding: '.7rem 0' }}>
+              <input type="checkbox" checked={intern} onChange={(e) => setIntern(e.target.checked)} />
+              <span>Intern (nicht auf der Website)</span>
+            </label>
+          </label>
+          <label className="buero-feld" style={{ justifyContent: 'end' }}>
+            <span>Vorlage</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', padding: '.7rem 0' }}>
+              <input
+                type="checkbox"
+                checked={mitVorlage}
+                onChange={(e) => setMitVorlage(e.target.checked)}
+              />
+              <span>Stückliste und Ablauf mitnehmen</span>
+            </label>
           </label>
           <div style={{ paddingBottom: '.2rem', display: 'flex', gap: '.6rem' }}>
             <button
