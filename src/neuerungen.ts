@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 106,
+    datum: null,
+    titel: 'Steuernummern aufs Papier, Artikel je Position',
+    punkte: [
+      {
+        text: '**Die USt-IdNr des Kunden steht jetzt auf der Rechnung** — sichtbar, nicht nur im maschinenlesbaren Anhang. Bisher stand sie ausschließlich in der Factur-X-Datei; auf dem Blatt, das der Kunde in die Hand nimmt, fehlte sie. Bei Reverse Charge ist sie Pflicht. Der SIRET steht jetzt ebenfalls dort, sobald er hinterlegt ist.',
+      },
+      {
+        text: '**Der Hinweis vor dem Festschreiben unterscheidet den ernsten Fall.** Ist Reverse Charge angehakt und keine USt-IdNr da, sagt er das deutlich — dort ist sie Pflicht. Ohne Reverse Charge bleibt es beim milden Hinweis, denn Kleinunternehmer und Privatkundschaft haben keine.',
+      },
+      {
+        text: '**„Als Artikel ablegen" gibt es jetzt je Position.** Vorher entstand ein einziger Artikel für den ganzen Auftrag, benannt nach der Auftragsbezeichnung und an die erste Position gehängt. Bei einem Auftrag über `Auflagebacken` und `Anschlagblech` sind das aber zwei Stücke und zwei Vorlagen. Jede Position hat jetzt ihren eigenen Knopf, und der Artikel trägt ihre Beschreibung.',
+      },
+      {
+        text: '**Beim Ablegen lässt sich wählen, ob der Artikel intern bleibt** — vorbelegt ist intern, weil an Lohnarbeits-Vorlagen Kundenname und Zuschnitt hängen. Dazu ein zweites Häkchen: ob Stückliste und Ablauf des Auftrags mitkommen. Die gehören dem ganzen Auftrag; bei mehreren Positionen sagen die Daten nicht, welches Material zu welchem Stück gehört, und geraten wird nicht.',
+      },
+      {
+        text: '**Beim Tippen einer Position schlägt das Büro vorhandene Artikel vor**, öffentliche wie interne — die internen mit dem Zusatz „intern". Wird ein Vorschlag übernommen, ist der Artikel gleich verknüpft: Sein Bild steht dann auf den Papieren, und der nächste gleiche Auftrag findet Stückliste und Ablauf. Wer aus einem Angebot kommt, hatte das immer schon; bei selbst angelegten Aufträgen fehlte es.',
+      },
+    ],
+  },
+  {
     nummer: 105,
     datum: null,
     titel: 'Die Rechnung nimmt die Angaben des Kunden mit',

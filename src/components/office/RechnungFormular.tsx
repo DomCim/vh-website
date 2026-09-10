@@ -527,7 +527,8 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         * gestellt — änderbar ist eine gestellte Rechnung nicht, sie muss
         * storniert und neu geschrieben werden.
         *
-        * Gesperrt wird trotzdem nichts: **Kleingewerbe hat keine USt-IdNr**,
+        * Gesperrt wird trotzdem nichts: **Ein Kleinunternehmer hat keine
+        * USt-IdNr**, weil er keine Umsatzsteuer ausweist,
         * und Privatkundschaft erst recht nicht. Eine Rechnung, die sich nicht
         * stellen lässt, wäre schlimmer als eine ohne Nummer. Deshalb steht
         * hier ein Satz, der beides sagt — was fehlt und wann das in Ordnung
@@ -535,12 +536,27 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         */}
       {!festgeschrieben && !w.customerVatId?.trim() && (
         <p className="buero-hinweis">
-          {w.customer ? (
+          {w.reverseCharge ? (
+            /*
+             * Der eine Fall, der wirklich weh tut. Bei Reverse Charge ist die
+             * USt-IdNr des Empfängers Pflicht — ohne sie ist die Rechnung
+             * angreifbar, und der Kunde kommt nicht an seinen Vorsteuerabzug.
+             * Genau daran ist einmal eine gestellte Rechnung gescheitert und
+             * musste storniert werden.
+             */
             <>
-              <strong>Für diesen Kunden ist keine USt-IdNr hinterlegt.</strong> Bei Kleingewerbe
-              und Privatkundschaft ist das richtig so. Ist es ein Geschäftskunde, gehört sie an
-              den Geschäftspartner — von dort kommt sie beim Festschreiben von selbst mit, und
-              eine gestellte Rechnung lässt sich nur noch stornieren.
+              <strong>Reverse Charge ohne USt-IdNr des Kunden.</strong> Bei übergegangener
+              Steuerschuld ist sie Pflicht und gehört aufs Papier. Trag sie am
+              Geschäftspartner nach — von dort kommt sie beim Festschreiben mit. Eine gestellte
+              Rechnung lässt sich nur noch stornieren.
+            </>
+          ) : w.customer ? (
+            <>
+              <strong>Für diesen Kunden ist keine USt-IdNr hinterlegt.</strong> Bei
+              Kleinunternehmern und Privatkundschaft ist das richtig so — wer keine Umsatzsteuer
+              ausweist, hat auch keine Nummer. Ist es ein Geschäftskunde im EU-Ausland, gehört
+              sie an den Geschäftspartner: Von dort kommt sie beim Festschreiben von selbst mit,
+              und eine gestellte Rechnung lässt sich nur noch stornieren.
             </>
           ) : (
             <>

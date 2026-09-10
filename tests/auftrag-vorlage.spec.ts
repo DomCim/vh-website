@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 import { expect, test } from '@playwright/test'
 
 import { unberuehrt, vorschlaegeAus } from '../src/lib/buero/ablaufvorschlaege'
@@ -207,5 +210,26 @@ test.describe('Die Zahlen nach einem Storno', () => {
     const alles = [...storniertesPaar, { status: 'bezahlt', netto: 180 }]
     expect(eingegangen(alles)).toBe(180)
     expect(offenerBetrag(stufen, alles)).toBe(0)
+  })
+})
+
+test.describe('Die Steuernummern des Kunden auf dem Papier', () => {
+  /*
+   * Bei Reverse Charge ist die USt-IdNr des Empfängers Pflicht. Sie stand
+   * bisher ausschließlich im maschinenlesbaren Anhang der Factur-X-Datei —
+   * dort liest sie kein Mensch, der ein Papier in der Hand hält, und kein
+   * Kunde, der seinen Vorsteuerabzug belegen will.
+   */
+  test('der Empfängerblock des PDF kennt USt-IdNr und SIRET', () => {
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'src/lib/invoice.ts'), 'utf8')
+    expect(quelle, 'die USt-IdNr wird gedruckt').toContain('USt-IdNr.:')
+    expect(quelle, 'der SIRET wird gedruckt').toContain('SIRET:')
+  })
+
+  test('die Rechnung reicht beide Angaben an den Druck weiter', () => {
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'src/lib/dokumente.ts'), 'utf8')
+    // Ohne diese Zeilen bliebe der Block leer, so richtig der Druck auch wäre
+    expect(quelle).toMatch(/umsatzsteuerId:\s*r\.customerVatId/)
+    expect(quelle).toMatch(/kennung:\s*r\.customerSiret/)
   })
 })

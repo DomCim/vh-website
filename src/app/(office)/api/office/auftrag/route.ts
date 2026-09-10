@@ -58,8 +58,23 @@ export async function POST(req: Request) {
      *
      * Doppelrecht wie bei `rechnung`: Es entsteht Website-Inhalt.
      */
+    /*
+     * Eine Position als Artikel ablegen.
+     *
+     * **Früher war das ein Knopf für den ganzen Auftrag** — ein Artikel je
+     * Auftrag, Titel gleich Auftragsbezeichnung, verknüpft mit der ersten
+     * Position. Bei einem Auftrag über „Auflagebacken" und „Anschlagblech"
+     * sind das aber zwei Stücke und zwei Vorlagen; abgelegt wurde eines mit
+     * dem Namen des Auftrags. Deshalb je Position.
+     *
+     * **Stückliste und Ablauf hängen am Auftrag, nicht an der Position.**
+     * Welches Material zu welchem der beiden Stücke gehört, sagen die Daten
+     * nicht — geraten wird deshalb nicht: `mitVorlage` entscheidet, und das
+     * Büro hakt es an genau der Position an, die die Hauptsache ist.
+     */
     if (b.aktion === 'alsArtikel') {
-      if (!b.id || !b.kategorie || !b.bild) {
+      const stelle = Number(b.position ?? 0)
+      if (!b.id || !b.kategorie || !b.bild || !Number.isInteger(stelle) || stelle < 0) {
         return NextResponse.json({ error: 'unvollstaendig' }, { status: 400 })
       }
       if (!(await darf(payload, user, 'website.pflegen'))) {
@@ -71,82 +86,100 @@ export async function POST(req: Request) {
         .catch(() => null)
       if (!auftrag) return NextResponse.json({ error: 'auftrag-fehlt' }, { status: 400 })
 
-      /*
-       * Zeigt schon eine Position auf einen Artikel, gibt es nichts
-       * abzulegen — und die Offline-Warteschlange darf einen doppelt
-       * getippten Knopf nicht in zwei Artikel verwandeln.
-       */
       const positionen = (auftrag.positions ?? []) as Record<string, unknown>[]
-      if (positionen.some((p) => p.product)) {
+      const position = positionen[stelle]
+      if (!position) return NextResponse.json({ error: 'position-fehlt' }, { status: 400 })
+
+      /*
+       * Zeigt diese Position schon auf einen Artikel, gibt es nichts
+       * abzulegen — und die Offline-Warteschlange darf einen doppelt
+       * getippten Knopf nicht in zwei Artikel verwandeln. Geprüft wird jetzt
+       * die Position und nicht mehr der ganze Auftrag: Sonst sperrte die
+       * erste abgelegte Position alle übrigen aus.
+       */
+      if (position.product) {
         return NextResponse.json({ error: 'schon-verknuepft' }, { status: 409 })
       }
 
       // Der Auftrag zählt gesamt, der Artikel je Stück
-      const stueckzahl = Math.max(1, Number(positionen[0]?.quantity) || 1)
+      const stueckzahl = Math.max(1, Number(position.quantity) || 1)
       const runden = (n: number) => Math.round(n * 1000) / 1000
+      const mitVorlage = b.mitVorlage !== false
 
       /*
        * Beigestelltes bleibt draußen: Es gehört dem Auftraggeber, und in
        * einer Vorlage wäre es eine Lüge über den eigenen Bedarf.
        */
-      const stueckliste = ((auftrag.material ?? []) as Record<string, unknown>[])
-        .filter((m) => m.item && !m.beigestellt)
-        .map((m) => ({
-          item: Number(typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item),
-          quantity: runden((Number(m.quantity) || 0) / stueckzahl),
-        }))
-        .filter((m) => m.item && m.quantity > 0)
+      const stueckliste = !mitVorlage
+        ? []
+        : ((auftrag.material ?? []) as Record<string, unknown>[])
+            .filter((m) => m.item && !m.beigestellt)
+            .map((m) => ({
+              item: Number(typeof m.item === 'object' ? (m.item as { id?: number })?.id : m.item),
+              quantity: runden((Number(m.quantity) || 0) / stueckzahl),
+            }))
+            .filter((m) => m.item && m.quantity > 0)
 
       /*
        * Der Ablauf gestutzt auf die Vorlagenform: `stand`, `erledigtAm` und
        * die Reise-Zeitstempel sind Geschichte dieses einen Auftrags, keine
        * Vorlage für den nächsten.
        */
-      const ablauf = ((auftrag.arbeitsplan ?? []) as Record<string, unknown>[])
-        .filter((s) => typeof s.was === 'string' && s.was.trim())
-        .map((s) => ({
-          was: s.was as string,
-          art: (s.art === 'fremd' ? 'fremd' : 'eigen') as 'eigen' | 'fremd',
-          minuten: (s.minuten as number | null) ?? null,
-          dienstleister:
-            Number(typeof s.dienstleister === 'object' ? (s.dienstleister as { id?: number })?.id : s.dienstleister) ||
-            undefined,
-          kosten: (s.kosten as number | null) ?? null,
-          vorlaufTage: (s.vorlaufTage as number | null) ?? null,
-          notiz: (s.notiz as string | null) || undefined,
-        }))
+      const ablauf = !mitVorlage
+        ? []
+        : ((auftrag.arbeitsplan ?? []) as Record<string, unknown>[])
+            .filter((s) => typeof s.was === 'string' && s.was.trim())
+            .map((s) => ({
+              was: s.was as string,
+              art: (s.art === 'fremd' ? 'fremd' : 'eigen') as 'eigen' | 'fremd',
+              minuten: (s.minuten as number | null) ?? null,
+              dienstleister:
+                Number(typeof s.dienstleister === 'object' ? (s.dienstleister as { id?: number })?.id : s.dienstleister) ||
+                undefined,
+              kosten: (s.kosten as number | null) ?? null,
+              vorlaufTage: (s.vorlaufTage as number | null) ?? null,
+              notiz: (s.notiz as string | null) || undefined,
+            }))
+
+      /*
+       * Intern ist die Vorgabe und bleibt es, wenn niemand widerspricht: An
+       * einer Lohnarbeits-Vorlage hängen Kundenname und Zuschnitt, die gehen
+       * Google nichts an. Wer sie ausdrücklich öffentlich will, sagt es —
+       * `onRequestOnly` und `available: false` bleiben trotzdem als Gürtel
+       * zum Hosenträger, damit ein sichtbarer Artikel nicht sofort einen
+       * Kaufknopf hat. Preise wandern bewusst nicht mit: Die am Auftrag sind
+       * verhandelt und kundenspezifisch.
+       */
+      const intern = b.intern !== false
+
+      const titel =
+        (typeof b.titel === 'string' && b.titel.trim()) ||
+        (typeof position.description === 'string' && position.description.trim()) ||
+        auftrag.title ||
+        'Artikel'
 
       const artikel = await payload.create({
         collection: 'products',
         overrideAccess: true,
         locale: 'de',
         data: {
-          title: (typeof b.titel === 'string' && b.titel.trim()) || auftrag.title || 'Artikel',
+          title: titel,
           category: Number(b.kategorie),
           images: [Number(b.bild)],
-          /*
-           * Intern, und dazu doppelt vernäht: `intern` nimmt dem Artikel die
-           * Seite, die Sitemap und die Suche — an einer Lohnarbeits-Vorlage
-           * hängen Kundenname und Zuschnitt, die gehen Google nichts an.
-           * `onRequestOnly` und `available: false` bleiben als Gürtel zum
-           * Hosenträger: Wer den Artikel später sichtbar macht, hat immer
-           * noch keinen Kaufknopf, bis er es ausdrücklich will. Preise
-           * wandern bewusst nicht mit — die am Auftrag sind verhandelt und
-           * kundenspezifisch.
-           */
-          intern: true,
+          intern,
           onRequestOnly: true,
           available: false,
           billOfMaterials: stueckliste as never,
           arbeitsplan: ablauf as never,
-          productionMinutes: auftrag.plannedMinutes
-            ? Math.max(1, Math.round(auftrag.plannedMinutes / stueckzahl))
-            : undefined,
+          productionMinutes:
+            mitVorlage && auftrag.plannedMinutes
+              ? Math.max(1, Math.round(auftrag.plannedMinutes / stueckzahl))
+              : undefined,
         },
       })
 
       /*
-       * Rückverweis: Die erste Position zeigt jetzt auf den neuen Artikel —
+       * Rückverweis: Diese Position zeigt jetzt auf den neuen Artikel —
        * damit erscheint künftig das Bild auf den Papieren, und der nächste
        * gleiche Auftrag findet Vorlage und Stückliste. Die ganze Liste wird
        * zurückgeschrieben, samt `farbe` — Teilabschriften verlieren Felder.
@@ -157,7 +190,7 @@ export async function POST(req: Request) {
         overrideAccess: true,
         data: {
           positions: positionen.map((p, i) =>
-            i === 0 ? { ...p, product: artikel.id } : p,
+            i === stelle ? { ...p, product: artikel.id } : p,
           ) as never,
         },
       })
