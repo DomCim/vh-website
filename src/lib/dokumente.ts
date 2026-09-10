@@ -316,6 +316,8 @@ export async function rechnungDokument(payload: Payload, id: string | number): P
         empfaenger: {
           name: r.customerName,
           anschrift: (r.customerAddress ?? '').split('\n').filter(Boolean),
+          kennung: r.customerSiret,
+          umsatzsteuerId: r.customerVatId,
         },
         positionen: await Promise.all(
           (r.items ?? []).map(async (p) => ({
