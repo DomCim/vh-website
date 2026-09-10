@@ -230,6 +230,8 @@ export async function rechnungskaufAnlegen(payload: Payload, bestellung: Bestell
       data: {
         status: 'entwurf',
         stufe: 'vollstaendig',
+        // Kauf auf Rechnung ist immer der Inlandsfall
+        steuerfall: 'inland',
         auftrag: Number(auftrag.id),
         customer: kontakt,
         customerName: bestellung.customer?.name ?? undefined,

@@ -9,8 +9,9 @@ import {
   type Vorstufe,
   type Zahlplan,
 } from './anzahlung'
-import { RECHNUNG_STUFEN, textKarte } from './listen'
+import { RECHNUNG_STUFEN, type Steuerfall, textKarte } from './listen'
 import { liveMelden } from './live'
+import { giltNoch } from './zahlungsstand'
 import { nachCommit } from './nachCommit'
 import { benachrichtige } from './push'
 import { kundenAbschrift } from './kundenabschrift'
@@ -46,7 +47,10 @@ type Auftrag = {
   customerName?: string | null
   contact?: unknown
   zahlplan?: Zahlplan | null
-  positions?: { description?: string | null; quantity?: number | null; price?: number | null }[] | null
+  /* `id` ist die Kennung der Array-Zeile — daran hängt, was schon berechnet ist */
+  positions?:
+    | { id?: string | null; description?: string | null; quantity?: number | null; price?: number | null }[]
+    | null
   meilenstein?: { bezeichnung?: string | null; erreichtAm?: string | null } | null
 }
 
@@ -220,6 +224,9 @@ export async function entwurfFuerStufe(
       auftrag: Number(auftrag.id),
       customer: typeof kontakt === 'number' ? kontakt : undefined,
       customerName: auftrag.customerName ?? undefined,
+      // Stufenrechnungen sind Zahlungsraten des Inlandsfalls; wer im Ausland
+      // stuft, setzt den Steuerfall am Entwurf nach.
+      steuerfall: 'inland',
       // Anschrift, SIRET und USt-IdNr des Empfängers — siehe lib/kundenabschrift.ts
       ...(await kundenAbschrift(payload, kontakt, { customerName: auftrag.customerName ?? '' }, req)),
       items: posten,
@@ -291,6 +298,45 @@ export async function entwurfFuerStufe(
 }
 
 /**
+ * Welche Positionen eines Auftrags noch nicht berechnet sind.
+ *
+ * **Warum es das braucht.** Liefert Vincent ein Sofa und baut es vor Ort auf,
+ * ist das eine Lieferung und eine sonstige Leistung — zwei Steuerfälle, und
+ * nur einer darf je Beleg gelten. Also zwei Rechnungen aus einem Auftrag, und
+ * dafür muss feststehen, was schon draußen ist.
+ *
+ * Gezählt wird nur, was **noch gilt**: Eine stornierte Rechnung und ihre
+ * Gegenrechnung geben ihre Positionen wieder frei. Sonst wäre ein Auftrag
+ * nach einem Storno für immer leer.
+ */
+export async function offenePositionen(
+  payload: Payload,
+  auftrag: Auftrag,
+  req?: PayloadRequest,
+): Promise<NonNullable<Auftrag['positions']>> {
+  const { docs } = await payload.find({
+    collection: 'outgoing-invoices',
+    where: { auftrag: { equals: auftrag.id } },
+    limit: 100,
+    depth: 0,
+    overrideAccess: true,
+    req,
+  })
+
+  const berechnet = new Set<string>()
+  for (const r of docs as unknown as {
+    status?: string | null
+    stornoVon?: unknown
+    items?: { auftragPosition?: string | null }[] | null
+  }[]) {
+    if (!giltNoch(r)) continue
+    for (const p of r.items ?? []) if (p.auftragPosition) berechnet.add(String(p.auftragPosition))
+  }
+
+  return (auftrag.positions ?? []).filter((p) => !p.id || !berechnet.has(String(p.id)))
+}
+
+/**
  * Eine vollständige Rechnung aus einem Auftrag — von Hand angestoßen.
  *
  * Der Weg, der bislang fehlte. Alles darüber entsteht an Auslösern und nur
@@ -318,6 +364,12 @@ export async function entwurfFuerStufe(
 export async function rechnungAusAuftrag(
   payload: Payload,
   auftragId: number | string,
+  wahl?: {
+    /** Kennungen der Auftragspositionen, die auf diese Rechnung sollen */
+    positionen?: string[]
+    /** Warum keine Umsatzsteuer anfällt — Vorgabe ist der Inlandsfall */
+    steuerfall?: Steuerfall
+  },
   req?: PayloadRequest,
 ): Promise<number | string | null> {
   const auftrag = (await payload
@@ -325,7 +377,18 @@ export async function rechnungAusAuftrag(
     .catch(() => null)) as Auftrag | null
   if (!auftrag) return null
 
-  const posten = (auftrag.positions ?? []).filter((p) => p.description?.trim())
+  const offen = await offenePositionen(payload, auftrag, req)
+
+  /*
+   * Ohne Auswahl geht alles Offene auf die Rechnung — der alte Weg, und der
+   * häufige Fall. Mit Auswahl genau das Gewählte, aber nie etwas, das schon
+   * berechnet ist: Die Auswahl kommt aus einer Anzeige, die Sekunden alt sein
+   * kann, und zweimal berechnen ist schlimmer als einmal zu wenig.
+   */
+  const gewaehlt = wahl?.positionen?.length
+    ? offen.filter((p) => wahl.positionen?.includes(String(p.id)))
+    : offen
+  const posten = gewaehlt.filter((p) => p.description?.trim())
   if (!posten.length) return null
 
   const satz = await steuersatz(payload, req)
@@ -348,12 +411,17 @@ export async function rechnungAusAuftrag(
        * ohne die USt-IdNr des Kunden lässt sich nur noch stornieren.
        */
       ...(await kundenAbschrift(payload, kontakt, { customerName: auftrag.customerName ?? '' }, req)),
+      steuerfall: wahl?.steuerfall ?? 'inland',
       items: posten.map((p) => ({
         description: p.description as string,
         quantity: Number(p.quantity) || 0,
         unit: 'Stück',
+        // Ohne Steuer, wenn der Steuerfall es sagt — sonst stünde ein Satz
+        // neben einem Betrag, der ihn nicht enthält.
         unitPrice: Number(p.price) || 0,
-        vatRate: satz,
+        vatRate: (wahl?.steuerfall ?? 'inland') === 'inland' ? satz : 0,
+        /* Damit später feststeht, was schon berechnet ist */
+        auftragPosition: p.id ? String(p.id) : undefined,
       })),
     },
   })

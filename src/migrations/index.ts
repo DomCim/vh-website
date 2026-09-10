@@ -73,6 +73,7 @@ import * as migration_20260828_170818_schrittzeit from './20260828_170818_schrit
 import * as migration_20260830_112216_termine_kalender from './20260830_112216_termine_kalender';
 import * as migration_20260909_063951_belege_einfrieren from './20260909_063951_belege_einfrieren';
 import * as migration_20260909_192704_adressen_je_sprache from './20260909_192704_adressen_je_sprache';
+import * as migration_20260910_214523_steuerfall_und_teilrechnung from './20260910_214523_steuerfall_und_teilrechnung';
 
 export const migrations = [
   {
@@ -448,6 +449,11 @@ export const migrations = [
   {
     up: migration_20260909_192704_adressen_je_sprache.up,
     down: migration_20260909_192704_adressen_je_sprache.down,
-    name: '20260909_192704_adressen_je_sprache'
+    name: '20260909_192704_adressen_je_sprache',
+  },
+  {
+    up: migration_20260910_214523_steuerfall_und_teilrechnung.up,
+    down: migration_20260910_214523_steuerfall_und_teilrechnung.down,
+    name: '20260910_214523_steuerfall_und_teilrechnung'
   },
 ];
