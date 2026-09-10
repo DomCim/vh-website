@@ -464,6 +464,11 @@ const de = {
     error: 'Es ist ein Fehler aufgetreten.',
     backHome: 'Zur Startseite',
   },
+  notFound: {
+    title: 'Diese Seite gibt es nicht',
+    lead: 'Vielleicht ein Tippfehler, vielleicht ein alter Link — die Adresse führt jedenfalls ins Leere. Von hier kommen Sie weiter.',
+    waysTitle: 'Oder einer dieser Wege',
+  },
 }
 
 export type Dictionary = typeof de
@@ -911,6 +916,11 @@ const fr: Dictionary = {
     error: "Une erreur s'est produite.",
     backHome: "Retour à l'accueil",
   },
+  notFound: {
+    title: "Cette page n'existe pas",
+    lead: "Une faute de frappe, peut-être un ancien lien — quoi qu'il en soit, l'adresse ne mène nulle part. Voici comment poursuivre.",
+    waysTitle: 'Ou par l’un de ces chemins',
+  },
 }
 
 const en: Dictionary = {
@@ -1353,6 +1363,11 @@ const en: Dictionary = {
     loading: 'Loading …',
     error: 'Something went wrong.',
     backHome: 'Back to home',
+  },
+  notFound: {
+    title: 'This page does not exist',
+    lead: 'A typo, perhaps an old link — either way, the address leads nowhere. Here is how to carry on.',
+    waysTitle: 'Or try one of these',
   },
 }
 

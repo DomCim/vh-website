@@ -26,6 +26,22 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 103,
+    datum: null,
+    titel: 'Wer sich verirrt, kommt jetzt weiter',
+    punkte: [
+      {
+        text: '**Eine Adresse, die es nicht gibt, führte bisher auf eine weiße Seite** mit dem englischen Satz „404: This page could not be found." — ohne Kopf, ohne Fuß, ohne einen Weg zurück, und das auch auf der französischen Seite. Wer aus einem Suchergebnis oder einem alten Lesezeichen kam, war damit weg.',
+      },
+      {
+        text: '**Jetzt steht dort eine richtige Seite** in der Sprache des Besuchers: ein Satz, der sagt, was los ist, die Suche, die Rubriken und der Weg zur Maßanfertigung.',
+      },
+      {
+        text: '**Umgeleitet wird trotzdem nicht auf die Startseite**, obwohl das naheliegt. Google wertet das als Scheinfehler: Die Adresse fliegt genauso aus dem Verzeichnis, nur meldet die Search Console den Fehler nicht mehr — und genau diese Meldungen sind die Liste, aus der die Umleitungen alter Adressen entstehen. Wer nach „Brasero Corten" gesucht hat und wortlos auf der Startseite steht, denkt ohnehin, er habe sich vertippt.',
+      },
+    ],
+  },
+  {
     nummer: 102,
     datum: null,
     titel: 'Texte behalten ihre Auszeichnung, wenn der Assistent sie anfasst',

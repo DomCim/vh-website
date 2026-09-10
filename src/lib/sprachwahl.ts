@@ -104,6 +104,24 @@ export function pfadNenntSprache(pfad: string): boolean {
   return isLocale(pfad.split('/')[1] ?? '')
 }
 
+/**
+ * Der Kopf, in dem die Middleware die Sprache an die Seite weiterreicht.
+ *
+ * Gebraucht wird er von der 404-Seite. `not-found.tsx` bekommt in Next keine
+ * Wegparameter — sie weiß also nicht, welche Sprache im Pfad steht, obwohl
+ * der Pfad sie nennt. Raten kommt nicht in Frage: Ein Franzose, der auf einen
+ * toten Link stößt, bekäme eine deutsche Fehlerseite und wäre zweimal
+ * verloren. Also schreibt die Middleware sie hier hinein, wo die Seite sie
+ * lesen kann.
+ */
+export const SPRACH_KOPF = 'x-vh-sprache'
+
+/** Die Sprache, die ein Pfad nennt — oder nichts, wenn er keine nennt. */
+export function spracheAusPfad(pfad: string): Locale | null {
+  const erste = pfad.split('/')[1] ?? ''
+  return isLocale(erste) ? erste : null
+}
+
 /** Derselbe Pfad mit Sprachkürzel davor. */
 export function mitSprache(pfad: string, sprache: Locale): string {
   return pfad === '/' ? `/${sprache}` : `/${sprache}${pfad}`
