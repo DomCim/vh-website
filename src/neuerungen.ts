@@ -26,6 +26,38 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 102,
+    datum: null,
+    titel: 'Texte behalten ihre Auszeichnung, wenn der Assistent sie anfasst',
+    punkte: [
+      {
+        text: '**Beschreibungen verloren ihre Fettungen, wenn der Assistent sie überarbeitete.** Er las sie über die Werkzeuge, und dabei fielen Fettungen weg und die Punkte einer Aufzählung klebten aneinander. Der Text sah kaputt aus, war es aber nicht — kaputt war das Lesen. Wer ihn daraufhin „richtete", löschte die Auszeichnung dann wirklich. Am Dubbe Stehtisch ist das einmal passiert und wurde wieder hergestellt.',
+      },
+      {
+        text: '**Ab jetzt kommt heraus, was auch hineingeht:** Zwischenüberschriften, Aufzählungen und Fettes. Damit ist es gleich, ob jemand die Seite ansieht oder der Assistent den Text abfragt — und eine Übersetzung behält die Gliederung des Originals, statt sie stillschweigend einzuebnen.',
+      },
+    ],
+  },
+  {
+    nummer: 101,
+    datum: null,
+    titel: 'Das Sortiment heißt jetzt in jeder Sprache, wie es dort heißt',
+    punkte: [
+      {
+        text: '**Alle Kategorien und alle Artikel tragen jetzt eigene französische und englische Adressen.** Aus `/fr/moebel/outdoor-sofa-os` ist `/fr/mobilier/canape-outdoor-os` geworden, aus `/en/feuer/feuer-brasero` ist `/en/fire/brasero-corten-steel` geworden. Wer eine alte Adresse aufruft — aus einem Lesezeichen, einer Mail oder von Google — landet weiterhin richtig, dauerhaft weitergeleitet.',
+      },
+      {
+        text: '**Zwei Namen weichen bewusst vom Titel ab.** Der Brasero heißt in der Adresse nach dem Cortenstahl und der Pflanzkübel schlicht nach Stahl, weil in Frankreich genau danach gesucht wird. Die Adresse ist eines der Signale, an denen eine Suchmaschine erkennt, worum es geht — dort zählt das gesuchte Wort mehr als der schöne.',
+      },
+      {
+        text: '**Der Dubbe Stehtisch steht jetzt auch auf Französisch und Englisch**, samt Varianten und Farbnamen. Damit ist das ganze Sortiment in allen drei Sprachen vollständig.',
+      },
+      {
+        text: '**Die Kategorie Objekte bekommt ihre französische Adresse erst mit dieser Fassung.** `/fr/objets` war die Adresse der alten TYPO3-Seite und wurde bisher weitergeleitet. Ab hier gehört sie der Kategorie selbst.',
+      },
+    ],
+  },
+  {
     nummer: 100,
     datum: null,
     titel: 'Französische Adressen dürfen jetzt französisch heißen',
