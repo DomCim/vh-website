@@ -8,6 +8,7 @@ import {
   naechsterSchritt,
   planStand,
 } from '../../lib/arbeitsplan'
+import { unberuehrt, type Vorschlag } from '../../lib/buero/ablaufvorschlaege'
 import { PartnerBezug } from './PartnerBezug'
 import { Zahleingabe } from './Zahleingabe'
 
@@ -69,12 +70,15 @@ export function Ablauf({
   plan,
   aendern,
   bearbeiten,
+  vorschlaege = [],
 }: {
   plan: Arbeitsschritt[]
   /** Fehlt sie, ist die Anzeige nur zum Lesen — etwa an einem alten Auftrag */
   aendern?: (index: number, stand: 'offen' | 'laeuft' | 'erledigt') => void
   /** Wenn gesetzt, lassen sich Schritte anlegen, ändern und umsortieren */
   bearbeiten?: AblaufBearbeiten
+  /** Schon einmal benutzte Schritte — siehe `lib/buero/ablaufvorschlaege.ts` */
+  vorschlaege?: Vorschlag[]
 }) {
   const jetzt = naechsterSchritt(plan)
   const stand = planStand(plan)
@@ -82,6 +86,38 @@ export function Ablauf({
 
   const schrittSetzen = (index: number, teil: Partial<Arbeitsschritt>) =>
     bearbeiten?.ersetzen(plan.map((s, i) => (i === index ? { ...s, ...teil } : s)))
+
+  const listenId = React.useId()
+
+  /*
+   * Ein Vorschlag füllt den **ganzen** Schritt, nicht nur seinen Namen.
+   *
+   * Das ist der eigentliche Gewinn: „PC - Konstruktion" bringt die Minuten
+   * mit, „Verzinken" den Dienstleister samt Kosten und Vorlauftagen. Der Name
+   * allein wäre ein Tippersparnis von zwei Sekunden; die Zahlen dahinter sind
+   * die, bei denen man sich vertippt.
+   *
+   * Gefüllt wird nur ein unberührter Schritt — wer schon Minuten eingetragen
+   * hat und danach den Namen vervollständigt, behält seine Zahlen.
+   */
+  const nameSetzen = (index: number, eingabe: string) => {
+    const schritt = plan[index]
+    const treffer = vorschlaege.find(
+      (v) => (v.was ?? '').toLocaleLowerCase('de') === eingabe.trim().toLocaleLowerCase('de'),
+    )
+    if (!treffer || !schritt || !unberuehrt(schritt)) {
+      schrittSetzen(index, { was: eingabe })
+      return
+    }
+    schrittSetzen(index, {
+      was: treffer.was ?? eingabe,
+      art: treffer.art ?? 'eigen',
+      minuten: treffer.minuten ?? null,
+      dienstleister: treffer.dienstleister ?? null,
+      kosten: treffer.kosten ?? null,
+      vorlaufTage: treffer.vorlaufTage ?? null,
+    })
+  }
 
   /*
    * Umsortieren über Pfeile, nicht Ziehen: Die Büro-App läuft am
@@ -151,6 +187,22 @@ export function Ablauf({
         </span>
       </div>
 
+      {/*
+        * Die Vorschlagsliste des Browsers statt einer eigenen Auswahl.
+        *
+        * Sie kann, was hier gebraucht wird: beim Tippen filtern, mit der
+        * Tastatur bedienbar, am Tablet ein Tippen — und sie kostet kein
+        * Bündel und keine Zeile Tastaturbehandlung. Wer etwas Neues tippt,
+        * wird nicht aufgehalten; die Liste schlägt vor, sie schreibt nicht vor.
+        */}
+      {vorschlaege.length > 0 && (
+        <datalist id={listenId}>
+          {vorschlaege.map((v) => (
+            <option key={v.was} value={v.was ?? ''} />
+          ))}
+        </datalist>
+      )}
+
       <ol className="buero-ablauf-liste">
         {plan.map((schritt, i) => {
           const s = schritt.stand ?? 'offen'
@@ -166,7 +218,8 @@ export function Ablauf({
                         <input
                           value={schritt.was ?? ''}
                           placeholder="z.B. Zuschnitt, Schweißen, Verzinken"
-                          onChange={(e) => schrittSetzen(i, { was: e.target.value })}
+                          list={vorschlaege.length ? listenId : undefined}
+                          onChange={(e) => nameSetzen(i, e.target.value)}
                         />
                       </label>
                       <label className="buero-feld">

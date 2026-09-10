@@ -15,6 +15,7 @@ import {
   terminVerschiebung,
   zahlungsstand,
   type StufenRechnung,
+  giltNoch,
 } from '../../lib/zahlungsstand'
 import { Rueckmeldung } from './Rueckmeldung'
 
@@ -82,6 +83,20 @@ export function Zahlungsleiste({
         return String(id ?? '') === String(auftragId)
       }),
     [alle, auftragId],
+  )
+
+  /*
+   * Was von den Rechnungen noch gilt.
+   *
+   * Ein Storno löscht nichts: Das Original bleibt stehen und trägt
+   * „storniert", daneben liegt die Gegenrechnung mit negativen Beträgen.
+   * Beide Papiere gehören in die Bücher — aber keines davon ist noch eine
+   * Forderung. Ohne diese Unterscheidung galt der Auftrag für immer als
+   * abgerechnet, und der Knopf, der eine Rechnung anlegt, kam nie zurück.
+   */
+  const gueltige = useMemo(
+    () => rechnungen.filter(giltNoch),
+    [rechnungen],
   )
 
   const stand = useMemo(
@@ -248,6 +263,35 @@ export function Zahlungsleiste({
           )
         })}
       </div>
+
+      {gueltige.length === 0 && (
+        /*
+         * Alles storniert — dann steht der Auftrag wieder ohne Rechnung da.
+         * Die Papiere darüber bleiben sichtbar, weil sie in den Büchern
+         * stehen; was fehlt, ist der Weg zur nächsten Rechnung. Genau hier
+         * blieb Vincent hängen und hat den Auftrag nachgebaut.
+         */
+        <div className="buero-hinweis">
+          <strong>Zu diesem Auftrag gilt keine Rechnung mehr.</strong> Die Papiere oben bleiben
+          stehen — eine gestellte Rechnung wird nicht gelöscht.
+          {auftragswert > 0 ? (
+            <>
+              {' '}
+              Der Auftrag steht bei {euro(auftragswert)} netto.
+              <button
+                type="button"
+                className="buero-knopf"
+                onClick={rechnungAnlegen}
+                disabled={laeuft}
+              >
+                Neue Rechnung aus dem Auftrag erstellen
+              </button>
+            </>
+          ) : (
+            ' Sobald die Positionen mit Preisen am Auftrag stehen, lässt sich eine neue Rechnung von hier aus anlegen.'
+          )}
+        </div>
+      )}
 
       {stand.wartet && (
         <div className="buero-hinweis">
