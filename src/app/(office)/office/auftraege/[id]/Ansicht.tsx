@@ -147,6 +147,14 @@ export function AuftragAnsicht() {
       <Zahlungsleiste
         auftragId={j.id}
         auftragswert={auftragswert}
+        positionen={
+          j.positions as {
+            id?: string | null
+            description?: string | null
+            quantity?: number | null
+            price?: number | null
+          }[]
+        }
         zahlplan={j.zahlplan as { anzahlungProzent?: number; zwischenProzent?: number }}
         fertigBis={j.dueDate as string}
       />

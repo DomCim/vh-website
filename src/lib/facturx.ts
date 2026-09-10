@@ -1,4 +1,5 @@
 import type { CompanyInfo } from './mail'
+import { type Steuerfall, steuerfallVon } from './listen'
 
 /**
  * Factur-X: die elektronische Rechnung, wie Frankreich sie verlangt.
@@ -39,6 +40,17 @@ import type { CompanyInfo } from './mail'
  * abgerechnet, braucht es eine Unterscheidung — dann gehört hier ein zweiter
  * Satz her und an die Rechnung die Angabe, was sie abrechnet.
  */
+/** Der Kategoriecode nach EN 16931 für diesen Beleg — S, K oder AE. */
+function kategorie(daten: { reverseCharge?: boolean; steuerfall?: Steuerfall | null }, satz: number) {
+  if (!daten.reverseCharge) return satz > 0 ? 'S' : 'Z'
+  return steuerfallVon(daten.steuerfall ?? 'ig_lieferung').kuerzel
+}
+
+/** Der Satz, der als Befreiungsgrund in die Datei gehört. */
+function grund(daten: { steuerfall?: Steuerfall | null }) {
+  return steuerfallVon(daten.steuerfall ?? 'ig_lieferung').hinweis ?? STEUERFREI_GRUND
+}
+
 export const STEUERFREI_HINWEIS =
   'Innergemeinschaftliche steuerfreie Lieferungen erfolgen nach § 4 Nr. 1 b in Verbindung mit § 6 a UStG.'
 
@@ -82,7 +94,18 @@ export type FacturXDaten = {
   rabatt?: { bezeichnung: string; betrag: number } | null
   /** Sonstige Zeilen wie Versand — netto */
   zusatzzeilen?: { bezeichnung: string; betrag: number; steuersatz: number }[]
+  /** Ohne Umsatzsteuer — ergibt sich aus dem Steuerfall, siehe `lib/listen.ts` */
   reverseCharge?: boolean
+  /**
+   * Warum keine Umsatzsteuer anfällt: `ig_lieferung` (Ware, Code K) oder
+   * `reverse_charge` (sonstige Leistung, Code AE).
+   *
+   * Hier stand einmal nur der Haken darüber, und der schrieb immer `AE` —
+   * während auf dem Papier der Satz zur innergemeinschaftlichen Lieferung
+   * stand. Zwei Tatbestände am selben Beleg; bei einer E-Rechnung ist die
+   * maschinenlesbare Fassung die maßgebliche.
+   */
+  steuerfall?: Steuerfall | null
   /** Bereits gezahlt (z.B. Anzahlung oder Shop-Bestellung) */
   bereitsGezahlt?: number | null
   iban?: string | null
@@ -311,7 +334,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
   if (daten.reverseCharge) {
     zeilen.push(
       '    <ram:IncludedNote>',
-      `      <ram:Content>${x(STEUERFREI_HINWEIS)}</ram:Content>`,
+      `      <ram:Content>${x(grund(daten))}</ram:Content>`,
       '    </ram:IncludedNote>',
     )
   }
@@ -340,7 +363,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
       '      <ram:SpecifiedLineTradeSettlement>',
       '        <ram:ApplicableTradeTax>',
       '          <ram:TypeCode>VAT</ram:TypeCode>',
-      `          <ram:CategoryCode>${daten.reverseCharge ? 'AE' : p.steuersatz > 0 ? 'S' : 'Z'}</ram:CategoryCode>`,
+      `          <ram:CategoryCode>${kategorie(daten, p.steuersatz)}</ram:CategoryCode>`,
       `          <ram:RateApplicablePercent>${zwei(daten.reverseCharge ? 0 : p.steuersatz)}</ram:RateApplicablePercent>`,
       '        </ram:ApplicableTradeTax>',
       '        <ram:SpecifiedTradeSettlementLineMonetarySummation>',
@@ -375,7 +398,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
       '      <ram:SpecifiedLineTradeSettlement>',
       '        <ram:ApplicableTradeTax>',
       '          <ram:TypeCode>VAT</ram:TypeCode>',
-      `          <ram:CategoryCode>${daten.reverseCharge ? 'AE' : z.steuersatz > 0 ? 'S' : 'Z'}</ram:CategoryCode>`,
+      `          <ram:CategoryCode>${kategorie(daten, z.steuersatz)}</ram:CategoryCode>`,
       `          <ram:RateApplicablePercent>${zwei(daten.reverseCharge ? 0 : z.steuersatz)}</ram:RateApplicablePercent>`,
       '        </ram:ApplicableTradeTax>',
       '        <ram:SpecifiedTradeSettlementLineMonetarySummation>',
@@ -467,9 +490,9 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
       '      <ram:ApplicableTradeTax>',
       `        <ram:CalculatedAmount>0.00</ram:CalculatedAmount>`,
       '        <ram:TypeCode>VAT</ram:TypeCode>',
-      `        <ram:ExemptionReason>${x(STEUERFREI_GRUND)}</ram:ExemptionReason>`,
+      `        <ram:ExemptionReason>${x(grund(daten))}</ram:ExemptionReason>`,
       `        <ram:BasisAmount>${zwei(s.netto)}</ram:BasisAmount>`,
-      '        <ram:CategoryCode>AE</ram:CategoryCode>',
+      `        <ram:CategoryCode>${kategorie(daten, 0)}</ram:CategoryCode>`,
       '        <ram:RateApplicablePercent>0.00</ram:RateApplicablePercent>',
       '      </ram:ApplicableTradeTax>',
     )
@@ -497,7 +520,7 @@ export function facturXml(daten: FacturXDaten, firma: CompanyInfo | undefined): 
       `        <ram:Reason>${x(daten.rabatt?.bezeichnung || 'Nachlass')}</ram:Reason>`,
       '        <ram:CategoryTradeTax>',
       '          <ram:TypeCode>VAT</ram:TypeCode>',
-      `          <ram:CategoryCode>${daten.reverseCharge ? 'AE' : 'S'}</ram:CategoryCode>`,
+      `          <ram:CategoryCode>${daten.reverseCharge ? kategorie(daten, 0) : 'S'}</ram:CategoryCode>`,
       `          <ram:RateApplicablePercent>${zwei(daten.reverseCharge ? 0 : (s.gruppen[0]?.satz ?? 0))}</ram:RateApplicablePercent>`,
       '        </ram:CategoryTradeTax>',
       '      </ram:SpecifiedTradeAllowanceCharge>',

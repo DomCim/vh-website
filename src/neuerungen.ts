@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 107,
+    datum: null,
+    titel: 'Steuerfall wählen, Rechnung je Position',
+    punkte: [
+      {
+        text: '**Aus einem Haken sind drei Fälle geworden: Inland, innergemeinschaftliche Lieferung und Reverse Charge.** Bisher gab es nur „Reverse Charge". Der Betrag stimmte — null Umsatzsteuer —, aber der Beleg behauptete zweierlei: Auf dem Papier stand der Satz zur **Lieferung**, in der elektronischen Rechnung der Code für **Reverse Charge**. Bei einer E-Rechnung ist die maschinenlesbare Fassung die verbindliche. Ab jetzt wird gewählt, und Satz wie Code kommen aus derselben Wahl.',
+      },
+      {
+        text: '**Hinter der Beschriftung steht ein Fragezeichen** mit der Erklärung, wann welcher Fall gilt. Kurz: Ware, die körperlich ins EU-Ausland geht, ist eine Lieferung. Eine Leistung dort — Montage, Konstruktion, Reparatur — ist Reverse Charge. Alles andere ist Inland, auch für Kleinunternehmer und Privatkundschaft ohne USt-IdNr.',
+      },
+      {
+        text: '**Ein Auftrag kann mehrere Rechnungen bekommen.** Liefert Vincent ein Sofa und baut es vor Ort auf, sind das zwei Steuerfälle — und nur einer darf je Rechnung gelten. Vor dem Anlegen des Entwurfs lässt sich deshalb auswählen, welche Positionen darauf sollen. Was schon berechnet ist, steht nicht mehr zur Wahl; solange etwas offen ist, führt vom Auftrag ein Weg zur nächsten Rechnung.',
+      },
+      {
+        text: '**Bestehende Rechnungen wandern als innergemeinschaftliche Lieferung mit** — das ist es, was bisher hinausgegangen ist, und ein Beleg beim Kunden wird nicht nachträglich umgedeutet.',
+      },
+    ],
+  },
+  {
     nummer: 106,
     datum: null,
     titel: 'Steuernummern aufs Papier, Artikel je Position',

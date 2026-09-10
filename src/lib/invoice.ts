@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit'
 
 import { facturXml, STEUERFREI_HINWEIS, type FacturXDaten } from './facturx'
+import { steuerfallVon } from './listen'
 import { giroBild } from './girocode'
 import type { CompanyInfo } from './mail'
 import { briefkopf, fusszeile, LINKS, RECHTS, schriftenDa, schriftenSetzen } from './pdfkopf'
@@ -59,6 +60,8 @@ export type RechnungsDaten = {
   zusatzzeilen?: { bezeichnung: string; betrag: number; steuersatz: number }[]
   hinweis?: string | null
   reverseCharge?: boolean
+  /** Warum ohne Steuer — entscheidet über den Satz, der gedruckt wird */
+  steuerfall?: 'inland' | 'ig_lieferung' | 'reverse_charge' | null
   /** Gewährter Nachlass auf die Nettosumme — anteilig auf alle Steuersätze */
   rabatt?: { bezeichnung: string; betrag: number } | null
   /**
@@ -390,7 +393,14 @@ export async function rechnungPdf(daten: RechnungsDaten, company?: CompanyInfo):
   doc.moveDown(1.2)
   doc.fontSize(9).fillColor('#444')
   if (daten.reverseCharge) {
-    doc.text(STEUERFREI_HINWEIS, links, doc.y, { width: rechts - links })
+    /*
+     * Der Satz gehört zum Steuerfall und nicht zum Haken. Vorher stand hier
+     * für jede steuerfreie Rechnung derselbe Text — der zur Lieferung —,
+     * auch wenn eine Montage vor Ort abgerechnet wurde.
+     */
+    doc.text(steuerfallVon(daten.steuerfall ?? 'ig_lieferung').hinweis ?? STEUERFREI_HINWEIS, links, doc.y, {
+      width: rechts - links,
+    })
     doc.moveDown(0.4)
   }
   if (daten.hinweis) {

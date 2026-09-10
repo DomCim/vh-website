@@ -132,7 +132,9 @@ export async function POST(req: Request) {
           discountKind: original.discountKind,
           discountValue: original.discountValue,
           discountReason: original.discountReason,
-          reverseCharge: Boolean(original.reverseCharge),
+          // Die Gegenrechnung erbt den Steuerfall des Originals — sie hebt
+          // genau diesen Umsatz auf und darf ihn nicht anders begründen.
+          steuerfall: original.steuerfall ?? 'inland',
           stornoVon: Number(original.id),
           stornoGrund: grund || undefined,
           note: `Storniert die Rechnung ${original.invoiceNumber}${
@@ -215,7 +217,12 @@ export async function POST(req: Request) {
           // Nur für das Bild auf dem Papier — siehe OutgoingInvoices.items
           product: Number(p.product) || undefined,
         })),
-      reverseCharge: Boolean(b.reverseCharge),
+      /*
+       * Der Steuerfall kommt vom Formular, der Haken folgt ihm im Datenmodell.
+       * Hier wird er deshalb nicht mehr gesetzt — sonst überschriebe ein
+       * altes Formularfeld die neue Entscheidung.
+       */
+      steuerfall: b.steuerfall || undefined,
       note: b.note || undefined,
     }
 

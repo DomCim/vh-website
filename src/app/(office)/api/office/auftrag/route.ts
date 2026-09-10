@@ -4,7 +4,6 @@ import { payloadClient } from '../../../../../lib/data'
 import { AUFTRAG_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 import { rechnungAusAuftrag } from '../../../../../lib/rechnungsstufen'
-import { GILT_NOCH_WHERE } from '../../../../../lib/zahlungsstand'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
@@ -280,39 +279,36 @@ export async function POST(req: Request) {
       }
 
       /*
-       * Zwei Rechnungen zum selben Auftrag entstehen hier nicht aus
-       * Versehen. Der Knopf im Büro verschwindet, sobald eine liegt — aber
-       * ohne Netz steht die Anfrage in der Warteschlange, und zweimal
-       * getippt käme sie zweimal an.
+       * Zweimal dieselbe Position zu berechnen, verhindert nicht mehr ein
+       * Zähler, sondern die Sache selbst.
        *
-       * **Gezählt wird nur, was noch gilt**, und das war einmal anders:
-       * Hier stand jede Rechnung am Auftrag, gleich welchen Standes. Nach
-       * einem Storno sind das zwei — das stornierte Original und die
-       * Gegenrechnung —, und beide bleiben absichtlich stehen, weil eine
-       * gestellte Rechnung nie gelöscht wird. Damit stand der Zähler für
-       * immer über null: Der Auftrag war für alle Zeit abgerechnet, obwohl
-       * ihm keine gültige Rechnung mehr gegenüberstand, und der einzige Weg
-       * zu einer neuen führte über einen nachgebauten Auftrag. Der wiederum
-       * zählt in Nachkalkulation, Auslastung und Statistik ein zweites Mal
-       * mit — ein Storno hätte so die Zahlen verbogen, an denen später
-       * abzulesen ist, ob sich ein Stück gelohnt hat.
+       * Hier stand: „hängt schon eine Rechnung am Auftrag, dann nein". Das
+       * war zweimal falsch — nach einem Storno für immer gesperrt, und ein
+       * Auftrag, der zwei Rechnungen braucht, ging gar nicht. Ein Sofa
+       * geliefert und vor Ort aufgebaut, das ist eine Lieferung und eine
+       * sonstige Leistung: zwei Steuerfälle, und nur einer darf je Beleg
+       * gelten.
+       *
+       * Stattdessen merkt sich jede Rechnungsposition ihre Auftragsposition.
+       * `rechnungAusAuftrag` nimmt nur, was noch offen ist, und gibt `null`
+       * zurück, wenn nichts mehr offen ist. Damit ist auch die
+       * Offline-Warteschlange abgesichert: Kommt dieselbe Anfrage zweimal an,
+       * findet die zweite nichts mehr vor.
        */
-      const { totalDocs } = await payload.count({
-        collection: 'outgoing-invoices',
-        where: {
-          // Dieselbe Frage wie in der Zahlungsleiste, aus derselben Datei
-          and: [{ auftrag: { equals: b.id } }, ...GILT_NOCH_WHERE],
+      const id = await rechnungAusAuftrag(
+        payload,
+        b.id,
+        {
+          positionen: Array.isArray(b.positionen) ? b.positionen.map(String) : undefined,
+          steuerfall: b.steuerfall,
         },
-        overrideAccess: true,
-      })
-      if (totalDocs > 0) {
-        return NextResponse.json({ error: 'schon-vorhanden' }, { status: 409 })
-      }
-
-      const id = await rechnungAusAuftrag(payload, b.id)
+      )
       if (!id) {
-        // Ohne Positionen gibt es nichts zu berechnen — das ist kein Fehler
-        // des Servers, sondern eine unfertige Vorbereitung am Auftrag.
+        /*
+         * Kein Fehler des Servers, sondern einer von zwei Zuständen am
+         * Auftrag: Es gibt nichts mit Preis, oder es ist bereits alles
+         * berechnet. Beides sagt dem Büro dasselbe — hier ist nichts zu tun.
+         */
         return NextResponse.json({ error: 'keine-positionen' }, { status: 400 })
       }
       return NextResponse.json({ ok: true, rechnung: id })

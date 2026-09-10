@@ -117,6 +117,57 @@ export const RECHNUNG_STATUS = [
   { label: 'Storniert', value: 'storniert', art: 'warn' },
 ] as const
 
+/**
+ * Die Steuerfälle einer Ausgangsrechnung.
+ *
+ * Alle außer `inland` bedeuten null Umsatzsteuer — aber aus verschiedenen
+ * Gründen, und nur einer darf auf dem Beleg stehen. Der Empfänger stützt
+ * seine eigene Steuerschuld darauf.
+ *
+ * `kuerzel` ist der Kategoriecode nach EN 16931, wie ihn die Factur-X-Datei
+ * führt: `S` normal, `K` innergemeinschaftliche Lieferung, `AE` Reverse
+ * Charge. Er steht hier und nicht im XML-Bauer, damit Beschriftung, Hinweis
+ * und Code nicht auseinanderlaufen können — genau das war einmal der Fall.
+ */
+export const STEUERFAELLE = [
+  {
+    label: 'Inland / normale Umsatzsteuer',
+    value: 'inland',
+    kuerzel: 'S',
+    kurz: 'Inland',
+    erklaerung:
+      'Der Normalfall: Vincent stellt französische TVA in Rechnung. Gilt auch für Privatkundschaft und für Kleinunternehmer im Ausland, die keine USt-IdNr angeben — die zahlen die Steuer einfach mit.',
+    hinweis: null,
+  },
+  {
+    label: 'Innergemeinschaftliche Lieferung (Ware)',
+    value: 'ig_lieferung',
+    kuerzel: 'K',
+    kurz: 'Ware ins EU-Ausland',
+    erklaerung:
+      'Eine Ware geht körperlich in ein anderes EU-Land, an einen Geschäftskunden mit gültiger USt-IdNr. Beispiel: Vincent liefert ein Sofa nach Deutschland. Die Rechnung bleibt ohne Steuer, der Kunde versteuert den Erwerb. Nötig sind beide USt-IdNr auf dem Beleg und ein Nachweis, dass die Ware angekommen ist (Gelangensbestätigung).',
+    hinweis:
+      'Innergemeinschaftliche steuerfreie Lieferungen erfolgen nach § 4 Nr. 1 b in Verbindung mit § 6 a UStG.',
+  },
+  {
+    label: 'Reverse Charge (sonstige Leistung)',
+    value: 'reverse_charge',
+    kuerzel: 'AE',
+    kurz: 'Leistung ins EU-Ausland',
+    erklaerung:
+      'Keine Ware, sondern eine Leistung an einen Geschäftskunden im EU-Ausland — Montage vor Ort, Konstruktion, Reparatur. Die Steuerschuld geht auf den Kunden über. Auch hier gehören beide USt-IdNr auf den Beleg.',
+    hinweis:
+      'Steuerschuldnerschaft des Leistungsempfängers — Autoliquidation (Art. 196 MwStSystRL).',
+  },
+] as const
+
+export type Steuerfall = (typeof STEUERFAELLE)[number]['value']
+
+/** Ein Steuerfall samt Kürzel, Erklärung und dem Satz, der aufs Blatt gehört. */
+export function steuerfallVon(wert: unknown) {
+  return STEUERFAELLE.find((f) => f.value === wert) ?? STEUERFAELLE[0]
+}
+
 export const RECHNUNG_STUFEN = [
   { label: 'Vollständige Rechnung', value: 'vollstaendig' },
   { label: 'Anzahlung', value: 'anzahlung' },
