@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { mitSprache, pfadNenntSprache, SPRACH_COOKIE, spracheWaehlen } from './lib/sprachwahl'
+import {
+  mitSprache,
+  pfadNenntSprache,
+  SPRACH_COOKIE,
+  SPRACH_KOPF,
+  spracheAusPfad,
+  spracheWaehlen,
+} from './lib/sprachwahl'
 
 /**
  * Wer ohne Sprachkürzel kommt, wird in seine Sprache geschickt.
@@ -87,9 +94,20 @@ export async function middleware(anfrage: NextRequest) {
     })
   }
 
-  // Eine Adresse, die ihre Sprache nennt, bleibt, wie sie ist — sie ist die
-  // Zusage an jeden, der den Link weitergibt
-  if (pfadNenntSprache(pathname)) return NextResponse.next()
+  /*
+   * Eine Adresse, die ihre Sprache nennt, bleibt, wie sie ist — sie ist die
+   * Zusage an jeden, der den Link weitergibt.
+   *
+   * Mitgegeben wird nur die erkannte Sprache, damit die 404-Seite sie kennt:
+   * Sie steht im Pfad, aber Next reicht `not-found.tsx` keine Wegparameter.
+   */
+  if (pfadNenntSprache(pathname)) {
+    const sprache = spracheAusPfad(pathname)
+    if (!sprache) return NextResponse.next()
+    const kopf = new Headers(anfrage.headers)
+    kopf.set(SPRACH_KOPF, sprache)
+    return NextResponse.next({ request: { headers: kopf } })
+  }
 
   const sprache = spracheWaehlen({
     gemerkt: anfrage.cookies.get(SPRACH_COOKIE)?.value,

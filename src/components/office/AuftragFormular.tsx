@@ -15,6 +15,7 @@ import { ArtikelBezug } from './ArtikelBezug'
 import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
+import { useAblaufVorschlaege } from '../../lib/buero/ablaufvorschlaege'
 import { Meldestand } from './Meldestand'
 import { Rueckmeldung } from './Rueckmeldung'
 
@@ -107,6 +108,9 @@ export function AuftragFormular({
   const [w, setW] = useState<AuftragWerte>(anfang)
 
   // Angefangenes überlebt den Gerätewechsel — siehe lib/buero/entwurf.ts
+  /* Schon einmal benutzte Ablaufschritte — kommen aus dem Bestand im Gerät. */
+  const ablaufVorschlaege = useAblaufVorschlaege()
+
   const entwurf = useEntwurf(`auftraege:${werte.id ?? 'neu'}`, w, anfang)
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
@@ -476,6 +480,7 @@ export function AuftragFormular({
         */}
       <h2>Ablauf</h2>
       <Ablauf
+        vorschlaege={ablaufVorschlaege}
         plan={w.arbeitsplan ?? []}
         bearbeiten={{
           ersetzen: (plan) => setzen({ arbeitsplan: plan }),

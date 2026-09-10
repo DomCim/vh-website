@@ -105,6 +105,17 @@ export function AuftragAnsicht() {
           id={j.id}
           abgenommen={j.abnahme as { am?: string | null; name?: string | null } | null}
         />
+        {/*
+          * Duplizieren führt ins Neu-Formular, statt gleich anzulegen.
+          *
+          * Ein Auftrag, der ohne Zutun entsteht, steht mit fremdem Kunden und
+          * fremder Bezeichnung in der Liste, bis jemand ihn aufräumt — und
+          * wird bis dahin mitgezählt. Hier füllt die Vorlage nur das Formular;
+          * angelegt wird beim Speichern, mit Kunde und Bezeichnung von Hand.
+          */}
+        <Link className="buero-knopf leise schmal" href={`/office/auftraege/neu?vorlage=${j.id}`}>
+          Duplizieren
+        </Link>
       </div>
 
       {(bestellId || angebotId) && (

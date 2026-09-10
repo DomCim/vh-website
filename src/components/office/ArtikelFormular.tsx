@@ -6,6 +6,7 @@ import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { Werkstattdateien } from './Werkstattdateien'
 import { Rueckmeldung } from './Rueckmeldung'
+import { useAblaufVorschlaege } from '../../lib/buero/ablaufvorschlaege'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 
@@ -80,6 +81,9 @@ export function ArtikelFormular({
   const [basis, setBasis] = useState<StuecklistenZeile[]>(stueckliste)
   const [basisMinuten, setBasisMinuten] = useState<number>(arbeitsminuten ?? 0)
   const [basisDienste, setBasisDienste] = useState<DienstleisterZeile[]>(dienstleister)
+  /* Schon einmal benutzte Ablaufschritte — kommen aus dem Bestand im Gerät. */
+  const ablaufVorschlaege = useAblaufVorschlaege()
+
   const [basisAblauf, setBasisAblauf] = useState<Arbeitsschritt[]>(ablauf)
 
   // '' ist die Grundlage, sonst die Kennung der Variante
@@ -574,6 +578,7 @@ export function ArtikelFormular({
       ) : (
         <>
           <Ablauf
+            vorschlaege={ablaufVorschlaege}
             plan={ablaufAktiv}
             bearbeiten={{ ersetzen: setAblauf, mitStand: false }}
           />

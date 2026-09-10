@@ -35,14 +35,14 @@ export type Partner = {
   sprache?: string | null
 }
 
-/**
- * Die Anschrift, wie sie ins Adressfeld gehört — ohne den Namen, der steht
- * auf den Papieren als eigene Zeile darüber. Nur was da ist, zeilenweise.
+/*
+ * Die Anschrift wird an zwei Stellen zusammengesetzt: hier, wenn jemand einen
+ * Partner auswählt, und auf dem Server, wenn eine Rechnung aus einem Auftrag
+ * entsteht. Zwei Fassungen liefen auseinander, sobald eine ein Feld dazubekam
+ * — deshalb steht sie in `lib/kundenabschrift.ts` und hier nur der Name, unter
+ * dem das Büro sie kennt.
  */
-export function partnerAnschrift(p: Partner): string {
-  const ort = [p.postalCode, p.city].filter(Boolean).join(' ')
-  return [p.line1, ort, p.country].filter(Boolean).join('\n')
-}
+export { anschriftAus as partnerAnschrift } from '../../lib/kundenabschrift'
 
 export function PartnerBezug({
   wert,

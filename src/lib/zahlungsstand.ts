@@ -98,6 +98,37 @@ export const bestellungZaehltZumUmsatz = (o: { paymentProvider?: string | null }
 export const istOffenerPosten = (r: { status?: string | null; stornoVon?: unknown }) =>
   r.status === 'gestellt' && !r.stornoVon
 
+/**
+ * Steht diese Rechnung dem Auftrag noch als Rechnung gegenüber?
+ *
+ * Ein Storno löscht nichts: Das Original bleibt stehen und trägt „storniert",
+ * daneben liegt die Gegenrechnung mit negativen Beträgen. Beide Papiere
+ * gehören in die Bücher, keines davon ist noch eine Forderung.
+ *
+ * **Daran hing ein Fehler.** Der Knopf „Rechnung aus dem Auftrag erstellen"
+ * verschwand, sobald *irgendeine* Rechnung am Auftrag hing — nach einem
+ * Storno also für immer. Der einzige Ausweg war, den Auftrag nachzubauen, und
+ * ein zweiter Auftrag zählt in Nachkalkulation, Auslastung und Statistik mit.
+ *
+ * Diese Frage wird an zwei Stellen gestellt: in der Zahlungsleiste, die den
+ * Knopf zeigt, und in der Schnittstelle, die ihn annimmt. Deshalb steht sie
+ * hier und nicht zweimal — und deshalb steht die Bedingung der Datenbank
+ * gleich daneben.
+ */
+export const giltNoch = (r: { status?: string | null; stornoVon?: unknown }) =>
+  r.status !== 'storniert' && !r.stornoVon
+
+/**
+ * Dieselbe Frage als Bedingung für die Datenbank.
+ *
+ * Wortgleich zu `giltNoch` zu halten ist Handarbeit — eine Prüfung hält beide
+ * an denselben Beispielen gegeneinander.
+ */
+export const GILT_NOCH_WHERE = [
+  { status: { not_equals: 'storniert' } },
+  { stornoVon: { exists: false } },
+] as const
+
 /** Ganze Tage zwischen einem Datum und heute; negativ heißt: noch nicht fällig. */
 export function tageSeit(datum: string | Date | null | undefined, jetzt = new Date()): number {
   if (!datum) return 0

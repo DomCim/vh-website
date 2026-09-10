@@ -13,6 +13,7 @@ import { RECHNUNG_STUFEN, textKarte } from './listen'
 import { liveMelden } from './live'
 import { nachCommit } from './nachCommit'
 import { benachrichtige } from './push'
+import { kundenAbschrift } from './kundenabschrift'
 
 /**
  * Rechnungsentwürfe an den drei Auslösern.
@@ -219,6 +220,8 @@ export async function entwurfFuerStufe(
       auftrag: Number(auftrag.id),
       customer: typeof kontakt === 'number' ? kontakt : undefined,
       customerName: auftrag.customerName ?? undefined,
+      // Anschrift, SIRET und USt-IdNr des Empfängers — siehe lib/kundenabschrift.ts
+      ...(await kundenAbschrift(payload, kontakt, { customerName: auftrag.customerName ?? '' }, req)),
       items: posten,
       note:
         stufe === 'schluss'
@@ -339,6 +342,12 @@ export async function rechnungAusAuftrag(
       auftrag: Number(auftrag.id),
       customer: typeof kontakt === 'number' ? kontakt : undefined,
       customerName: auftrag.customerName ?? undefined,
+      /*
+       * Die Angaben des Empfängers gehören auf die Rechnung, nicht nur sein
+       * Name. Hier stand einmal nichts davon — und eine gestellte Rechnung
+       * ohne die USt-IdNr des Kunden lässt sich nur noch stornieren.
+       */
+      ...(await kundenAbschrift(payload, kontakt, { customerName: auftrag.customerName ?? '' }, req)),
       items: posten.map((p) => ({
         description: p.description as string,
         quantity: Number(p.quantity) || 0,

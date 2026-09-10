@@ -4,6 +4,7 @@ import { payloadClient } from '../../../../../lib/data'
 import { AUFTRAG_STATUS, werteVon } from '../../../../../lib/listen'
 import { darf } from '../../../../../lib/wache'
 import { rechnungAusAuftrag } from '../../../../../lib/rechnungsstufen'
+import { GILT_NOCH_WHERE } from '../../../../../lib/zahlungsstand'
 import { nurGesendete } from '../../../../../lib/teilaenderung'
 
 export const dynamic = 'force-dynamic'
@@ -250,10 +251,25 @@ export async function POST(req: Request) {
        * Versehen. Der Knopf im Büro verschwindet, sobald eine liegt — aber
        * ohne Netz steht die Anfrage in der Warteschlange, und zweimal
        * getippt käme sie zweimal an.
+       *
+       * **Gezählt wird nur, was noch gilt**, und das war einmal anders:
+       * Hier stand jede Rechnung am Auftrag, gleich welchen Standes. Nach
+       * einem Storno sind das zwei — das stornierte Original und die
+       * Gegenrechnung —, und beide bleiben absichtlich stehen, weil eine
+       * gestellte Rechnung nie gelöscht wird. Damit stand der Zähler für
+       * immer über null: Der Auftrag war für alle Zeit abgerechnet, obwohl
+       * ihm keine gültige Rechnung mehr gegenüberstand, und der einzige Weg
+       * zu einer neuen führte über einen nachgebauten Auftrag. Der wiederum
+       * zählt in Nachkalkulation, Auslastung und Statistik ein zweites Mal
+       * mit — ein Storno hätte so die Zahlen verbogen, an denen später
+       * abzulesen ist, ob sich ein Stück gelohnt hat.
        */
       const { totalDocs } = await payload.count({
         collection: 'outgoing-invoices',
-        where: { auftrag: { equals: b.id } },
+        where: {
+          // Dieselbe Frage wie in der Zahlungsleiste, aus derselben Datei
+          and: [{ auftrag: { equals: b.id } }, ...GILT_NOCH_WHERE],
+        },
         overrideAccess: true,
       })
       if (totalDocs > 0) {

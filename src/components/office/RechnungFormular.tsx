@@ -519,6 +519,39 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
        * „Als bezahlt markieren" kommt Tage später und ist deshalb zweite
        * Reihe, auch wenn es dann der nächste Schritt ist.
        */}
+      {/*
+        * Ein Hinweis vor dem Festschreiben, keine Sperre.
+        *
+        * Der Anlass: Eine Rechnung ging ohne die USt-IdNr des Kunden hinaus.
+        * Auffallen konnte das erst am fertigen Papier, und da war sie schon
+        * gestellt — änderbar ist eine gestellte Rechnung nicht, sie muss
+        * storniert und neu geschrieben werden.
+        *
+        * Gesperrt wird trotzdem nichts: **Kleingewerbe hat keine USt-IdNr**,
+        * und Privatkundschaft erst recht nicht. Eine Rechnung, die sich nicht
+        * stellen lässt, wäre schlimmer als eine ohne Nummer. Deshalb steht
+        * hier ein Satz, der beides sagt — was fehlt und wann das in Ordnung
+        * ist.
+        */}
+      {!festgeschrieben && !w.customerVatId?.trim() && (
+        <p className="buero-hinweis">
+          {w.customer ? (
+            <>
+              <strong>Für diesen Kunden ist keine USt-IdNr hinterlegt.</strong> Bei Kleingewerbe
+              und Privatkundschaft ist das richtig so. Ist es ein Geschäftskunde, gehört sie an
+              den Geschäftspartner — von dort kommt sie beim Festschreiben von selbst mit, und
+              eine gestellte Rechnung lässt sich nur noch stornieren.
+            </>
+          ) : (
+            <>
+              <strong>Kein Geschäftspartner ausgewählt.</strong> Anschrift, SIRET und USt-IdNr
+              kommen dann nicht von selbst mit — wer sie braucht, trägt sie oben von Hand ein
+              oder wählt den Kunden aus.
+            </>
+          )}
+        </p>
+      )}
+
       <Fussleiste>
         {/* „Speichern" war der Weg, über den eine gestellte Rechnung doch noch
             geändert werden konnte — ein Klick, und das Papier beim Kunden
