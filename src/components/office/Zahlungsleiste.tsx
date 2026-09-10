@@ -264,33 +264,31 @@ export function Zahlungsleiste({
         })}
       </div>
 
+      {/*
+        * Alles storniert — dann steht der Auftrag wieder ohne Rechnung da.
+        * Die Papiere darüber bleiben sichtbar, weil sie in den Büchern stehen;
+        * was fehlt, ist der Weg zur nächsten Rechnung. Genau hier blieb
+        * Vincent hängen und hat den Auftrag nachgebaut.
+        *
+        * Der Knopf steht **unter** dem Hinweis und nicht in ihm. Mitten im
+        * Satz brach er die Zeile auf und ließ das Wort danach allein stehen —
+        * am Handy fiel das kaum auf, am Rechner sah es kaputt aus. Dieselbe
+        * Aufteilung benutzt der Terminvorschlag weiter unten.
+        */}
       {gueltige.length === 0 && (
-        /*
-         * Alles storniert — dann steht der Auftrag wieder ohne Rechnung da.
-         * Die Papiere darüber bleiben sichtbar, weil sie in den Büchern
-         * stehen; was fehlt, ist der Weg zur nächsten Rechnung. Genau hier
-         * blieb Vincent hängen und hat den Auftrag nachgebaut.
-         */
         <div className="buero-hinweis">
           <strong>Zu diesem Auftrag gilt keine Rechnung mehr.</strong> Die Papiere oben bleiben
           stehen — eine gestellte Rechnung wird nicht gelöscht.
-          {auftragswert > 0 ? (
-            <>
-              {' '}
-              Der Auftrag steht bei {euro(auftragswert)} netto.
-              <button
-                type="button"
-                className="buero-knopf"
-                onClick={rechnungAnlegen}
-                disabled={laeuft}
-              >
-                Neue Rechnung aus dem Auftrag erstellen
-              </button>
-            </>
-          ) : (
-            ' Sobald die Positionen mit Preisen am Auftrag stehen, lässt sich eine neue Rechnung von hier aus anlegen.'
-          )}
+          {auftragswert > 0
+            ? ` Der Auftrag steht bei ${euro(auftragswert)} netto.`
+            : ' Sobald die Positionen mit Preisen am Auftrag stehen, lässt sich eine neue Rechnung von hier aus anlegen.'}
         </div>
+      )}
+
+      {gueltige.length === 0 && auftragswert > 0 && (
+        <button type="button" className="buero-knopf" onClick={rechnungAnlegen} disabled={laeuft}>
+          Neue Rechnung aus dem Auftrag erstellen
+        </button>
       )}
 
       {stand.wartet && (

@@ -198,9 +198,18 @@ export function terminVerschiebung(stand: Zahlungsstand): number {
  *
  * Für die Übersicht im Büro: Was steht, was fehlt. Bezahlt zählt, gestellt
  * nicht — eine Rechnung im Briefkasten ist kein Geld auf dem Konto.
+ *
+ * **Stornierte Paare zählen nicht mit.** Sie standen einmal beide hier drin,
+ * und das ergab im Büro Zahlen, die niemand erklären konnte: Ein Auftrag über
+ * 180 € meldete „-180,00 € eingegangen · 360,00 € stehen noch aus". Die
+ * Gegenrechnung trägt „bezahlt" und einen negativen Betrag, das stornierte
+ * Original steht auf „storniert" und zählte nie — übrig blieb die Hälfte der
+ * Rechnung, mit umgedrehtem Vorzeichen. Ein Storno hebt sich auf; beide
+ * Papiere bleiben in den Büchern und aus dieser Summe heraus.
  */
 export function eingegangen(rechnungen: StufenRechnung[]): number {
   return rechnungen
+    .filter(giltNoch)
     .filter((r) => r.status === 'bezahlt')
     .reduce((summe, r) => summe + (Number(r.netto) || 0), 0)
 }
