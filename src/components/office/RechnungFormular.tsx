@@ -16,6 +16,7 @@ import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Abschnitt } from './Abschnitt'
 
 export type Position = {
   description: string
@@ -233,6 +234,14 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
       )}
       <Rueckmeldung text={meldung} />
 
+      <Abschnitt
+        merk="rechnung:kunde"
+        titel="Kunde und Termine"
+        vorgabe
+        kurz={[w.customerName || 'ohne Kunde', w.issueDate ? `vom ${nurTag(w.issueDate)}` : null]
+          .filter(Boolean)
+          .join(' · ')}
+      >
       <div className="buero-reihe">
         <PartnerBezug
           wert={w.customer}
@@ -290,9 +299,16 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         />
       </div>
 
+      </Abschnitt>
+
       {/* Angaben für die elektronische Rechnung. Bei Privatkundschaft bleiben
           sie leer — dort verlangt sie niemand, also bleiben sie eingeklappt. */}
-      <h2 style={{ marginTop: '1.5rem' }}>Elektronische Rechnung</h2>
+      <Abschnitt
+        merk="rechnung:erechnung"
+        titel="Elektronische Rechnung"
+        vorgabe={eRechnungOffen}
+        kurz={eRechnungOffen ? 'Geschäftskunde' : 'bleibt leer bei Privatkundschaft'}
+      >
       {!eRechnungOffen && (
         <p className="buero-unterzeile" style={{ marginTop: '-.4rem' }}>
           Bei Privatkundschaft bleibt hier alles leer.{' '}
@@ -376,7 +392,18 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </>
       )}
 
-      <h2 style={{ marginTop: '1.5rem' }}>Positionen</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="rechnung:positionen"
+        titel="Positionen"
+        vorgabe
+        kurz={
+          (w.items ?? []).length
+            ? `${(w.items ?? []).length} ${(w.items ?? []).length === 1 ? 'Position' : 'Positionen'}`
+            : 'noch nichts eingetragen'
+        }
+      >
       {(w.items ?? []).map((p, i) => (
         <div
           key={i}
@@ -467,6 +494,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </button>
       )}
 
+      </Abschnitt>
+
+      {/* Die Summen und der Steuerfall stehen immer offen: Das ist das Geld,
+          und danach sieht man als Erstes. */}
       <div
         style={{
           marginTop: '1.25rem',
@@ -614,7 +645,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </p>
       )}
 
-      <Fussleiste>
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         {/* „Speichern" war der Weg, über den eine gestellte Rechnung doch noch
             geändert werden konnte — ein Klick, und das Papier beim Kunden
             stimmte nicht mehr mit dem hier überein. Danach gibt es nur noch

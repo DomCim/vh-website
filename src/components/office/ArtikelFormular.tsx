@@ -9,6 +9,7 @@ import { Rueckmeldung } from './Rueckmeldung'
 import { useAblaufVorschlaege } from '../../lib/buero/ablaufvorschlaege'
 import { Ablauf } from './Ablauf'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
+import { Abschnitt } from './Abschnitt'
 
 export type StuecklistenZeile = { item: number | ''; quantity: number; note?: string | null }
 export type DienstleisterZeile = {
@@ -269,10 +270,16 @@ export function ArtikelFormular({
         </>
       )}
 
-      <h2>
-        Material je Stück
-        {variante ? ` · ${variante.titel}` : ''}
-      </h2>
+      <Abschnitt
+        merk="artikel:material"
+        titel={`Material je Stück${variante ? ` · ${variante.titel}` : ''}`}
+        vorgabe
+        kurz={
+          zeilen.length
+            ? `${zeilen.length} ${zeilen.length === 1 ? 'Posten' : 'Posten'}${erbt ? ' · geerbt' : ''}`
+            : 'keine Stückliste'
+        }
+      >
       {zeilen.length === 0 && (
         <p className="buero-unterzeile">
           Ohne Stückliste kann das System bei einer Bestellung nicht prüfen, ob alles da ist.
@@ -398,9 +405,18 @@ export function ArtikelFormular({
         </>
       )}
 
-      <h2>
-        Externe Dienstleister{variante ? ` · ${variante.titel}` : ''}
-      </h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="artikel:dienste"
+        titel={`Externe Dienstleister${variante ? ` · ${variante.titel}` : ''}`}
+        vorgabe={dienste.length > 0}
+        kurz={
+          dienste.length
+            ? `${dienste.length} ${dienste.length === 1 ? 'Betrieb' : 'Betriebe'}${erbtDienste ? ' · geerbt' : ''}`
+            : 'keine Fremdleistung'
+        }
+      >
       {dienste.length === 0 && !erbtDienste && (
         <p className="buero-unterzeile">
           Verzinkerei, Beschichter, Laserschneider — wer von außen mitarbeitet, gehört hierher.
@@ -540,9 +556,18 @@ export function ArtikelFormular({
         </>
       )}
 
-      <h2 style={{ marginTop: '1.5rem' }}>
-        Ablauf (Vorlage){variante ? ` · ${variante.titel}` : ''}
-      </h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="artikel:ablauf"
+        titel={`Ablauf (Vorlage)${variante ? ` · ${variante.titel}` : ''}`}
+        vorgabe={ablaufAktiv.length > 0}
+        kurz={
+          ablaufAktiv.length
+            ? `${ablaufAktiv.length} ${ablaufAktiv.length === 1 ? 'Schritt' : 'Schritte'}${erbtAblauf ? ' · geerbt' : ''}`
+            : 'keine Vorlage'
+        }
+      >
       <p className="buero-unterzeile">
         Die Reihenfolge, in der das Stück entsteht — wird beim Anlegen eines Auftrags
         abgeschrieben und dort abgehakt.
@@ -595,9 +620,14 @@ export function ArtikelFormular({
         </>
       )}
 
-      <h2 style={{ marginTop: '1.5rem' }}>
-        Arbeitszeit{variante ? ` · ${variante.titel}` : ''}
-      </h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="artikel:zeit"
+        titel={`Arbeitszeit${variante ? ` · ${variante.titel}` : ''}`}
+        vorgabe
+        kurz={minuten ? `${minuten} min je Stück` : 'nicht geschätzt'}
+      >
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Minuten je Stück</span>
@@ -682,6 +712,8 @@ export function ArtikelFormular({
             </div>
           )}
       </div>
+
+      </Abschnitt>
 
       {/*
        * Die Bauunterlagen stehen unter derselben Variantenwahl wie Stückliste

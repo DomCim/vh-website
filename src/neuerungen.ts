@@ -26,6 +26,53 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 113,
+    datum: null,
+    titel: 'Lange Formulare stehen in Abschnitten, und der Speicherknopf meldet sich',
+    punkte: [
+      {
+        text: '**Die Auftragsseite war am Handy 6023 Pixel hoch** — gut sieben Bildschirmlängen für dreizehn Blöcke, von denen die meisten bei den meisten Aufträgen nie angefasst werden. Wer in der Werkstatt den Ablauf abhaken wollte, scrollte an „Bestellung des Kunden" und „Bezahlt wird in Stufen" vorbei.',
+      },
+      {
+        text: '**Jeder Block ist jetzt ein Abschnitt zum Auf- und Zuklappen** — und zugeklappt sagt er in einer Zeile, was drinsteht: „3 Positionen · 1.190,00 €", „2 von 5 erledigt", „keine Bestellnummer". Damit sieht man auf einem Bildschirm mehr als vorher, nicht weniger. Der Auftrag ist von 6023 auf 4102 Pixel geschrumpft, die Rechnung von 4840 auf 2418.',
+      },
+      {
+        text: '**Was offen steht, hängt am Stand des Vorgangs.** Am geplanten Auftrag stehen Positionen und Ablauf offen, am fertigen die Übergabe. Was jemand selbst auf- oder zuklappt, merkt sich das Gerät — und zwar für alle Aufträge, nicht nur für den einen.',
+      },
+      {
+        text: '**Der Speicherknopf meldet sich, sobald etwas geändert wurde.** Am Rechner schwebt er dann unten am Bildschirmrand mit dem Hinweis „Nicht gespeichert"; am Handy, wo er ohnehin unten klebt, wechselt er die Farbe. Ist nichts offen, ist auch nichts zu sehen. Verschwunden ist dabei nichts: „Rechnung senden" und die übrigen Knöpfe bleiben, wo sie waren.',
+      },
+      {
+        text: '**Neben der Meldung steht „Verwerfen".** Damit geht es zurück zum gespeicherten Stand — bisher gab es das gar nicht: Wer eine Änderung loswerden wollte, musste die Seite verlassen. Gefragt wird vorher.',
+      },
+      {
+        text: '**Und wer weggeht, ohne zu speichern, wird gefragt.** Ein Tipp auf „Übersicht" in der Leiste unten hat bisher eine halbe Stunde Tipparbeit weggeworfen, ohne ein Wort. Das gilt jetzt für beide Wege hinaus: Verweise im Büro und Neuladen oder Schließen des Fensters. Nur der Zurück-Knopf des Browsers lässt sich nicht aufhalten.',
+      },
+      {
+        text: '**Zugeklappt heißt zusammengefasst, nicht weg.** Was in einem geschlossenen Abschnitt steht, wird beim Speichern mitgeschickt — dafür sorgt jetzt eine eigene Prüfung, damit es niemand später versehentlich kaputt macht.',
+      },
+    ],
+  },
+  {
+    nummer: 112,
+    datum: null,
+    titel: 'Der Ablauf lässt sich am Handy bedienen',
+    punkte: [
+      {
+        text: '**Ein Schritt im Ablauf war eine einzige Zeile** — Nummer, acht Felder, Stand-Auswahl und drei Knöpfe nebeneinander. Am Rechner ging das gerade so, am Handy gar nicht: Die Stand-Auswahl saß mittig neben dem hohen Feldblock und lag damit quer über der Bemerkung, und für die Felder blieben 120 Pixel. Aus „120 Minuten" wurde „12C".',
+      },
+      {
+        text: '**Jetzt hat jeder Schritt eine Kopfzeile** mit Nummer, Stand und den Knöpfen zum Verschieben und Löschen, und darunter stehen die Felder über die volle Breite. Am Handy untereinander, am Rechner nebeneinander wie bisher.',
+      },
+      {
+        text: '**Das galt nicht nur im Ablauf.** Formularreihen im ganzen Büro haben sich am Handy nie auf eine Spalte zusammengelegt, obwohl sie es sollten — sie richteten sich immer nach dem breitesten Feld. Unter 560 Pixel steht jetzt überall eine Spalte: Auftrag, Rechnung, Beleg, Partner, Einstellungen.',
+      },
+      {
+        text: '**Und die Felder ohne Beschriftung sehen endlich aus wie die anderen.** Die Stand-Auswahl im Ablauf, die Artikelwahl an einer Rechnungsposition, das Namensfeld beim Anlegen eines Postfach-Ordners, das Datei-Feld am Beleg: Die trugen bisher den weißen, eckigen Kasten des Browsers, seit Kurzem mit dem neuen bronzenen Pfeil darauf. Der Rahmen gehört jetzt zum Bedienfeld selbst.',
+      },
+    ],
+  },
+  {
     nummer: 111,
     datum: null,
     titel: 'Kästchen, Auswahlknöpfe und Ausklappfelder sehen nicht mehr nach 1995 aus',

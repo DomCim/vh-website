@@ -208,10 +208,71 @@ export function Ablauf({
           const s = schritt.stand ?? 'offen'
           return (
             <li key={i} className={`buero-ablauf-schritt ist-${s}`}>
-              <div className="buero-ablauf-zeile">
-                <span className="buero-ablauf-nummer">{i + 1}</span>
-                {bearbeiten ? (
-                  <div className="buero-zeile-haupt">
+              {/*
+                * Zwei Bauweisen, und der Unterschied ist nicht Geschmack.
+                *
+                * **Zum Lesen** — am Artikel oder an einem abgeschlossenen
+                * Auftrag — ist ein Schritt eine Zeile: Nummer, Text, Stand.
+                * Nebeneinander, kompakt, viele davon auf einen Blick.
+                *
+                * **Zum Bearbeiten** sind es bis zu acht Felder. Die neben
+                * Nummer, Stand-Auswahl und drei Knöpfen in dieselbe Zeile zu
+                * zwängen, ging am Rechner gerade so und am Handy gar nicht:
+                * Die Auswahl saß mittig neben einem hohen Block und lag damit
+                * quer über der Bemerkung, und für die Felder blieben 120
+                * Pixel — „120 Minuten" wurde zu „12C".
+                *
+                * Deshalb hier eine Kopfzeile mit allem, was den Schritt
+                * verwaltet, und darunter die Felder über die volle Breite.
+                */}
+              {bearbeiten ? (
+                <>
+                  <div className="buero-ablauf-kopfzeile">
+                    <span className="buero-ablauf-nummer">{i + 1}</span>
+                    {aendern && bearbeiten.mitStand && (
+                      <select
+                        className="buero-ablauf-stand"
+                        value={s}
+                        aria-label={`Stand von ${schritt.was || `Schritt ${i + 1}`}`}
+                        onChange={(e) =>
+                          aendern(i, e.target.value as 'offen' | 'laeuft' | 'erledigt')
+                        }
+                      >
+                        <option value="offen">offen</option>
+                        <option value="laeuft">läuft</option>
+                        <option value="erledigt">erledigt</option>
+                      </select>
+                    )}
+                    <div className="buero-ablauf-knoepfe">
+                      <button
+                        type="button"
+                        className="buero-knopf leise"
+                        aria-label={`${schritt.was || 'Schritt'} nach oben`}
+                        disabled={i === 0}
+                        onClick={() => schieben(i, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="buero-knopf leise"
+                        aria-label={`${schritt.was || 'Schritt'} nach unten`}
+                        disabled={i === plan.length - 1}
+                        onClick={() => schieben(i, 1)}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="buero-knopf leise"
+                        aria-label={`${schritt.was || 'Schritt'} entfernen`}
+                        onClick={() => bearbeiten.ersetzen(plan.filter((_, idx) => idx !== i))}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <div className="buero-ablauf-felder">
                     <div className="buero-reihe">
                       <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
                         <span>Schritt</span>
@@ -314,7 +375,10 @@ export function Ablauf({
                       )}
                     </div>
                   </div>
-                ) : (
+                </>
+              ) : (
+                <div className="buero-ablauf-zeile">
+                  <span className="buero-ablauf-nummer">{i + 1}</span>
                   <div className="buero-zeile-haupt">
                     <div className="buero-zeile-titel">{schritt.was}</div>
                     <div className="buero-zeile-neben">
@@ -335,53 +399,24 @@ export function Ablauf({
                         .join(' · ')}
                     </div>
                   </div>
-                )}
-                {aendern && (!bearbeiten || bearbeiten.mitStand) ? (
-                  <select
-                    value={s}
-                    aria-label={`Stand von ${schritt.was}`}
-                    onChange={(e) =>
-                      aendern(i, e.target.value as 'offen' | 'laeuft' | 'erledigt')
-                    }
-                  >
-                    <option value="offen">offen</option>
-                    <option value="laeuft">läuft</option>
-                    <option value="erledigt">erledigt</option>
-                  </select>
-                ) : !bearbeiten ? (
-                  <span className="buero-marker">{STAND_TEXT[s]}</span>
-                ) : null}
-                {bearbeiten && (
-                  <div style={{ display: 'flex', gap: '.3rem', alignItems: 'flex-start' }}>
-                    <button
-                      type="button"
-                      className="buero-knopf leise"
-                      aria-label={`${schritt.was || 'Schritt'} nach oben`}
-                      disabled={i === 0}
-                      onClick={() => schieben(i, -1)}
+                  {aendern ? (
+                    <select
+                      className="buero-ablauf-stand"
+                      value={s}
+                      aria-label={`Stand von ${schritt.was}`}
+                      onChange={(e) =>
+                        aendern(i, e.target.value as 'offen' | 'laeuft' | 'erledigt')
+                      }
                     >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      className="buero-knopf leise"
-                      aria-label={`${schritt.was || 'Schritt'} nach unten`}
-                      disabled={i === plan.length - 1}
-                      onClick={() => schieben(i, 1)}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      className="buero-knopf leise"
-                      aria-label={`${schritt.was || 'Schritt'} entfernen`}
-                      onClick={() => bearbeiten.ersetzen(plan.filter((_, idx) => idx !== i))}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
+                      <option value="offen">offen</option>
+                      <option value="laeuft">läuft</option>
+                      <option value="erledigt">erledigt</option>
+                    </select>
+                  ) : (
+                    <span className="buero-marker">{STAND_TEXT[s]}</span>
+                  )}
+                </div>
+              )}
             </li>
           )
         })}

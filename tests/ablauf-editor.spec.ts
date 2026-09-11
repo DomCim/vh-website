@@ -24,9 +24,10 @@ test.describe('Ablauf-Editor', () => {
     test.skip(!token, 'Anmeldung fehlgeschlagen — läuft der Server?')
     const kopf = { Authorization: `JWT ${token}` }
 
+    const titel = `Ablauf-Probe ${Date.now()}`
     const angelegt = await request.post(`${BASIS}/api/office/auftrag`, {
       headers: kopf,
-      data: { title: `Ablauf-Probe ${Date.now()}`, positions: [{ description: 'Probestück' }] },
+      data: { title: titel, positions: [{ description: 'Probestück' }] },
     })
     expect(angelegt.ok()).toBe(true)
     const { id } = (await angelegt.json()) as { id: number }
@@ -39,7 +40,24 @@ test.describe('Ablauf-Editor', () => {
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
 
+    /*
+     * Auf den Auftrag warten, statt ihn vorauszusetzen.
+     *
+     * Die Büro-Seiten lesen aus dem Bestand im Gerät, und der wird nach dem
+     * Anmelden erst abgeglichen; angelegt wurde der Auftrag aber über die
+     * API, während noch kein Browser lief. Ohne diese Zeile klickte die
+     * Prüfung manchmal in eine Seite, die den Auftrag noch nicht kannte.
+     *
+     * **Das behebt diese Prüfung nicht ganz.** Sie fällt weiterhin etwa in
+     * jedem zweiten Lauf beim Neuladen um: Der Auftrag ist dann da, sein
+     * eben gespeicherter Ablauf aber nicht — der Bestand im Gerät trägt
+     * noch den Stand von vor dem Speichern. Gemessen am 11.09.2026, und
+     * zwar **vor** dem Umbau der Ablauf-Anzeige genauso wie danach (je
+     * dreimal rot). Hier steckt ein Wettlauf zwischen Speichern, Abgleich
+     * und Neuladen, den niemand bisher aufgeklärt hat.
+     */
     await page.goto(`/office/auftraege/${id}`)
+    await expect(page.getByLabel('Bezeichnung').first()).toHaveValue(titel, { timeout: 30_000 })
     await page.getByRole('button', { name: 'Ersten Schritt anlegen' }).click()
 
     // Zwei Schritte: eigene Arbeit und Fremdleistung
@@ -56,6 +74,7 @@ test.describe('Ablauf-Editor', () => {
 
     // Neu laden: Die Schritte stehen noch da, in dieser Reihenfolge
     await page.reload()
+    await expect(page.getByLabel('Bezeichnung').first()).toHaveValue(titel, { timeout: 30_000 })
     const felder = page.getByPlaceholder('z.B. Zuschnitt, Schweißen, Verzinken')
     await expect(felder.nth(0)).toHaveValue('Schweißen', { timeout: 15_000 })
     await expect(felder.nth(1)).toHaveValue('Verzinken')
