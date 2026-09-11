@@ -79,10 +79,19 @@ services:
       db:
         condition: service_healthy
     environment:
-      # Dieser Container bedient die Website und erledigt alles, was es genau
-      # einmal geben darf: Migrationen, Startdaten, nächtliche Sicherung,
-      # Erinnerungen, Postfach-Blick.
+      # Dieser Container bedient die Website und bringt beim Start die
+      # Datenbank auf Stand: Migrationen, Startdaten, Neuerungen.
       ROLLE: web
+      # Den wiederkehrenden Takt macht er NICHT mehr — der hat einen eigenen
+      # Container. Der Postfach-Blick wertet Rechnungs-PDFs aus, und Node ist
+      # einprozessig: Blockiert das die Schleife, antwortet dieser Prozess gar
+      # nicht mehr, auch nicht auf /api/healthz. Am 11.09.2026 nachgemessen —
+      # zwölf Aussetzer in acht Stunden.
+      #
+      # Ohne diese Zeile täte er es weiter. Das ist Absicht: Zwischen dem neuen
+      # Abbild und diesem Stapel darf kein Augenblick liegen, in dem niemand
+      # den Takt hält.
+      ZEITPLAN: aus
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vincent-hellmann.com}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
       DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
@@ -273,6 +282,72 @@ services:
       - traefik.http.middlewares.vhbuero-gleichzeitig.inflightreq.amount=30
       - traefik.http.middlewares.vhbuero-gleichzeitig.inflightreq.sourcecriterion.ipstrategy.depth=1
       - traefik.http.routers.vhbuero.middlewares=vhbuero-bremse,vhbuero-gleichzeitig
+    mem_limit: 1g
+    cpus: 1.5
+
+  # ── Der Takt ──────────────────────────────────────────────────────────────
+  #
+  # Ein Prozess, der niemanden bedient. Er holt Mails, macht daraus
+  # Beleg-Entwürfe, sichert nachts und schickt Erinnerungen — alles Arbeit, die
+  # dauern darf, weil niemand darauf wartet.
+  #
+  # **Warum überhaupt ein eigener Container.** Das lief bis 09/2026 im
+  # Web-Container. Der Postfach-Blick wertet Rechnungs-PDFs aus; Node ist
+  # einprozessig, und eine blockierte Ereignisschleife antwortet gar nicht mehr
+  # — auch nicht auf den Health-Check. Der Wächter meldete darum reihenweise
+  # „nicht erreichbar", während dem Container nichts fehlte: zwölf Aussetzer in
+  # acht Stunden, während das FWG-Portal auf demselben Wirt durchgehend stand.
+  #
+  # **Kein Traefik, kein Port.** Von außen führt kein Weg hierher, und das ist
+  # der Sinn der Sache. Sein Lebenszeichen legt er in der Datenbank ab; wer
+  # wissen will, ob er lebt, fragt den Web-Container unter /api/takt/healthz.
+  takt:
+    # Dasselbe Abbild wie die Website: Der Takt braucht denselben Serverkram
+    # (Payload, Wartung, Postfach) und kein eigenes.
+    image: ghcr.io/domcim/vh-website:${VH_FASSUNG_WEB:-${VH_FASSUNG:-latest}}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ROLLE: takt
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://vincent-hellmann.com}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: postgres://${POSTGRES_USER:-vh}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}@db:5432/${POSTGRES_DB:-vh}
+      # Erinnerungen und Meldungen gehen von hier hinaus
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Vincent Hellmann}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
+      # Für pg_dump in der nächtlichen Sicherung
+      POSTGRES_USER: ${POSTGRES_USER:-vh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      POSTGRES_DB: ${POSTGRES_DB:-vh}
+    volumes:
+      # Dieselben Volumes wie die anderen beiden: Die Sicherung schreibt hier
+      # hinein, und Belege aus dem Postfach landen in den Medien.
+      - media:/app/media
+      - backups:/app/backups
+    networks:
+      # `edge` nicht für eingehenden Verkehr, sondern für ausgehenden: IMAP,
+      # SMTP und die NAS liegen außerhalb.
+      - edge
+      - internal
+    healthcheck:
+      # Nicht „Prozess lebt", sondern „der letzte Schlag ist nicht zu lange
+      # her" — ein Node, der steht, wäre sonst gesund.
+      test:
+        [
+          'CMD-SHELL',
+          "node -e \"fetch('http://localhost:3000/api/takt/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     mem_limit: 1g
     cpus: 1.5
 

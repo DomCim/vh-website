@@ -33,7 +33,7 @@ const SCHLAG_MS = 60_000
 
 export async function taktStarten(): Promise<void> {
   const { payloadClient } = await import('./lib/data')
-  const { hoertZu, machtTakt } = await import('./lib/rolle')
+  const { hoertZu, machtStart, machtZeitplan } = await import('./lib/rolle')
 
   // Der Büro-Container horcht auf Meldungen der anderen Seite — sonst bekäme
   // ein Tablet in der Werkstatt nichts davon mit, dass im Shop eine
@@ -46,11 +46,18 @@ export async function taktStarten(): Promise<void> {
   }
 
   /*
-   * Alles Zeitgesteuerte gehört in genau einen Container. Liefe es in beiden,
-   * gäbe es jede Sicherung doppelt und jede Erinnerung zweimal aufs Handy.
+   * Zwei verschiedene Fragen, die früher eine waren.
+   *
+   * **Startarbeit** (Migrationen, Startdaten, Neuerungen) macht der
+   * Web-Container — wer Verkehr bedient, soll nicht gegen eine Datenbank
+   * antworten, die ein anderer gerade umbaut.
+   *
+   * **Der wiederkehrende Takt** gehört in einen Prozess, der niemanden
+   * bedient: Der Postfach-Blick wertet Rechnungs-PDFs aus, und eine blockierte
+   * Ereignisschleife antwortet gar nicht mehr — auch nicht auf `/api/healthz`.
    */
-  if (!machtTakt()) {
-    console.log('Rolle „buero": kein eigener Takt, das erledigt der Web-Container.')
+  if (!machtStart() && !machtZeitplan()) {
+    console.log('Rolle „buero": weder Start- noch Taktarbeit — beides erledigen die anderen.')
     return
   }
 
@@ -65,12 +72,19 @@ export async function taktStarten(): Promise<void> {
    *
    * Fällt es aus, läuft das Büro weiter mit dem Stand, der schon dasteht.
    */
-  void payloadClient()
-    .then(async (payload) => {
-      const { neuerungenEinspielen } = await import('./lib/neuerungenEinspielen')
-      return neuerungenEinspielen(payload)
-    })
-    .catch((err) => console.error('Neuerungen konnten nicht eingespielt werden:', err))
+  if (machtStart()) {
+    void payloadClient()
+      .then(async (payload) => {
+        const { neuerungenEinspielen } = await import('./lib/neuerungenEinspielen')
+        return neuerungenEinspielen(payload)
+      })
+      .catch((err) => console.error('Neuerungen konnten nicht eingespielt werden:', err))
+  }
+
+  if (!machtZeitplan()) {
+    console.log('Kein eigener Zeitplan — Postfach und Wartung erledigt der Takt-Container.')
+    return
+  }
 
   const { istFaellig, postfachPruefen, takteinstellungen, wartungslauf } = await import(
     './lib/wartung'
@@ -117,11 +131,32 @@ export async function taktStarten(): Promise<void> {
     }
   }
 
+  /*
+   * Ein Lebenszeichen bei jedem Schlag.
+   *
+   * **Warum das dazugehört, seit der Takt allein läuft.** Solange er im
+   * Web-Container saß, fiel sein Ausfall auf — war er weg, war die Website
+   * weg. Ein eigener Prozess stirbt dagegen still: keine Sicherung, keine
+   * Erinnerung, keine Meldung über neue Post, und niemand merkt es. Der
+   * Zeitstempel steht in `system-state` unter `takt`; daran hängen der
+   * Healthcheck des Containers und die Anzeige im Büro.
+   *
+   * Geschrieben wird bei jedem Schlag, also jede Minute — ein Datensatz, ein
+   * `UPDATE`. Billiger als jede Alternative, die erst bei Gelegenheit meldet.
+   */
+  const lebenszeichen = async () => {
+    const payload = await payloadClient()
+    const { zustandMerken } = await import('./lib/sicherung')
+    await zustandMerken(payload, 'takt', { ok: true })
+  }
+
   const uhr = setInterval(() => {
+    void lebenszeichen().catch((err) => console.error('Lebenszeichen fehlgeschlagen:', err))
     void schlag().catch((err) => console.error('Takt fehlgeschlagen:', err))
   }, SCHLAG_MS)
   // Der Takt soll den Prozess nicht am Beenden hindern
   uhr.unref?.()
 
+  void lebenszeichen().catch(() => {})
   console.log('Eigener Takt läuft — Einstellungen im Büro unter Einstellungen → Takt.')
 }
