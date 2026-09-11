@@ -83,6 +83,24 @@ export function NachbestellenAnsicht() {
     [inventar],
   )
 
+  const vorschlagsliste = React.useId()
+
+  /*
+   * Der Posten, der genau so heißt wie das, was gerade im Feld steht.
+   *
+   * Zwei Aufgaben auf einmal: Er verhindert, dass „Schraube M5x20" ein
+   * zweites Mal angelegt wird, wenn es sie längst gibt — und er liefert die
+   * Vorlage für etwas Ähnliches. Wer „Schraube M5x20" auswählt und daraus
+   * „Schraube M5x30" macht, hat Einheit, Lieferant und Schreibweise schon
+   * richtig. Eine eigene Namenskonvention hält niemand durch, wenn er sie
+   * jedes Mal aus dem Kopf tippt.
+   */
+  const treffer = useMemo(() => {
+    const gesucht = neu.name.trim().toLocaleLowerCase('de')
+    if (!gesucht) return null
+    return inventar.find((p) => (p.name ?? '').toLocaleLowerCase('de') === gesucht) ?? null
+  }, [inventar, neu.name])
+
   const bloecke = useMemo(
     () =>
       nachLieferanten(
@@ -318,14 +336,59 @@ export function NachbestellenAnsicht() {
           füllt die Lieferung. Einen Mindestbestand kann man später am Posten setzen, wenn klar
           ist, ob es dauerhaft dazugehört.
         </p>
+        {/*
+          * Die Vorschlagsliste des Browsers statt einer eigenen Auswahl —
+          * dieselbe Überlegung wie beim Ablauf: Sie filtert beim Tippen, ist
+          * mit der Tastatur bedienbar, kostet kein Bündel, und wer etwas
+          * Neues schreibt, wird nicht aufgehalten.
+          */}
+        <datalist id={vorschlagsliste}>
+          {[...inventar]
+            .filter((p) => (p.name ?? '').trim())
+            .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'de'))
+            .map((p) => (
+              <option key={p.id} value={p.name ?? ''} />
+            ))}
+        </datalist>
+
         <div className="buero-reihe">
           <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
             <span>Was</span>
             <input
               value={neu.name}
               placeholder="z.B. Schleifscheiben 125 mm"
-              onChange={(e) => setNeu((n) => ({ ...n, name: e.target.value }))}
+              list={vorschlagsliste}
+              onChange={(e) => {
+                const wert = e.target.value
+                const gleich = inventar.find(
+                  (p) =>
+                    (p.name ?? '').toLocaleLowerCase('de') === wert.trim().toLocaleLowerCase('de'),
+                )
+                /*
+                 * Trifft die Eingabe einen vorhandenen Posten, kommen Einheit,
+                 * Artikelnummer und Lieferant gleich mit. Wer den Namen danach
+                 * abwandelt („… M5x30"), behält sie — und damit die
+                 * Schreibweise, die im Lager schon gilt.
+                 */
+                setNeu((n) => ({
+                  ...n,
+                  name: wert,
+                  ...(gleich
+                    ? {
+                        einheit: gleich.unit ?? n.einheit,
+                        artikelnummer: gleich.supplierRef ?? '',
+                        lieferant: (lieferantenId(gleich.supplier) as number) ?? n.lieferant,
+                      }
+                    : {}),
+                }))
+              }}
             />
+            {treffer ? (
+              <small className="buero-unterzeile" style={{ marginTop: '.25rem' }}>
+                Den gibt es schon — die Bestellung geht auf diesen Posten, es wird keiner doppelt
+                angelegt. Für etwas Ähnliches den Namen abwandeln.
+              </small>
+            ) : null}
           </label>
           <label className="buero-feld">
             <span>Menge</span>
@@ -382,17 +445,19 @@ export function NachbestellenAnsicht() {
           {(() => {
             const gewaehlt = partner.find((p) => String(p.id) === String(neu.lieferant))
             const bereit = neu.name.trim().length > 0 && neu.menge > 0
-            const nutzlast = {
-              neu: [
-                {
-                  name: neu.name.trim(),
-                  menge: neu.menge,
-                  einheit: neu.einheit,
-                  artikelnummer: neu.artikelnummer,
-                },
-              ],
-              lieferant: neu.lieferant || null,
-            }
+            const nutzlast = treffer
+              ? { zeilen: [{ item: treffer.id, menge: neu.menge }], lieferant: neu.lieferant || null }
+              : {
+                  neu: [
+                    {
+                      name: neu.name.trim(),
+                      menge: neu.menge,
+                      einheit: neu.einheit,
+                      artikelnummer: neu.artikelnummer,
+                    },
+                  ],
+                  lieferant: neu.lieferant || null,
+                }
             const leeren = () =>
               setNeu({ name: '', menge: 1, einheit: 'Stück', artikelnummer: '', lieferant: '', wo: '' })
             return (
@@ -427,7 +492,7 @@ export function NachbestellenAnsicht() {
                           ),
                           wo: gewaehlt.name,
                         },
-                        'Anfrage ist raus, der Posten ist angelegt.',
+                        treffer ? 'Anfrage ist raus.' : 'Anfrage ist raus, der Posten ist angelegt.',
                       ).then(leeren)
                     }
                   >
@@ -446,7 +511,7 @@ export function NachbestellenAnsicht() {
                         aktion: 'vermerken',
                         wo: neu.wo.trim() || gewaehlt?.name || 'woanders bestellt',
                       },
-                      'Vermerkt, der Posten ist angelegt.',
+                      treffer ? 'Vermerkt.' : 'Vermerkt, der Posten ist angelegt.',
                     ).then(leeren)
                   }
                 >
