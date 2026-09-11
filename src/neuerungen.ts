@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 114,
+    datum: null,
+    titel: 'Rechnungen stehen nach Nummer, und die Partner ziehen um',
+    punkte: [
+      {
+        text: '**Die Rechnungsliste war innerhalb eines Tages durcheinander** — 0008, 0009, 0010, dann 0007, 0006, 0005. Sortiert wurde nach dem Rechnungsdatum, und das kennt nur den Tag: Alles, was am selben Tag entstand, war gleich, und dann entschied der Zufall.',
+      },
+      {
+        text: '**Jetzt entscheidet die Rechnungsnummer.** Die wird beim Festschreiben vergeben und zählt lückenlos hoch — sie ist die Reihenfolge, in der gestellt wurde, und sie lässt sich nachträglich nicht verschieben. Entwürfe stehen oben: Die haben keine Nummer und sind das, woran noch zu arbeiten ist.',
+      },
+      {
+        text: '**Belege hatten denselben Fehler** und stehen jetzt bei gleichem Datum nach dem Zeitpunkt, an dem sie erfasst wurden. Eine eigene Nummer taugt dort nicht — die kommt vom Lieferanten und zählt nichts hoch.',
+      },
+      {
+        text: '**Die Geschäftspartner stehen jetzt unter „Kundschaft" statt unter „Geld".** Dort waren sie gelandet, weil an einer Rechnung ein Partner hängt — aber wer einen Kontakt pflegt, pflegt keine Zahl. Gesucht hat man sie zwischen Steuer und Nachkalkulation.',
+      },
+    ],
+  },
+  {
     nummer: 113,
     datum: null,
     titel: 'Lange Formulare stehen in Abschnitten, und der Speicherknopf meldet sich',

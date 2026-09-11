@@ -53,6 +53,20 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/angebote', label: 'Angebote', recht: 'angebote.schreiben' },
       { href: '/office/uebergabe', label: 'Übergabemappen', recht: 'angebote.schreiben' },
       { href: '/office/wiedervorlagen', label: 'Wiedervorlagen' },
+      /*
+       * Die Geschäftspartner stehen hier und nicht mehr unter „Geld".
+       *
+       * Dort waren sie gelandet, weil an einer Rechnung ein Partner hängt —
+       * das ist aber der Gebrauch und nicht die Sache. Wer einen Kontakt
+       * pflegt, pflegt keine Zahl: Anschrift, Ansprechpartner, Telefon,
+       * Steuernummer. Unter „Geld" suchte man sie zwischen Steuer und
+       * Nachkalkulation.
+       *
+       * Dass auch Lieferanten und Dienstleister darin stehen, spricht nicht
+       * dagegen: Es ist eine Liste, und eine Liste gehört an einen Ort. Die
+       * Rolle trennt der Filter in der Liste selbst.
+       */
+      { href: '/office/partner', label: 'Partner', recht: 'partner.pflegen' },
       { href: '/office/newsletter', label: 'Newsletter', recht: 'newsletter.versenden' },
     ],
   },
@@ -81,7 +95,6 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/belege', label: 'Belege', recht: 'belege.erfassen' },
       { href: '/office/nachkalkulation', label: 'Nachkalkulation', recht: 'zahlen.sehen' },
       { href: '/office/steuer', label: 'Steuer', recht: 'zahlen.sehen' },
-      { href: '/office/partner', label: 'Partner', recht: 'partner.pflegen' },
     ],
   },
   {
