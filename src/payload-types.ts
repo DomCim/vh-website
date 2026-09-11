@@ -602,7 +602,14 @@ export interface InventoryItem {
  */
 export interface Contact {
   id: number;
+  /**
+   * Steht so auf Angebot, Auftragsbestätigung und Rechnung.
+   */
   name: string;
+  /**
+   * Der Mensch bei diesem Betrieb. Erscheint im Büro, nicht auf den Papieren.
+   */
+  ansprechpartner?: string | null;
   role?: ('lieferant' | 'kunde' | 'dienstleister' | 'beides') | null;
   email?: string | null;
   phone?: string | null;
@@ -1374,6 +1381,10 @@ export interface OutgoingInvoice {
   items?:
     | {
         description: string;
+        /**
+         * Gesetzt, wenn die Rechnung aus einem Auftrag entstanden ist.
+         */
+        auftragPosition?: string | null;
         product?: (number | null) | Product;
         quantity: number;
         unit?: string | null;
@@ -1410,7 +1421,11 @@ export interface OutgoingInvoice {
       }[]
     | null;
   /**
-   * Bei Geschäftskunden im EU-Ausland mit gültiger USt-IdNr. — dann alle Sätze auf 0 setzen; der Hinweis erscheint auf der Rechnung.
+   * Inland: normale Umsatzsteuer. Die beiden anderen setzen alle Sätze auf 0 und drucken ihren Hinweis.
+   */
+  steuerfall?: ('inland' | 'ig_lieferung' | 'reverse_charge') | null;
+  /**
+   * Ergibt sich aus dem Steuerfall — nicht von Hand setzen.
    */
   reverseCharge?: boolean | null;
   /**
@@ -2625,6 +2640,7 @@ export interface NewsletterSubscribersSelect<T extends boolean = true> {
  */
 export interface ContactsSelect<T extends boolean = true> {
   name?: T;
+  ansprechpartner?: T;
   role?: T;
   email?: T;
   phone?: T;
@@ -2893,6 +2909,7 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
     | T
     | {
         description?: T;
+        auftragPosition?: T;
         product?: T;
         quantity?: T;
         unit?: T;
@@ -2918,6 +2935,7 @@ export interface OutgoingInvoicesSelect<T extends boolean = true> {
         pdfAblage?: T;
         id?: T;
       };
+  steuerfall?: T;
   reverseCharge?: T;
   note?: T;
   project?: T;

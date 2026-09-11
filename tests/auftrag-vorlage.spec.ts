@@ -6,6 +6,7 @@ import { expect, test } from '@playwright/test'
 import { unberuehrt, vorschlaegeAus } from '../src/lib/buero/ablaufvorschlaege'
 import { werteAusVorlage } from '../src/lib/buero/auftragVorlage'
 import { anschriftAus } from '../src/lib/kundenabschrift'
+import { steuerfallVon } from '../src/lib/listen'
 import {
   eingegangen,
   giltNoch,
@@ -231,5 +232,42 @@ test.describe('Die Steuernummern des Kunden auf dem Papier', () => {
     // Ohne diese Zeilen bliebe der Block leer, so richtig der Druck auch wäre
     expect(quelle).toMatch(/umsatzsteuerId:\s*r\.customerVatId/)
     expect(quelle).toMatch(/kennung:\s*r\.customerSiret/)
+  })
+})
+
+test.describe('Der Steuerfall entscheidet, was auf dem Beleg steht', () => {
+  /*
+   * Gefunden beim Abgleich mit dem Wissensstamm (Entscheidungen/Steuerfall
+   * einer Rechnung haengt am Kunden, 10.09.2026): Auf dem Papier stand der
+   * Satz zur innergemeinschaftlichen Lieferung, in der Factur-X-Datei der
+   * Code AE für Reverse Charge. Zwei Tatbestände am selben Beleg — und bei
+   * einer E-Rechnung ist die maschinenlesbare Fassung die maßgebliche.
+   */
+  test('jeder Fall hat genau einen Code nach EN 16931', () => {
+    expect(steuerfallVon('inland').kuerzel).toBe('S')
+    expect(steuerfallVon('ig_lieferung').kuerzel, 'Lieferung von Ware ins EU-Ausland').toBe('K')
+    expect(steuerfallVon('reverse_charge').kuerzel, 'sonstige Leistung ins EU-Ausland').toBe('AE')
+  })
+
+  test('unbekannt fällt auf den Inlandsfall zurück, nicht auf steuerfrei', () => {
+    // Lieber eine Rechnung, die zu wenig behauptet, als eine, die eine
+    // Steuerbefreiung erfindet.
+    expect(steuerfallVon(undefined).value).toBe('inland')
+    expect(steuerfallVon('quatsch').value).toBe('inland')
+  })
+
+  test('die beiden steuerfreien Fälle tragen verschiedene Sätze', () => {
+    const ig = steuerfallVon('ig_lieferung').hinweis ?? ''
+    const rc = steuerfallVon('reverse_charge').hinweis ?? ''
+    expect(steuerfallVon('inland').hinweis, 'im Inland gibt es nichts zu begründen').toBeNull()
+    expect(ig).toContain('6 a UStG')
+    expect(rc).toContain('Steuerschuldnerschaft')
+    expect(ig, 'zwei Gründe, zwei Sätze').not.toBe(rc)
+  })
+
+  test('der XML-Bauer schreibt den Code nicht mehr fest', () => {
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'src/lib/facturx.ts'), 'utf8')
+    expect(quelle, 'kein fest verdrahtetes AE mehr').not.toMatch(/<ram:CategoryCode>AE<\/ram:CategoryCode>/)
+    expect(quelle, 'der Code kommt aus dem Steuerfall').toContain('steuerfallVon')
   })
 })

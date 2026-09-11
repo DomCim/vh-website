@@ -3,7 +3,7 @@ import type { CollectionConfig, Payload, PayloadRequest, Where } from 'payload'
 import { office } from '../access'
 import { hatRecht } from '../lib/rechte'
 import { geplanteStufen } from '../lib/anzahlung'
-import { RECHNUNG_STATUS, RECHNUNG_STUFEN } from '../lib/listen'
+import { RECHNUNG_STATUS, RECHNUNG_STUFEN, STEUERFAELLE } from '../lib/listen'
 import { betraege } from '../lib/betraege'
 import { ablageFeld, absenderAbschrift, absenderFeld } from '../lib/absender'
 import { kundenAbschrift } from '../lib/kundenabschrift'
@@ -223,6 +223,16 @@ export const OutgoingInvoices: CollectionConfig = {
         const wirdFestgeschrieben =
           data.status && data.status !== 'entwurf' && originalDoc?.status === 'entwurf'
         const istNeuUndFest = operation === 'create' && data.status && data.status !== 'entwurf'
+        /*
+         * Der alte Haken folgt dem Steuerfall, immer und ohne Ausnahme.
+         *
+         * Er ist die Weiche, an der Summenrechnung, PDF und Factur-X hängen;
+         * der Steuerfall sagt, warum. Würden beide auseinanderlaufen, stünde
+         * auf dem Blatt ein Grund und in den Zahlen ein anderer.
+         */
+        const fall = data.steuerfall ?? originalDoc?.steuerfall ?? 'inland'
+        data.reverseCharge = fall !== 'inland'
+
         if ((wirdFestgeschrieben || istNeuUndFest) && !data.invoiceNumber) {
           if (!data.issueDate) data.issueDate = new Date().toISOString()
 
@@ -446,6 +456,30 @@ export const OutgoingInvoices: CollectionConfig = {
         { name: 'description', label: 'Beschreibung', type: 'text', required: true },
         {
           /*
+           * Welche Position des Auftrags hier abgerechnet wird.
+           *
+           * Gebraucht, seit eine Rechnung nur einen Teil des Auftrags
+           * abdecken darf: Liefert Vincent ein Sofa und baut es vor Ort auf,
+           * ist das eine Lieferung und eine Leistung — zwei Steuerfälle, zwei
+           * Rechnungen, ein Auftrag. Ohne diesen Verweis wüsste niemand,
+           * welche Position schon berechnet ist, und der Auftrag ginge
+           * entweder doppelt oder gar nicht hinaus.
+           *
+           * Die Kennung der Array-Zeile, nicht ihr Text: Der Text darf sich
+           * auf der Rechnung von der Auftragszeile unterscheiden, er ist
+           * verhandelt.
+           */
+          name: 'auftragPosition',
+          label: 'Position des Auftrags',
+          type: 'text',
+          index: true,
+          admin: {
+            readOnly: true,
+            description: 'Gesetzt, wenn die Rechnung aus einem Auftrag entstanden ist.',
+          },
+        },
+        {
+          /*
            * Welcher Artikel gemeint ist — freiwillig.
            *
            * Die Beschreibung bleibt der maßgebliche Text: Sie steht auf dem
@@ -573,13 +607,65 @@ export const OutgoingInvoices: CollectionConfig = {
       ],
     },
     {
+      /*
+       * Welcher Grund die Umsatzsteuer wegfallen lässt.
+       *
+       * **Hier stand einmal ein einziger Haken „Reverse Charge".** Der Betrag
+       * war damit richtig — null Umsatzsteuer —, aber der Beleg behauptete
+       * zwei verschiedene Dinge gleichzeitig: Auf dem Papier stand der Satz
+       * zur **innergemeinschaftlichen Lieferung** (§ 4 Nr. 1 b i.V.m. § 6 a
+       * UStG, also Ware), in der eingebetteten Factur-X-Datei stand
+       * `CategoryCode AE`, also **Reverse Charge** (sonstige Leistung). Zur
+       * Lieferung gehört nach EN 16931 der Code `K`.
+       *
+       * Das ist kein Schönheitsfehler. Der Empfänger stützt seine eigene
+       * Steuerschuld auf diesen Beleg, und bei einer E-Rechnung ist die
+       * maschinenlesbare Datei die rechtlich maßgebliche — auf dem Blatt stand
+       * also das eine, verbindlich war das andere.
+       *
+       * **Warum es zwei Fälle sein müssen und nicht einer:** Liefert Vincent
+       * ein Sofa nach Deutschland, ist das eine Lieferung (K). Baut er es dort
+       * auf, ist das eine sonstige Leistung (AE). Kommt beides in einem
+       * Auftrag vor, gehört es auf zwei Rechnungen — deshalb lassen sich
+       * Rechnungen je Position stellen (siehe `lib/rechnungsstufen.ts`).
+       *
+       * Beide bedeuten null Umsatzsteuer, aus zwei Gründen, und nur einer darf
+       * auf dem Beleg stehen.
+       */
+      name: 'steuerfall',
+      label: 'Steuerfall',
+      type: 'select',
+      /*
+       * Vorgabe statt Pflicht. In der Spalte steht `NOT NULL DEFAULT
+       * 'inland'`, und `beforeChange` fällt ebenfalls darauf zurück — fehlen
+       * kann er also nicht. `required` würde nur jeden der acht Orte, an denen
+       * eine Rechnung entsteht, zwingen, den Normalfall hinzuschreiben.
+       */
+      defaultValue: 'inland',
+      options: [...STEUERFAELLE],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Inland: normale Umsatzsteuer. Die beiden anderen setzen alle Sätze auf 0 und drucken ihren Hinweis.',
+      },
+    },
+    {
+      /*
+       * Der alte Haken bleibt als abgeleiteter Wert stehen.
+       *
+       * Er wird nicht mehr getippt, sondern in `beforeChange` aus dem
+       * Steuerfall gesetzt. Daran hängen die Summenrechnung, das PDF und die
+       * Factur-X-Datei an einem Dutzend Stellen; sie alle auf einmal
+       * umzuschreiben wäre ein zweiter, größerer Eingriff mit demselben
+       * Ergebnis. Wer neu baut, fragt `steuerfall`.
+       */
       name: 'reverseCharge',
-      label: 'Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge)',
+      label: 'Ohne Umsatzsteuer (abgeleitet)',
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description:
-          'Bei Geschäftskunden im EU-Ausland mit gültiger USt-IdNr. — dann alle Sätze auf 0 setzen; der Hinweis erscheint auf der Rechnung.',
+        readOnly: true,
+        description: 'Ergibt sich aus dem Steuerfall — nicht von Hand setzen.',
       },
     },
     {

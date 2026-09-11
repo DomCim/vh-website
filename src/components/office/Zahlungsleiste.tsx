@@ -7,7 +7,7 @@ import { stufenBerechnen, type Zahlplan } from '../../lib/anzahlung'
 import { useBestand, useRahmen } from '../../lib/buero/bestand'
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum, euro } from '../../lib/format'
-import { RECHNUNG_STUFEN, textKarte } from '../../lib/listen'
+import { RECHNUNG_STUFEN, STEUERFAELLE, type Steuerfall, textKarte } from '../../lib/listen'
 import {
   eingegangen,
   istOffenerPosten,
@@ -17,6 +17,7 @@ import {
   type StufenRechnung,
   giltNoch,
 } from '../../lib/zahlungsstand'
+import { Erklaerung } from './Erklaerung'
 import { Rueckmeldung } from './Rueckmeldung'
 
 /**
@@ -45,6 +46,8 @@ type Rechnung = {
   netTotal?: number | null
   total?: number | null
   stornoVon?: unknown
+  /** Welche Auftragspositionen diese Rechnung abdeckt */
+  items?: { auftragPosition?: string | null }[] | null
 }
 
 // In der Leiste heißt „vollstaendig" schlicht „Rechnung" — der lange Titel gehört ins Formular.
@@ -63,11 +66,14 @@ function spaeter(tag: string, tage: number): string {
 export function Zahlungsleiste({
   auftragId,
   auftragswert,
+  positionen = [],
   zahlplan,
   fertigBis,
 }: {
   auftragId: number | string
   auftragswert: number
+  /** Die Positionen des Auftrags — daraus ergibt sich, was noch offen ist */
+  positionen?: { id?: string | null; description?: string | null; quantity?: number | null; price?: number | null }[]
   zahlplan?: Zahlplan | null
   fertigBis?: string | null
 }) {
@@ -98,6 +104,31 @@ export function Zahlungsleiste({
     () => rechnungen.filter(giltNoch),
     [rechnungen],
   )
+
+  /*
+   * Was noch nicht berechnet ist.
+   *
+   * Dieselbe Frage stellt der Server vor dem Anlegen noch einmal (siehe
+   * `lib/rechnungsstufen.ts`) — hier geht es nur darum, was zur Auswahl
+   * steht. Eine Position gilt als berechnet, sobald sie auf einer Rechnung
+   * steht, die noch gilt; ein Storno gibt sie wieder frei.
+   */
+  const berechnet = useMemo(() => {
+    const menge = new Set<string>()
+    for (const r of gueltige) {
+      for (const p of r.items ?? []) if (p.auftragPosition) menge.add(String(p.auftragPosition))
+    }
+    return menge
+  }, [gueltige])
+
+  const offenePositionen = useMemo(
+    () => positionen.filter((p) => p.description?.trim() && (!p.id || !berechnet.has(String(p.id)))),
+    [positionen, berechnet],
+  )
+
+  const [auswahlOffen, setAuswahlOffen] = useState(false)
+  const [gewaehlt, setGewaehlt] = useState<string[]>([])
+  const [steuerfall, setSteuerfall] = useState<Steuerfall>('inland')
 
   const stand = useMemo(
     () =>
@@ -163,8 +194,16 @@ export function Zahlungsleiste({
       const { sofort } = await absenden({
         pfad: '/api/office/auftrag',
         bereich: 'auftraege',
-        koerper: { aktion: 'rechnung', id: auftragId },
+        koerper: {
+          aktion: 'rechnung',
+          id: auftragId,
+          /* Leer heißt: alles Offene. So bleibt der einfache Fall ein Klick. */
+          positionen: gewaehlt.length ? gewaehlt : undefined,
+          steuerfall,
+        },
       })
+      setAuswahlOffen(false)
+      setGewaehlt([])
       setMeldung(
         sofort
           ? 'Rechnungsentwurf liegt bereit — er steht gleich in der Liste. Verschickt wird von Hand.'
@@ -175,6 +214,99 @@ export function Zahlungsleiste({
     } finally {
       setLaeuft(false)
     }
+  }
+
+  /*
+   * Der Weg zum Entwurf: erst wählen, dann anlegen.
+   *
+   * **Warum eine Auswahl und nicht ein Knopf.** Liefert Vincent ein Sofa und
+   * baut es vor Ort auf, ist das eine Lieferung und eine sonstige Leistung —
+   * zwei Steuerfälle, und nur einer darf je Beleg gelten. Also zwei
+   * Rechnungen aus einem Auftrag, jede mit ihren Positionen.
+   *
+   * Beim ersten Klick sind alle offenen Positionen angehakt: Der häufige Fall
+   * ist weiterhin „alles auf eine Rechnung", und der soll zwei Klicks kosten
+   * und nicht zehn.
+   */
+  const auswahl = (
+    <div className="buero-hinweis" style={{ marginTop: '.6rem' }}>
+      <div style={{ marginBottom: '.6rem' }}>
+        <strong>Was kommt auf diese Rechnung?</strong>
+      </div>
+      <div style={{ display: 'grid', gap: '.35rem', marginBottom: '.8rem' }}>
+        {offenePositionen.map((p, i) => {
+          const kennung = String(p.id ?? i)
+          return (
+            <label key={kennung} style={{ display: 'flex', gap: '.45rem', alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                checked={gewaehlt.includes(kennung)}
+                onChange={(e) =>
+                  setGewaehlt((bisher) =>
+                    e.target.checked
+                      ? [...bisher, kennung]
+                      : bisher.filter((k) => k !== kennung),
+                  )
+                }
+              />
+              <span>
+                {p.description}
+                {p.quantity ? ` · ${p.quantity} ×` : ''}
+                {p.price ? ` ${euro(Number(p.price))}` : ''}
+              </span>
+            </label>
+          )
+        })}
+      </div>
+
+      <div style={{ marginBottom: '.8rem' }}>
+        <strong style={{ fontSize: '.85rem' }}>Steuerfall</strong>
+        <Erklaerung titel="Steuerfall">
+          <p style={{ margin: 0 }}>
+            <strong>Alle drei ergeben einen richtigen Betrag — aber nur einer nennt den richtigen
+            Grund.</strong> Der Kunde stützt seine eigene Steuerschuld auf diesen Beleg.
+          </p>
+          {STEUERFAELLE.map((f) => (
+            <p key={f.value} style={{ marginBottom: 0 }}>
+              <strong>{f.label}</strong> — {f.erklaerung}
+            </p>
+          ))}
+        </Erklaerung>
+        <div style={{ display: 'grid', gap: '.3rem', marginTop: '.35rem' }}>
+          {STEUERFAELLE.map((f) => (
+            <label key={f.value} style={{ display: 'flex', gap: '.45rem', alignItems: 'center' }}>
+              <input
+                type="radio"
+                name="steuerfall-auswahl"
+                checked={steuerfall === f.value}
+                onChange={() => setSteuerfall(f.value)}
+              />
+              {f.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="buero-knopf"
+          disabled={laeuft || gewaehlt.length === 0}
+          onClick={() => void rechnungAnlegen()}
+        >
+          Entwurf anlegen
+        </button>
+        <button type="button" className="buero-knopf leise" onClick={() => setAuswahlOffen(false)}>
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  )
+
+  /** Auswahl aufmachen, mit allem Offenen angehakt. */
+  const auswahlOeffnen = () => {
+    setGewaehlt(offenePositionen.map((p, i) => String(p.id ?? i)))
+    setAuswahlOffen(true)
   }
 
   /*
@@ -201,8 +333,8 @@ export function Zahlungsleiste({
           <button
             type="button"
             className="buero-knopf"
-            onClick={rechnungAnlegen}
-            disabled={laeuft}
+            onClick={auswahlOeffnen}
+            disabled={laeuft || auswahlOffen}
           >
             Rechnung aus dem Auftrag erstellen
           </button>
@@ -215,6 +347,7 @@ export function Zahlungsleiste({
             aus anlegen.
           </p>
         )}
+        {auswahlOffen && auswahl}
         <Rueckmeldung text={meldung} />
       </div>
     )
@@ -275,7 +408,7 @@ export function Zahlungsleiste({
         * am Handy fiel das kaum auf, am Rechner sah es kaputt aus. Dieselbe
         * Aufteilung benutzt der Terminvorschlag weiter unten.
         */}
-      {gueltige.length === 0 && (
+      {gueltige.length === 0 && offenePositionen.length > 0 && (
         <div className="buero-hinweis">
           <strong>Zu diesem Auftrag gilt keine Rechnung mehr.</strong> Die Papiere oben bleiben
           stehen — eine gestellte Rechnung wird nicht gelöscht.
@@ -285,11 +418,30 @@ export function Zahlungsleiste({
         </div>
       )}
 
-      {gueltige.length === 0 && auftragswert > 0 && (
-        <button type="button" className="buero-knopf" onClick={rechnungAnlegen} disabled={laeuft}>
-          Neue Rechnung aus dem Auftrag erstellen
+      {/*
+        * Solange Positionen offen sind, führt von hier ein Weg zur nächsten
+        * Rechnung — auch wenn schon eine gültige am Auftrag hängt. Genau das
+        * ist der Montagefall: Ware auf der einen, Aufbau auf der anderen.
+        */}
+      {gueltige.length > 0 && offenePositionen.length > 0 && (
+        <div className="buero-hinweis">
+          <strong>
+            {offenePositionen.length === 1
+              ? 'Eine Position ist noch nicht berechnet.'
+              : `${offenePositionen.length} Positionen sind noch nicht berechnet.`}
+          </strong>{' '}
+          Sie können auf eine weitere Rechnung — etwa, wenn Ware und Montage
+          verschiedene Steuerfälle sind.
+        </div>
+      )}
+
+      {offenePositionen.length > 0 && auftragswert > 0 && !auswahlOffen && (
+        <button type="button" className="buero-knopf" onClick={auswahlOeffnen} disabled={laeuft}>
+          {gueltige.length === 0 ? 'Neue Rechnung aus dem Auftrag erstellen' : 'Weitere Rechnung aus dem Auftrag'}
         </button>
       )}
+
+      {auswahlOffen && auswahl}
 
       {stand.wartet && (
         <div className="buero-hinweis">

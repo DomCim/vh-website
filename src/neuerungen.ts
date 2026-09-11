@@ -26,6 +26,47 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 108,
+    datum: null,
+    titel: 'Ein Kunde, ein Name — und der Entwurf folgt dem Partner',
+    punkte: [
+      {
+        text: '**Name und Anschrift auf Auftrag, Angebot und Rechnung folgen jetzt dem Geschäftspartner**, solange die Rechnung ein Entwurf ist. Bisher war es eine Abschrift vom Tag des Anlegens: Wer die Anschrift beim Partner änderte — etwa weil der Kunde darum bat —, änderte am Entwurf nichts, und auf dem Papier stand weiter der alte Stand.',
+      },
+      {
+        text: '**Eine gestellte Rechnung bleibt unberührt.** Was beim Kunden liegt, darf sich nicht nachträglich bewegen. Ist eine Anschrift dort falsch, führt der Weg weiterhin über Storno und neu — die neue Rechnung holt sich die berichtigten Angaben dann von selbst.',
+      },
+      {
+        text: '**Abweichen geht weiterhin, aber auf Ansage.** Solange der Entwurf dem Partner folgt, sind die Felder gesperrt und darunter steht, warum. Wer eine andere Firmierung braucht, klickt „Abweichenden Namen eintragen"; weicht ein bestehender Entwurf ab, sagt das Büro es und bietet „Vom Partner übernehmen" an.',
+      },
+      {
+        text: '**Der Partner führt Firma und Ansprechpartner getrennt.** In das eine alte Feld wurde beides getippt („Armin Keins / Majer GmbH & Co. KG") und landete so auf der Rechnung. Auf die Papiere gehört die Firma, der Mensch gehört ins Büro. Bestehende Einträge bleiben, wie sie sind; wo zwei Angaben in einem Feld stecken, schlägt das Büro beim Öffnen eine Aufteilung vor — aufgeteilt wird auf Klick.',
+      },
+      {
+        text: '**Die Partnerliste hat Suche und Filter.** Nach Kundschaft, Lieferanten oder Dienstleistern, dazu ein Suchfeld über Firma, Ansprechpartner und Ort. Getrennte Listen gibt es bewusst nicht: Ein Betrieb kann beides sein, und zwei Datensätze für denselben Betrieb hätten am Ende zwei Anschriften, von denen eine veraltet.',
+      },
+    ],
+  },
+  {
+    nummer: 107,
+    datum: null,
+    titel: 'Steuerfall wählen, Rechnung je Position',
+    punkte: [
+      {
+        text: '**Aus einem Haken sind drei Fälle geworden: Inland, innergemeinschaftliche Lieferung und Reverse Charge.** Bisher gab es nur „Reverse Charge". Der Betrag stimmte — null Umsatzsteuer —, aber der Beleg behauptete zweierlei: Auf dem Papier stand der Satz zur **Lieferung**, in der elektronischen Rechnung der Code für **Reverse Charge**. Bei einer E-Rechnung ist die maschinenlesbare Fassung die verbindliche. Ab jetzt wird gewählt, und Satz wie Code kommen aus derselben Wahl.',
+      },
+      {
+        text: '**Hinter der Beschriftung steht ein Fragezeichen** mit der Erklärung, wann welcher Fall gilt. Kurz: Ware, die körperlich ins EU-Ausland geht, ist eine Lieferung. Eine Leistung dort — Montage, Konstruktion, Reparatur — ist Reverse Charge. Alles andere ist Inland, auch für Kleinunternehmer und Privatkundschaft ohne USt-IdNr.',
+      },
+      {
+        text: '**Ein Auftrag kann mehrere Rechnungen bekommen.** Liefert Vincent ein Sofa und baut es vor Ort auf, sind das zwei Steuerfälle — und nur einer darf je Rechnung gelten. Vor dem Anlegen des Entwurfs lässt sich deshalb auswählen, welche Positionen darauf sollen. Was schon berechnet ist, steht nicht mehr zur Wahl; solange etwas offen ist, führt vom Auftrag ein Weg zur nächsten Rechnung.',
+      },
+      {
+        text: '**Bestehende Rechnungen wandern als innergemeinschaftliche Lieferung mit** — das ist es, was bisher hinausgegangen ist, und ein Beleg beim Kunden wird nicht nachträglich umgedeutet.',
+      },
+    ],
+  },
+  {
     nummer: 106,
     datum: null,
     titel: 'Steuernummern aufs Papier, Artikel je Position',

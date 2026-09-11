@@ -2081,6 +2081,33 @@ html.tastatur-offen .buero-inhalt {
   margin-bottom: 1rem;
 }
 
+/* Das Fragezeichen hinter einer Beschriftung — antippbar, weil die Büro-App am
+   Werkstatt-Tablet läuft und dort niemand mit der Maus schwebt. Klein genug,
+   um die Zeile nicht zu sprengen, groß genug für einen Finger mit Handschuh. */
+.buero-fragezeichen {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.4rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--buero-bronze) 45%, transparent);
+  background: transparent;
+  color: var(--buero-bronze);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color 0.15s;
+}
+
+.buero-fragezeichen:hover,
+.buero-fragezeichen[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--buero-bronze) 15%, transparent);
+}
+
 /* Dasselbe in Rot, wenn etwas schiefging — z.B. eine Sicherung, die es nicht
    auf die NAS geschafft hat */
 .buero-hinweis.warn {

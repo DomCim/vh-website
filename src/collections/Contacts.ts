@@ -32,7 +32,40 @@ export const Contacts: CollectionConfig = {
     delete: office,
   },
   fields: [
-    { name: 'name', label: 'Name / Firma', type: 'text', required: true, index: true },
+    {
+      /*
+       * Der Name, der auf die Papiere gehört — die Firma, nicht der Mensch.
+       *
+       * Er stand einmal allein da und hieß „Name / Firma". Getippt wurde
+       * daraufhin beides hinein: „Armin Keins / Majer GmbH & Co. KG". Auf der
+       * Rechnung steht das dann genauso, und niemand weiß mehr, wer der
+       * Rechnungsempfänger ist und wer nur der Mensch am Telefon.
+       *
+       * Bestehende Einträge bleiben, wie sie sind. Das Büro schlägt beim
+       * Öffnen vor, sie zu trennen — aufgeteilt wird nur auf Klick. Ein
+       * Firmenname darf einen Schrägstrich enthalten („Meier / Schulz GbR"),
+       * und eine Wanderung, die das selbst entscheidet, zerlegt irgendwann den
+       * falschen.
+       */
+      name: 'name',
+      label: 'Firma / Name',
+      type: 'text',
+      required: true,
+      index: true,
+      admin: { description: 'Steht so auf Angebot, Auftragsbestätigung und Rechnung.' },
+    },
+    {
+      /*
+       * Wer dort arbeitet. Steht auf keinem Beleg — er ist der Weg zur Firma,
+       * nicht der Schuldner.
+       */
+      name: 'ansprechpartner',
+      label: 'Ansprechpartner',
+      type: 'text',
+      admin: {
+        description: 'Der Mensch bei diesem Betrieb. Erscheint im Büro, nicht auf den Papieren.',
+      },
+    },
     {
       name: 'role',
       label: 'Art',

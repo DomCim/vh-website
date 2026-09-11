@@ -14,6 +14,7 @@ import { Zahleingabe } from './Zahleingabe'
 import { ArtikelBezug } from './ArtikelBezug'
 import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
+import { KundenAngaben } from './KundenAngaben'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
 import { useAblaufVorschlaege } from '../../lib/buero/ablaufvorschlaege'
 import { Meldestand } from './Meldestand'
@@ -232,13 +233,13 @@ export function AuftragFormular({
             })
           }
         />
-        <label className="buero-feld">
-          <span>Kunde</span>
-          <input
-            value={w.customerName ?? ''}
-            onChange={(e) => setzen({ customerName: e.target.value })}
-          />
-        </label>
+        <KundenAngaben
+          partnerId={w.contact}
+          werte={w}
+          aendern={setzen}
+          teil="name"
+          fuehrt="name"
+        />
         <label className="buero-feld">
           <span>Start</span>
           <input

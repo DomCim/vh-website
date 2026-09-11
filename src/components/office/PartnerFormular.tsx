@@ -1,7 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
+
+import { firmaUndPerson } from '../../lib/namensteilung'
 import { useEntwurf } from '../../lib/buero/entwurf'
 import { absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
@@ -11,6 +13,7 @@ import { Rueckmeldung } from './Rueckmeldung'
 export type PartnerWerte = {
   id?: number | string
   name?: string | null
+  ansprechpartner?: string | null
   role?: string
   email?: string | null
   phone?: string | null
@@ -55,6 +58,12 @@ export function PartnerFormular({
     ...werte,
   }))
   const [w, setW] = useState<PartnerWerte>(anfang)
+
+  /* Nur solange niemand aufgeräumt hat — siehe `lib/namensteilung.ts`. */
+  const vorschlag = useMemo(
+    () => (w.ansprechpartner?.trim() ? null : firmaUndPerson(w.name)),
+    [w.name, w.ansprechpartner],
+  )
   const [laeuft, setLaeuft] = useState(false)
   const [meldung, setMeldung] = useState<string | null>(null)
   const [pinKlartext, setPinKlartext] = useState<string | null>(null)
@@ -106,9 +115,44 @@ export function PartnerFormular({
 
       <div className="buero-reihe">
         <label className="buero-feld" style={{ gridColumn: 'span 2' }}>
-          <span>Name / Firma</span>
+          <span>Firma / Name</span>
           <input value={w.name ?? ''} onChange={(e) => setzen({ name: e.target.value })} />
         </label>
+        <label className="buero-feld">
+          <span>Ansprechpartner</span>
+          <input
+            value={w.ansprechpartner ?? ''}
+            placeholder="z.B. Armin Keins"
+            onChange={(e) => setzen({ ansprechpartner: e.target.value })}
+          />
+        </label>
+        {vorschlag && (
+          /*
+           * Aufgeteilt wird auf Klick, nicht von selbst.
+           *
+           * In das alte Feld „Name / Firma" wurde beides getippt: „Armin Keins
+           * / Majer GmbH & Co. KG". Auf der Rechnung stand das dann genauso.
+           * Eine Wanderung, die am Schrägstrich trennt, zerlegt irgendwann
+           * einen Firmennamen, der selbst einen trägt („Meier / Schulz GbR") —
+           * und das fällt erst auf einem Beleg auf.
+           *
+           * Die Firma ist der längere Teil und der mit der Rechtsform; der
+           * Mensch der andere. Geraten wird das nur als Vorschlag, gespeichert
+           * erst, wenn jemand hinsieht und tippt.
+           */
+          <div className="buero-hinweis" style={{ gridColumn: '1 / -1' }}>
+            <strong>Stecken hier zwei Angaben in einem Feld?</strong> Auf die Papiere gehört die
+            Firma, der Mensch gehört ins Büro. Vorschlag: Firma „{vorschlag.firma}&ldquo;,
+            Ansprechpartner „{vorschlag.person}&ldquo;.{' '}
+            <button
+              type="button"
+              className="buero-knopf leise schmal"
+              onClick={() => setzen({ name: vorschlag.firma, ansprechpartner: vorschlag.person })}
+            >
+              Aufteilen
+            </button>
+          </div>
+        )}
         <label className="buero-feld">
           <span>Art</span>
           <select value={w.role} onChange={(e) => setzen({ role: e.target.value })}>

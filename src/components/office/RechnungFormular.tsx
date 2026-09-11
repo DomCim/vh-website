@@ -9,6 +9,9 @@ import { AbsendeFehler, absenden } from '../../lib/buero/warteschlange'
 import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
+import { STEUERFAELLE, type Steuerfall } from '../../lib/listen'
+import { Erklaerung } from './Erklaerung'
+import { KundenAngaben } from './KundenAngaben'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { ArtikelBezug } from './ArtikelBezug'
@@ -43,6 +46,8 @@ export type RechnungWerte = {
   paidDate?: string | null
   items?: Position[]
   reverseCharge?: boolean
+  /** Welcher Grund die Umsatzsteuer wegfallen lässt — siehe `lib/listen.ts` */
+  steuerfall?: Steuerfall
   note?: string | null
 }
 
@@ -248,15 +253,13 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
             if (partner?.siret || partner?.vatId) setERechnungOffen(true)
           }}
         />
-        <label className="buero-feld">
-          <span>Kunde</span>
-          <input
-            value={w.customerName ?? ''}
-            disabled={gesperrt}
-            onChange={(e) => setzen({ customerName: e.target.value })}
-            placeholder="z.B. Stadt Naila"
-          />
-        </label>
+        <KundenAngaben
+          partnerId={w.customer}
+          werte={w}
+          aendern={setzen}
+          gesperrt={gesperrt}
+          teil="name"
+        />
         <label className="buero-feld">
           <span>Rechnungsdatum</span>
           <input
@@ -277,16 +280,15 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </label>
       </div>
 
-      <label className="buero-feld">
-        <span>Rechnungsanschrift</span>
-        <textarea
-          rows={3}
-          value={w.customerAddress ?? ''}
-          disabled={gesperrt}
-          onChange={(e) => setzen({ customerAddress: e.target.value })}
-          placeholder={'Straße 1\n12345 Ort\nFrankreich'}
+      <div className="buero-reihe">
+        <KundenAngaben
+          partnerId={w.customer}
+          werte={w}
+          aendern={setzen}
+          gesperrt={gesperrt}
+          teil="anschrift"
         />
-      </label>
+      </div>
 
       {/* Angaben für die elektronische Rechnung. Bei Privatkundschaft bleiben
           sie leer — dort verlangt sie niemand, also bleiben sie eingeklappt. */}
@@ -490,15 +492,59 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </div>
       </div>
 
-      <label style={{ display: 'flex', gap: '.4rem', alignItems: 'center', fontSize: '.88rem', margin: '1rem 0' }}>
-        <input
-          type="checkbox"
-          checked={Boolean(w.reverseCharge)}
-          disabled={gesperrt}
-          onChange={(e) => setzen({ reverseCharge: e.target.checked })}
-        />
-        Reverse Charge (Geschäftskunde im EU-Ausland, ohne Steuer)
-      </label>
+      {/*
+        * Der Steuerfall, und zwar als Entweder-oder statt als ein Haken.
+        *
+        * Vorher gab es „Reverse Charge" als einzelnes Kästchen. Der Betrag war
+        * damit richtig — null Umsatzsteuer —, aber der Beleg behauptete zwei
+        * Dinge auf einmal: auf dem Papier den Satz zur innergemeinschaftlichen
+        * Lieferung, in der Factur-X-Datei den Code für Reverse Charge. Bei
+        * einer E-Rechnung ist die maschinenlesbare Fassung die maßgebliche.
+        *
+        * Die Entscheidung ist keine, die man nebenbei trifft, deshalb steht
+        * die Erklärung hinter dem Fragezeichen und nicht nur in einer
+        * Klammer hinter der Beschriftung.
+        */}
+      <div style={{ margin: '1rem 0' }}>
+        <span style={{ fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.06em', opacity: 0.75 }}>
+          Steuerfall
+          <Erklaerung titel="Steuerfall">
+            <p style={{ margin: 0 }}>
+              <strong>Alle drei ergeben einen richtigen Betrag — aber nur einer nennt den
+              richtigen Grund.</strong> Der Kunde stützt seine eigene Steuerschuld auf diesen
+              Beleg.
+            </p>
+            {STEUERFAELLE.map((f) => (
+              <p key={f.value} style={{ marginBottom: 0 }}>
+                <strong>{f.label}</strong> — {f.erklaerung}
+              </p>
+            ))}
+            <p style={{ marginBottom: 0 }}>
+              Liefert Vincent eine Ware <em>und</em> baut sie vor Ort auf, sind das zwei Fälle und
+              gehören auf zwei Rechnungen. Am Auftrag lässt sich dafür auswählen, welche
+              Positionen auf welche Rechnung gehen.
+            </p>
+          </Erklaerung>
+        </span>
+        <div style={{ display: 'grid', gap: '.35rem', marginTop: '.4rem' }}>
+          {STEUERFAELLE.map((f) => (
+            <label
+              key={f.value}
+              style={{ display: 'flex', gap: '.45rem', alignItems: 'center', fontSize: '.88rem' }}
+            >
+              <input
+                type="radio"
+                name="steuerfall"
+                value={f.value}
+                checked={(w.steuerfall ?? 'inland') === f.value}
+                disabled={gesperrt}
+                onChange={() => setzen({ steuerfall: f.value })}
+              />
+              {f.label}
+            </label>
+          ))}
+        </div>
+      </div>
 
       <label className="buero-feld">
         <span>Hinweis auf der Rechnung</span>
