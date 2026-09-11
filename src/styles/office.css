@@ -1611,6 +1611,13 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-bronze);
 }
 
+/* „Verwerfen" steht neben der Meldung und nicht bei den Aktionen: Es ist der
+   Rückweg, nicht die Handlung. Entsprechend zurückhaltend. */
+.buero-verwerfen {
+  margin-left: 0.6rem;
+  vertical-align: baseline;
+}
+
 /* ── Abschnitte eines langen Formulars ─────────────────────────────────────
    Aufklappbar, und zugeklappt mit einer Zeile, die sagt, was drinsteht.
    Warum überhaupt — siehe `components/office/Abschnitt.tsx`.

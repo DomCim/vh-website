@@ -408,7 +408,10 @@ export function BelegFormular({
         <textarea rows={2} value={w.notes ?? ''} onChange={(e) => setzen({ notes: e.target.value })} />
       </label>
 
-      <Fussleiste geaendert={entwurf.geaendert}>
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         <button
           type="button"
           className="buero-knopf leise"

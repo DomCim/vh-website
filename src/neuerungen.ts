@@ -43,6 +43,12 @@ export const NEUERUNGEN: Neuerung[] = [
         text: '**Der Speicherknopf meldet sich, sobald etwas geändert wurde.** Am Rechner schwebt er dann unten am Bildschirmrand mit dem Hinweis „Nicht gespeichert"; am Handy, wo er ohnehin unten klebt, wechselt er die Farbe. Ist nichts offen, ist auch nichts zu sehen. Verschwunden ist dabei nichts: „Rechnung senden" und die übrigen Knöpfe bleiben, wo sie waren.',
       },
       {
+        text: '**Neben der Meldung steht „Verwerfen".** Damit geht es zurück zum gespeicherten Stand — bisher gab es das gar nicht: Wer eine Änderung loswerden wollte, musste die Seite verlassen. Gefragt wird vorher.',
+      },
+      {
+        text: '**Und wer weggeht, ohne zu speichern, wird gefragt.** Ein Tipp auf „Übersicht" in der Leiste unten hat bisher eine halbe Stunde Tipparbeit weggeworfen, ohne ein Wort. Das gilt jetzt für beide Wege hinaus: Verweise im Büro und Neuladen oder Schließen des Fensters. Nur der Zurück-Knopf des Browsers lässt sich nicht aufhalten.',
+      },
+      {
         text: '**Zugeklappt heißt zusammengefasst, nicht weg.** Was in einem geschlossenen Abschnitt steht, wird beim Speichern mitgeschickt — dafür sorgt jetzt eine eigene Prüfung, damit es niemand später versehentlich kaputt macht.',
       },
     ],

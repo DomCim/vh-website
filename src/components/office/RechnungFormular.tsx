@@ -645,7 +645,10 @@ export function RechnungFormular({ werte }: { werte: RechnungWerte }) {
         </p>
       )}
 
-      <Fussleiste geaendert={entwurf.geaendert}>
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         {/* „Speichern" war der Weg, über den eine gestellte Rechnung doch noch
             geändert werden konnte — ein Klick, und das Papier beim Kunden
             stimmte nicht mehr mit dem hier überein. Danach gibt es nur noch

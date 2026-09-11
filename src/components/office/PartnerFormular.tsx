@@ -303,7 +303,10 @@ export function PartnerFormular({
         </>
       )}
 
-      <Fussleiste geaendert={entwurf.geaendert}>
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
           Speichern
         </button>

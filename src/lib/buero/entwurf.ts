@@ -92,6 +92,14 @@ export function useEntwurf<T extends object>(
   verwerfen: () => void
   erledigt: (neuerGrundstand?: T) => void
   /**
+   * Alles Ungespeicherte wegwerfen und zum letzten gespeicherten Stand
+   * zurück — gibt ihn zurück, damit das Formular ihn einsetzen kann.
+   *
+   * Der liegende Entwurf geht dabei mit. Sonst fände man beim nächsten
+   * Öffnen genau das wieder angeboten, was man eben verworfen hat.
+   */
+  zuruecksetzen: () => T
+  /**
    * Steht etwas Ungespeichertes im Formular?
    *
    * Dieselbe Frage, die der Entwurf ohnehin bei jedem Zeichen beantwortet —
@@ -224,5 +232,19 @@ export function useEntwurf<T extends object>(
     wegwerfen()
   }, [wegwerfen])
 
-  return { angebot, uebernehmen, verwerfen, erledigt, geaendert: !gleich(werte, grundstand) }
+  const zuruecksetzen = useCallback(() => {
+    haelt.current = false
+    setAngebot(null)
+    wegwerfen()
+    return start.current
+  }, [wegwerfen])
+
+  return {
+    angebot,
+    uebernehmen,
+    verwerfen,
+    erledigt,
+    zuruecksetzen,
+    geaendert: !gleich(werte, grundstand),
+  }
 }

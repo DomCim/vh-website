@@ -96,4 +96,61 @@ test.describe('Abschnitte in langen Formularen', () => {
 
     await request.delete(`${BASIS}/api/jobs/${id}`, { headers: { Authorization: `JWT ${token}` } })
   })
+
+  /**
+   * „Verwerfen" und die Warnung beim Weggehen.
+   *
+   * Beides kam aus derselben Beobachtung von Dominik: Verwerfen gab es gar
+   * nicht — wer eine Änderung loswerden wollte, verließ die Seite. Und dabei
+   * sagte niemand etwas; ein Tipp auf „Übersicht" warf die Arbeit weg.
+   */
+  test('Verwerfen fragt nach, und Weggehen warnt', async ({ page, request }) => {
+    const anmeldung = await request.post(`${BASIS}/api/users/login`, {
+      data: { email: EMAIL, password: PASSWORT },
+    })
+    const { token } = (await anmeldung.json()) as { token?: string }
+    test.skip(!token, 'Anmeldung fehlgeschlagen — läuft der Server?')
+
+    const titel = `Verwerfen-Probe ${Date.now()}`
+    const angelegt = await request.post(`${BASIS}/api/office/auftrag`, {
+      headers: { Authorization: `JWT ${token}` },
+      data: { title: titel, positions: [{ description: 'Probestück' }] },
+    })
+    const { id } = (await angelegt.json()) as { id: number }
+
+    await page.goto('/office/login')
+    await page.waitForLoadState('networkidle')
+    await page.fill('input[autocomplete="username"]', EMAIL)
+    await page.fill('input[type="password"]', PASSWORT!)
+    await page.locator('form button[type="submit"]').first().click()
+    await page.waitForURL(/\/office$/, { timeout: 30_000 })
+
+    await page.goto(`/office/auftraege/${id}`)
+    const bezeichnung = page.getByLabel('Bezeichnung').first()
+    await expect(bezeichnung).toHaveValue(titel, { timeout: 30_000 })
+
+    await bezeichnung.fill(`${titel} — geändert`)
+    await expect(page.locator('.buero-fussleiste')).toHaveClass(/wach/)
+
+    /*
+     * Playwright weist jede Frage von selbst ab, solange niemand zuhört —
+     * genau richtig für die erste Hälfte: Wer „nein" sagt, bleibt stehen.
+     */
+    await page.getByRole('link', { name: 'Übersicht' }).first().click()
+    await page.waitForTimeout(500)
+    expect(page.url(), 'abgelehntes Weggehen bleibt auf der Seite').toContain(`/auftraege/${id}`)
+
+    await page.getByRole('button', { name: 'Verwerfen' }).click()
+    await expect(bezeichnung, 'abgelehntes Verwerfen lässt den Text stehen').toHaveValue(
+      `${titel} — geändert`,
+    )
+
+    // Und jetzt mit „ja"
+    page.once('dialog', (d) => void d.accept())
+    await page.getByRole('button', { name: 'Verwerfen' }).click()
+    await expect(bezeichnung).toHaveValue(titel)
+    await expect(page.locator('.buero-fussleiste')).not.toHaveClass(/wach/)
+
+    await request.delete(`${BASIS}/api/jobs/${id}`, { headers: { Authorization: `JWT ${token}` } })
+  })
 })

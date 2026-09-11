@@ -768,7 +768,10 @@ export function AuftragFormular({
         </label>
       </Abschnitt>
 
-      <Fussleiste geaendert={entwurf.geaendert}>
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         {w.status === 'geplant' && (
           <button
             type="button"
