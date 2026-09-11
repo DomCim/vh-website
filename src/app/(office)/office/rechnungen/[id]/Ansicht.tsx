@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { Steuerfall } from '../../../../../lib/listen'
 import { useParams } from 'next/navigation'
 import React from 'react'
 
@@ -183,6 +184,16 @@ export function RechnungAnsicht() {
             vatRate: p.vatRate ?? 0,
             product: (p.product as number) ?? '',
           })),
+          /*
+           * Der Steuerfall gehört mitgeladen, nicht nur der abgeleitete Haken.
+           *
+           * Fehlte er hier, stand im Formular immer die Vorgabe „Inland" — und
+           * das war nicht nur eine falsche Anzeige: Wer einen Entwurf mit
+           * Reverse Charge öffnete und auf Speichern drückte, schrieb „Inland"
+           * zurück. Die Umsatzsteuer wäre damit wieder auf die Beträge
+           * gekommen, ohne dass jemand den Steuerfall angefasst hätte.
+           */
+          steuerfall: (r.steuerfall as Steuerfall) ?? 'inland',
           reverseCharge: Boolean(r.reverseCharge),
           note: r.note as string,
         }}

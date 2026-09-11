@@ -3689,13 +3689,182 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-tinte);
 }
 
-.buero-haken input[type='checkbox'] {
-  flex: 0 0 auto;
-  width: 1.15rem;
-  height: 1.15rem;
-  min-height: 0;
+/* ── Kästchen zum Anhaken ──────────────────────────────────────────────────
+   Eine Regel für alle, statt je Stelle eine eigene.
+
+   **Warum überhaupt selbst gezeichnet.** Das Kästchen des Browsers ist in
+   jedem Browser ein anderes, hat auf dem Werkstatt-Tablet Fingergröße nur per
+   Zufall, und `accent-color` färbt zwar den Haken, lässt Rahmen und Ecken aber
+   so, wie sie 1995 aussahen. Hier steht eins, das zum Rest passt: derselbe
+   Rahmen wie an jedem Feld, dieselbe Rundung, dieselbe Bronze.
+
+   **Warum die feste Größe so wichtig ist.** `.buero-feld input` zieht jedes
+   Eingabefeld auf volle Breite und 44 Pixel Höhe — richtig für ein Textfeld,
+   verheerend für ein Kästchen: Daraus wurde ein weißer Kasten quer über die
+   Zeile. `flex: none` und die Maße hier gewinnen, egal wo das Kästchen steht.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero input[type='checkbox'],
+.buero-feld input[type='checkbox'],
+.buero-haken input[type='checkbox'],
+input[type='checkbox'].buero-haken-kasten {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin: 0;
   padding: 0;
-  accent-color: var(--buero-bronze);
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 6px;
+  background: var(--buero-flaeche);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+/* Der Haken selbst — gezeichnet, nicht als Zeichen gesetzt: Ein „✓" aus der
+   Schrift sitzt in jeder Schriftart woanders. */
+.buero input[type='checkbox']::before,
+.buero-feld input[type='checkbox']::before,
+.buero-haken input[type='checkbox']::before {
+  content: '';
+  width: 0.72rem;
+  height: 0.72rem;
+  transform: scale(0);
+  transition: transform 0.12s ease-out;
+  background: var(--buero-papier);
+  clip-path: polygon(14% 44%, 0 60%, 39% 100%, 100% 18%, 84% 4%, 39% 69%);
+}
+
+.buero input[type='checkbox']:checked,
+.buero-feld input[type='checkbox']:checked,
+.buero-haken input[type='checkbox']:checked {
+  background: var(--buero-bronze);
+  border-color: var(--buero-bronze);
+}
+
+.buero input[type='checkbox']:checked::before,
+.buero-feld input[type='checkbox']:checked::before,
+.buero-haken input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+
+.buero input[type='checkbox']:hover:not(:disabled),
+.buero-feld input[type='checkbox']:hover:not(:disabled),
+.buero-haken input[type='checkbox']:hover:not(:disabled) {
+  border-color: var(--buero-bronze);
+}
+
+/* Sichtbar für die Tastatur — das Kästchen ist klein, der Ring muss deutlich
+   sein. */
+.buero input[type='checkbox']:focus-visible,
+.buero-feld input[type='checkbox']:focus-visible,
+.buero-haken input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+}
+
+.buero input[type='checkbox']:disabled,
+.buero-feld input[type='checkbox']:disabled,
+.buero-haken input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Auswahlknöpfe ─────────────────────────────────────────────────────────
+   Dasselbe Kästchen, nur rund und mit Punkt statt Haken. Sie stehen seit dem
+   Steuerfall an der Rechnung neben den Kästchen — zwei verschiedene
+   Zeitalter nebeneinander wären schlimmer als zwei altmodische.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid var(--buero-rahmen);
+  border-radius: 50%;
+  background: var(--buero-flaeche);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.buero input[type='radio']::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--buero-bronze);
+  transform: scale(0);
+  transition: transform 0.12s ease-out;
+}
+
+.buero input[type='radio']:checked {
+  border-color: var(--buero-bronze);
+}
+
+.buero input[type='radio']:checked::before {
+  transform: scale(1);
+}
+
+.buero input[type='radio']:hover:not(:disabled) {
+  border-color: var(--buero-bronze);
+}
+
+.buero input[type='radio']:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+}
+
+.buero input[type='radio']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Ausklappfelder ────────────────────────────────────────────────────────
+   Der Pfeil des Browsers ist das letzte Stück 1995 im Formular: in jedem
+   Browser ein anderer, meist grau, immer zu klein. Hier ein gezeichneter, in
+   derselben Bronze wie alles andere, was man bedienen kann.
+
+   `appearance: none` nimmt ihn weg — dafür muss rechts Platz bleiben, sonst
+   läuft ein langer Eintrag unter den neuen Pfeil. Das Bild liegt als Daten-URI
+   im Stil, nicht als Datei: eine Anfrage weniger, und es kann nicht fehlen.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a86b3d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 0.72rem;
+  cursor: pointer;
+}
+
+.buero select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Im Dunkeln trägt die Bronze einen anderen Wert — und der Pfeil steckt als
+   Bild im Stil, er erbt die Variable also nicht. Einmal nachgezogen. */
+@media (prefers-color-scheme: dark) {
+  .buero select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23d9975c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
 }
 
 /* Ein Hinweis unter dem Haken darf wieder klein sein */

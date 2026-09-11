@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 111,
+    datum: null,
+    titel: 'Kästchen, Auswahlknöpfe und Ausklappfelder sehen nicht mehr nach 1995 aus',
+    punkte: [
+      {
+        text: '**Die Bedienteile kamen bisher vom Browser** — in jedem ein anderes, meist grau und eckig, und der Pfeil im Ausklappfeld war das letzte Stück Systemgrau in einem Formular, das sonst auf jedes Detail achtet. Jetzt tragen sie dieselbe Handschrift wie der Rest: abgerundet, in Bronze, mit einem gezeichneten Haken statt einem Zeichen aus der Schrift.',
+      },
+      {
+        text: '**Dieselben Teile im Büro und auf der Website.** Zuerst waren sie verschieden gedacht — im Büro Bronze, auf der Website Tinte. Das war eine Begründung im Nachhinein: Wer beides am selben Tag benutzt, sieht den Bruch. Jetzt ist es eine Gestaltung, an einer Stelle gepflegt.',
+      },
+      {
+        text: '**Nebenbei behoben:** Im Ablauf war das neue Häkchen zu einem weißen Kasten quer über die Zeile geraten — es steckte in einem Feldrahmen, der jedes Eingabefeld auf volle Breite zieht.',
+      },
+      {
+        text: '**Und ein Fehler beim Steuerfall:** Das Rechnungsformular las das Feld gar nicht und zeigte deshalb immer „Inland" — auch bei einer Rechnung mit Reverse Charge. Auf dem Papier stand es richtig, im Formular nicht. Wer einen Entwurf geöffnet und gespeichert hätte, hätte ihn damit auf Inland zurückgeschrieben, samt Umsatzsteuer auf den Beträgen.',
+      },
+    ],
+  },
+  {
     nummer: 110,
     datum: null,
     titel: 'Der Kunde kann auch zwischendurch hören, wie es steht',
