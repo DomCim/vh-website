@@ -26,6 +26,41 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 110,
+    datum: null,
+    titel: 'Der Kunde kann auch zwischendurch hören, wie es steht',
+    punkte: [
+      {
+        text: '**Gemeldet wurde bisher an drei Ständen:** in Fertigung, fertig, geliefert. Bei einem Stück, das Wochen unterwegs ist, liegen dazwischen Wochen Stille — das Teil geht zum Laserer, kommt zurück, geht zur Kanterei. Wer nichts hört, ruft an.',
+      },
+      {
+        text: '**Jeder Ablaufschritt hat jetzt ein Häkchen „Kunden benachrichtigen, wenn erledigt".** Wird es gesetzt, erscheint darunter das Feld **„Das liest der Kunde"**. Sobald der Schritt auf „erledigt" springt, geht dieser eine Satz als Mail raus — mit Auftragsnummer und dem vorgesehenen Termin, sonst nichts.',
+      },
+      {
+        text: '**Auf dem Blatt steht ausschließlich dieser Satz.** Nicht der Schrittname, nicht die Art, nicht die Kosten, nicht der Betrieb, nicht die Vorlaufzeit. `Bestellen - Kanten` mit 200 € neben dem Namen einer Kanterei geht die Kundschaft nichts an — deshalb ein eigenes Feld und nicht die Bemerkung, die intern bleibt und jetzt auch so heißt.',
+      },
+      {
+        text: '**Ohne Text geht nichts raus**, und jeder Schritt meldet höchstens einmal. Das Häkchen oben am Auftrag bleibt der Hauptschalter: Ist es aus, schweigt auch der Ablauf.',
+      },
+    ],
+  },
+  {
+    nummer: 109,
+    datum: null,
+    titel: 'Der Takt hat jetzt einen eigenen Prozess',
+    punkte: [
+      {
+        text: '**Die Website war immer wieder für zwei bis vier Minuten nicht erreichbar** — zwölf Mal an einem Vormittag. Die Ursache saß im Haus: Der Postfach-Blick holt alle paar Minuten Mails und wertet Rechnungs-PDFs aus, und er lief im selben Prozess, der die Website ausliefert. Solange er rechnete, antwortete die Seite nicht. Nicht langsam — gar nicht.',
+      },
+      {
+        text: '**Diese Arbeit läuft jetzt in einem eigenen Container**, der niemanden bedient: Postfach, nächtliche Sicherung, Erinnerungen. Er darf so lange brauchen, wie er will. Die Website und das Büro merken davon nichts mehr.',
+      },
+      {
+        text: '**Unter Einstellungen → Integrationen steht jetzt, ob der Takt lebt** — mit dem Zeitpunkt des letzten Schlags. Das ist kein Schmuck: Ein Takt in einem eigenen Prozess kann ausfallen, ohne dass sonst etwas auffällt, und dann gäbe es still keine Sicherung, keine Erinnerungen und keine Meldung über neue Post mehr. Steht er, sagt es das Büro deutlich.',
+      },
+    ],
+  },
+  {
     nummer: 108,
     datum: null,
     titel: 'Ein Kunde, ein Name — und der Entwurf folgt dem Partner',

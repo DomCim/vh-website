@@ -12,6 +12,7 @@ import { Haengengebliebenes } from '../../../../components/office/Haengengeblieb
 import { MailVorlagen } from '../../../../components/office/MailVorlagen'
 import { MeinKonto } from '../../../../components/office/MeinKonto'
 import { RollenVerwaltung } from '../../../../components/office/RollenVerwaltung'
+import { TaktStand } from '../../../../components/office/TaktStand'
 import { useRahmen } from '../../../../lib/buero/bestand'
 
 /**
@@ -88,7 +89,13 @@ export function EinstellungenAnsicht() {
       {teil === 'mailvorlagen' && <MailVorlagen />}
 
       {teil === 'integrationen' && (
-        <EinstellungenFormular bereich="integrationen" titel="Integrationen" />
+        <>
+          {/* Über dem Formular, weil die Frage „läuft er überhaupt?" vor jeder
+              Einstellung kommt — und weil sein Ausfall sonst niemandem
+              auffiele, seit er in einem eigenen Container arbeitet. */}
+          <TaktStand />
+          <EinstellungenFormular bereich="integrationen" titel="Integrationen" />
+        </>
       )}
     </>
   )
