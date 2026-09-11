@@ -135,7 +135,11 @@ export function NachbestellenAnsicht() {
     return p?.name || b.supplierName || 'ohne Angabe'
   }
 
-  async function schicken(schluessel: string, koerper: Record<string, unknown>, erfolg: string) {
+  async function schicken(
+    schluessel: string,
+    koerper: Record<string, unknown>,
+    erfolg: string | ((daten: { bestellung?: string }) => string),
+  ) {
     setLaeuft(schluessel)
     setMeldung((m) => ({ ...m, [schluessel]: '' }))
     try {
@@ -155,7 +159,10 @@ export function NachbestellenAnsicht() {
         }))
         return
       }
-      setMeldung((m) => ({ ...m, [schluessel]: erfolg }))
+      setMeldung((m) => ({
+        ...m,
+        [schluessel]: typeof erfolg === 'function' ? erfolg(daten) : erfolg,
+      }))
     } catch {
       setMeldung((m) => ({ ...m, [schluessel]: 'Das hat nicht geklappt — dafür braucht es Netz.' }))
     } finally {
@@ -323,6 +330,17 @@ export function NachbestellenAnsicht() {
                 Woanders bestellt — nur vermerken
               </button>
             </div>
+            {/*
+              * Ein Knopf muss sagen, was er tut. „Nur vermerken" klang nach
+              * einer Notiz ohne Folgen — angelegt wird aber eine richtige
+              * Bestellung mit Nummer, und der Posten wandert nach
+              * „Unterwegs". Beides steht jetzt dran.
+              */}
+            <p className="buero-unterzeile" style={{ marginTop: '.5rem' }}>
+              „Als bestellt eintragen“ legt eine Bestellung mit dem heutigen Datum an — ohne Mail,
+              für alles, was im Netz, im Laden oder am Telefon bestellt wurde. Sie steht danach
+              unter „Unterwegs“, bis die Lieferung gebucht ist.
+            </p>
             <Rueckmeldung text={meldung[schluessel]} />
           </div>
         )
@@ -334,7 +352,8 @@ export function NachbestellenAnsicht() {
         <p className="buero-unterzeile">
           Was es im Lager noch nicht gibt. Der Posten wird dabei angelegt — mit Bestand 0, den
           füllt die Lieferung. Einen Mindestbestand kann man später am Posten setzen, wenn klar
-          ist, ob es dauerhaft dazugehört.
+          ist, ob es dauerhaft dazugehört. Tippt man einen Namen, der schon im Lager steht, wird
+          kein zweiter Posten angelegt.
         </p>
         {/*
           * Die Vorschlagsliste des Browsers statt einer eigenen Auswahl —
@@ -432,7 +451,7 @@ export function NachbestellenAnsicht() {
             </select>
           </label>
           <label className="buero-feld">
-            <span>Wo bestellt?</span>
+            <span>Bestellt bei</span>
             <input
               value={neu.wo}
               placeholder="z.B. im Netz, Laden, Telefon"
@@ -492,7 +511,10 @@ export function NachbestellenAnsicht() {
                           ),
                           wo: gewaehlt.name,
                         },
-                        treffer ? 'Anfrage ist raus.' : 'Anfrage ist raus, der Posten ist angelegt.',
+                        (d) =>
+                          `Anfrage ist raus${
+                            treffer ? '' : ', der Posten ist dabei entstanden'
+                          } — Bestellung ${d.bestellung ?? ''} steht unter „Angefragt“.`,
                       ).then(leeren)
                     }
                   >
@@ -511,11 +533,14 @@ export function NachbestellenAnsicht() {
                         aktion: 'vermerken',
                         wo: neu.wo.trim() || gewaehlt?.name || 'woanders bestellt',
                       },
-                      treffer ? 'Vermerkt.' : 'Vermerkt, der Posten ist angelegt.',
+                      (d) =>
+                        `Bestellung ${d.bestellung ?? ''} angelegt${
+                          treffer ? '' : ', der Posten ist dabei entstanden'
+                        } — steht jetzt unter „Unterwegs“.`,
                     ).then(leeren)
                   }
                 >
-                  Schon bestellt — nur vermerken
+                  Als bestellt eintragen
                 </button>
               </>
             )
