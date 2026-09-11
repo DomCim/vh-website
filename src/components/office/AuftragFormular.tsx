@@ -836,23 +836,17 @@ function AlsArtikelDialog({
                 ))}
             </select>
           </label>
-          <label className="buero-feld" style={{ justifyContent: 'end' }}>
-            <span>Sichtbarkeit</span>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', padding: '.7rem 0' }}>
-              <input type="checkbox" checked={intern} onChange={(e) => setIntern(e.target.checked)} />
-              <span>Intern (nicht auf der Website)</span>
-            </label>
+          <label className="buero-haken" style={{ alignSelf: 'end', marginBottom: '.9rem' }}>
+            <input type="checkbox" checked={intern} onChange={(e) => setIntern(e.target.checked)} />
+            <span>Intern (nicht auf der Website)</span>
           </label>
-          <label className="buero-feld" style={{ justifyContent: 'end' }}>
-            <span>Vorlage</span>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', padding: '.7rem 0' }}>
-              <input
-                type="checkbox"
-                checked={mitVorlage}
-                onChange={(e) => setMitVorlage(e.target.checked)}
-              />
-              <span>Stückliste und Ablauf mitnehmen</span>
-            </label>
+          <label className="buero-haken" style={{ alignSelf: 'end', marginBottom: '.9rem' }}>
+            <input
+              type="checkbox"
+              checked={mitVorlage}
+              onChange={(e) => setMitVorlage(e.target.checked)}
+            />
+            <span>Stückliste und Ablauf mitnehmen</span>
           </label>
           <div style={{ paddingBottom: '.2rem', display: 'flex', gap: '.6rem' }}>
             <button

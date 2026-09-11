@@ -310,3 +310,125 @@ body {
   outline: 2px solid var(--color-bronze);
   outline-offset: 2px;
 }
+
+/* ── Kästchen, Auswahlknöpfe und Ausklappfelder ───────────────────────────
+   Dieselbe Handschrift wie im Büro — und zwar wirklich dieselbe.
+
+   Erst standen hier Tinte statt Bronze und kleinere Maße, mit der Begründung,
+   Bronze sei auf der Website die Akzentfarbe für Verweise und würde sich
+   vordrängen. Das Argument trägt nicht: Im Büro ist Bronze dieselbe
+   Akzentfarbe, und dort steht das Kästchen ruhig daneben. Zwei Handschriften
+   für dieselbe Sache sind schlechter als eine — wer beides am selben Tag
+   benutzt, sieht den Bruch.
+
+   **Warum selbst gezeichnet.** Das Kästchen des Browsers ist überall ein
+   anderes und sieht neben einer Seite, die sonst auf jedes Detail achtet, nach
+   Formular von 1995 aus. `accent-color` färbt nur den Haken und lässt Rahmen
+   und Ecken, wie sie waren.
+
+   Betroffen sind die Zustimmung im Bestellvorgang, das Kundenstimmen-Formular
+   und die Auswahlfelder der Kasse — wenige Stellen, aber genau die, an denen
+   jemand im Begriff ist, etwas zu kaufen.
+   ────────────────────────────────────────────────────────────────────────── */
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  margin: 0;
+  border: 1.5px solid var(--color-line);
+  background: var(--color-paper);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+input[type='checkbox'] {
+  border-radius: 6px;
+}
+
+input[type='radio'] {
+  border-radius: 50%;
+}
+
+input[type='checkbox']::before {
+  content: '';
+  width: 0.72rem;
+  height: 0.72rem;
+  transform: scale(0);
+  transition: transform 0.12s ease-out;
+  background: var(--color-paper);
+  /* Gezeichnet und nicht als Zeichen gesetzt: Ein „✓" aus der Schrift sitzt
+     in jeder Schriftart woanders. */
+  clip-path: polygon(14% 44%, 0 60%, 39% 100%, 100% 18%, 84% 4%, 39% 69%);
+}
+
+input[type='radio']::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--color-bronze);
+  transform: scale(0);
+  transition: transform 0.12s ease-out;
+}
+
+input[type='checkbox']:checked {
+  background: var(--color-bronze);
+  border-color: var(--color-bronze);
+}
+
+/* Der Auswahlknopf bleibt hell und bekommt einen bronzenen Punkt — ein voll
+   gefüllter Kreis mit hellem Punkt darin liest sich als Kästchen. */
+input[type='radio']:checked {
+  border-color: var(--color-bronze);
+}
+
+input[type='checkbox']:checked::before,
+input[type='radio']:checked::before {
+  transform: scale(1);
+}
+
+input[type='checkbox']:hover:not(:disabled),
+input[type='radio']:hover:not(:disabled) {
+  border-color: var(--color-bronze);
+}
+
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 2px;
+}
+
+input[type='checkbox']:disabled,
+input[type='radio']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Der Pfeil im Ausklappfeld — in Tinte statt im Systemgrau. Rechts muss dafür
+   Platz bleiben, sonst läuft ein langer Eintrag darunter. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a5622d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 0.68rem;
+  cursor: pointer;
+}
+
+/* Im Dunkeln trägt die Tinte einen anderen Wert, und der Pfeil steckt als Bild
+   im Stil — er erbt die Variable nicht. */
+@media (prefers-color-scheme: dark) {
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23c98a52' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
