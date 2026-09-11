@@ -13,6 +13,7 @@ export type MailArt =
   | 'versand'
   | 'auftrag-fertigung'
   | 'auftrag-fertig'
+  | 'auftrag-zwischenstand'
   | 'auftrag-geliefert'
   | 'anfrage'
   | 'zugangscode'

@@ -266,12 +266,55 @@ export function Ablauf({
                         </label>
                       )}
                       <label className="buero-feld">
-                        <span>Bemerkung</span>
+                        <span>Bemerkung (intern)</span>
                         <input
                           value={schritt.notiz ?? ''}
+                          placeholder="bleibt im Haus"
                           onChange={(e) => schrittSetzen(i, { notiz: e.target.value })}
                         />
                       </label>
+
+                      {/*
+                        * Die Meldung an die Kundschaft — zwei Felder, und das
+                        * zweite erscheint erst, wenn das Häkchen steht.
+                        *
+                        * Getrennt von der Bemerkung, und zwar mit Absicht: Die
+                        * ist intern, das war sie immer. Wer dort „Kanterei
+                        * zickt wieder" notiert, hat das hundertmal gefahrlos
+                        * getan — beim hundertersten Mal ginge es hinaus. Und
+                        * der Schrittname taugt ohnehin nicht: „Bestellen -
+                        * Kanten" verriete den Zulieferer, daneben stehen die
+                        * Einkaufskosten.
+                        */}
+                      <label
+                        className="buero-feld"
+                        style={{ gridColumn: '1 / -1', flexDirection: 'row', alignItems: 'center', gap: '.45rem' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(schritt.kundeMelden)}
+                          onChange={(e) => schrittSetzen(i, { kundeMelden: e.target.checked })}
+                        />
+                        <span style={{ margin: 0 }}>Kunden benachrichtigen, wenn erledigt</span>
+                      </label>
+
+                      {schritt.kundeMelden && (
+                        <label className="buero-feld" style={{ gridColumn: '1 / -1' }}>
+                          <span>Das liest der Kunde</span>
+                          <input
+                            value={schritt.kundentext ?? ''}
+                            placeholder="z.B. Die Kantteile sind fertig und zurück in der Werkstatt."
+                            onChange={(e) => schrittSetzen(i, { kundentext: e.target.value })}
+                          />
+                          <small className="buero-unterzeile" style={{ marginTop: '.25rem' }}>
+                            {schritt.gemeldetAm
+                              ? `Gemeldet am ${new Date(schritt.gemeldetAm).toLocaleDateString('de-DE')}.`
+                              : schritt.kundentext?.trim()
+                                ? 'Geht raus, sobald dieser Schritt auf „erledigt" steht. Nur dieser Satz — Schrittname, Kosten und Betrieb bleiben im Haus.'
+                                : 'Ohne Text geht nichts raus.'}
+                          </small>
+                        </label>
+                      )}
                     </div>
                   </div>
                 ) : (

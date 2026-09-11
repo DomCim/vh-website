@@ -75,6 +75,7 @@ import * as migration_20260909_063951_belege_einfrieren from './20260909_063951_
 import * as migration_20260909_192704_adressen_je_sprache from './20260909_192704_adressen_je_sprache';
 import * as migration_20260910_214523_steuerfall_und_teilrechnung from './20260910_214523_steuerfall_und_teilrechnung';
 import * as migration_20260911_052650_ansprechpartner from './20260911_052650_ansprechpartner';
+import * as migration_20260911_111233_schrittmeldung from './20260911_111233_schrittmeldung';
 
 export const migrations = [
   {
@@ -460,6 +461,11 @@ export const migrations = [
   {
     up: migration_20260911_052650_ansprechpartner.up,
     down: migration_20260911_052650_ansprechpartner.down,
-    name: '20260911_052650_ansprechpartner'
+    name: '20260911_052650_ansprechpartner',
+  },
+  {
+    up: migration_20260911_111233_schrittmeldung.up,
+    down: migration_20260911_111233_schrittmeldung.down,
+    name: '20260911_111233_schrittmeldung'
   },
 ];

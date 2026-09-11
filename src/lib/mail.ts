@@ -812,6 +812,8 @@ const AUFTRAGSWORTE: Record<
     fertigAbholung: string
     geliefert: (nr: string) => string
     geliefertText: string
+    /** Betreff einer Zwischenmeldung aus dem Ablauf */
+    zwischenstand: (nr: string) => string
     sendung: string
     portal: string
     gruss: string
@@ -831,6 +833,7 @@ const AUFTRAGSWORTE: Record<
       'Ihr Auftrag ist fertig und steht zur Abholung bereit. Melden Sie sich gern für einen Termin.',
     geliefert: (nr) => `Ihr Auftrag ${nr} ist unterwegs – Vincent Hellmann`,
     geliefertText: 'Ihr Auftrag hat die Werkstatt verlassen.',
+    zwischenstand: (nr) => `Zwischenstand zu Ihrem Auftrag ${nr} – Vincent Hellmann`,
     sendung: 'Sendungsverfolgung',
     portal: 'Ihre Vorgänge im Kundenbereich ansehen',
     gruss: 'Mit freundlichen Grüßen',
@@ -849,6 +852,7 @@ const AUFTRAGSWORTE: Record<
       'Votre commande est terminée et prête à être retirée. Contactez-nous pour convenir d’un rendez-vous.',
     geliefert: (nr) => `Votre commande ${nr} est en route – Vincent Hellmann`,
     geliefertText: "Votre commande a quitté l'atelier.",
+    zwischenstand: (nr) => `Point d'étape sur votre commande ${nr} – Vincent Hellmann`,
     sendung: 'Suivi de colis',
     portal: 'Consulter vos dossiers dans votre espace client',
     gruss: 'Cordialement',
@@ -867,6 +871,7 @@ const AUFTRAGSWORTE: Record<
       'Your order is finished and ready for collection. Get in touch to arrange a time.',
     geliefert: (nr) => `Your order ${nr} is on its way – Vincent Hellmann`,
     geliefertText: 'Your order has left the workshop.',
+    zwischenstand: (nr) => `Progress update on your order ${nr} – Vincent Hellmann`,
     sendung: 'Tracking',
     portal: 'View your projects in the customer area',
     gruss: 'Kind regards',
@@ -998,5 +1003,46 @@ export function auftragGeliefertEmail(
     firma,
     'auftragGeliefert',
     { sendung },
+  )
+}
+
+/**
+ * Was der Kunde geschrieben bekommt, ist getippter Text — er gehört
+ * maskiert. Ein `&` in „Meier & Sohn" zerlegte sonst still das Markup.
+ */
+const alsText = (z: string) =>
+  z.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/**
+ * Ein Zwischenstand aus dem Ablauf — was der Kunde zwischen den drei Ständen
+ * hört.
+ *
+ * **Warum es das gibt.** Gemeldet wurde bisher an drei Ständen des Auftrags:
+ * in Fertigung, fertig, geliefert. Bei einem Stück, das Wochen unterwegs ist,
+ * liegen dazwischen Wochen Stille — das Teil ist beim Laserer, kommt zurück,
+ * geht zur Kanterei. Wer nichts hört, ruft an.
+ *
+ * **Der Rumpf ist ausschließlich der Satz, den Vincent geschrieben hat.** Kein
+ * Schrittname, keine Art, keine Kosten, kein Betrieb, keine Vorlaufzeit. Die
+ * Schritte heißen „Bestellen - Kanten" und tragen den Einkaufspreis; nichts
+ * davon geht die Kundschaft an. Genau deshalb steht der Kundentext in einem
+ * eigenen Feld und nicht in der Bemerkung, die intern ist.
+ */
+export function auftragZwischenstandEmail(
+  auftrag: AuftragLike,
+  kundeName: string,
+  text: string,
+  sprache: Locale = 'de',
+  firma?: CompanyInfo,
+) {
+  const w = AUFTRAGSWORTE[sprache]
+  return auftragsMail(
+    auftrag,
+    kundeName,
+    sprache,
+    w.zwischenstand(auftrag.jobNumber ?? ''),
+    `<p>${alsText(text)}</p>`,
+    firma,
+    'auftragZwischenstand',
   )
 }

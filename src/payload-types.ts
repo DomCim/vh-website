@@ -325,6 +325,9 @@ export interface Product {
                * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
                */
               vorlaufTage?: number | null;
+              /**
+               * Bleibt im Haus — der Kunde sieht sie nie.
+               */
               notiz?: string | null;
               id?: string | null;
             }[]
@@ -400,6 +403,9 @@ export interface Product {
          * Wie lange das Stück außer Haus ist. Zählt beim Termin mit, auch wenn dabei keine eigene Arbeit anfällt.
          */
         vorlaufTage?: number | null;
+        /**
+         * Bleibt im Haus — der Kunde sieht sie nie.
+         */
         notiz?: string | null;
         id?: string | null;
       }[]
@@ -1152,7 +1158,19 @@ export interface Job {
         zurueckAm?: string | null;
         angekommenAm?: string | null;
         fertigGemeldetAm?: string | null;
+        /**
+         * Bleibt im Haus — der Kunde sieht sie nie.
+         */
         notiz?: string | null;
+        /**
+         * Geht raus, sobald dieser Schritt auf „erledigt" steht.
+         */
+        kundeMelden?: boolean | null;
+        /**
+         * Ein Satz in der Sprache des Kunden. Ohne ihn geht nichts raus — Schrittname, Kosten und Betrieb bleiben im Haus.
+         */
+        kundentext?: string | null;
+        gemeldetAm?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1970,6 +1988,7 @@ export interface MailLog {
         | 'versand'
         | 'auftrag-fertigung'
         | 'auftrag-fertig'
+        | 'auftrag-zwischenstand'
         | 'auftrag-geliefert'
         | 'anfrage'
         | 'zugangscode'
@@ -2853,6 +2872,9 @@ export interface JobsSelect<T extends boolean = true> {
         angekommenAm?: T;
         fertigGemeldetAm?: T;
         notiz?: T;
+        kundeMelden?: T;
+        kundentext?: T;
+        gemeldetAm?: T;
         id?: T;
       };
   plannedMinutes?: T;

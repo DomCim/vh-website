@@ -1,10 +1,12 @@
 import type { Payload, PayloadRequest } from 'payload'
 
+import type { Arbeitsschritt } from './arbeitsplan'
 import type { Locale } from './i18n'
 import {
   auftragFertigEmail,
   auftragGeliefertEmail,
   auftragInFertigungEmail,
+  auftragZwischenstandEmail,
   type AuftragLike,
 } from './mail'
 import { sendMail } from './sendMail'
@@ -247,4 +249,136 @@ async function vermerken(
   } catch (err) {
     payload.logger.warn({ err }, `Auftrag ${auftrag.jobNumber}: Meldevermerk nicht geschrieben`)
   }
+}
+
+/**
+ * Welche Schritte gerade eine Meldung verdienen — ohne Nebenwirkungen, damit
+ * es prüfbar bleibt. Dieselbe Trennung wie bei `meldungPruefen`.
+ *
+ * Vier Bedingungen, alle nötig:
+ *
+ *  1. Der Schritt ist **gerade** auf `erledigt` gesprungen — nicht „steht
+ *     schon länger so". Sonst meldete jedes Speichern denselben Schritt erneut.
+ *  2. Das Häkchen steht.
+ *  3. Es gibt einen Kundentext. Ohne ihn kein Versand: Lieber Schweigen als
+ *     eine Mail, die nichts sagt.
+ *  4. Er wurde noch nicht gemeldet.
+ */
+export function faelligeSchritte(
+  jetzt: Arbeitsschritt[],
+  vorher: Arbeitsschritt[] | null | undefined,
+): { schritt: Arbeitsschritt; i: number }[] {
+  return jetzt
+    .map((schritt, i) => ({ schritt, i }))
+    .filter(
+      ({ schritt, i }) =>
+        schritt.stand === 'erledigt' &&
+        vorher?.[i]?.stand !== 'erledigt' &&
+        Boolean(schritt.kundeMelden) &&
+        Boolean(schritt.kundentext?.trim()) &&
+        !schritt.gemeldetAm,
+    )
+}
+
+/**
+ * Zwischenstände aus dem Ablauf — was der Kunde zwischen den drei Ständen hört.
+ *
+ * **Warum es das braucht.** Gemeldet wurde bisher an drei Ständen des
+ * Auftrags: in Fertigung, fertig, geliefert. Bei einem Stück, das Wochen
+ * unterwegs ist, liegen dazwischen Wochen Stille — das Teil geht zum Laserer,
+ * kommt zurück, geht zur Kanterei. Wer nichts hört, ruft an.
+ *
+ * **Vier Bedingungen, alle nötig:**
+ *
+ *  1. Der Hauptschalter am Auftrag steht auf melden. Er gilt für alles; ist er
+ *     aus, hilft kein Häkchen am Schritt.
+ *  2. Der Schritt ist gerade auf `erledigt` gesprungen — nicht „steht schon
+ *     länger so". Sonst meldete jedes Speichern denselben Schritt erneut.
+ *  3. An ihm hängt das Häkchen **und** ein Kundentext. Ohne Text kein Versand:
+ *     Lieber Schweigen als eine Mail, die nichts sagt.
+ *  4. Er wurde noch nicht gemeldet.
+ *
+ * **Was hinausgeht, ist ausschließlich der Kundentext.** Nicht der Schrittname
+ * („Bestellen - Kanten"), nicht die Art, nicht die Kosten, nicht der Betrieb,
+ * nicht die Vorlaufzeit. Das ist der Grund, aus dem der Text ein eigenes Feld
+ * hat und nicht die Bemerkung teilt — die ist intern, und eine Notiz wie
+ * „Kanterei zickt wieder" darf niemals hinausgehen.
+ *
+ * Zurückgeschrieben wird über einen frisch geladenen Auftrag mit Tiefe 0: Der
+ * hier hereingereichte trägt aufgelöste Bezüge, und die als Objekt
+ * zurückzuschreiben machte aus dem Dienstleister eine leere Verknüpfung.
+ */
+export async function schrittmeldungenVerschicken(
+  payload: Payload,
+  auftrag: Meldeauftrag & { arbeitsplan?: Arbeitsschritt[] | null },
+  vorher: Arbeitsschritt[] | null | undefined,
+  req?: PayloadRequest,
+): Promise<number> {
+  if (auftrag.kundeBenachrichtigen === false) return 0
+
+  const schritte = auftrag.arbeitsplan ?? []
+  if (!schritte.length) return 0
+
+  const { email, name, sprache } = kundenzugang(auftrag)
+  if (!email) return 0
+
+  const faellig = faelligeSchritte(schritte, vorher)
+  if (!faellig.length) return 0
+
+  let firma: ReturnType<typeof firmenAngaben> | undefined
+  try {
+    firma = firmenAngaben(await payload.findGlobal({ slug: 'site-settings', depth: 0 }))
+  } catch {
+    // Ohne Briefkopf geht die Mail trotzdem raus — siehe oben
+  }
+
+  const gemeldet: number[] = []
+  for (const { schritt, i } of faellig) {
+    try {
+      await sendMail(payload, {
+        to: email,
+        ...auftragZwischenstandEmail(auftrag, name, schritt.kundentext!.trim(), sprache, firma),
+        art: 'auftrag-zwischenstand',
+        bezug: { job: auftrag.id },
+        ...(req ? { req } : {}),
+      })
+      gemeldet.push(i)
+    } catch (err) {
+      payload.logger.error(
+        { err },
+        `Auftrag ${auftrag.jobNumber}: Zwischenstand zu Schritt ${i + 1} nicht verschickt`,
+      )
+    }
+  }
+
+  if (!gemeldet.length) return 0
+
+  try {
+    const roh = (await payload.findByID({
+      collection: 'jobs',
+      id: auftrag.id,
+      depth: 0,
+      overrideAccess: true,
+      req,
+    })) as { arbeitsplan?: Arbeitsschritt[] | null }
+    const jetzt = new Date().toISOString()
+    await payload.update({
+      collection: 'jobs',
+      id: auftrag.id,
+      overrideAccess: true,
+      ...(req ? { req } : {}),
+      data: {
+        arbeitsplan: (roh.arbeitsplan ?? []).map((s, i) =>
+          gemeldet.includes(i) ? { ...s, gemeldetAm: jetzt } : s,
+        ),
+      } as never,
+    })
+  } catch (err) {
+    payload.logger.warn(
+      { err },
+      `Auftrag ${auftrag.jobNumber}: Vermerk der Schrittmeldung nicht geschrieben`,
+    )
+  }
+
+  return gemeldet.length
 }
