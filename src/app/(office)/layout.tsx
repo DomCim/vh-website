@@ -89,10 +89,26 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
             </span>
           </div>
         </header>
-        <BueroNavigation />
-        {/* Steht zwischen Navigation und Inhalt: gesehen wird er, im Weg ist er nicht */}
-        <NeuerungenBanner />
-        <main className="buero-inhalt">{children}</main>
+        {/*
+          * Navigation und Inhalt nebeneinander — am Rechner.
+          *
+          * Die Navigation stand bis hierher als Leiste über dem Inhalt. Das
+          * kostete zu jedem Ziel zwei Klicks: einmal den Bereich aufklappen,
+          * einmal den Punkt. Als Seitenleiste steht alles gleichzeitig da,
+          * und es ist ein Klick.
+          *
+          * Am Handy ändert sich nichts: Dort zeichnet `BueroNavigation` die
+          * Leiste am unteren Rand, die liegt `fixed` und kümmert sich nicht
+          * um diese Reihe.
+          */}
+        <div className="buero-rumpf">
+          <BueroNavigation />
+          <div className="buero-spalte">
+            {/* Steht zwischen Navigation und Inhalt: gesehen wird er, im Weg ist er nicht */}
+            <NeuerungenBanner />
+            <main className="buero-inhalt">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   )

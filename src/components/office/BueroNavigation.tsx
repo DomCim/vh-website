@@ -447,7 +447,73 @@ export function BueroNavigation() {
   /* Am Handy ist immer höchstens ein Bereich aufgeklappt — hier steht,
      welcher. `null` heißt: kein Blatt offen. */
   const [offenesBlatt, setOffenesBlatt] = useState<string | null>(null)
-  const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
+  /*
+   * Eingeklappt zeigt die Seitenleiste nur die Zeichen.
+   *
+   * Gemerkt wird das im Gerät und gleich beim ersten Zeichnen gelesen —
+   * sonst sieht man die Leiste nach jedem Seitenwechsel kurz breit und dann
+   * schmal werden. `useState` mit Funktion, damit das Lesen einmal passiert
+   * und nicht bei jedem Zeichnen.
+   */
+  const [schmal, setSchmal] = useState(false)
+  useEffect(() => {
+    try {
+      const gemerkt = window.localStorage.getItem('buero:seitenleiste')
+      if (gemerkt) {
+        setSchmal(gemerkt === 'schmal')
+        return
+      }
+    } catch {
+      // Privates Fenster — dann gilt die Vorgabe unten
+    }
+    /*
+     * Ohne eigene Wahl entscheidet die Breite des Schirms.
+     *
+     * In der Werkstatt steht ein kleiner Bildschirm; dort nimmt eine breite
+     * Leiste fast ein Viertel weg. Am Schreibtisch ist Platz genug, da soll
+     * alles lesbar dastehen. 1200 Pixel ist die Grenze: Darunter bleiben
+     * dem Inhalt sonst unter 1000.
+     */
+    setSchmal(window.innerWidth < 1200)
+  }, [])
+  /*
+   * Welche Bereiche zugeklappt sind — je Gerät gemerkt, wie die Breite.
+   *
+   * Die Vorgabe ist „alles offen": Eine Navigation, die beim ersten Besuch
+   * etwas versteckt, das man noch nie gesehen hat, verbirgt Funktionen
+   * dauerhaft. Wer aufräumen will, klappt selbst zu.
+   */
+  const [zugeklappt, setZugeklappt] = useState<Record<string, boolean>>({})
+  useEffect(() => {
+    try {
+      const roh = window.localStorage.getItem('buero:bereiche-zu')
+      if (roh) setZugeklappt(JSON.parse(roh) as Record<string, boolean>)
+    } catch {
+      // Kaputter oder gesperrter Speicher — dann steht alles offen
+    }
+  }, [])
+  const bereichUmschalten = (titel: string) => {
+    setZugeklappt((v) => {
+      const neu = { ...v, [titel]: !v[titel] }
+      try {
+        window.localStorage.setItem('buero:bereiche-zu', JSON.stringify(neu))
+      } catch {
+        // Dann gilt es nur für diesen Besuch
+      }
+      return neu
+    })
+  }
+
+  const breiteUmschalten = () => {
+    setSchmal((v) => {
+      try {
+        window.localStorage.setItem('buero:seitenleiste', v ? 'breit' : 'schmal')
+      } catch {
+        // Dann gilt es nur für diesen Besuch
+      }
+      return !v
+    })
+  }
   const leiste = useRef<HTMLElement>(null)
   const rahmen = useRahmen()
   const zuErledigen = useZuErledigen()
@@ -477,25 +543,8 @@ export function BueroNavigation() {
   // Beim Seitenwechsel schließen — sonst bliebe das Blatt über der neuen Seite
   useEffect(() => {
     setOffenesBlatt(null)
-    setOffeneGruppe(null)
   }, [pfad])
 
-  // Klick daneben schließt das Menü; sonst bliebe es beim Weiterarbeiten offen
-  useEffect(() => {
-    if (!offeneGruppe) return
-    const beiKlick = (e: MouseEvent) => {
-      if (!leiste.current?.contains(e.target as Node)) setOffeneGruppe(null)
-    }
-    const beiTaste = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOffeneGruppe(null)
-    }
-    document.addEventListener('mousedown', beiKlick)
-    window.addEventListener('keydown', beiTaste)
-    return () => {
-      document.removeEventListener('mousedown', beiKlick)
-      window.removeEventListener('keydown', beiTaste)
-    }
-  }, [offeneGruppe])
 
   useEffect(() => {
     if (!offenesBlatt) return
@@ -511,65 +560,105 @@ export function BueroNavigation() {
 
   return (
     <>
-      <nav className="buero-nav" aria-label="Büro" ref={leiste}>
+      {/*
+        * Am Rechner eine feste Seitenleiste statt einer Leiste über dem
+        * Inhalt — Vorschlag von Dominik, und er hat die Klicks gezählt.
+        *
+        * Oben war es **immer** zweimal: den Bereich aufklappen, dann den
+        * Punkt. Hier steht alles gleichzeitig da, und es ist einer. Die
+        * Zähler bleiben dabei sichtbar, ohne dass man irgendetwas öffnen
+        * muss — das konnte die Leiste nur für die vier Bereiche, nicht für
+        * die einzelnen Punkte.
+        *
+        * **Eingeklappt bleiben die Zeichen.** Wer den Platz für den Inhalt
+        * braucht, schiebt sie auf gut drei Zentimeter zusammen; die Zeichen
+        * tragen dann den Namen als Titel, und ein Zähler wird zum Punkt am
+        * Rand. Genau dafür hat jeder Eintrag seit Längerem ein eigenes
+        * Zeichen samt Bereichsfarbe — eingeklappt zahlt sich das aus.
+        */}
+      <nav
+        className={`buero-seitenleiste${schmal ? ' schmal' : ''}`}
+        aria-label="Büro"
+        ref={leiste}
+      >
+        <button
+          type="button"
+          className="buero-seitenleiste-griff"
+          aria-label={schmal ? 'Navigation ausklappen' : 'Navigation einklappen'}
+          title={schmal ? 'Ausklappen' : 'Einklappen'}
+          onClick={breiteUmschalten}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         <Link
           href={UEBERSICHT.href}
+          className="buero-seitenleiste-punkt"
+          title={UEBERSICHT.label}
           aria-current={istAktiv(pfad, UEBERSICHT.href) ? 'page' : undefined}
         >
-          {UEBERSICHT.label}
+          <span className="buero-seitenleiste-zeichen">{Zeichen.uebersicht}</span>
+          <span className="buero-seitenleiste-wort">{UEBERSICHT.label}</span>
         </Link>
 
         {gruppen.map((b) => {
-          const offen = offeneGruppe === b.titel
+          /*
+           * Der Bereich, in dem man gerade steht, lässt sich nicht zuklappen
+           * — Vorschlag von Dominik. Sonst könnte man sich die eigene
+           * Umgebung wegräumen und wüsste hinterher nicht mehr, wo man ist.
+           * Der Griff fehlt dort deshalb ganz, statt zu klemmen: Ein Knopf,
+           * der nichts tut, ist ärgerlicher als keiner.
+           */
           const drin = b.punkte.some((p) => istAktiv(pfad, p.href))
+          const offen = drin || !zugeklappt[b.titel]
           return (
-            <div
+            <section
               key={b.titel}
-              className="buero-nav-gruppe"
-              /*
-               * Aufklappen beim Drüberfahren, damit man am Rechner nicht erst
-               * klicken muss — und trotzdem ein echter Knopf darunter, weil
-               * Hovern auf einem Touchscreen und mit der Tastatur nichts tut.
-               */
-              onMouseEnter={() => setOffeneGruppe(b.titel)}
-              onMouseLeave={() => setOffeneGruppe((v) => (v === b.titel ? null : v))}
+              className={`buero-seitenleiste-teil ${bereichsKlasse(b.titel)}${
+                drin ? ' hier' : ''
+              }${offen ? '' : ' zu'}`}
             >
-              <button
-                type="button"
-                className={offen ? 'offen' : undefined}
-                aria-expanded={offen}
-                aria-current={drin ? 'page' : undefined}
-                onClick={() => setOffeneGruppe((v) => (v === b.titel ? null : b.titel))}
-              >
-                {b.titel}
-                <Zaehler anzahl={gruppenSumme(b.punkte)} inline />
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="buero-nav-pfeil">
-                  <path d="m7 10 5 5 5-5" />
-                </svg>
-              </button>
-
-              {offen && (
-                <div
-                  className={`buero-nav-menue ${bereichsKlasse(b.titel)}`}
-                  role="menu"
-                  aria-label={b.titel}
-                >
-                  {b.punkte.map((p) => (
-                    <Link
-                      key={p.href}
-                      href={ziel(p.href, pfad)}
-                      role="menuitem"
-                      aria-current={istAktiv(pfad, p.href) ? 'page' : undefined}
-                      onClick={() => setOffeneGruppe(null)}
-                    >
-                      <PunktZeichen href={p.href} />
-                      {p.label}
-                      <Zaehler anzahl={zuErledigen[p.href] ?? 0} inline />
-                    </Link>
-                  ))}
-                </div>
+              {drin ? (
+                <h2>
+                  <span className="buero-seitenleiste-wort">{b.titel}</span>
+                  <Zaehler anzahl={gruppenSumme(b.punkte)} inline />
+                </h2>
+              ) : (
+                <h2>
+                  <button
+                    type="button"
+                    aria-expanded={offen}
+                    title={offen ? `${b.titel} zuklappen` : `${b.titel} aufklappen`}
+                    onClick={() => bereichUmschalten(b.titel)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="buero-seitenleiste-pfeil">
+                      <path d="m7 10 5 5 5-5" />
+                    </svg>
+                    <span className="buero-seitenleiste-wort">{b.titel}</span>
+                    <Zaehler anzahl={gruppenSumme(b.punkte)} inline />
+                  </button>
+                </h2>
               )}
-            </div>
+
+              {offen &&
+                b.punkte.map((p) => (
+                  <Link
+                    key={p.href}
+                    href={ziel(p.href, pfad)}
+                    className="buero-seitenleiste-punkt"
+                    title={p.label}
+                    aria-current={istAktiv(pfad, p.href) ? 'page' : undefined}
+                  >
+                    <span className="buero-seitenleiste-zeichen">
+                      <PunktZeichen href={p.href} />
+                    </span>
+                    <span className="buero-seitenleiste-wort">{p.label}</span>
+                    <Zaehler anzahl={zuErledigen[p.href] ?? 0} inline />
+                  </Link>
+                ))}
+            </section>
           )
         })}
       </nav>
