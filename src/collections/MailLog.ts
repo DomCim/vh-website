@@ -67,6 +67,7 @@ export const MailLog: CollectionConfig = {
             { label: 'Versandmeldung', value: 'versand' },
             { label: 'Auftrag: in Fertigung', value: 'auftrag-fertigung' },
             { label: 'Auftrag: fertig', value: 'auftrag-fertig' },
+            { label: 'Auftrag: Zwischenstand', value: 'auftrag-zwischenstand' },
             { label: 'Auftrag: geliefert', value: 'auftrag-geliefert' },
             { label: 'Anfrage eingegangen', value: 'anfrage' },
             { label: 'Zugangscode', value: 'zugangscode' },

@@ -168,7 +168,68 @@ export function arbeitsschritte(mitStand: boolean): Field[] {
           },
         ] as Field[])
       : []),
-    { name: 'notiz', label: 'Bemerkung', type: 'text' },
+    {
+      name: 'notiz',
+      label: 'Bemerkung',
+      type: 'text',
+      admin: { description: 'Bleibt im Haus — der Kunde sieht sie nie.' },
+    },
+    ...(mitStand
+      ? ([
+          {
+            /*
+             * Soll der Kunde hören, wenn dieser Schritt fertig ist?
+             *
+             * **Warum je Schritt und nicht nur je Status.** Gemeldet wurde
+             * bisher an drei Ständen des Auftrags — in Fertigung, fertig,
+             * geliefert. Dazwischen liegen bei einem Stück, das Wochen
+             * unterwegs ist, Wochen Stille: Das Teil ist beim Laserer, kommt
+             * zurück, geht zur Kanterei. Wer das weiß, fragt nicht nach.
+             */
+            name: 'kundeMelden',
+            label: 'Kunden hier benachrichtigen',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              description: 'Geht raus, sobald dieser Schritt auf „erledigt" steht.',
+            },
+          },
+          {
+            /*
+             * Was der Kunde liest — und ausdrücklich **nicht** der Schrittname.
+             *
+             * Die Schritte heißen „Bestellen - Kanten", tragen die Art
+             * „Dienstleister", die Kosten und den Betrieb. Nichts davon geht
+             * die Kundschaft an: Es verriete Zulieferer und Kalkulation. Auf
+             * dem Blatt landet ausschließlich dieser Satz.
+             *
+             * Und deshalb ist es nicht die Bemerkung. Die ist intern, das war
+             * sie immer, und wer dort „Kanterei zickt wieder" notiert, hat das
+             * hundertmal gefahrlos getan — beim hundertersten Mal ginge es
+             * hinaus.
+             *
+             * Leer heißt: keine Meldung. Lieber Schweigen als eine Mail, die
+             * nichts sagt.
+             */
+            name: 'kundentext',
+            label: 'Das liest der Kunde',
+            type: 'text',
+            admin: {
+              condition: (_daten: unknown, geschwister: { kundeMelden?: boolean } | undefined) =>
+                Boolean(geschwister?.kundeMelden),
+              description:
+                'Ein Satz in der Sprache des Kunden. Ohne ihn geht nichts raus — Schrittname, Kosten und Betrieb bleiben im Haus.',
+            },
+          },
+          {
+            /* Was einmal gemeldet ist, bleibt gemeldet — wie bei den Ständen. */
+            name: 'gemeldetAm',
+            label: 'Gemeldet am',
+            type: 'date',
+            admin: { readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
+          },
+        ] as Field[])
+      : []),
   ]
 }
 
@@ -204,6 +265,12 @@ export type Arbeitsschritt = {
   angekommenAm?: string | null
   fertigGemeldetAm?: string | null
   notiz?: string | null
+  /** Soll der Kunde hören, wenn dieser Schritt erledigt ist? */
+  kundeMelden?: boolean | null
+  /** Der Satz, den der Kunde liest — nie der Schrittname */
+  kundentext?: string | null
+  /** Schon gemeldet? Dann nicht noch einmal. */
+  gemeldetAm?: string | null
 }
 
 /**

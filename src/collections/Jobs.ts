@@ -7,7 +7,7 @@ import { naechsteAuftragsnummer } from '../lib/nummernkreis'
 import { liveHooks } from '../lib/liveHooks'
 import { entwurfFuerStufe } from '../lib/rechnungsstufen'
 import { arbeitsplanFeld } from '../lib/arbeitsplan'
-import { meldungVerschicken } from '../lib/auftragsmeldung'
+import { meldungVerschicken, schrittmeldungenVerschicken } from '../lib/auftragsmeldung'
 import { ablageFeld, absenderFeld } from '../lib/absender'
 
 /**
@@ -117,7 +117,26 @@ export const Jobs: CollectionConfig = {
          * Der Auftrag wird dafür mit Tiefe 1 nachgeladen: Sprache und Adresse
          * hängen am Geschäftspartner, und `doc` trägt hier nur dessen ID.
          */
-        if (doc.status !== previousDoc?.status) {
+        /*
+         * Zwei Meldewege, ein Nachladen.
+         *
+         * Der **Status** meldet an drei Ständen: in Fertigung, fertig,
+         * geliefert. Die **Ablaufschritte** melden dazwischen — bei einem
+         * Stück, das Wochen unterwegs ist, liegen zwischen den drei Ständen
+         * Wochen Stille, und wer nichts hört, ruft an.
+         *
+         * Nachgeladen wird nur, wenn wirklich etwas zu melden sein kann:
+         * geänderter Status oder ein Schritt, der gerade fertig wurde. Sonst
+         * zöge jedes Speichern eines Auftrags eine Abfrage mit Tiefe 1 nach
+         * sich, nur um festzustellen, dass nichts zu tun ist.
+         */
+        const schrittFertig = ((doc.arbeitsplan ?? []) as { stand?: string }[]).some(
+          (s, i) =>
+            s?.stand === 'erledigt' &&
+            ((previousDoc?.arbeitsplan ?? []) as { stand?: string }[])[i]?.stand !== 'erledigt',
+        )
+
+        if (doc.status !== previousDoc?.status || schrittFertig) {
           try {
             const voll = await req.payload.findByID({
               collection: 'jobs',
@@ -126,11 +145,21 @@ export const Jobs: CollectionConfig = {
               overrideAccess: true,
               req,
             })
-            await meldungVerschicken(req.payload, voll as never, previousDoc?.status, req)
+            if (doc.status !== previousDoc?.status) {
+              await meldungVerschicken(req.payload, voll as never, previousDoc?.status, req)
+            }
+            if (schrittFertig) {
+              await schrittmeldungenVerschicken(
+                req.payload,
+                voll as never,
+                previousDoc?.arbeitsplan as never,
+                req,
+              )
+            }
           } catch (err) {
             req.payload.logger.error(
               { err },
-              `Auftrag ${doc.jobNumber}: Statusmeldung fehlgeschlagen`,
+              `Auftrag ${doc.jobNumber}: Meldung an die Kundschaft fehlgeschlagen`,
             )
           }
         }
