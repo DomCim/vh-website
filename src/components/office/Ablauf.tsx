@@ -286,16 +286,13 @@ export function Ablauf({
                         * Kanten" verriete den Zulieferer, daneben stehen die
                         * Einkaufskosten.
                         */}
-                      <label
-                        className="buero-feld"
-                        style={{ gridColumn: '1 / -1', flexDirection: 'row', alignItems: 'center', gap: '.45rem' }}
-                      >
+                      <label className="buero-haken" style={{ gridColumn: '1 / -1' }}>
                         <input
                           type="checkbox"
                           checked={Boolean(schritt.kundeMelden)}
                           onChange={(e) => schrittSetzen(i, { kundeMelden: e.target.checked })}
                         />
-                        <span style={{ margin: 0 }}>Kunden benachrichtigen, wenn erledigt</span>
+                        <span>Kunden benachrichtigen, wenn erledigt</span>
                       </label>
 
                       {schritt.kundeMelden && (
