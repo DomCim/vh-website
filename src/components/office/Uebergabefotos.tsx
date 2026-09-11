@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react'
 
 import { abgleichen, useBestand } from '../../lib/buero/bestand'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Abschnitt } from './Abschnitt'
 
 /**
  * Fotos vom Zustand bei der Übergabe.
@@ -117,8 +118,15 @@ export function Uebergabefotos({
    * Punkt.
    */
   return (
-    <>
-      <h2 style={{ marginTop: '1.5rem' }}>Zustand bei der Übergabe</h2>
+    <Abschnitt
+      merk="auftrag:uebergabe"
+      titel="Zustand bei der Übergabe"
+      kurz={
+        bilder.length
+          ? `${bilder.length} ${bilder.length === 1 ? 'Foto' : 'Fotos'}`
+          : 'noch keine Fotos'
+      }
+    >
       <p className="buero-unterzeile">
         {bilder.length
           ? `${bilder.length} ${bilder.length === 1 ? 'Foto' : 'Fotos'} auf dem Lieferschein — sie belegen, wie die Ware das Haus verlassen hat.`
@@ -223,6 +231,6 @@ export function Uebergabefotos({
       </div>
 
       <Rueckmeldung text={meldung} />
-    </>
+    </Abschnitt>
   )
 }

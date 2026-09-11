@@ -16,6 +16,9 @@ import { PartnerBezug } from './PartnerBezug'
 import { Ablauf } from './Ablauf'
 import { KundenAngaben } from './KundenAngaben'
 import type { Arbeitsschritt } from '../../lib/arbeitsplan'
+import { planStand } from '../../lib/arbeitsplan'
+import { euro } from '../../lib/format'
+import { Abschnitt } from './Abschnitt'
 import { useAblaufVorschlaege } from '../../lib/buero/ablaufvorschlaege'
 import { Meldestand } from './Meldestand'
 import { Rueckmeldung } from './Rueckmeldung'
@@ -162,6 +165,23 @@ export function AuftragFormular({
 
   const setzen = (teil: Partial<AuftragWerte>) => setW((v) => ({ ...v, ...teil }))
 
+  /*
+   * Was in der Kopfzeile eines zugeklappten Abschnitts steht.
+   *
+   * Eine Zeile je Abschnitt, und sie muss die Frage beantworten „muss ich
+   * hier aufklappen?". Ohne sie wäre Zuklappen nur Verstecken — man müsste
+   * jeden Abschnitt einmal aufmachen, um zu wissen, ob etwas drinsteht.
+   */
+  const positionen = w.positions ?? []
+  const summe = positionen.reduce(
+    (s, pos) => s + (Number(pos.price) || 0) * (Number(pos.quantity) || 0),
+    0,
+  )
+  const ablauf = planStand(w.arbeitsplan)
+  const material = w.material ?? []
+  const stufig = Boolean(w.anzahlungProzent || w.zwischenProzent)
+  const fertigOderWeg = w.status === 'fertig' || w.status === 'geliefert'
+
   // Fehlmengen sofort sichtbar, ohne die Seite neu zu laden
   const knapp = (w.material ?? [])
     .map((m) => {
@@ -217,6 +237,14 @@ export function AuftragFormular({
         </p>
       )}
 
+      <Abschnitt
+        merk="auftrag:grunddaten"
+        titel="Auftrag"
+        vorgabe
+        kurz={[w.customerName || 'ohne Kunde', AUFTRAG_STATUS.find((x) => x.value === w.status)?.label]
+          .filter(Boolean)
+          .join(' · ')}
+      >
       <label className="buero-feld">
         <span>Bezeichnung</span>
         <input value={w.title ?? ''} onChange={(e) => setzen({ title: e.target.value })} />
@@ -285,7 +313,20 @@ export function AuftragFormular({
         </label>
       </div>
 
-      <h2>Lieferung und Meldungen</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="auftrag:lieferung"
+        titel="Lieferung und Meldungen"
+        vorgabe={fertigOderWeg}
+        kurz={[
+          w.lieferart === 'abholung' ? 'Abholung' : 'Versand',
+          w.trackingNumber ? `Sendung ${w.trackingNumber}` : null,
+          w.kundeBenachrichtigen === false ? 'ohne Meldungen' : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      >
       {/*
         * Was hier steht, entscheidet, was die Kundschaft erfährt. Deshalb steht
         * es beieinander und nicht verstreut: Lieferart, Adresse, Schalter — und
@@ -347,8 +388,14 @@ export function AuftragFormular({
       )}
 
       <Meldestand gemeldet={w.gemeldet} />
+      </Abschnitt>
 
-      <h2>Bestellung des Kunden</h2>
+      <Abschnitt
+        merk="auftrag:bestellung"
+        titel="Bestellung des Kunden"
+        vorgabe={Boolean(w.customerOrderRef)}
+        kurz={w.customerOrderRef ? `Nr. ${w.customerOrderRef}` : 'keine Bestellnummer'}
+      >
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Bestellnummer des Kunden</span>
@@ -386,7 +433,23 @@ export function AuftragFormular({
         </div>
       )}
 
-      <h2>Bezahlt wird in Stufen</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="auftrag:stufen"
+        titel="Bezahlt wird in Stufen"
+        vorgabe={stufig}
+        kurz={
+          stufig
+            ? [
+                w.anzahlungProzent ? `${w.anzahlungProzent} % Anzahlung` : null,
+                w.zwischenProzent ? `${w.zwischenProzent} % Zwischenrechnung` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            : 'eine Rechnung am Ende'
+        }
+      >
       <p className="buero-unterzeile">
         Beide Felder leer oder 0: eine Rechnung am Ende. Sonst legt das Büro die Rechnungen von
         selbst als <strong>Entwurf</strong> an — bei der Auftragsanlage, beim erreichten Meilenstein
@@ -432,7 +495,20 @@ export function AuftragFormular({
         </p>
       )}
 
-      <h2>Was gefertigt wird</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="auftrag:positionen"
+        titel="Was gefertigt wird"
+        vorgabe={!fertigOderWeg}
+        kurz={
+          positionen.length
+            ? `${positionen.length} ${positionen.length === 1 ? 'Position' : 'Positionen'}${
+                summe ? ` · ${euro(summe)}` : ''
+              }`
+            : 'noch nichts eingetragen'
+        }
+      >
       {artikelVorschlaege.length > 0 && (
         <datalist id={artikelListeId}>
           {artikelVorschlaege.map((a) => (
@@ -540,7 +616,18 @@ export function AuftragFormular({
         * Der Ablauf steht über dem Material: In der Werkstatt fragt man
         * zuerst „was ist jetzt dran?" und erst dann „was brauche ich dafür?".
         */}
-      <h2>Ablauf</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="auftrag:ablauf"
+        titel="Ablauf"
+        vorgabe={!fertigOderWeg}
+        kurz={
+          ablauf.gesamt
+            ? `${ablauf.erledigt} von ${ablauf.gesamt} erledigt`
+            : 'kein Ablauf hinterlegt'
+        }
+      >
       <Ablauf
         vorschlaege={ablaufVorschlaege}
         plan={w.arbeitsplan ?? []}
@@ -566,7 +653,20 @@ export function AuftragFormular({
         }
       />
 
-      <h2>Geplantes Material</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="auftrag:material"
+        titel="Geplantes Material"
+        vorgabe={w.status === 'inFertigung'}
+        kurz={
+          material.length
+            ? `${material.length} ${material.length === 1 ? 'Posten' : 'Posten'}${
+                w.materialGebucht ? ' · abgebucht' : ''
+              }`
+            : 'kein Material geplant'
+        }
+      >
       {w.materialGebucht && (
         <p className="buero-unterzeile">Bereits vom Inventar abgezogen — Änderungen wirken nicht mehr nach.</p>
       )}
@@ -650,16 +750,28 @@ export function AuftragFormular({
         Material hinzufügen
       </button>
 
-      <label className="buero-feld" style={{ marginTop: '1.5rem' }}>
-        <span>Notizen zur Fertigung</span>
-        <textarea
-          rows={3}
-          value={w.notes ?? ''}
-          onChange={(e) => setzen({ notes: e.target.value })}
-        />
-      </label>
+      </Abschnitt>
 
-      <Fussleiste>
+      <Abschnitt
+        merk="auftrag:notizen"
+        titel="Notizen zur Fertigung"
+        vorgabe={Boolean(w.notes?.trim())}
+        kurz={w.notes?.trim() ? w.notes.trim().split('\n')[0].slice(0, 60) : 'keine Notizen'}
+      >
+        <label className="buero-feld">
+          <textarea
+            rows={3}
+            aria-label="Notizen zur Fertigung"
+            value={w.notes ?? ''}
+            onChange={(e) => setzen({ notes: e.target.value })}
+          />
+        </label>
+      </Abschnitt>
+
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         {w.status === 'geplant' && (
           <button
             type="button"

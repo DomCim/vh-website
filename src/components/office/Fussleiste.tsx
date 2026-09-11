@@ -54,10 +54,41 @@ function istNebensache(kind: React.ReactNode): boolean {
 
 export function Fussleiste({
   hinweis,
+  geaendert,
+  aufVerwerfen,
   children,
 }: {
   /** Kurzer Stand links neben der Aktion, z.B. „3 Positionen · 480,00 €" */
   hinweis?: React.ReactNode
+  /**
+   * Steht etwas Ungespeichertes im Formular?
+   *
+   * Ist etwas offen, taucht die Leiste am Rechner unten am Bildschirmrand
+   * auf und trägt „Nicht gespeichert" — am Handy, wo sie ohnehin klebt,
+   * wechselt sie nur die Farbe. Vorschlag von Dominik, und der bessere: Ein
+   * Balken, der immer gleich aussieht, sagt nichts; einer, der sich meldet,
+   * sagt „hier ist etwas offen".
+   *
+   * **Ohne Angabe bleibt alles wie bisher.** Und weggenommen wird nie etwas:
+   * Die Hauptaktion ist nicht überall „Speichern" — an der Rechnung steht
+   * dort „Rechnung senden", und der muss erreichbar bleiben, auch wenn
+   * niemand ein Feld angefasst hat.
+   */
+  geaendert?: boolean
+  /**
+   * Zurück zum gespeicherten Stand — steht neben „Nicht gespeichert" und
+   * sonst nirgends.
+   *
+   * **Warum der Knopf genau hier auftaucht.** Ein „Verwerfen", das dauernd
+   * dasteht, ist ein Knopf, der nichts tut und trotzdem Angst macht. Einer,
+   * der zusammen mit der Meldung kommt, beantwortet die Frage, die man in
+   * dem Moment wirklich hat: Was steht hier eigentlich offen, und komme ich
+   * da wieder heraus?
+   *
+   * Er fragt vorher nach. Getipptes ist Arbeit, und ein Fehlgriff neben
+   * „Speichern" wäre teuer.
+   */
+  aufVerwerfen?: () => void
   children: React.ReactNode
 }) {
   const leiste = useRef<HTMLDivElement>(null)
@@ -102,6 +133,74 @@ export function Fussleiste({
     }
   }, [insBlatt.length, inLeiste.length])
 
+  /*
+   * Nicht weggehen, ohne zu fragen.
+   *
+   * **Warum das hierher gehört.** „Verwerfen" gab es bis eben gar nicht —
+   * wer eine Änderung loswerden wollte, verließ die Seite. Und genau dabei
+   * sagte niemand etwas: Ein Tipp auf „Übersicht" in der Leiste unten, und
+   * eine halbe Stunde Tipparbeit war weg, ohne Rückfrage, ohne Spur.
+   *
+   * Die Leiste weiß als Einzige, ob etwas offen ist. Also fragt sie auch —
+   * jedes Formular, das `geaendert` meldet, bekommt die Warnung mit, ohne
+   * eine Zeile dafür zu schreiben.
+   *
+   * **Zwei Wege hinaus, zwei Wächter.** `beforeunload` deckt ab, was der
+   * Browser selbst tut: Neuladen, Schließen, eine fremde Adresse. Innerhalb
+   * des Büros wird aber gar nicht neu geladen — dort fängt der Klick auf
+   * einen Verweis ab, was sonst lautlos durchginge. Wer bestätigt, geht;
+   * dann nimmt sich der erste Wächter für diesen einen Schritt zurück,
+   * damit nicht zweimal dieselbe Frage kommt.
+   *
+   * **Was hier nicht geht:** der Zurück-Knopf des Browsers. Den lässt sich
+   * ohne Eingriffe in den Verlauf nicht sauber aufhalten, und ein Eingriff
+   * in den Verlauf bricht mehr, als er rettet.
+   */
+  const darfGehen = useRef(false)
+  useEffect(() => {
+    if (!geaendert) return
+    darfGehen.current = false
+
+    const vorWeg = (e: BeforeUnloadEvent) => {
+      if (darfGehen.current) return
+      e.preventDefault()
+      // Ältere Browser zeigen nur etwas, wenn hier etwas zugewiesen wird
+      e.returnValue = ''
+    }
+
+    const beiKlick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0) return
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      const ziel = (e.target as HTMLElement | null)?.closest?.('a[href]') as HTMLAnchorElement | null
+      if (!ziel || ziel.hasAttribute('download')) return
+      if (ziel.target && ziel.target !== '_self') return
+      let adresse: URL
+      try {
+        adresse = new URL(ziel.href, window.location.href)
+      } catch {
+        return
+      }
+      // Fremde Adressen und Sprungmarken auf derselben Seite gehen den
+      // Browser an, nicht uns
+      if (adresse.origin !== window.location.origin) return
+      if (adresse.pathname === window.location.pathname) return
+
+      if (window.confirm('Hier stehen ungespeicherte Änderungen. Trotzdem weggehen?')) {
+        darfGehen.current = true
+        return
+      }
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    window.addEventListener('beforeunload', vorWeg)
+    document.addEventListener('click', beiKlick, true)
+    return () => {
+      window.removeEventListener('beforeunload', vorWeg)
+      document.removeEventListener('click', beiKlick, true)
+    }
+  }, [geaendert])
+
   // Ein offenes Blatt schließt sich beim Zurückgehen, nicht die ganze Seite
   useEffect(() => {
     if (!blattOffen) return
@@ -114,8 +213,29 @@ export function Fussleiste({
 
   return (
     <>
-      <div className="buero-fussleiste" ref={leiste}>
-        {hinweis ? <div className="buero-fussleiste-hinweis">{hinweis}</div> : null}
+      <div
+        className={`buero-fussleiste${geaendert ? ' wach' : ''}`}
+        ref={leiste}
+      >
+        {geaendert || hinweis ? (
+          <div className="buero-fussleiste-hinweis">
+            {geaendert ? <strong className="buero-fussleiste-offen">Nicht gespeichert</strong> : null}
+            {geaendert && aufVerwerfen ? (
+              <button
+                type="button"
+                className="buero-knopf stumm schmal buero-verwerfen"
+                onClick={() => {
+                  if (window.confirm('Alle Änderungen verwerfen und zurück zum gespeicherten Stand?'))
+                    aufVerwerfen()
+                }}
+              >
+                Verwerfen
+              </button>
+            ) : null}
+            {geaendert && hinweis ? ' · ' : null}
+            {hinweis}
+          </div>
+        ) : null}
         {inLeiste}
         {insBlatt.length > 0 && (
           <button

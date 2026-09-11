@@ -1513,6 +1513,212 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-tinte-leise);
 }
 
+/*
+ * Die Leiste taucht auf, wenn es etwas zu speichern gibt — sonst ruht sie.
+ *
+ * Ein Balken, der immer unten klebt, sagt nichts; man liest ihn nach drei
+ * Tagen nicht mehr. Einer, der erscheint, sobald etwas offen ist, sagt genau
+ * eine Sache — und die stimmt. Am Rechner ist das neu: Dort stand die
+ * Hauptaktion bisher unter dem Formular, und bei dreizehn Blöcken heißt das
+ * sechs Bildschirmlängen weiter unten.
+ */
+/*
+ * **Was „wach" hinzufügt, und was es nicht wegnimmt.**
+ *
+ * Am Handy klebt die Leiste ohnehin über der Tableiste — dort soll sie auch
+ * bleiben, wenn nichts geändert wurde: Ihre Hauptaktion ist nicht überall
+ * „Speichern". An der Rechnung steht dort „Rechnung senden", und der Knopf
+ * darf nicht verschwinden, bloß weil niemand ein Feld angefasst hat.
+ *
+ * „Wach" ist deshalb eine Zutat und kein Zustandswechsel: derselbe Balken,
+ * jetzt in Bronze, mit „Nicht gespeichert" davor — und am Rechner, wo er
+ * sonst am Ende des Formulars liegt, schwebend am unteren Rand.
+ */
+.buero-fussleiste.wach {
+  /*
+   * `fixed` und nicht `sticky` — und das ist hier der Unterschied zwischen
+   * „taucht auf" und „ist irgendwo weiter unten". Eine klebende Leiste wird
+   * erst sichtbar, wenn man bis zu ihrer eigentlichen Stelle gescrollt ist;
+   * die steht am Ende eines Formulars, das fünf Bildschirmlängen lang ist.
+   * Gemeldet werden soll aber im selben Moment, in dem etwas geändert wird.
+   *
+   * Die Sorge, die sonst gegen `fixed` spricht — die Bildschirmtastatur auf
+   * iOS —, ist schon gelöst: `html.tastatur-offen` nimmt die Leiste beim
+   * Tippen ohnehin an sich und schiebt sie mit gemessenen Werten über die
+   * Tastatur. Diese Regel steht später und ist genauer, sie gewinnt.
+   */
+  position: fixed;
+  left: 1.25rem;
+  right: 1.25rem;
+  max-width: 65.5rem;
+  margin: 0 auto;
+  /* Am Handy sitzt unten die Tableiste — darüber, nicht darauf. */
+  bottom: 0.9rem;
+  z-index: 25;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--buero-bronze);
+  border-radius: 14px;
+  background: var(--buero-flaeche);
+  box-shadow: 0 8px 26px rgb(0 0 0 / 16%);
+  animation: buero-leiste-auf 0.18s ease-out;
+}
+
+/*
+ * Platz unter der Seite, solange die Leiste schwebt.
+ *
+ * Am Handy hält `.buero-inhalt` diesen Streifen ohnehin frei (siehe dort);
+ * am Rechner gab es bisher keine schwebende Leiste und deshalb auch keine
+ * Reserve — die letzte Zeile des Formulars lag darunter. `:has()` fragt
+ * genau das, worum es geht: Hängt in diesem Inhalt gerade eine wache
+ * Leiste? Kennt ein Browser die Frage nicht, verdeckt die Leiste beim
+ * Tippen die letzte Zeile — mehr passiert nicht.
+ */
+@media (min-width: 720px) {
+  .buero-inhalt:has(.buero-fussleiste.wach) {
+    padding-bottom: calc(var(--buero-fussleiste-hoehe, 0px) + 2.5rem);
+  }
+}
+
+/*
+ * Am Handy liegt unten die Tableiste — die Leiste rückt darüber.
+ *
+ * Diese Regel steht hier und nicht oben im Handy-Block: Beide sprechen
+ * `.buero-fussleiste.wach` an, haben also dieselbe Spezifität, und bei
+ * Gleichstand gewinnt die spätere. Oben stand sie und blieb wirkungslos —
+ * die Leiste lag hinter der Tableiste.
+ */
+@media (max-width: 719px) {
+  .buero-fussleiste.wach {
+    bottom: calc(4.4rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes buero-leiste-auf {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+}
+
+/* Wer mit dem Schalter „weniger Bewegung" unterwegs ist, bekommt sie ohne */
+@media (prefers-reduced-motion: reduce) {
+  .buero-fussleiste.wach {
+    animation: none;
+  }
+}
+
+.buero-fussleiste-offen {
+  color: var(--buero-bronze);
+}
+
+/* „Verwerfen" steht neben der Meldung und nicht bei den Aktionen: Es ist der
+   Rückweg, nicht die Handlung. Entsprechend zurückhaltend. */
+.buero-verwerfen {
+  margin-left: 0.6rem;
+  vertical-align: baseline;
+}
+
+/* ── Abschnitte eines langen Formulars ─────────────────────────────────────
+   Aufklappbar, und zugeklappt mit einer Zeile, die sagt, was drinsteht.
+   Warum überhaupt — siehe `components/office/Abschnitt.tsx`.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero-abschnitt {
+  border-top: 1px solid var(--buero-linie);
+  margin-top: 1.4rem;
+}
+
+/*
+ * Ein Gitter und kein Flex-Kasten, und der Grund ist eine Zeile, die
+ * umbrach: „Elektronische Rechnung" passte am Handy nicht neben den Pfeil,
+ * also rutschte der Titel in die zweite Zeile und der Pfeil blieb allein in
+ * der ersten. Im Gitter hat jedes Stück seine Spalte — der Pfeil links, der
+ * Titel daneben, die Zusammenfassung am Handy darunter und am Rechner
+ * rechts außen.
+ */
+.buero-abschnitt-kopf {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+  padding: 0.9rem 0 0.2rem;
+  cursor: pointer;
+  /* Das Dreieck des Browsers ist in jedem ein anderes — hier steht ein
+     eigenes, in derselben Bronze wie jeder andere Pfeil im Büro. */
+  list-style: none;
+}
+
+.buero-abschnitt-kopf::-webkit-details-marker {
+  display: none;
+}
+
+.buero-abschnitt-kopf::after {
+  content: '';
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  width: 0.72rem;
+  height: 0.72rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a86b3d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease-out;
+  align-self: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .buero-abschnitt-kopf::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23d9975c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+.buero-abschnitt[open] > .buero-abschnitt-kopf::after {
+  transform: rotate(0deg);
+}
+
+.buero-abschnitt-kopf h2 {
+  grid-column: 2;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Die Zusammenfassung tritt zurück — sie beantwortet eine Frage, sie stellt
+   keine. Am Rechner rückt sie an den rechten Rand, am Handy unter den Titel. */
+.buero-abschnitt-kurz {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: var(--buero-tinte-leise);
+}
+
+@media (min-width: 720px) {
+  .buero-abschnitt-kopf {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .buero-abschnitt-kurz {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+.buero-abschnitt-kopf:hover h2 {
+  color: var(--buero-bronze);
+}
+
+.buero-abschnitt-kopf:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.buero-abschnitt-inhalt {
+  padding-top: 0.5rem;
+}
+
 .buero-feld {
   display: block;
   margin-bottom: 0.9rem;
@@ -1527,10 +1733,24 @@ html.tastatur-offen .buero-inhalt {
   margin-bottom: 0.3rem;
 }
 
-.buero-feld input,
-.buero-feld select,
-.buero-feld textarea {
-  width: 100%;
+/*
+ * Das Aussehen eines Bedienfeldes hängt am Büro, nicht an `.buero-feld`.
+ *
+ * **Warum das umgezogen ist.** Es gibt Felder, die keine Beschriftung
+ * darüber tragen und deshalb nicht in einem `.buero-feld` stecken: die
+ * Stand-Auswahl im Ablauf, die Artikelwahl an einer Rechnungsposition, das
+ * Namensfeld beim Anlegen eines Postfach-Ordners. Die sahen aus wie 1995,
+ * während zwei Zentimeter daneben ein gerundetes Feld stand — und seit der
+ * gezeichnete Pfeil (`.buero select`) dazukam, saß er sogar auf dem weißen
+ * Kasten des Browsers. Der Rahmen gehört also zum Bedienfeld, die Breite zur
+ * Beschriftungshülle.
+ *
+ * Kästchen und Auswahlknöpfe sind ausgenommen — die zeichnen sich weiter
+ * unten selbst und würden hier zu Kästen quer über die Zeile.
+ */
+.buero input:not([type='checkbox']):not([type='radio']),
+.buero select,
+.buero textarea {
   min-height: 44px;
   padding: 0.6rem 0.75rem;
   /* Derselbe Rahmen wie am Knopf: Ein Feld ist auch etwas zum Bedienen */
@@ -1543,9 +1763,16 @@ html.tastatur-offen .buero-inhalt {
   font-size: 16px;
 }
 
-.buero-feld input:focus,
-.buero-feld select:focus,
-.buero-feld textarea:focus {
+/* Die Beschriftungshülle gibt die Breite vor, nicht das Aussehen. */
+.buero-feld input,
+.buero-feld select,
+.buero-feld textarea {
+  width: 100%;
+}
+
+.buero input:focus,
+.buero select:focus,
+.buero textarea:focus {
   outline: 2px solid var(--buero-bronze);
   outline-offset: 1px;
 }
@@ -1559,9 +1786,9 @@ html.tastatur-offen .buero-inhalt {
  * der Browser blasst gesperrte Felder so weit ab, dass gerade die Zahlen, auf die
  * es ankommt, kaum noch zu lesen sind.
  */
-.buero-feld input:disabled,
-.buero-feld select:disabled,
-.buero-feld textarea:disabled {
+.buero input:not([type='checkbox']):not([type='radio']):disabled,
+.buero select:disabled,
+.buero textarea:disabled {
   background: var(--buero-papier);
   border-color: var(--buero-linie);
   color: var(--buero-tinte);
@@ -1575,11 +1802,27 @@ html.tastatur-offen .buero-inhalt {
   gap: 0 0.75rem;
 }
 
-/* Vier Spalten auf einem Handy heißt vier unlesbare Spalten */
-@media (max-width: 520px) {
+/*
+ * Am Handy eine Spalte, und zwar wirklich eine.
+ *
+ * Vorher stand hier `minmax(7.5rem, 1fr)` in der Annahme, das ergäbe bei
+ * schmalem Schirm von selbst eine Spalte. Tut es nicht: `auto-fit` nimmt
+ * mindestens so viele Spalten, wie das breiteste Element überspannt — und
+ * einige Felder tragen `grid-column: span 2`. Auf einem 400er Schirm blieben
+ * damit 120 Pixel je Feld, und aus „120 Minuten" wurde „12C".
+ *
+ * Deshalb hier beides: eine Spalte, und die Spannen aufgehoben. Das
+ * `!important` ist nötig, weil die Spannen als Inline-Stil am Element
+ * stehen.
+ */
+@media (max-width: 560px) {
   .buero-reihe {
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-    gap: 0 0.6rem;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .buero-reihe > * {
+    grid-column: 1 / -1 !important;
   }
 }
 
@@ -1592,16 +1835,9 @@ html.tastatur-offen .buero-inhalt {
 }
 
 /* ── Postfach ───────────────────────────────────────────────────────────── */
+/* Rahmen, Höhe und Schriftgröße kommen inzwischen von `.buero select` —
+   hier bleibt nur, was dieser Auswahl eigen ist. */
 .buero-fach-wahl {
-  min-height: 44px;
-  padding: 0.55rem 0.7rem;
-  border: 1.5px solid var(--buero-rahmen);
-  border-radius: 9px;
-  background: var(--buero-flaeche);
-  color: inherit;
-  font: inherit;
-  /* Verhindert das Hineinzoomen von Safari beim Antippen */
-  font-size: 16px;
   max-width: 100%;
 }
 
@@ -3618,12 +3854,67 @@ html.tastatur-offen .buero-inhalt {
   padding: 0;
 }
 
+/*
+ * Der Trennstrich sitzt am Schritt, nicht an der Zeile.
+ *
+ * Beim Bearbeiten besteht ein Schritt aus zwei Teilen — Kopfzeile und
+ * Feldblock. Ein Strich je Zeile hätte mitten hindurchgeschnitten und den
+ * Schritt in zwei zerlegt, die nicht zusammengehören.
+ */
+.buero-ablauf-schritt {
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
 .buero-ablauf-zeile {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.55rem 0;
-  border-top: 1px solid var(--buero-linie);
+}
+
+/*
+ * Die Kopfzeile beim Bearbeiten: Nummer links, Stand und Knöpfe rechts.
+ *
+ * Alles, was den Schritt *verwaltet*, steht hier — und nichts davon in der
+ * Reihe der Felder. Vorher saß die Stand-Auswahl neben dem Feldblock und
+ * wurde mittig dazu ausgerichtet; bei acht Feldern lag sie damit quer über
+ * der Bemerkung.
+ */
+.buero-ablauf-kopfzeile {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Links steht, was der Schritt *ist* — Nummer und Stand. Rechts, was man mit
+   ihm *tun* kann. Dazwischen der Platz, der übrig bleibt. */
+.buero-ablauf-knoepfe {
+  display: flex;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+/* Die Knöpfe der Kopfzeile sind Zeichen, keine Wörter — sie brauchen keine
+   Knopfbreite, aber eine Fingerfläche. */
+.buero-ablauf-knoepfe .buero-knopf {
+  min-width: 2.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Die Auswahl trägt ihren Text und nicht mehr — auf volle Breite gezogen
+   sähe sie aus wie ein Feld, das etwas verschweigt. */
+.buero-ablauf-stand {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 7rem;
+}
+
+/* Die Felder eines Schrittes stehen unter der Kopfzeile über die ganze
+   Breite — nicht in einer Spalte neben ihr. */
+.buero-ablauf-felder .buero-feld {
+  margin-bottom: 0.7rem;
 }
 
 .buero-ablauf-nummer {
@@ -3657,11 +3948,7 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-auf-bronze);
 }
 
-.buero-ablauf-zeile select {
-  flex: 0 0 auto;
-  width: auto;
-  min-width: 6rem;
-}
+
 
 /* ── Ein Haken mit Beschriftung ────────────────────────────────────────────
    `.buero-feld` ist ein Block, und seine Beschriftung ebenso — für ein

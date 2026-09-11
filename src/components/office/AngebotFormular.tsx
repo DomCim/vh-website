@@ -15,6 +15,7 @@ import { KundenAngaben } from './KundenAngaben'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Abschnitt } from './Abschnitt'
 
 export type AngebotPosition = {
   description: string
@@ -210,7 +211,16 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         <KundenAngaben partnerId={w.customer} werte={w} aendern={setzen} teil="anschrift" />
       </div>
 
-      <h2>Positionen</h2>
+      <Abschnitt
+        merk="angebot:positionen"
+        titel="Positionen"
+        vorgabe
+        kurz={
+          (w.items ?? []).length
+            ? `${(w.items ?? []).length} ${(w.items ?? []).length === 1 ? 'Position' : 'Positionen'}`
+            : 'noch nichts eingetragen'
+        }
+      >
       {(w.items ?? []).map((p, i) => (
         <div
           key={i}
@@ -289,7 +299,14 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         Position hinzufügen
       </button>
 
-      <h2>Nachlass</h2>
+      </Abschnitt>
+
+      <Abschnitt
+        merk="angebot:nachlass"
+        titel="Nachlass"
+        vorgabe={Boolean(w.discountKind && w.discountKind !== 'kein')}
+        kurz={w.discountKind && w.discountKind !== 'kein' ? 'gewährt' : 'kein Nachlass'}
+      >
       <div className="buero-reihe">
         <label className="buero-feld">
           <span>Art</span>
@@ -372,7 +389,12 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
        * dann „Angenommen", dann den Auftrag daraus anlegen. Nur eine davon
        * ist je sichtbar, und sie steht immer zuletzt.
        */}
-      <Fussleiste>
+      </Abschnitt>
+
+      <Fussleiste
+        geaendert={entwurf.geaendert}
+        aufVerwerfen={() => setW(entwurf.zuruecksetzen())}
+      >
         <button type="button" className="buero-knopf leise" disabled={laeuft} onClick={() => void speichern()}>
           Speichern
         </button>
