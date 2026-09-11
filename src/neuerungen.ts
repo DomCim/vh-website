@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 112,
+    datum: null,
+    titel: 'Der Ablauf lässt sich am Handy bedienen',
+    punkte: [
+      {
+        text: '**Ein Schritt im Ablauf war eine einzige Zeile** — Nummer, acht Felder, Stand-Auswahl und drei Knöpfe nebeneinander. Am Rechner ging das gerade so, am Handy gar nicht: Die Stand-Auswahl saß mittig neben dem hohen Feldblock und lag damit quer über der Bemerkung, und für die Felder blieben 120 Pixel. Aus „120 Minuten" wurde „12C".',
+      },
+      {
+        text: '**Jetzt hat jeder Schritt eine Kopfzeile** mit Nummer, Stand und den Knöpfen zum Verschieben und Löschen, und darunter stehen die Felder über die volle Breite. Am Handy untereinander, am Rechner nebeneinander wie bisher.',
+      },
+      {
+        text: '**Das galt nicht nur im Ablauf.** Formularreihen im ganzen Büro haben sich am Handy nie auf eine Spalte zusammengelegt, obwohl sie es sollten — sie richteten sich immer nach dem breitesten Feld. Unter 560 Pixel steht jetzt überall eine Spalte: Auftrag, Rechnung, Beleg, Partner, Einstellungen.',
+      },
+      {
+        text: '**Und die Felder ohne Beschriftung sehen endlich aus wie die anderen.** Die Stand-Auswahl im Ablauf, die Artikelwahl an einer Rechnungsposition, das Namensfeld beim Anlegen eines Postfach-Ordners, das Datei-Feld am Beleg: Die trugen bisher den weißen, eckigen Kasten des Browsers, seit Kurzem mit dem neuen bronzenen Pfeil darauf. Der Rahmen gehört jetzt zum Bedienfeld selbst.',
+      },
+    ],
+  },
+  {
     nummer: 111,
     datum: null,
     titel: 'Kästchen, Auswahlknöpfe und Ausklappfelder sehen nicht mehr nach 1995 aus',

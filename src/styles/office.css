@@ -1527,10 +1527,24 @@ html.tastatur-offen .buero-inhalt {
   margin-bottom: 0.3rem;
 }
 
-.buero-feld input,
-.buero-feld select,
-.buero-feld textarea {
-  width: 100%;
+/*
+ * Das Aussehen eines Bedienfeldes hängt am Büro, nicht an `.buero-feld`.
+ *
+ * **Warum das umgezogen ist.** Es gibt Felder, die keine Beschriftung
+ * darüber tragen und deshalb nicht in einem `.buero-feld` stecken: die
+ * Stand-Auswahl im Ablauf, die Artikelwahl an einer Rechnungsposition, das
+ * Namensfeld beim Anlegen eines Postfach-Ordners. Die sahen aus wie 1995,
+ * während zwei Zentimeter daneben ein gerundetes Feld stand — und seit der
+ * gezeichnete Pfeil (`.buero select`) dazukam, saß er sogar auf dem weißen
+ * Kasten des Browsers. Der Rahmen gehört also zum Bedienfeld, die Breite zur
+ * Beschriftungshülle.
+ *
+ * Kästchen und Auswahlknöpfe sind ausgenommen — die zeichnen sich weiter
+ * unten selbst und würden hier zu Kästen quer über die Zeile.
+ */
+.buero input:not([type='checkbox']):not([type='radio']),
+.buero select,
+.buero textarea {
   min-height: 44px;
   padding: 0.6rem 0.75rem;
   /* Derselbe Rahmen wie am Knopf: Ein Feld ist auch etwas zum Bedienen */
@@ -1543,9 +1557,16 @@ html.tastatur-offen .buero-inhalt {
   font-size: 16px;
 }
 
-.buero-feld input:focus,
-.buero-feld select:focus,
-.buero-feld textarea:focus {
+/* Die Beschriftungshülle gibt die Breite vor, nicht das Aussehen. */
+.buero-feld input,
+.buero-feld select,
+.buero-feld textarea {
+  width: 100%;
+}
+
+.buero input:focus,
+.buero select:focus,
+.buero textarea:focus {
   outline: 2px solid var(--buero-bronze);
   outline-offset: 1px;
 }
@@ -1559,9 +1580,9 @@ html.tastatur-offen .buero-inhalt {
  * der Browser blasst gesperrte Felder so weit ab, dass gerade die Zahlen, auf die
  * es ankommt, kaum noch zu lesen sind.
  */
-.buero-feld input:disabled,
-.buero-feld select:disabled,
-.buero-feld textarea:disabled {
+.buero input:not([type='checkbox']):not([type='radio']):disabled,
+.buero select:disabled,
+.buero textarea:disabled {
   background: var(--buero-papier);
   border-color: var(--buero-linie);
   color: var(--buero-tinte);
@@ -1575,11 +1596,27 @@ html.tastatur-offen .buero-inhalt {
   gap: 0 0.75rem;
 }
 
-/* Vier Spalten auf einem Handy heißt vier unlesbare Spalten */
-@media (max-width: 520px) {
+/*
+ * Am Handy eine Spalte, und zwar wirklich eine.
+ *
+ * Vorher stand hier `minmax(7.5rem, 1fr)` in der Annahme, das ergäbe bei
+ * schmalem Schirm von selbst eine Spalte. Tut es nicht: `auto-fit` nimmt
+ * mindestens so viele Spalten, wie das breiteste Element überspannt — und
+ * einige Felder tragen `grid-column: span 2`. Auf einem 400er Schirm blieben
+ * damit 120 Pixel je Feld, und aus „120 Minuten" wurde „12C".
+ *
+ * Deshalb hier beides: eine Spalte, und die Spannen aufgehoben. Das
+ * `!important` ist nötig, weil die Spannen als Inline-Stil am Element
+ * stehen.
+ */
+@media (max-width: 560px) {
   .buero-reihe {
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-    gap: 0 0.6rem;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .buero-reihe > * {
+    grid-column: 1 / -1 !important;
   }
 }
 
@@ -1592,16 +1629,9 @@ html.tastatur-offen .buero-inhalt {
 }
 
 /* ── Postfach ───────────────────────────────────────────────────────────── */
+/* Rahmen, Höhe und Schriftgröße kommen inzwischen von `.buero select` —
+   hier bleibt nur, was dieser Auswahl eigen ist. */
 .buero-fach-wahl {
-  min-height: 44px;
-  padding: 0.55rem 0.7rem;
-  border: 1.5px solid var(--buero-rahmen);
-  border-radius: 9px;
-  background: var(--buero-flaeche);
-  color: inherit;
-  font: inherit;
-  /* Verhindert das Hineinzoomen von Safari beim Antippen */
-  font-size: 16px;
   max-width: 100%;
 }
 
@@ -3618,12 +3648,67 @@ html.tastatur-offen .buero-inhalt {
   padding: 0;
 }
 
+/*
+ * Der Trennstrich sitzt am Schritt, nicht an der Zeile.
+ *
+ * Beim Bearbeiten besteht ein Schritt aus zwei Teilen — Kopfzeile und
+ * Feldblock. Ein Strich je Zeile hätte mitten hindurchgeschnitten und den
+ * Schritt in zwei zerlegt, die nicht zusammengehören.
+ */
+.buero-ablauf-schritt {
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
 .buero-ablauf-zeile {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.55rem 0;
-  border-top: 1px solid var(--buero-linie);
+}
+
+/*
+ * Die Kopfzeile beim Bearbeiten: Nummer links, Stand und Knöpfe rechts.
+ *
+ * Alles, was den Schritt *verwaltet*, steht hier — und nichts davon in der
+ * Reihe der Felder. Vorher saß die Stand-Auswahl neben dem Feldblock und
+ * wurde mittig dazu ausgerichtet; bei acht Feldern lag sie damit quer über
+ * der Bemerkung.
+ */
+.buero-ablauf-kopfzeile {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Links steht, was der Schritt *ist* — Nummer und Stand. Rechts, was man mit
+   ihm *tun* kann. Dazwischen der Platz, der übrig bleibt. */
+.buero-ablauf-knoepfe {
+  display: flex;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+/* Die Knöpfe der Kopfzeile sind Zeichen, keine Wörter — sie brauchen keine
+   Knopfbreite, aber eine Fingerfläche. */
+.buero-ablauf-knoepfe .buero-knopf {
+  min-width: 2.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Die Auswahl trägt ihren Text und nicht mehr — auf volle Breite gezogen
+   sähe sie aus wie ein Feld, das etwas verschweigt. */
+.buero-ablauf-stand {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 7rem;
+}
+
+/* Die Felder eines Schrittes stehen unter der Kopfzeile über die ganze
+   Breite — nicht in einer Spalte neben ihr. */
+.buero-ablauf-felder .buero-feld {
+  margin-bottom: 0.7rem;
 }
 
 .buero-ablauf-nummer {
@@ -3657,11 +3742,7 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-auf-bronze);
 }
 
-.buero-ablauf-zeile select {
-  flex: 0 0 auto;
-  width: auto;
-  min-width: 6rem;
-}
+
 
 /* ── Ein Haken mit Beschriftung ────────────────────────────────────────────
    `.buero-feld` ist ein Block, und seine Beschriftung ebenso — für ein
