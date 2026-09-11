@@ -77,6 +77,7 @@ import * as migration_20260910_214523_steuerfall_und_teilrechnung from './202609
 import * as migration_20260911_052650_ansprechpartner from './20260911_052650_ansprechpartner';
 import * as migration_20260911_111233_schrittmeldung from './20260911_111233_schrittmeldung';
 import * as migration_20260911_204508_lieferantenbestellungen from './20260911_204508_lieferantenbestellungen';
+import * as migration_20260911_221258_aenderungshistorie from './20260911_221258_aenderungshistorie';
 
 export const migrations = [
   {
@@ -472,6 +473,11 @@ export const migrations = [
   {
     up: migration_20260911_204508_lieferantenbestellungen.up,
     down: migration_20260911_204508_lieferantenbestellungen.down,
-    name: '20260911_204508_lieferantenbestellungen'
+    name: '20260911_204508_lieferantenbestellungen',
+  },
+  {
+    up: migration_20260911_221258_aenderungshistorie.up,
+    down: migration_20260911_221258_aenderungshistorie.down,
+    name: '20260911_221258_aenderungshistorie'
   },
 ];

@@ -112,6 +112,8 @@ const NUR_ENTWUERFE: Where = {
 
 export const OutgoingInvoices: CollectionConfig = {
   slug: 'outgoing-invoices',
+  // Änderungshistorie — warum, steht in `collections/Expenses.ts`
+  versions: { drafts: false },
   // Auch ein verworfener Entwurf bleibt liegen — die Zugriffsregel unten gilt
   // ebenso fürs Wegwerfen, eine gestellte Rechnung verschwindet also nicht.
   trash: true,

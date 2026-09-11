@@ -15,6 +15,25 @@ export { AUSGABEN_KATEGORIEN }
  */
 export const Expenses: CollectionConfig = {
   slug: 'expenses',
+  /*
+   * Jede Änderung bleibt nachvollziehbar.
+   *
+   * Die GoBD verlangt nicht, dass Aufzeichnungen unveränderlich sind — sie
+   * verlangt, dass eine Änderung erkennbar bleibt: was vorher dastand, wann
+   * es geändert wurde und von wem. Bei einer gestellten Rechnung übernimmt
+   * das der Riegel (sie lässt sich gar nicht mehr ändern, siehe
+   * `api/office/rechnung`). Bei allem anderen gab es bis hierher **nichts**:
+   * Wer den Betrag eines erfassten Belegs von 240 auf 420 setzte, hinterließ
+   * keine Spur.
+   *
+   * Payload legt mit `versions` zu jedem Speichern einen Stand ab. Das kostet
+   * Platz und ist genau dafür da.
+   *
+   * `drafts: false` mit Absicht: Ein zweiter Entwurfsstand neben dem
+   * gültigen wäre eine eigene Bedeutung, die hier niemand braucht — es geht
+   * um die Historie, nicht um Vorabfassungen.
+   */
+  versions: { drafts: false },
   // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
   trash: true,
   labels: {

@@ -1019,7 +1019,7 @@ export interface Appointment {
   contact?: (number | null) | Contact;
   job?: (number | null) | Job;
   uid?: string | null;
-  quelle?: ('buero' | 'caldav') | null;
+  quelle?: ('buero' | 'caldav' | 'mcp') | null;
   createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;

@@ -13,6 +13,8 @@ import { ablageFeld, absenderFeld } from '../lib/absender'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
+  // Änderungshistorie — warum, steht in `collections/Expenses.ts`
+  versions: { drafts: false },
   // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
   trash: true,
   labels: {

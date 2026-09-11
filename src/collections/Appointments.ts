@@ -138,6 +138,12 @@ export const Appointments: CollectionConfig = {
       options: [
         { label: 'Büro', value: 'buero' },
         { label: 'Telefon (CalDAV)', value: 'caldav' },
+        /*
+         * Über den Assistenten angelegt (MCP). Gehört genau aus dem Grund
+         * dazu, der oben steht: Wer einen Termin sieht, den er nie selbst
+         * eingetragen hat, soll erkennen können, woher er kam.
+         */
+        { label: 'Assistent', value: 'mcp' },
       ],
       admin: { readOnly: true, position: 'sidebar' },
     },

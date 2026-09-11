@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 116,
+    datum: null,
+    titel: 'Änderungen an Belegen und Rechnungen bleiben nachvollziehbar',
+    punkte: [
+      {
+        text: '**Jede Änderung wird jetzt mitgeschrieben** — bei Ausgangsrechnungen, Belegen, Angeboten und Shop-Bestellungen. Jedes Speichern legt den vorherigen Stand ab, mit Zeitpunkt und Benutzer. Wer den Betrag eines Belegs nachträglich ändert, hinterlässt damit eine Spur.',
+      },
+      {
+        text: '**Warum das nötig war.** Eine gestellte Rechnung war längst gesperrt — die lässt sich gar nicht mehr ändern. Bei allem anderen gab es **nichts**: Aus 240 € konnten 420 € werden, ohne dass irgendwo stand, dass da einmal etwas anderes stand. Die GoBD verlangt genau das Gegenteil.',
+      },
+      {
+        text: '**Dazu gibt es jetzt eine Verfahrensdokumentation** — das Papier, das ein Prüfer sehen will: Wie ein Beleg hereinkommt, wie eine Rechnung entsteht und festgeschrieben wird, wer was darf, was gesichert wird und was von Hand geschieht. Sie liegt im Quelltext unter `VERFAHRENSDOKUMENTATION.md` und gehört einmal durch die Kanzlei, bevor sie irgendwo vorgelegt wird.',
+      },
+      {
+        text: '**Und Termine lassen sich jetzt über den Assistenten anlegen.** Vor allem die öffentlichen: Die entstehen dadurch, dass in der Notiz `#öffentlich`, `#beschreibung:` und `#ort:` stehen — das ist fürs Telefon gedacht und dort richtig, aber man muss die Schreibweise im Kopf haben. Ein Tippfehler heißt: Der Termin steht nicht im Netz, und niemand sieht warum. Jetzt sagt man Titel, Zeit und Beschreibung, den Rest baut der Assistent.',
+      },
+    ],
+  },
+  {
     nummer: 115,
     datum: null,
     titel: 'Nachbestellen ist zu Ende gedacht: Anfrage, Bestellung, Lieferung',
