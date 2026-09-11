@@ -5,7 +5,12 @@ import React, { useMemo } from 'react'
 
 import { WareneingangFormular } from '../../../../../components/office/WareneingangFormular'
 import { useBestand } from '../../../../../lib/buero/bestand'
-import { bestellmenge, lieferantenId, type Lagerposten } from '../../../../../lib/nachbestellung'
+import {
+  lieferantenId,
+  OFFENE_STAENDE,
+  type Lagerposten,
+  type Lieferantenbestellung,
+} from '../../../../../lib/nachbestellung'
 
 /**
  * Eine Lieferung buchen.
@@ -21,6 +26,7 @@ export function WareneingangNeuAnsicht() {
   const suche = useSearchParams()
   const inventar = useBestand<Lagerposten>('inventar')
   const partner = useBestand<Partner>('partner')
+  const bestellungen = useBestand<Lieferantenbestellung>('lieferantenbestellungen')
 
   const lieferant = Number(suche.get('lieferant')) || undefined
 
@@ -40,20 +46,37 @@ export function WareneingangNeuAnsicht() {
     [partner],
   )
 
-  // Vorbelegen mit dem, was bei diesem Lieferanten als bestellt vermerkt ist
+  /*
+   * Vorbelegt mit dem, was bei diesem Lieferanten offen ist — aus der
+   * Bestellung, nicht neu gerechnet.
+   *
+   * Vorher stand hier `bestellmenge(p)`: die Menge, die sich aus
+   * Mindestbestand und Gebinde *ergäbe*. Wer beim Bestellen 3 auf 5 geändert
+   * hatte, bekam trotzdem 3 vorgeschlagen — die 5 war nirgends gespeichert.
+   * Jetzt steht sie an der Bestellzeile, und hier steht, was davon noch
+   * aussteht.
+   */
   const vorbelegung = useMemo(() => {
     if (!lieferant) return undefined
-    const erwartet = inventar.filter(
-      (p) => p.reorderedAt && Number(lieferantenId(p.supplier)) === lieferant,
+    const offen = bestellungen.filter(
+      (b) =>
+        OFFENE_STAENDE.includes((b.status ?? '') as 'bestellt') &&
+        Number(lieferantenId(b.supplier)) === lieferant,
     )
+    const zeilen = new Map<number, number>()
+    for (const b of offen) {
+      for (const z of b.lines ?? []) {
+        const id = Number(lieferantenId(z.item))
+        const fehlt = Math.max((z.quantity ?? 0) - (z.deliveredQuantity ?? 0), 0)
+        if (!id || fehlt <= 0) continue
+        zeilen.set(id, (zeilen.get(id) ?? 0) + fehlt)
+      }
+    }
     return {
       supplier: lieferant,
-      lines: erwartet.map((p) => ({
-        item: Number(p.id),
-        quantity: bestellmenge(p),
-      })),
+      lines: [...zeilen.entries()].map(([item, quantity]) => ({ item, quantity })),
     }
-  }, [inventar, lieferant])
+  }, [bestellungen, lieferant])
 
   return (
     <>

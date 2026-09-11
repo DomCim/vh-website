@@ -18,6 +18,13 @@
  * eigene Frage.
  */
 
+import {
+  bestellmenge,
+  offeneMenge,
+  type Lagerposten,
+  type Lieferantenbestellung,
+} from './nachbestellung'
+
 import { istOffenerPosten } from './zahlungsstand'
 
 /** Der Tag, ab dem ein Beleg als „bald fällig" gilt. */
@@ -27,7 +34,8 @@ export type ZuErledigenBestand = {
   anfragen?: { status?: string | null }[]
   rechnungen?: { status?: string | null; dueDate?: string | null; stornoVon?: unknown }[]
   belege?: { paid?: boolean | null; dueDate?: string | null }[]
-  inventar?: { quantity?: number | null; minQuantity?: number | null }[]
+  inventar?: Lagerposten[]
+  lieferantenbestellungen?: Lieferantenbestellung[]
   wiedervorlagen?: { done?: boolean | null; dueDate?: string | null }[]
   meldungen?: { tag?: string | null; gelesen?: boolean | null }[]
 }
@@ -101,7 +109,21 @@ export function zuErledigen(
     (daten.rechnungen ?? []).filter((r) => istEntwurf(r) || istUeberfaellig(r, jetzt)).length,
   )
   setzen('/office/belege', (daten.belege ?? []).filter((b) => istZuZahlen(b, jetzt)).length)
-  setzen('/office/nachbestellen', (daten.inventar ?? []).filter(istKnapp).length)
+  /*
+   * Nur, was wirklich noch zu bestellen ist.
+   *
+   * Vorher zählte hier jeder knappe Posten — auch der, für den gestern eine
+   * Bestellung rausging. Der Zähler stand dann tagelang auf derselben Zahl
+   * und forderte zu etwas auf, das längst erledigt war.
+   */
+  setzen(
+    '/office/nachbestellen',
+    (daten.inventar ?? []).filter(
+      (p) =>
+        istKnapp(p) &&
+        offeneMenge(daten.lieferantenbestellungen ?? [], p.id) < bestellmenge(p),
+    ).length,
+  )
   setzen(
     '/office/wiedervorlagen',
     (daten.wiedervorlagen ?? []).filter((w) => istFaellig(w, jetzt)).length,

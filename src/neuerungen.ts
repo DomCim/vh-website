@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 115,
+    datum: null,
+    titel: 'Nachbestellen ist zu Ende gedacht: Anfrage, Bestellung, Lieferung',
+    punkte: [
+      {
+        text: '**Bisher hörte der Weg mittendrin auf.** Die Anfrage ging raus, und am Posten stand ein Datum — mehr wurde nirgends festgehalten. Damit war die bestellte Menge weg (sie stand nur im Mailtext), eine Anfrage galt sofort als Bestellung, und es gab nichts, wogegen man später die Rechnung des Lieferanten prüfen konnte.',
+      },
+      {
+        text: '**Jetzt entsteht eine richtige Bestellung** mit eigener Nummer (`LB-2026-0001`), den bestellten Mengen, Preisen und einem Stand: **angefragt → bestellt → teilgeliefert → geliefert**. Unter „Nachbestellen" stehen die drei Abschnitte untereinander, und man sieht auf einen Blick, worauf man wartet.',
+      },
+      {
+        text: '**Antwortet der Lieferant, wird aus der Anfrage eine Bestellung** — zugesagter Termin wird eingetragen, fertig. Sagt er ab, gibt es „Kommt nicht", und die Posten stehen sofort wieder oben.',
+      },
+      {
+        text: '**Nicht jede Bestellung braucht eine Anfrage.** Wer im Netz, im Laden oder am Telefon bestellt, trägt nur ein, wo — freier Text, kein Geschäftspartner nötig. Die Bestellung gilt damit sofort als aufgegeben.',
+      },
+      {
+        text: '**Eine halbe Lieferung wirft nichts mehr durcheinander.** Vorher löschte jeder Zugang den Merker „nachbestellt", auch ein einziges Stück; der Posten stand am nächsten Tag wieder in der Liste und wäre ein zweites Mal bestellt worden. Jetzt zählt die Menge: 20 von 50 da heißt 30 unterwegs. Der Wareneingang schreibt das selbst mit — und belegt umgekehrt mit dem vor, was **bestellt** wurde, nicht mit einer neu gerechneten Menge.',
+      },
+    ],
+  },
+  {
     nummer: 114,
     datum: null,
     titel: 'Rechnungen stehen nach Nummer, und die Partner ziehen um',

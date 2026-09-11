@@ -21,6 +21,7 @@ export const BEREICHE = {
   kontobewegungen: 'bank-transactions',
   kundenstimmen: 'testimonials',
   laufmarken: 'job-tags',
+  lieferantenbestellungen: 'supplier-orders',
   medien: 'media',
   meldungen: 'notifications',
   neuerungen: 'changelog',
@@ -89,6 +90,9 @@ export const BEREICH_RECHTE: Partial<Record<Bereich, string[]>> = {
   inventur: ['inventar.pflegen'],
   kontobewegungen: ['rechnungen.schreiben', 'zahlen.sehen'],
   laufmarken: ['auftraege.bearbeiten'],
+  /* Wer das Lager pflegt, bestellt auch nach — Preise stehen darin, also
+     nicht für jeden, der nur Aufträge sieht. */
+  lieferantenbestellungen: ['inventar.pflegen', 'zahlen.sehen'],
   newsletter: ['newsletter.versenden'],
   partner: [
     'partner.pflegen',

@@ -151,7 +151,7 @@ test.describe('Was zu erledigen ist', () => {
         anfragen: [{ status: 'neu' }],
         rechnungen: [{ status: 'entwurf' }],
         belege: [{ paid: false, dueDate: new Date(jetzt).toISOString() }],
-        inventar: [{ quantity: 0, minQuantity: 1 }],
+        inventar: [{ id: 1, quantity: 0, minQuantity: 1 }],
         wiedervorlagen: [{ done: false, dueDate: '2026-08-01' }],
       },
       jetzt,

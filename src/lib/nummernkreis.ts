@@ -121,3 +121,16 @@ export async function naechsteWareneingangsnummer(payload: Payload): Promise<str
   const nummer = await naechsteNummer(payload, `wareneingang-${jahr}`)
   return `WE-${jahr}-${String(nummer).padStart(4, '0')}`
 }
+
+/**
+ * Nummer einer Lieferantenbestellung, z.B. LB-2026-0003
+ *
+ * Eigener Kreis und nicht der der Kundenbestellungen: Das eine ist, was
+ * hereinkommt, das andere, was hinausgeht. Eine gemeinsame Zählung hieße,
+ * dass eine Schraubenbestellung die Nummern der Kundschaft weiterschiebt.
+ */
+export async function naechsteLieferantenbestellnummer(payload: Payload): Promise<string> {
+  const jahr = new Date().getFullYear()
+  const nummer = await naechsteNummer(payload, `lieferantenbestellung-${jahr}`)
+  return `LB-${jahr}-${String(nummer).padStart(4, '0')}`
+}

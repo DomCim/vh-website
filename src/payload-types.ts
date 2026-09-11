@@ -87,6 +87,7 @@ export interface Config {
     'bank-transactions': BankTransaction;
     'inventory-items': InventoryItem;
     'goods-receipts': GoodsReceipt;
+    'supplier-orders': SupplierOrder;
     'job-tags': JobTag;
     'product-files': ProductFile;
     'customer-uploads': CustomerUpload;
@@ -131,6 +132,7 @@ export interface Config {
     'bank-transactions': BankTransactionsSelect<false> | BankTransactionsSelect<true>;
     'inventory-items': InventoryItemsSelect<false> | InventoryItemsSelect<true>;
     'goods-receipts': GoodsReceiptsSelect<false> | GoodsReceiptsSelect<true>;
+    'supplier-orders': SupplierOrdersSelect<false> | SupplierOrdersSelect<true>;
     'job-tags': JobTagsSelect<false> | JobTagsSelect<true>;
     'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
     'customer-uploads': CustomerUploadsSelect<false> | CustomerUploadsSelect<true>;
@@ -1718,6 +1720,44 @@ export interface GoodsReceipt {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "supplier-orders".
+ */
+export interface SupplierOrder {
+  id: number;
+  orderNumber?: string | null;
+  status: 'angefragt' | 'bestellt' | 'teilgeliefert' | 'geliefert' | 'storniert';
+  supplier?: (number | null) | Contact;
+  supplierName?: string | null;
+  requestedAt?: string | null;
+  orderedAt?: string | null;
+  /**
+   * Was der Lieferant auf die Anfrage geantwortet hat.
+   */
+  expectedAt?: string | null;
+  deliveredAt?: string | null;
+  lines?:
+    | {
+        item: number | InventoryItem;
+        quantity: number;
+        deliveredQuantity?: number | null;
+        /**
+         * Was der Lieferant auf die Anfrage genannt hat.
+         */
+        price?: number | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Was am Telefon besprochen wurde, Bestellnummer des Lieferanten …
+   */
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "job-tags".
  */
 export interface JobTag {
@@ -2177,6 +2217,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'goods-receipts';
         value: number | GoodsReceipt;
+      } | null)
+    | ({
+        relationTo: 'supplier-orders';
+        value: number | SupplierOrder;
       } | null)
     | ({
         relationTo: 'job-tags';
@@ -3046,6 +3090,34 @@ export interface GoodsReceiptsSelect<T extends boolean = true> {
       };
   booked?: T;
   expense?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "supplier-orders_select".
+ */
+export interface SupplierOrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  status?: T;
+  supplier?: T;
+  supplierName?: T;
+  requestedAt?: T;
+  orderedAt?: T;
+  expectedAt?: T;
+  deliveredAt?: T;
+  lines?:
+    | T
+    | {
+        item?: T;
+        quantity?: T;
+        deliveredQuantity?: T;
+        price?: T;
+        note?: T;
+        id?: T;
+      };
   note?: T;
   updatedAt?: T;
   createdAt?: T;

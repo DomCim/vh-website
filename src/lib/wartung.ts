@@ -10,6 +10,7 @@ import { abhaken, benachrichtige } from './push'
 import { sendMail } from './sendMail'
 import { firmenAngaben } from './settings'
 import { sicherungAutomatik, zustandLesen, zustandMerken } from './sicherung'
+import { OFFENE_STAENDE, offeneMenge } from './nachbestellung'
 
 /**
  * Der Tageslauf des Hauses: sichern, erinnern, aufräumen.
@@ -420,8 +421,26 @@ export async function bestandMelden(payload: Payload): Promise<number> {
     overrideAccess: true,
   })
 
+  /*
+   * Was schon bestellt ist, meldet sich nicht noch einmal.
+   *
+   * Vorher stand hier `!p.reorderedAt` — ein Datum am Posten, das jeder
+   * Zugang löschte, auch eine halbe Lieferung. Jetzt wird gegen die offenen
+   * Lieferantenbestellungen gerechnet: Solange dort etwas aussteht, ist der
+   * Posten versorgt.
+   */
+  const { docs: bestellungen } = await payload.find({
+    collection: 'supplier-orders',
+    where: { status: { in: [...OFFENE_STAENDE] } },
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+  })
+
   const knapp = (docs as Record<string, any>[]).filter(
-    (p) => (p.quantity ?? 0) < (p.minQuantity ?? 0) && !p.reorderedAt,
+    (p) =>
+      (p.quantity ?? 0) < (p.minQuantity ?? 0) &&
+      offeneMenge(bestellungen as never, p.id as number) <= 0,
   )
   if (!knapp.length) return 0
 
