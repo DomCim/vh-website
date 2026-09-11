@@ -602,7 +602,14 @@ export interface InventoryItem {
  */
 export interface Contact {
   id: number;
+  /**
+   * Steht so auf Angebot, Auftragsbestätigung und Rechnung.
+   */
   name: string;
+  /**
+   * Der Mensch bei diesem Betrieb. Erscheint im Büro, nicht auf den Papieren.
+   */
+  ansprechpartner?: string | null;
   role?: ('lieferant' | 'kunde' | 'dienstleister' | 'beides') | null;
   email?: string | null;
   phone?: string | null;
@@ -2633,6 +2640,7 @@ export interface NewsletterSubscribersSelect<T extends boolean = true> {
  */
 export interface ContactsSelect<T extends boolean = true> {
   name?: T;
+  ansprechpartner?: T;
   role?: T;
   email?: T;
   phone?: T;

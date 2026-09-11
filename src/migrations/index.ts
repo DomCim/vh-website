@@ -74,6 +74,7 @@ import * as migration_20260830_112216_termine_kalender from './20260830_112216_t
 import * as migration_20260909_063951_belege_einfrieren from './20260909_063951_belege_einfrieren';
 import * as migration_20260909_192704_adressen_je_sprache from './20260909_192704_adressen_je_sprache';
 import * as migration_20260910_214523_steuerfall_und_teilrechnung from './20260910_214523_steuerfall_und_teilrechnung';
+import * as migration_20260911_052650_ansprechpartner from './20260911_052650_ansprechpartner';
 
 export const migrations = [
   {
@@ -454,6 +455,11 @@ export const migrations = [
   {
     up: migration_20260910_214523_steuerfall_und_teilrechnung.up,
     down: migration_20260910_214523_steuerfall_und_teilrechnung.down,
-    name: '20260910_214523_steuerfall_und_teilrechnung'
+    name: '20260910_214523_steuerfall_und_teilrechnung',
+  },
+  {
+    up: migration_20260911_052650_ansprechpartner.up,
+    down: migration_20260911_052650_ansprechpartner.down,
+    name: '20260911_052650_ansprechpartner'
   },
 ];
