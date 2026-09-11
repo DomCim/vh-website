@@ -11,6 +11,7 @@ import { EntwurfLeiste } from './EntwurfLeiste'
 import { Fussleiste } from './Fussleiste'
 import { Zahleingabe } from './Zahleingabe'
 import { ArtikelBezug } from './ArtikelBezug'
+import { KundenAngaben } from './KundenAngaben'
 import { PartnerBezug, partnerAnschrift } from './PartnerBezug'
 import { VerwerfenKnopf } from './VerwerfenKnopf'
 import { Rueckmeldung } from './Rueckmeldung'
@@ -175,13 +176,7 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
             })
           }
         />
-        <label className="buero-feld">
-          <span>Kunde</span>
-          <input
-            value={w.customerName ?? ''}
-            onChange={(e) => setzen({ customerName: e.target.value })}
-          />
-        </label>
+        <KundenAngaben partnerId={w.customer} werte={w} aendern={setzen} teil="name" />
         <label className="buero-feld">
           <span>Angebotsdatum</span>
           <input
@@ -211,14 +206,9 @@ export function AngebotFormular({ werte }: { werte: AngebotWerte }) {
         </label>
       </div>
 
-      <label className="buero-feld">
-        <span>Anschrift</span>
-        <textarea
-          rows={3}
-          value={w.customerAddress ?? ''}
-          onChange={(e) => setzen({ customerAddress: e.target.value })}
-        />
-      </label>
+      <div className="buero-reihe">
+        <KundenAngaben partnerId={w.customer} werte={w} aendern={setzen} teil="anschrift" />
+      </div>
 
       <h2>Positionen</h2>
       {(w.items ?? []).map((p, i) => (

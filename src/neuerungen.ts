@@ -26,6 +26,28 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 108,
+    datum: null,
+    titel: 'Ein Kunde, ein Name — und der Entwurf folgt dem Partner',
+    punkte: [
+      {
+        text: '**Name und Anschrift auf Auftrag, Angebot und Rechnung folgen jetzt dem Geschäftspartner**, solange die Rechnung ein Entwurf ist. Bisher war es eine Abschrift vom Tag des Anlegens: Wer die Anschrift beim Partner änderte — etwa weil der Kunde darum bat —, änderte am Entwurf nichts, und auf dem Papier stand weiter der alte Stand.',
+      },
+      {
+        text: '**Eine gestellte Rechnung bleibt unberührt.** Was beim Kunden liegt, darf sich nicht nachträglich bewegen. Ist eine Anschrift dort falsch, führt der Weg weiterhin über Storno und neu — die neue Rechnung holt sich die berichtigten Angaben dann von selbst.',
+      },
+      {
+        text: '**Abweichen geht weiterhin, aber auf Ansage.** Solange der Entwurf dem Partner folgt, sind die Felder gesperrt und darunter steht, warum. Wer eine andere Firmierung braucht, klickt „Abweichenden Namen eintragen"; weicht ein bestehender Entwurf ab, sagt das Büro es und bietet „Vom Partner übernehmen" an.',
+      },
+      {
+        text: '**Der Partner führt Firma und Ansprechpartner getrennt.** In das eine alte Feld wurde beides getippt („Armin Keins / Majer GmbH & Co. KG") und landete so auf der Rechnung. Auf die Papiere gehört die Firma, der Mensch gehört ins Büro. Bestehende Einträge bleiben, wie sie sind; wo zwei Angaben in einem Feld stecken, schlägt das Büro beim Öffnen eine Aufteilung vor — aufgeteilt wird auf Klick.',
+      },
+      {
+        text: '**Die Partnerliste hat Suche und Filter.** Nach Kundschaft, Lieferanten oder Dienstleistern, dazu ein Suchfeld über Firma, Ansprechpartner und Ort. Getrennte Listen gibt es bewusst nicht: Ein Betrieb kann beides sein, und zwei Datensätze für denselben Betrieb hätten am Ende zwei Anschriften, von denen eine veraltet.',
+      },
+    ],
+  },
+  {
     nummer: 107,
     datum: null,
     titel: 'Steuerfall wählen, Rechnung je Position',
