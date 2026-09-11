@@ -303,7 +303,7 @@ export function PartnerFormular({
         </>
       )}
 
-      <Fussleiste>
+      <Fussleiste geaendert={entwurf.geaendert}>
         <button type="button" className="buero-knopf" disabled={laeuft} onClick={() => void speichern()}>
           Speichern
         </button>

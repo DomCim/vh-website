@@ -310,7 +310,7 @@ export function InventarFormular({
        * dort, kostete jeder Posten zwei Tipper statt einem, und zwar an der
        * Werkbank, wo genau das niemand will.
        */}
-      <Fussleiste>
+      <Fussleiste geaendert={entwurf.geaendert}>
         {neu ? (
           <>
             <button

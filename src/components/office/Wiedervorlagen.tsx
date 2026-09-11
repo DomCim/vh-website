@@ -6,6 +6,7 @@ import { useBestand } from '../../lib/buero/bestand'
 import { absenden } from '../../lib/buero/warteschlange'
 import { datum } from '../../lib/format'
 import { Rueckmeldung } from './Rueckmeldung'
+import { Abschnitt } from './Abschnitt'
 
 /**
  * Wiedervorlagen an einem Vorgang — Partner, Auftrag oder Rechnung.
@@ -107,8 +108,12 @@ export function Wiedervorlagen({ bezug }: { bezug: WiedervorlagenBezug }) {
   }
 
   return (
-    <div className="buero-karte">
-      <h2>Wiedervorlage</h2>
+    <Abschnitt
+      merk="vorgang:wiedervorlage"
+      titel="Wiedervorlage"
+      vorgabe={offen.length > 0}
+      kurz={offen.length ? `${offen.length} offen` : 'nichts offen'}
+    >
       <p className="buero-unterzeile">
         Was hier steht, meldet sich am gewählten Tag aufs Handy.
       </p>
@@ -168,6 +173,6 @@ export function Wiedervorlagen({ bezug }: { bezug: WiedervorlagenBezug }) {
           Erledigt: {erledigt.map((w) => `${w.title} (${datum(w.dueDate)})`).join(' · ')}
         </p>
       )}
-    </div>
+    </Abschnitt>
   )
 }

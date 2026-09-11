@@ -1513,6 +1513,205 @@ html.tastatur-offen .buero-inhalt {
   color: var(--buero-tinte-leise);
 }
 
+/*
+ * Die Leiste taucht auf, wenn es etwas zu speichern gibt — sonst ruht sie.
+ *
+ * Ein Balken, der immer unten klebt, sagt nichts; man liest ihn nach drei
+ * Tagen nicht mehr. Einer, der erscheint, sobald etwas offen ist, sagt genau
+ * eine Sache — und die stimmt. Am Rechner ist das neu: Dort stand die
+ * Hauptaktion bisher unter dem Formular, und bei dreizehn Blöcken heißt das
+ * sechs Bildschirmlängen weiter unten.
+ */
+/*
+ * **Was „wach" hinzufügt, und was es nicht wegnimmt.**
+ *
+ * Am Handy klebt die Leiste ohnehin über der Tableiste — dort soll sie auch
+ * bleiben, wenn nichts geändert wurde: Ihre Hauptaktion ist nicht überall
+ * „Speichern". An der Rechnung steht dort „Rechnung senden", und der Knopf
+ * darf nicht verschwinden, bloß weil niemand ein Feld angefasst hat.
+ *
+ * „Wach" ist deshalb eine Zutat und kein Zustandswechsel: derselbe Balken,
+ * jetzt in Bronze, mit „Nicht gespeichert" davor — und am Rechner, wo er
+ * sonst am Ende des Formulars liegt, schwebend am unteren Rand.
+ */
+.buero-fussleiste.wach {
+  /*
+   * `fixed` und nicht `sticky` — und das ist hier der Unterschied zwischen
+   * „taucht auf" und „ist irgendwo weiter unten". Eine klebende Leiste wird
+   * erst sichtbar, wenn man bis zu ihrer eigentlichen Stelle gescrollt ist;
+   * die steht am Ende eines Formulars, das fünf Bildschirmlängen lang ist.
+   * Gemeldet werden soll aber im selben Moment, in dem etwas geändert wird.
+   *
+   * Die Sorge, die sonst gegen `fixed` spricht — die Bildschirmtastatur auf
+   * iOS —, ist schon gelöst: `html.tastatur-offen` nimmt die Leiste beim
+   * Tippen ohnehin an sich und schiebt sie mit gemessenen Werten über die
+   * Tastatur. Diese Regel steht später und ist genauer, sie gewinnt.
+   */
+  position: fixed;
+  left: 1.25rem;
+  right: 1.25rem;
+  max-width: 65.5rem;
+  margin: 0 auto;
+  /* Am Handy sitzt unten die Tableiste — darüber, nicht darauf. */
+  bottom: 0.9rem;
+  z-index: 25;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--buero-bronze);
+  border-radius: 14px;
+  background: var(--buero-flaeche);
+  box-shadow: 0 8px 26px rgb(0 0 0 / 16%);
+  animation: buero-leiste-auf 0.18s ease-out;
+}
+
+/*
+ * Platz unter der Seite, solange die Leiste schwebt.
+ *
+ * Am Handy hält `.buero-inhalt` diesen Streifen ohnehin frei (siehe dort);
+ * am Rechner gab es bisher keine schwebende Leiste und deshalb auch keine
+ * Reserve — die letzte Zeile des Formulars lag darunter. `:has()` fragt
+ * genau das, worum es geht: Hängt in diesem Inhalt gerade eine wache
+ * Leiste? Kennt ein Browser die Frage nicht, verdeckt die Leiste beim
+ * Tippen die letzte Zeile — mehr passiert nicht.
+ */
+@media (min-width: 720px) {
+  .buero-inhalt:has(.buero-fussleiste.wach) {
+    padding-bottom: calc(var(--buero-fussleiste-hoehe, 0px) + 2.5rem);
+  }
+}
+
+/*
+ * Am Handy liegt unten die Tableiste — die Leiste rückt darüber.
+ *
+ * Diese Regel steht hier und nicht oben im Handy-Block: Beide sprechen
+ * `.buero-fussleiste.wach` an, haben also dieselbe Spezifität, und bei
+ * Gleichstand gewinnt die spätere. Oben stand sie und blieb wirkungslos —
+ * die Leiste lag hinter der Tableiste.
+ */
+@media (max-width: 719px) {
+  .buero-fussleiste.wach {
+    bottom: calc(4.4rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes buero-leiste-auf {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+}
+
+/* Wer mit dem Schalter „weniger Bewegung" unterwegs ist, bekommt sie ohne */
+@media (prefers-reduced-motion: reduce) {
+  .buero-fussleiste.wach {
+    animation: none;
+  }
+}
+
+.buero-fussleiste-offen {
+  color: var(--buero-bronze);
+}
+
+/* ── Abschnitte eines langen Formulars ─────────────────────────────────────
+   Aufklappbar, und zugeklappt mit einer Zeile, die sagt, was drinsteht.
+   Warum überhaupt — siehe `components/office/Abschnitt.tsx`.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero-abschnitt {
+  border-top: 1px solid var(--buero-linie);
+  margin-top: 1.4rem;
+}
+
+/*
+ * Ein Gitter und kein Flex-Kasten, und der Grund ist eine Zeile, die
+ * umbrach: „Elektronische Rechnung" passte am Handy nicht neben den Pfeil,
+ * also rutschte der Titel in die zweite Zeile und der Pfeil blieb allein in
+ * der ersten. Im Gitter hat jedes Stück seine Spalte — der Pfeil links, der
+ * Titel daneben, die Zusammenfassung am Handy darunter und am Rechner
+ * rechts außen.
+ */
+.buero-abschnitt-kopf {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+  padding: 0.9rem 0 0.2rem;
+  cursor: pointer;
+  /* Das Dreieck des Browsers ist in jedem ein anderes — hier steht ein
+     eigenes, in derselben Bronze wie jeder andere Pfeil im Büro. */
+  list-style: none;
+}
+
+.buero-abschnitt-kopf::-webkit-details-marker {
+  display: none;
+}
+
+.buero-abschnitt-kopf::after {
+  content: '';
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  width: 0.72rem;
+  height: 0.72rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a86b3d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease-out;
+  align-self: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .buero-abschnitt-kopf::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23d9975c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+.buero-abschnitt[open] > .buero-abschnitt-kopf::after {
+  transform: rotate(0deg);
+}
+
+.buero-abschnitt-kopf h2 {
+  grid-column: 2;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Die Zusammenfassung tritt zurück — sie beantwortet eine Frage, sie stellt
+   keine. Am Rechner rückt sie an den rechten Rand, am Handy unter den Titel. */
+.buero-abschnitt-kurz {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: var(--buero-tinte-leise);
+}
+
+@media (min-width: 720px) {
+  .buero-abschnitt-kopf {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .buero-abschnitt-kurz {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+.buero-abschnitt-kopf:hover h2 {
+  color: var(--buero-bronze);
+}
+
+.buero-abschnitt-kopf:focus-visible {
+  outline: 2px solid var(--buero-bronze);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.buero-abschnitt-inhalt {
+  padding-top: 0.5rem;
+}
+
 .buero-feld {
   display: block;
   margin-bottom: 0.9rem;

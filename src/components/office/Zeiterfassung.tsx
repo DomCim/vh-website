@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { absenden } from '../../lib/buero/warteschlange'
+import { Abschnitt } from './Abschnitt'
 
 export type Zeitbuchung = { day?: string | null; minutes?: number | null; note?: string | null }
 
@@ -96,8 +97,15 @@ export function Zeiterfassung({
   }
 
   return (
-    <>
-      <h2 style={{ marginTop: '1.5rem' }}>Arbeitszeit</h2>
+    <Abschnitt
+      merk="auftrag:zeit"
+      titel="Arbeitszeit"
+      vorgabe={laufend > 0}
+      kurz={[
+        stunden(gesamt),
+        laufend > 0 ? 'läuft gerade' : `${buchungen.length} Buchungen`,
+      ].join(' · ')}
+    >
 
       <div className="buero-kacheln" style={{ marginBottom: '.8rem' }}>
         <div className="buero-kachel">
@@ -186,6 +194,6 @@ export function Zeiterfassung({
           ))}
         </div>
       )}
-    </>
+    </Abschnitt>
   )
 }

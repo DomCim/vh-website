@@ -10,6 +10,7 @@ import { auswahlSenden, lesbareGroesse, type Uploadstand } from '../../lib/hochl
 import { Rueckmeldung } from './Rueckmeldung'
 import { Dateiknopf } from './Dateiknopf'
 import { useDateiablage } from '../../lib/buero/dateiablage'
+import { Abschnitt } from './Abschnitt'
 
 /**
  * Die Dateien eines Vorgangs — Anfrage, Angebot oder Auftrag.
@@ -200,8 +201,15 @@ export function Vorgangsdateien({
   }
 
   return (
-    <>
-      <h2>Unterlagen zum Vorgang</h2>
+    <Abschnitt
+      merk="vorgang:unterlagen"
+      titel="Unterlagen zum Vorgang"
+      kurz={
+        dateien.length
+          ? `${dateien.length} ${dateien.length === 1 ? 'Datei' : 'Dateien'}`
+          : 'noch nichts abgelegt'
+      }
+    >
       <p className="buero-unterzeile">
         Zeichnungen, CAD-Dateien und Schriftstücke, die zu diesem Vorgang gehören — auch das, was
         über eine Übergabemappe hereinkam.
@@ -310,6 +318,6 @@ export function Vorgangsdateien({
           )}
         </div>
       )}
-    </>
+    </Abschnitt>
   )
 }

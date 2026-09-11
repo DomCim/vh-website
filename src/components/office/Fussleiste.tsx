@@ -54,10 +54,26 @@ function istNebensache(kind: React.ReactNode): boolean {
 
 export function Fussleiste({
   hinweis,
+  geaendert,
   children,
 }: {
   /** Kurzer Stand links neben der Aktion, z.B. „3 Positionen · 480,00 €" */
   hinweis?: React.ReactNode
+  /**
+   * Steht etwas Ungespeichertes im Formular?
+   *
+   * Ist etwas offen, taucht die Leiste am Rechner unten am Bildschirmrand
+   * auf und trägt „Nicht gespeichert" — am Handy, wo sie ohnehin klebt,
+   * wechselt sie nur die Farbe. Vorschlag von Dominik, und der bessere: Ein
+   * Balken, der immer gleich aussieht, sagt nichts; einer, der sich meldet,
+   * sagt „hier ist etwas offen".
+   *
+   * **Ohne Angabe bleibt alles wie bisher.** Und weggenommen wird nie etwas:
+   * Die Hauptaktion ist nicht überall „Speichern" — an der Rechnung steht
+   * dort „Rechnung senden", und der muss erreichbar bleiben, auch wenn
+   * niemand ein Feld angefasst hat.
+   */
+  geaendert?: boolean
   children: React.ReactNode
 }) {
   const leiste = useRef<HTMLDivElement>(null)
@@ -114,8 +130,17 @@ export function Fussleiste({
 
   return (
     <>
-      <div className="buero-fussleiste" ref={leiste}>
-        {hinweis ? <div className="buero-fussleiste-hinweis">{hinweis}</div> : null}
+      <div
+        className={`buero-fussleiste${geaendert ? ' wach' : ''}`}
+        ref={leiste}
+      >
+        {geaendert || hinweis ? (
+          <div className="buero-fussleiste-hinweis">
+            {geaendert ? <strong className="buero-fussleiste-offen">Nicht gespeichert</strong> : null}
+            {geaendert && hinweis ? ' · ' : null}
+            {hinweis}
+          </div>
+        ) : null}
         {inLeiste}
         {insBlatt.length > 0 && (
           <button

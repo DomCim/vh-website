@@ -90,12 +90,33 @@ export function useEntwurf<T extends object>(
   angebot: Entwurf<T> | null
   uebernehmen: () => T | null
   verwerfen: () => void
-  erledigt: () => void
+  erledigt: (neuerGrundstand?: T) => void
+  /**
+   * Steht etwas Ungespeichertes im Formular?
+   *
+   * Dieselbe Frage, die der Entwurf ohnehin bei jedem Zeichen beantwortet —
+   * hier nur nach außen gegeben. Die Fußleiste hängt daran: Der
+   * Speicherknopf taucht auf, wenn es etwas zu speichern gibt, und ist sonst
+   * kein Balken, der Platz wegnimmt.
+   */
+  geaendert: boolean
 } {
   const [angebot, setAngebot] = useState<Entwurf<T> | null>(null)
   const oertlichUhr = useRef<number | undefined>(undefined)
   const serverUhr = useRef<number | undefined>(undefined)
   const start = useRef(urspruenglich)
+  /*
+   * Derselbe Grundstand ein zweites Mal, diesmal als Zustand.
+   *
+   * `start` ist eine Referenz, und eine Referenz zeichnet nichts neu. Für
+   * den Vergleich „steht hier etwas Ungespeichertes" braucht es aber genau
+   * das: Nach dem Speichern muss die Leiste verschwinden, und das merkt der
+   * Bildschirm nur, wenn sich der Zustand ändert.
+   */
+  const [grundstand, setGrundstand] = useState(urspruenglich)
+  /** Der jeweils letzte Stand — damit `erledigt()` weiß, was gespeichert wurde. */
+  const letzte = useRef(werte)
+  letzte.current = werte
   // Solange ein Angebot offensteht, wird nichts geschrieben — sonst
   // überschriebe der leere Bildschirm genau den Entwurf, der gerade
   // angeboten wird.
@@ -183,12 +204,25 @@ export function useEntwurf<T extends object>(
     wegwerfen()
   }, [wegwerfen])
 
-  /** Der Datensatz ist gespeichert — der Entwurf hat sich erledigt. */
-  const erledigt = useCallback(() => {
+  /**
+   * Der Datensatz ist gespeichert — der Entwurf hat sich erledigt.
+   *
+   * Und der Grundstand wandert mit: Was eben gespeichert wurde, ist ab jetzt
+   * das, womit verglichen wird. Ohne diesen Schritt bliebe die Leiste nach
+   * dem Speichern stehen und behauptete, es sei noch etwas offen.
+   *
+   * Wer beim Speichern nebenbei etwas setzt — der Auftrag hebt den Status
+   * mit an —, reicht den neuen Stand hier herein. Sonst gilt, was gerade im
+   * Formular steht.
+   */
+  const erledigt = useCallback((neuerGrundstand?: T) => {
     haelt.current = false
     setAngebot(null)
+    const stand = neuerGrundstand ?? letzte.current
+    start.current = stand
+    setGrundstand(stand)
     wegwerfen()
   }, [wegwerfen])
 
-  return { angebot, uebernehmen, verwerfen, erledigt }
+  return { angebot, uebernehmen, verwerfen, erledigt, geaendert: !gleich(werte, grundstand) }
 }
