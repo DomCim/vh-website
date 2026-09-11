@@ -1,0 +1,14 @@
+{
+  "_hinweis": "Siehe did0m-verwaltung/module.json. Schluessel aus dem DiD0m-Modulkatalog.",
+  "module": [
+    "kern", "website", "shop", "zahlung", "lager", "stueckliste", "digitalware",
+    "aktionen", "crm", "angebote", "auftraege", "rechnungen", "erechnung",
+    "mahnwesen", "belege", "postfach", "news", "referenzen", "galerie",
+    "newsletter", "termine", "benachrichtigungen", "push", "statistik", "mcp"
+  ],
+  "anmerkungen": {
+    "website": "Dreisprachig de/fr/en.",
+    "news": "Mit Facebook- und Instagram-Autopost.",
+    "erechnung": "Factur-X fuer Ausgangsrechnungen; Belege eingefroren beim Festschreiben."
+  }
+}
