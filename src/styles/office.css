@@ -474,6 +474,307 @@
   display: none;
 }
 
+/* ── Seitenleiste am Rechner ───────────────────────────────────────────────
+   Warum sie die Leiste über dem Inhalt abgelöst hat, steht in
+   `BueroNavigation.tsx`. Kurz: Die Leiste kostete zu jedem Ziel zwei Klicks,
+   die Seitenleiste kostet einen — und die Zähler stehen offen da.
+
+   Am Handy gibt es sie nicht; dort führt die Leiste am unteren Rand.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero-rumpf {
+  display: block;
+}
+
+.buero-spalte {
+  min-width: 0;
+}
+
+.buero-seitenleiste {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .buero-rumpf {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .buero-spalte {
+    flex: 1 1 auto;
+  }
+
+  .buero-seitenleiste {
+    /*
+     * Spalte statt Block: Die Bereiche in der Mitte scrollen, der Fuß mit
+     * Konto und Abmelden bleibt unten stehen. Sonst müsste man zum
+     * Abmelden erst durch achtzehn Punkte rollen.
+     */
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    width: 14.5rem;
+    /*
+     * `sticky` mit eigener Höhe: Die Leiste bleibt stehen, während der
+     * Inhalt scrollt, und rollt bei Bedarf für sich. `4.2rem` ist die Höhe
+     * der Kopfleiste — sie klebt darüber, und ohne diesen Abstand läge der
+     * erste Punkt darunter.
+     */
+    position: sticky;
+    top: 4.2rem;
+    max-height: calc(100vh - 4.2rem);
+    overflow-y: auto;
+    padding: 0.8rem 0.6rem 1.5rem;
+    border-right: 1px solid var(--buero-linie);
+    background: var(--buero-flaeche);
+    scrollbar-width: thin;
+    transition: width 0.14s ease-out;
+  }
+
+  .buero-seitenleiste.schmal {
+    width: 3.6rem;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .buero-seitenleiste {
+      transition: none;
+    }
+  }
+
+  /* Der Griff zum Ein- und Ausklappen — oben, wo sonst nichts steht */
+  .buero-seitenleiste-griff {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    margin: 0 0 0.5rem auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--buero-tinte-leise);
+    cursor: pointer;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-griff {
+    margin-right: auto;
+  }
+
+  .buero-seitenleiste-griff:hover {
+    background: var(--buero-papier);
+    color: var(--buero-bronze);
+  }
+
+  .buero-seitenleiste-griff svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+  }
+
+  .buero-seitenleiste-mitte {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Konto, Einstellungen, Abmelden — abgesetzt am Fuß */
+  .buero-seitenleiste-fuss {
+    flex: 0 0 auto;
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--buero-linie);
+  }
+
+  /*
+   * Der eigene Name ist ein Punkt wie die darunter — er führt aufs eigene
+   * Konto und sieht deshalb auch so aus. Eigen ist nur, dass ein langer Name
+   * oder eine lange Adresse abgeschnitten wird, statt die Leiste zu sprengen.
+   */
+  .buero-seitenleiste-wer {
+    overflow: hidden;
+  }
+
+  .buero-seitenleiste-wer .buero-seitenleiste-wort {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /*
+   * „Abmelden" ist ein Knopf und kein Verweis — er muss etwas tun, bevor er
+   * die Seite wechselt (den Bestand im Gerät vergessen). Damit er trotzdem
+   * aussieht wie seine Nachbarn, trägt die Zeile das Aussehen und der Knopf
+   * darin gibt seines auf.
+   */
+  .buero-seitenleiste-raus .buero-knopf,
+  .buero-seitenleiste-raus button {
+    all: unset;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+  }
+
+  .buero-seitenleiste-raus:hover {
+    background: var(--buero-papier);
+    color: var(--buero-rot);
+  }
+
+  .buero-seitenleiste-teil {
+    margin-top: 1rem;
+  }
+
+  .buero-seitenleiste-teil h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.2rem;
+    padding: 0 0.55rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--buero-tinte-leise);
+  }
+
+  /* Zuklappbare Bereiche: die Überschrift ist der Knopf */
+  .buero-seitenleiste-teil h2 button {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+    margin: 0 0 0 -0.3rem;
+    padding: 0.15rem 0.3rem;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .buero-seitenleiste-teil h2 button:hover {
+    background: var(--buero-papier);
+    color: var(--buero-bronze);
+  }
+
+  .buero-seitenleiste-pfeil {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.14s ease-out;
+  }
+
+  .buero-seitenleiste-teil.zu .buero-seitenleiste-pfeil {
+    transform: rotate(-90deg);
+  }
+
+  /*
+   * Wo man gerade steht, trägt keinen Griff — der Bereich bleibt offen.
+   * Damit das nicht wie ein vergessener Knopf aussieht, ist die Überschrift
+   * dort in Bronze und rückt um die Breite des fehlenden Pfeils ein, damit
+   * die Wörter untereinander bleiben.
+   */
+  .buero-seitenleiste-teil.hier h2 {
+    color: var(--buero-bronze);
+    padding-left: 1.4rem;
+  }
+
+  .buero-seitenleiste-punkt {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.42rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    color: inherit;
+    white-space: nowrap;
+  }
+
+  .buero-seitenleiste-punkt:hover {
+    background: var(--buero-papier);
+  }
+
+  .buero-seitenleiste-punkt[aria-current='page'] {
+    background: var(--buero-papier);
+    font-weight: 600;
+    color: var(--buero-bronze);
+  }
+
+  .buero-seitenleiste-zeichen {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .buero-seitenleiste-zeichen svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  /*
+   * Eingeklappt bleibt das Zeichen, das Wort geht.
+   *
+   * Die Überschrift eines Bereichs schrumpft dabei auf ihren Zähler
+   * zusammen — und wo keiner steht, auf einen Strich, damit die Gruppen
+   * nicht ineinanderlaufen. Der Name steht am `title`, also im Tooltip.
+   */
+  .buero-seitenleiste.schmal .buero-seitenleiste-wort {
+    display: none;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-punkt {
+    justify-content: center;
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+    position: relative;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-teil h2 {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 0.35rem;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-teil h2 button {
+    justify-content: center;
+    width: auto;
+    margin: 0;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-pfeil {
+    display: none;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-teil h2::before {
+    content: '';
+    display: block;
+    width: 1.4rem;
+    border-top: 1px solid var(--buero-linie);
+  }
+
+  /* Der Zähler wird zum Fleck an der Ecke des Zeichens */
+  .buero-seitenleiste.schmal .buero-seitenleiste-punkt .buero-zaehler {
+    position: absolute;
+    top: 0.1rem;
+    right: 0.25rem;
+    min-width: 0.95rem;
+    height: 0.95rem;
+    padding: 0 0.2rem;
+    font-size: 0.6rem;
+    line-height: 0.95rem;
+  }
+}
+
 .buero-nav a {
   white-space: nowrap;
   padding: 0.45rem 0.85rem;
@@ -1039,6 +1340,43 @@ html.tastatur-offen .buero-inhalt {
   margin: 0 auto;
   padding: 1.5rem 1.25rem 4rem;
   padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+/*
+ * Auf einem breiten Schirm darf der Inhalt mitwachsen.
+ *
+ * 68rem sind 1088 Pixel — auf Vincents 3440er Monitor stand die Seite damit
+ * als schmales Band in einer großen leeren Fläche. Der Deckel ist trotzdem
+ * richtig: Formulare und Listen, die über die volle Breite laufen, zwingen
+ * den Blick quer über den Tisch, und eine Zeile, die man mit den Augen
+ * abfahren muss, liest sich schlechter. Deshalb kein „so breit wie das
+ * Fenster", sondern zwei Stufen mehr Luft.
+ */
+@media (min-width: 1600px) {
+  .buero-inhalt {
+    max-width: 82rem;
+  }
+}
+
+@media (min-width: 2200px) {
+  .buero-inhalt {
+    max-width: 104rem;
+  }
+}
+
+/*
+ * Ultrabreit (3440 und aufwärts): noch eine Stufe, aber kein „randlos".
+ *
+ * Über die volle Breite gezogen wären eine Rechnungszeile drei Meter lang
+ * und die Spalten eines Formulars so weit auseinander, dass der Blick
+ * zwischen Beschriftung und Feld wandern muss. 128rem sind gut 2000 Pixel —
+ * breit genug, dass nichts verloren aussieht, schmal genug, dass eine Zeile
+ * noch eine Zeile ist.
+ */
+@media (min-width: 3000px) {
+  .buero-inhalt {
+    max-width: 128rem;
+  }
 }
 
 /* Platz, damit die Tableiste nichts verdeckt.
@@ -4877,5 +5215,116 @@ input[type='checkbox'].buero-haken-kasten {
 @media (max-width: 640px) {
   .buero-besuch-seite {
     max-width: 14rem;
+  }
+}
+
+
+/* ── Ein Papier aus dem Quelltext ──────────────────────────────────────────
+   Die Verfahrensdokumentation und alles, was sonst noch als Markdown im
+   Repository liegt. Bewusst schmaler als der übrige Inhalt: Das hier wird
+   gelesen, nicht überflogen, und eine Zeile über die volle Breite eines
+   Monitors liest sich schlecht.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero-papier {
+  max-width: 46rem;
+  line-height: 1.65;
+}
+
+.buero-papier h1 {
+  margin-bottom: 0.4rem;
+}
+
+.buero-papier h2 {
+  margin-top: 2.2rem;
+}
+
+.buero-papier h3 {
+  margin-top: 1.5rem;
+  font-size: 1.02rem;
+}
+
+.buero-papier p {
+  margin: 0.7rem 0;
+}
+
+.buero-papier-liste {
+  margin: 0.7rem 0;
+  padding-left: 1.3rem;
+}
+
+.buero-papier-liste li {
+  margin-bottom: 0.35rem;
+}
+
+.buero-papier code {
+  font-size: 0.88em;
+  padding: 0.1rem 0.3rem;
+  border-radius: 5px;
+  background: var(--buero-papier);
+}
+
+.buero-papier-linie {
+  margin: 1.8rem 0;
+  border: 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-papier blockquote {
+  margin: 1rem 0;
+}
+
+/*
+ * In einem Papier sind die Tabellen Text und keine Zahlen — die Regel, die
+ * anderswo die letzte Spalte rechtsbündig setzt (Beträge!), ist hier falsch.
+ */
+.buero-papier .buero-tabelle td:last-child,
+.buero-papier .buero-tabelle th:last-child {
+  text-align: left;
+  font-variant-numeric: normal;
+}
+
+.buero-papier-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--buero-linie);
+}
+
+/*
+ * Gedruckt wird dieses Papier wirklich — als PDF für die Kanzlei oder die
+ * Prüfung. Also gehört alles weg, was auf Papier nichts verloren hat:
+ * Navigation, Kopfleiste, Knöpfe. Übrig bleibt der Text, schwarz auf weiß.
+ */
+@media print {
+  .buero-kopf,
+  .buero-seitenleiste,
+  .buero-tableiste,
+  .buero-fussleiste,
+  .buero-papier-kopf,
+  .buero-abgleich-leiste {
+    display: none !important;
+  }
+
+  .buero-inhalt {
+    max-width: none;
+    padding: 0;
+  }
+
+  .buero-papier {
+    max-width: none;
+  }
+
+  .buero-papier h2 {
+    /* Eine Überschrift allein am Seitenfuß liest sich wie ein Versehen */
+    break-after: avoid;
+  }
+
+  .buero-papier table,
+  .buero-papier blockquote {
+    break-inside: avoid;
   }
 }

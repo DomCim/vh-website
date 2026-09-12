@@ -84,13 +84,21 @@ test.describe('Rechnung aus dem Auftrag', () => {
       unitPrice: 480,
     })
 
-    // Ein zweiter Aufruf legt nichts nach — ohne Netz steht die Anfrage in der
-    // Warteschlange, und zweimal getippt käme sie zweimal an.
+    /*
+     * Ein zweiter Aufruf legt nichts nach — ohne Netz steht die Anfrage in der
+     * Warteschlange, und zweimal getippt käme sie zweimal an.
+     *
+     * Geantwortet wird mit 400 `keine-positionen` und nicht mehr mit 409:
+     * Seit ein Auftrag mehrere Rechnungen tragen darf (09/2026), sperrt nicht
+     * mehr die vorhandene Rechnung, sondern es ist schlicht nichts mehr
+     * offen, was sich berechnen ließe. Für das Büro ist das dieselbe Aussage.
+     */
     const nochmal = await request.post(`${BASIS}/api/office/auftrag`, {
       headers: kopf,
       data: { aktion: 'rechnung', id: auftragId },
     })
-    expect(nochmal.status(), 'keine zweite Rechnung zum selben Auftrag').toBe(409)
+    expect(nochmal.status(), 'keine zweite Rechnung zum selben Auftrag').toBe(400)
+    expect((await nochmal.json()).error).toBe('keine-positionen')
 
     // Aufräumen: Der Entwurf hat keine Nummer, also lässt er sich verwerfen.
     await request.post(`${BASIS}/api/office/rechnung`, {

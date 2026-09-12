@@ -5,6 +5,7 @@ import { registerAdressen } from '../../../../lib/mcp/adressen'
 import { registerAktionen } from '../../../../lib/mcp/aktionen'
 import { registerAnalyse } from '../../../../lib/mcp/analyse'
 import { registerAnfragen } from '../../../../lib/mcp/anfragen'
+import { registerTermine } from '../../../../lib/mcp/termine'
 import { registerBestellungen } from '../../../../lib/mcp/bestellungen'
 import { registerBuero } from '../../../../lib/mcp/buero'
 import { registerFaq } from '../../../../lib/mcp/faq'
@@ -72,6 +73,7 @@ function alleWerkzeuge(server: McpServer) {
   registerAktionen(server)
   registerBestellungen(server)
   registerAnfragen(server)
+  registerTermine(server)
   registerMedien(server)
   registerSeiten(server)
   registerAnalyse(server)

@@ -26,6 +26,85 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 117,
+    datum: null,
+    titel: 'Das eigene Konto steht am Fuß der Leiste',
+    punkte: [
+      {
+        text: '**Der eigene Name unten in der Seitenleiste führt jetzt irgendwohin** — auf `/office/konto`. Dort steht, was nur einen selbst und das Gerät in der Hand angeht: Passwort, Zwei-Faktor, Passkeys, die angemeldeten Geräte, die Meldungen dieses Geräts und die hängengebliebenen Einträge.',
+      },
+      {
+        text: '**Aus den Einstellungen sind diese beiden Reiter verschwunden.** Sie standen dort zwischen Benutzerverwaltung, Betriebsdaten und Zugangsdaten zu fremden Diensten — also zwischen lauter Dingen, die für den ganzen Betrieb gelten. Das eigene Passwort gilt für einen selbst. Die Einstellungen führen weiterhin hinüber, wer sie dort sucht, findet den Weg.',
+      },
+      {
+        text: '**Am Telefon steht beides im Blatt „Sonstiges"** — „Mein Konto", „Einstellungen" und „Abmelden" untereinander am Fuß, so wie am Rechner am Fuß der Leiste. Die Einstellungen fehlten dort seit dem Umbau der Navigation.',
+      },
+      {
+        text: '**Und die Verfahrensdokumentation hat ein Zeichen bekommen** — ein Buch. Sie stand als einziger Punkt ohne eines da, am Rechner wie am Telefon.',
+      },
+    ],
+  },
+  {
+    nummer: 116,
+    datum: null,
+    titel: 'Änderungen an Belegen und Rechnungen bleiben nachvollziehbar',
+    punkte: [
+      {
+        text: '**Jede Änderung wird jetzt mitgeschrieben** — bei Ausgangsrechnungen, Belegen, Angeboten und Shop-Bestellungen. Jedes Speichern legt den vorherigen Stand ab, mit Zeitpunkt und Benutzer. Wer den Betrag eines Belegs nachträglich ändert, hinterlässt damit eine Spur.',
+      },
+      {
+        text: '**Warum das nötig war.** Eine gestellte Rechnung war längst gesperrt — die lässt sich gar nicht mehr ändern. Bei allem anderen gab es **nichts**: Aus 240 € konnten 420 € werden, ohne dass irgendwo stand, dass da einmal etwas anderes stand. Die GoBD verlangt genau das Gegenteil.',
+      },
+      {
+        text: '**Dazu gibt es jetzt eine Verfahrensdokumentation** — das Papier, das ein Prüfer sehen will: Wie ein Beleg hereinkommt, wie eine Rechnung entsteht und festgeschrieben wird, wer was darf, was gesichert wird und was von Hand geschieht. Sie liegt im Quelltext unter `VERFAHRENSDOKUMENTATION.md` und gehört einmal durch die Kanzlei, bevor sie irgendwo vorgelegt wird.',
+      },
+      {
+        text: '**Und Termine lassen sich jetzt über den Assistenten anlegen.** Vor allem die öffentlichen: Die entstehen dadurch, dass in der Notiz `#öffentlich`, `#beschreibung:` und `#ort:` stehen — das ist fürs Telefon gedacht und dort richtig, aber man muss die Schreibweise im Kopf haben. Ein Tippfehler heißt: Der Termin steht nicht im Netz, und niemand sieht warum. Jetzt sagt man Titel, Zeit und Beschreibung, den Rest baut der Assistent.',
+      },
+    ],
+  },
+  {
+    nummer: 115,
+    datum: null,
+    titel: 'Nachbestellen ist zu Ende gedacht: Anfrage, Bestellung, Lieferung',
+    punkte: [
+      {
+        text: '**Bisher hörte der Weg mittendrin auf.** Die Anfrage ging raus, und am Posten stand ein Datum — mehr wurde nirgends festgehalten. Damit war die bestellte Menge weg (sie stand nur im Mailtext), eine Anfrage galt sofort als Bestellung, und es gab nichts, wogegen man später die Rechnung des Lieferanten prüfen konnte.',
+      },
+      {
+        text: '**Jetzt entsteht eine richtige Bestellung** mit eigener Nummer (`LB-2026-0001`), den bestellten Mengen, Preisen und einem Stand: **angefragt → bestellt → teilgeliefert → geliefert**. Unter „Nachbestellen" stehen die drei Abschnitte untereinander, und man sieht auf einen Blick, worauf man wartet.',
+      },
+      {
+        text: '**Antwortet der Lieferant, wird aus der Anfrage eine Bestellung** — zugesagter Termin wird eingetragen, fertig. Sagt er ab, gibt es „Kommt nicht", und die Posten stehen sofort wieder oben.',
+      },
+      {
+        text: '**Nicht jede Bestellung braucht eine Anfrage.** Wer im Netz, im Laden oder am Telefon bestellt, trägt nur ein, wo — freier Text, kein Geschäftspartner nötig. Die Bestellung gilt damit sofort als aufgegeben.',
+      },
+      {
+        text: '**Eine halbe Lieferung wirft nichts mehr durcheinander.** Vorher löschte jeder Zugang den Merker „nachbestellt", auch ein einziges Stück; der Posten stand am nächsten Tag wieder in der Liste und wäre ein zweites Mal bestellt worden. Jetzt zählt die Menge: 20 von 50 da heißt 30 unterwegs. Der Wareneingang schreibt das selbst mit — und belegt umgekehrt mit dem vor, was **bestellt** wurde, nicht mit einer neu gerechneten Menge.',
+      },
+    ],
+  },
+  {
+    nummer: 114,
+    datum: null,
+    titel: 'Rechnungen stehen nach Nummer, und die Partner ziehen um',
+    punkte: [
+      {
+        text: '**Die Rechnungsliste war innerhalb eines Tages durcheinander** — 0008, 0009, 0010, dann 0007, 0006, 0005. Sortiert wurde nach dem Rechnungsdatum, und das kennt nur den Tag: Alles, was am selben Tag entstand, war gleich, und dann entschied der Zufall.',
+      },
+      {
+        text: '**Jetzt entscheidet die Rechnungsnummer.** Die wird beim Festschreiben vergeben und zählt lückenlos hoch — sie ist die Reihenfolge, in der gestellt wurde, und sie lässt sich nachträglich nicht verschieben. Entwürfe stehen oben: Die haben keine Nummer und sind das, woran noch zu arbeiten ist.',
+      },
+      {
+        text: '**Belege hatten denselben Fehler** und stehen jetzt bei gleichem Datum nach dem Zeitpunkt, an dem sie erfasst wurden. Eine eigene Nummer taugt dort nicht — die kommt vom Lieferanten und zählt nichts hoch.',
+      },
+      {
+        text: '**Die Geschäftspartner stehen jetzt unter „Kundschaft" statt unter „Geld".** Dort waren sie gelandet, weil an einer Rechnung ein Partner hängt — aber wer einen Kontakt pflegt, pflegt keine Zahl. Gesucht hat man sie zwischen Steuer und Nachkalkulation.',
+      },
+    ],
+  },
+  {
     nummer: 113,
     datum: null,
     titel: 'Lange Formulare stehen in Abschnitten, und der Speicherknopf meldet sich',
