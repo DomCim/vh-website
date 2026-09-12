@@ -380,6 +380,21 @@ const PUNKT_ZEICHEN: Record<string, React.ReactNode> = {
       <circle cx="10.5" cy="16.5" r="2.3" />
     </>
   ),
+  /* Verfahrensdokumentation: das gebundene Handbuch mit dem Rücken links */
+  '/office/verfahren': (
+    <>
+      <path d="M6.5 3.5H18a.5.5 0 0 1 .5.5v16a.5.5 0 0 1-.5.5H6.5A2.5 2.5 0 0 1 4 18V6a2.5 2.5 0 0 1 2.5-2.5z" />
+      <path d="M4 18a2.5 2.5 0 0 1 2.5-2.5h12" />
+      <path d="M8 7.5h6.5M8 11h6.5" />
+    </>
+  ),
+  /* Mein Konto: dieselbe Gestalt wie in der Fußzeile der Seitenleiste */
+  '/office/konto': (
+    <>
+      <circle cx="12" cy="8.5" r="3.6" />
+      <path d="M4.8 20c0-3.6 3.2-6 7.2-6s7.2 2.4 7.2 6" />
+    </>
+  ),
   '/office/neuerungen': (
     <>
       <path d="M12 3.5 13.9 9l5.6.3-4.4 3.5 1.5 5.4L12 15.1l-4.6 3.1L8.9 12.8 4.5 9.3 10.1 9z" />
@@ -699,12 +714,23 @@ export function BueroNavigation() {
           * die Kopfleiste trägt nur noch Marke, Seitenname und Glocke.
           */}
         <div className="buero-seitenleiste-fuss">
-          <div className="buero-seitenleiste-wer" title={rahmen.benutzer?.email || undefined}>
+          {/*
+            * Der eigene Name ist kein Schild, sondern der Weg zum eigenen
+            * Konto: Passwort, Zwei-Faktor, angemeldete Geräte und die
+            * Meldungen dieses Geräts. Die lagen als Reiter in den
+            * Einstellungen — zwischen Dingen, die den ganzen Betrieb angehen.
+            */}
+          <Link
+            href="/office/konto"
+            className="buero-seitenleiste-punkt buero-seitenleiste-wer"
+            title={rahmen.benutzer?.email || undefined}
+            aria-current={istAktiv(pfad, '/office/konto') ? 'page' : undefined}
+          >
             <span className="buero-seitenleiste-zeichen">{Zeichen.person}</span>
             <span className="buero-seitenleiste-wort">
-              {rahmen.benutzer?.name || rahmen.benutzer?.email || 'Angemeldet'}
+              {rahmen.benutzer?.name || rahmen.benutzer?.email || 'Mein Konto'}
             </span>
-          </div>
+          </Link>
 
           <Link
             href="/office/einstellungen"
@@ -798,12 +824,31 @@ export function BueroNavigation() {
                   <Zaehler anzahl={zuErledigen[p.href] ?? 0} inline />
                 </Link>
               ))}
-              {/* Abmelden steht am Handy hier, weil oben in der Leiste kein
-                  Platz dafür ist — sie trägt dort den Namen der Seite. */}
+              {/*
+                * Am Handy hängt der Fuß der Seitenleiste hier mit dran: Es
+                * gibt keine Leiste am Rand, in der er stehen könnte, und oben
+                * ist kein Platz — dort steht der Name der Seite.
+                */}
               {offenesBlatt === 'Sonstiges' && (
-                <div className="buero-blatt-abmelden">
-                  <Abmelden />
-                </div>
+                <>
+                  <Link
+                    href="/office/konto"
+                    aria-current={istAktiv(pfad, '/office/konto') ? 'page' : undefined}
+                  >
+                    <PunktZeichen href="/office/konto" />
+                    Mein Konto
+                  </Link>
+                  <Link
+                    href="/office/einstellungen"
+                    aria-current={istAktiv(pfad, '/office/einstellungen') ? 'page' : undefined}
+                  >
+                    <PunktZeichen href="/office/einstellungen" />
+                    Einstellungen
+                  </Link>
+                  <div className="buero-blatt-abmelden">
+                    <Abmelden />
+                  </div>
+                </>
               )}
             </div>
           </div>

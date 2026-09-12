@@ -590,21 +590,18 @@
     border-top: 1px solid var(--buero-linie);
   }
 
+  /*
+   * Der eigene Name ist ein Punkt wie die darunter — er führt aufs eigene
+   * Konto und sieht deshalb auch so aus. Eigen ist nur, dass ein langer Name
+   * oder eine lange Adresse abgeschnitten wird, statt die Leiste zu sprengen.
+   */
   .buero-seitenleiste-wer {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.35rem 0.55rem 0.5rem;
-    font-size: 0.82rem;
-    color: var(--buero-tinte-leise);
-    white-space: nowrap;
     overflow: hidden;
   }
 
-  .buero-seitenleiste-wer svg {
-    width: 1.15rem;
-    height: 1.15rem;
-    flex: 0 0 auto;
+  .buero-seitenleiste-wer .buero-seitenleiste-wort {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /*
@@ -733,12 +730,6 @@
    */
   .buero-seitenleiste.schmal .buero-seitenleiste-wort {
     display: none;
-  }
-
-  .buero-seitenleiste.schmal .buero-seitenleiste-wer {
-    justify-content: center;
-    padding-left: 0.3rem;
-    padding-right: 0.3rem;
   }
 
   .buero-seitenleiste.schmal .buero-seitenleiste-punkt {

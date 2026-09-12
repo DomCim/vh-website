@@ -4,16 +4,11 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
 
-import { Benachrichtigungen } from '../../../../components/office/Benachrichtigungen'
-import { BestandNeuHolen } from '../../../../components/office/BestandNeuHolen'
 import { BenutzerVerwaltung } from '../../../../components/office/BenutzerVerwaltung'
 import { EinstellungenFormular } from '../../../../components/office/EinstellungenFormular'
-import { Haengengebliebenes } from '../../../../components/office/Haengengebliebenes'
 import { MailVorlagen } from '../../../../components/office/MailVorlagen'
-import { MeinKonto } from '../../../../components/office/MeinKonto'
 import { RollenVerwaltung } from '../../../../components/office/RollenVerwaltung'
 import { TaktStand } from '../../../../components/office/TaktStand'
-import { useRahmen } from '../../../../lib/buero/bestand'
 
 /**
  * Einstellungen — alles Betriebliche an einem Ort.
@@ -26,11 +21,13 @@ import { useRahmen } from '../../../../lib/buero/bestand'
  * Ohne Netz geht das nicht — anders als die übrigen Büro-Seiten. Das ist
  * Absicht: Einstellungen zwischenzuspeichern hieße, Zugangsdaten im Gerät zu
  * halten, und ein Zugangsdatum, das man offline ändert, wäre eine Falle.
+ *
+ * Was nur den einen Menschen und sein Gerät angeht — Passwort, Zwei-Faktor,
+ * Meldungen, hängengebliebene Einträge — steht seit 09/2026 unter
+ * `/office/konto`. Hier bleibt, was für den Betrieb gilt.
  */
 
 const TEILE = [
-  { schluessel: 'geraet', label: 'Dieses Gerät' },
-  { schluessel: 'konto', label: 'Mein Konto' },
   { schluessel: 'benutzer', label: 'Benutzer' },
   { schluessel: 'betrieb', label: 'Betrieb' },
   { schluessel: 'mailvorlagen', label: 'Mail-Vorlagen' },
@@ -39,15 +36,18 @@ const TEILE = [
 
 export function EinstellungenAnsicht() {
   const suche = useSearchParams()
-  const teil = suche.get('teil') ?? 'geraet'
-  const { benutzer } = useRahmen()
+  const teil = suche.get('teil') ?? 'benutzer'
 
   return (
     <>
       <h1>Einstellungen</h1>
       <p className="buero-unterzeile">
-        Angemeldet als {benutzer.email || '…'}
-        {benutzer.name ? ` (${benutzer.name})` : ''}
+        Was hier steht, gilt für den ganzen Betrieb. Das eigene Passwort, die Meldungen dieses
+        Geräts und die angemeldeten Geräte stehen unter{' '}
+        <Link href="/office/konto" style={{ textDecoration: 'underline' }}>
+          Mein Konto
+        </Link>
+        .
       </p>
 
       <div className="buero-reiter">
@@ -61,16 +61,6 @@ export function EinstellungenAnsicht() {
           </Link>
         ))}
       </div>
-
-      {teil === 'geraet' && (
-        <>
-          <Benachrichtigungen />
-          <Haengengebliebenes />
-          <BestandNeuHolen />
-        </>
-      )}
-
-      {teil === 'konto' && <MeinKonto />}
 
       {teil === 'benutzer' && (
         <>

@@ -26,6 +26,25 @@ import type { Neuerung } from './lib/neuerungen'
  */
 export const NEUERUNGEN: Neuerung[] = [
   {
+    nummer: 117,
+    datum: null,
+    titel: 'Das eigene Konto steht am Fuß der Leiste',
+    punkte: [
+      {
+        text: '**Der eigene Name unten in der Seitenleiste führt jetzt irgendwohin** — auf `/office/konto`. Dort steht, was nur einen selbst und das Gerät in der Hand angeht: Passwort, Zwei-Faktor, Passkeys, die angemeldeten Geräte, die Meldungen dieses Geräts und die hängengebliebenen Einträge.',
+      },
+      {
+        text: '**Aus den Einstellungen sind diese beiden Reiter verschwunden.** Sie standen dort zwischen Benutzerverwaltung, Betriebsdaten und Zugangsdaten zu fremden Diensten — also zwischen lauter Dingen, die für den ganzen Betrieb gelten. Das eigene Passwort gilt für einen selbst. Die Einstellungen führen weiterhin hinüber, wer sie dort sucht, findet den Weg.',
+      },
+      {
+        text: '**Am Telefon steht beides im Blatt „Sonstiges"** — „Mein Konto", „Einstellungen" und „Abmelden" untereinander am Fuß, so wie am Rechner am Fuß der Leiste. Die Einstellungen fehlten dort seit dem Umbau der Navigation.',
+      },
+      {
+        text: '**Und die Verfahrensdokumentation hat ein Zeichen bekommen** — ein Buch. Sie stand als einziger Punkt ohne eines da, am Rechner wie am Telefon.',
+      },
+    ],
+  },
+  {
     nummer: 116,
     datum: null,
     titel: 'Änderungen an Belegen und Rechnungen bleiben nachvollziehbar',

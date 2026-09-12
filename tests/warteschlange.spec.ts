@@ -56,6 +56,19 @@ test.describe('Schreiben ohne Netz', () => {
     await page.locator('input').first().fill(name)
     await page.getByRole('button', { name: /speichern|anlegen/i }).first().click()
 
+    /*
+     * Erst die Bestätigung abwarten, dann die Seite wechseln.
+     *
+     * Ohne Netz sagt das Formular „Gemerkt — geht raus, sobald wieder Netz da
+     * ist", und erst dann liegt der Eintrag wirklich im Gerät. Ging die Probe
+     * sofort weiter, traf der Seitenwechsel gelegentlich mitten in das
+     * Schreiben nach IndexedDB — die Zeile fehlte danach in der Liste, und
+     * das sah nach einem Fehler im Büro aus, wo nur die Probe zu schnell war.
+     */
+    await expect(page.getByText(/Gemerkt/i), 'das Büro hat den Eintrag angenommen').toBeVisible({
+      timeout: 20_000,
+    })
+
     // Steht augenblicklich in der Liste — ohne dass der Server davon weiß
     await page.goto('/office/partner', { waitUntil: 'domcontentloaded' })
     await expect(page.getByText(name), 'Eingabe ist sofort da').toBeVisible({ timeout: 20_000 })
@@ -174,7 +187,7 @@ test.describe('Schreiben ohne Netz', () => {
     await page.locator('form button[type="submit"]').first().click()
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
 
-    await page.goto('/office/einstellungen?teil=geraet')
+    await page.goto('/office/konto?teil=geraet')
     await page.waitForLoadState('networkidle')
 
     /*
