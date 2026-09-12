@@ -504,7 +504,13 @@
   }
 
   .buero-seitenleiste {
-    display: block;
+    /*
+     * Spalte statt Block: Die Bereiche in der Mitte scrollen, der Fuß mit
+     * Konto und Abmelden bleibt unten stehen. Sonst müsste man zum
+     * Abmelden erst durch achtzehn Punkte rollen.
+     */
+    display: flex;
+    flex-direction: column;
     flex: 0 0 auto;
     width: 14.5rem;
     /*
@@ -568,6 +574,56 @@
     stroke: currentColor;
     stroke-width: 1.9;
     stroke-linecap: round;
+  }
+
+  .buero-seitenleiste-mitte {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Konto, Einstellungen, Abmelden — abgesetzt am Fuß */
+  .buero-seitenleiste-fuss {
+    flex: 0 0 auto;
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--buero-linie);
+  }
+
+  .buero-seitenleiste-wer {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.55rem 0.5rem;
+    font-size: 0.82rem;
+    color: var(--buero-tinte-leise);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .buero-seitenleiste-wer svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: 0 0 auto;
+  }
+
+  /*
+   * „Abmelden" ist ein Knopf und kein Verweis — er muss etwas tun, bevor er
+   * die Seite wechselt (den Bestand im Gerät vergessen). Damit er trotzdem
+   * aussieht wie seine Nachbarn, trägt die Zeile das Aussehen und der Knopf
+   * darin gibt seines auf.
+   */
+  .buero-seitenleiste-raus .buero-knopf,
+  .buero-seitenleiste-raus button {
+    all: unset;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+  }
+
+  .buero-seitenleiste-raus:hover {
+    background: var(--buero-papier);
+    color: var(--buero-rot);
   }
 
   .buero-seitenleiste-teil {
@@ -677,6 +733,12 @@
    */
   .buero-seitenleiste.schmal .buero-seitenleiste-wort {
     display: none;
+  }
+
+  .buero-seitenleiste.schmal .buero-seitenleiste-wer {
+    justify-content: center;
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
   }
 
   .buero-seitenleiste.schmal .buero-seitenleiste-punkt {

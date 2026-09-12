@@ -108,7 +108,6 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       // Melden darf jeder, der im Büro ist: Eine Hürde vor „hier stimmt was
       // nicht" bekommt man nie wieder weg — gemeldet wird dann gar nicht mehr.
       { href: '/office/melden', label: 'Fehler melden' },
-      { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
       { href: '/office/rechtliches', label: 'Rechtstexte', recht: 'website.pflegen' },
       /*
@@ -142,6 +141,20 @@ const Zeichen = {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M13.5 3.5 20 10l-2.5 2.5L11 6z" />
       <path d="M10.2 7.3 4 13.5a2 2 0 0 0 0 2.8l1.7 1.7a2 2 0 0 0 2.8 0l6.2-6.2" />
+    </svg>
+  ),
+  /* Wer angemeldet ist — am Fuß der Seitenleiste */
+  person: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8.5" r="3.6" />
+      <path d="M4.8 20c0-3.6 3.2-6 7.2-6s7.2 2.4 7.2 6" />
+    </svg>
+  ),
+  /* Hinaus — die Tür mit dem Pfeil */
+  raus: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14.5 4.5H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 19.5h8.5" />
+      <path d="M17 8.5 20.5 12 17 15.5M20 12h-9" />
     </svg>
   ),
   /* Geld: Schein — Rechnungen, Belege, Steuer */
@@ -610,6 +623,7 @@ export function BueroNavigation() {
           <span className="buero-seitenleiste-wort">{UEBERSICHT.label}</span>
         </Link>
 
+        <div className="buero-seitenleiste-mitte">
         {gruppen.map((b) => {
           /*
            * Der Bereich, in dem man gerade steht, lässt sich nicht zuklappen
@@ -668,6 +682,49 @@ export function BueroNavigation() {
             </section>
           )
         })}
+        </div>
+
+        {/*
+          * Ganz unten: wer angemeldet ist, und was zu ihm gehört.
+          *
+          * Vorschlag von Dominik, und er hat recht. „Website-Verwaltung" und
+          * „Abmelden" standen oben rechts in der Kopfleiste — dort, wo sonst
+          * nichts über *mich* steht, sondern nur, wo ich gerade bin. Und die
+          * Einstellungen lagen unter „Sonstiges", zwischen Statistik und
+          * Rechtstexten, also zwischen lauter Dingen, die den Betrieb
+          * angehen und nicht das eigene Konto.
+          *
+          * Zusammen an den Fuß der Leiste: Wer bin ich, was gehört mir, und
+          * hier komme ich raus. Das ist der Platz, an dem man es sucht — und
+          * die Kopfleiste trägt nur noch Marke, Seitenname und Glocke.
+          */}
+        <div className="buero-seitenleiste-fuss">
+          <div className="buero-seitenleiste-wer" title={rahmen.benutzer?.email || undefined}>
+            <span className="buero-seitenleiste-zeichen">{Zeichen.person}</span>
+            <span className="buero-seitenleiste-wort">
+              {rahmen.benutzer?.name || rahmen.benutzer?.email || 'Angemeldet'}
+            </span>
+          </div>
+
+          <Link
+            href="/office/einstellungen"
+            className="buero-seitenleiste-punkt"
+            title="Einstellungen"
+            aria-current={istAktiv(pfad, '/office/einstellungen') ? 'page' : undefined}
+          >
+            <span className="buero-seitenleiste-zeichen">
+              <PunktZeichen href="/office/einstellungen" />
+            </span>
+            <span className="buero-seitenleiste-wort">Einstellungen</span>
+          </Link>
+
+          <div className="buero-seitenleiste-punkt buero-seitenleiste-raus">
+            <span className="buero-seitenleiste-zeichen">{Zeichen.raus}</span>
+            <span className="buero-seitenleiste-wort">
+              <Abmelden />
+            </span>
+          </div>
+        </div>
       </nav>
 
       {/*

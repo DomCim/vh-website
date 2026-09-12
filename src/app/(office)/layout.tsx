@@ -5,7 +5,6 @@ import React from 'react'
 import { AbgleichLeiste } from '../../components/office/AbgleichLeiste'
 import { Abgleichpunkt } from '../../components/office/Abgleichpunkt'
 import { AdminVerweis } from '../../components/office/AdminVerweis'
-import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { Haptik } from '../../components/office/Haptik'
@@ -82,11 +81,16 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
                 der Seite daneben passt — der schrumpft mit. */}
             <Meldungsglocke />
             <Abgleichpunkt />
-            {/* Beide nur am Rechner: Am Handy stehen sie im Blatt „Sonstiges" */}
+            {/*
+              * „Website-Verwaltung" bleibt hier; „Abmelden" nicht mehr.
+              *
+              * Die Kopfleiste sagt, **wo** man ist — nicht, **wer** man ist.
+              * Das eigene Konto, die Einstellungen und der Weg hinaus stehen
+              * jetzt am Fuß der Seitenleiste beieinander (siehe
+              * `BueroNavigation`). Am Handy war „Abmelden" ohnehin nie hier,
+              * sondern im Blatt „Sonstiges".
+              */}
             <AdminVerweis />
-            <span className="buero-nur-breit">
-              <Abmelden />
-            </span>
           </div>
         </header>
         {/*
