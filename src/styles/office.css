@@ -5164,3 +5164,114 @@ input[type='checkbox'].buero-haken-kasten {
     max-width: 14rem;
   }
 }
+
+
+/* ── Ein Papier aus dem Quelltext ──────────────────────────────────────────
+   Die Verfahrensdokumentation und alles, was sonst noch als Markdown im
+   Repository liegt. Bewusst schmaler als der übrige Inhalt: Das hier wird
+   gelesen, nicht überflogen, und eine Zeile über die volle Breite eines
+   Monitors liest sich schlecht.
+   ────────────────────────────────────────────────────────────────────────── */
+.buero-papier {
+  max-width: 46rem;
+  line-height: 1.65;
+}
+
+.buero-papier h1 {
+  margin-bottom: 0.4rem;
+}
+
+.buero-papier h2 {
+  margin-top: 2.2rem;
+}
+
+.buero-papier h3 {
+  margin-top: 1.5rem;
+  font-size: 1.02rem;
+}
+
+.buero-papier p {
+  margin: 0.7rem 0;
+}
+
+.buero-papier-liste {
+  margin: 0.7rem 0;
+  padding-left: 1.3rem;
+}
+
+.buero-papier-liste li {
+  margin-bottom: 0.35rem;
+}
+
+.buero-papier code {
+  font-size: 0.88em;
+  padding: 0.1rem 0.3rem;
+  border-radius: 5px;
+  background: var(--buero-papier);
+}
+
+.buero-papier-linie {
+  margin: 1.8rem 0;
+  border: 0;
+  border-top: 1px solid var(--buero-linie);
+}
+
+.buero-papier blockquote {
+  margin: 1rem 0;
+}
+
+/*
+ * In einem Papier sind die Tabellen Text und keine Zahlen — die Regel, die
+ * anderswo die letzte Spalte rechtsbündig setzt (Beträge!), ist hier falsch.
+ */
+.buero-papier .buero-tabelle td:last-child,
+.buero-papier .buero-tabelle th:last-child {
+  text-align: left;
+  font-variant-numeric: normal;
+}
+
+.buero-papier-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--buero-linie);
+}
+
+/*
+ * Gedruckt wird dieses Papier wirklich — als PDF für die Kanzlei oder die
+ * Prüfung. Also gehört alles weg, was auf Papier nichts verloren hat:
+ * Navigation, Kopfleiste, Knöpfe. Übrig bleibt der Text, schwarz auf weiß.
+ */
+@media print {
+  .buero-kopf,
+  .buero-seitenleiste,
+  .buero-tableiste,
+  .buero-fussleiste,
+  .buero-papier-kopf,
+  .buero-abgleich-leiste {
+    display: none !important;
+  }
+
+  .buero-inhalt {
+    max-width: none;
+    padding: 0;
+  }
+
+  .buero-papier {
+    max-width: none;
+  }
+
+  .buero-papier h2 {
+    /* Eine Überschrift allein am Seitenfuß liest sich wie ein Versehen */
+    break-after: avoid;
+  }
+
+  .buero-papier table,
+  .buero-papier blockquote {
+    break-inside: avoid;
+  }
+}

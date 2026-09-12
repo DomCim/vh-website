@@ -89,6 +89,10 @@ COPY --from=builder --chown=node:node /app/server.mjs ./server.mjs
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=node:node /app/src ./src
 COPY --from=builder --chown=node:node /app/scripts ./scripts
+# Die Verfahrensdokumentation gehört ins Abbild: Das Büro zeigt sie unter
+# /office/verfahren und bietet sie zum Herunterladen an. Sie beschreibt genau
+# die Fassung, die in diesem Abbild läuft — deshalb reist sie mit.
+COPY --from=builder --chown=node:node /app/VERFAHRENSDOKUMENTATION.md ./VERFAHRENSDOKUMENTATION.md
 COPY --from=builder --chown=node:node /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Persistente Verzeichnisse (als Volumes mounten!)

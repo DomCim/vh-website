@@ -111,6 +111,13 @@ const BEREICHE: { titel: string; punkte: Punkt[] }[] = [
       { href: '/office/einstellungen', label: 'Einstellungen' },
       { href: '/office/neuerungen', label: 'Neuerungen' },
       { href: '/office/rechtliches', label: 'Rechtstexte', recht: 'website.pflegen' },
+      /*
+       * Die Verfahrensdokumentation steht bei „Sonstiges" und nicht bei
+       * „Geld": Sie beschreibt das ganze Haus, nicht die Zahlen darin. Das
+       * Recht `zahlen.sehen` hängt trotzdem daran — wer keine Beträge sehen
+       * darf, braucht auch nicht zu wissen, wie sie zustande kommen.
+       */
+      { href: '/office/verfahren', label: 'Verfahrensdokumentation', recht: 'zahlen.sehen' },
       { href: '/admin', label: 'Website-Verwaltung', recht: 'website.pflegen' },
     ],
   },

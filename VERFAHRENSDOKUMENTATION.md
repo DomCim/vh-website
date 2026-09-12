@@ -1,6 +1,7 @@
 # Verfahrensdokumentation
 
 **Vincent Hellmann — Metallgestaltung**
+
 Stand: 12.09.2026 · Fassung 1
 
 ---
