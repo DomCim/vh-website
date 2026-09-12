@@ -650,7 +650,16 @@ export function NachbestellenAnsicht() {
                 </p>
                 <div className="buero-liste">
                   {zeilenVon(b).map((z, i) => (
-                    <div key={i} className="buero-zeile">
+                    /*
+                     * Hier trägt die Zeile ihren Balken — anders als oben bei
+                     * „zu bestellen", wo jede Zeile gleich dringlich ist. In
+                     * einer angebrochenen Lieferung ist genau das die Frage:
+                     * Was steht noch aus? Was da ist, bleibt farblos.
+                     */
+                    <div
+                      key={i}
+                      className={`buero-zeile${z.geliefert >= z.bestellt ? '' : ' ist-offen'}`}
+                    >
                       <div className="buero-zeile-haupt">
                         <div className="buero-zeile-titel">{z.name}</div>
                         <div className="buero-zeile-neben">

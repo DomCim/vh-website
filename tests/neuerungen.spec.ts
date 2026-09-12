@@ -48,8 +48,14 @@ test('es steht keine Auszeichnung im Text, die die Anzeige nicht kennt', () => {
     // Paarweise — ein einzelnes Sternchen wäre ein Kursiv, das niemand setzt
     expect((text.match(/\*\*/g) ?? []).length % 2, text.slice(0, 60)).toBe(0)
     expect((text.match(/`/g) ?? []).length % 2, text.slice(0, 60)).toBe(0)
-    // Was übrig bleibt, darf kein Sternchen mehr enthalten
-    expect(text.replace(/\*\*(.+?)\*\*/g, '$1'), text.slice(0, 60)).not.toContain('*')
+    /*
+     * Was übrig bleibt, darf kein Sternchen mehr enthalten — wobei das, was
+     * in Backticks steht, wörtlich gemeint ist und deshalb vorher weggeht.
+     * Ein Eintrag erklärt die Merker für öffentliche Termine, und dort steht
+     * `*kursiv*` als Beispiel: Das ist Text, keine Auszeichnung.
+     */
+    const ohneAuszeichnung = text.replace(/`[^`]*`/g, '').replace(/\*\*(.+?)\*\*/g, '$1')
+    expect(ohneAuszeichnung, text.slice(0, 60)).not.toContain('*')
     expect(text, text.slice(0, 60)).not.toMatch(/\]\(/)
   }
 })
