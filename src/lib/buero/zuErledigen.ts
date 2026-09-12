@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 
 import { zuErledigen } from '../zuErledigen'
 import { useBestand } from './bestand'
+import type { Lagerposten, Lieferantenbestellung } from '../nachbestellung'
 
 /**
  * Die Zähler an der Navigation, gerechnet aus dem Bestand im Gerät.
@@ -19,7 +20,9 @@ export function useZuErledigen(): Record<string, number> {
   const anfragen = useBestand<{ status?: string | null }>('anfragen')
   const rechnungen = useBestand<{ status?: string | null; dueDate?: string | null }>('rechnungen')
   const belege = useBestand<{ paid?: boolean | null; dueDate?: string | null }>('belege')
-  const inventar = useBestand<{ quantity?: number | null; minQuantity?: number | null }>('inventar')
+  const inventar = useBestand<Lagerposten>('inventar')
+  // Was schon bestellt ist, zählt nicht mehr als „nachzubestellen"
+  const lieferantenbestellungen = useBestand<Lieferantenbestellung>('lieferantenbestellungen')
   const wiedervorlagen = useBestand<{ done?: boolean | null; dueDate?: string | null }>(
     'wiedervorlagen',
   )
@@ -27,7 +30,24 @@ export function useZuErledigen(): Record<string, number> {
   const meldungen = useBestand<{ tag?: string | null; gelesen?: boolean | null }>('meldungen')
 
   return useMemo(
-    () => zuErledigen({ anfragen, rechnungen, belege, inventar, wiedervorlagen, meldungen }),
-    [anfragen, rechnungen, belege, inventar, wiedervorlagen, meldungen],
+    () =>
+      zuErledigen({
+        anfragen,
+        rechnungen,
+        belege,
+        inventar,
+        lieferantenbestellungen,
+        wiedervorlagen,
+        meldungen,
+      }),
+    [
+      anfragen,
+      rechnungen,
+      belege,
+      inventar,
+      lieferantenbestellungen,
+      wiedervorlagen,
+      meldungen,
+    ],
   )
 }

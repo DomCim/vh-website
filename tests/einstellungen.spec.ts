@@ -30,7 +30,9 @@ test.describe('Einstellungen im Büro', () => {
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
 
     await page.goto('/office/einstellungen?teil=integrationen')
-    await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
+    await expect(page.getByRole('heading', { name: 'Integrationen', level: 2 })).toBeVisible({
+      timeout: 30_000,
+    })
 
     // Jeder Bereich aus Payload steht als Zeile in der Übersicht
     for (const bereich of ['E-Mail-Versand', 'Postfächer', 'Takt', 'Sicherung', 'PayPal']) {
@@ -45,7 +47,9 @@ test.describe('Einstellungen im Büro', () => {
       .toBeVisible()
 
     await page.locator('.buero-zeile-knopf', { hasText: 'E-Mail-Versand' }).first().click()
-    await expect(page.locator('h2')).toContainText('E-Mail-Versand', { timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: 'E-Mail-Versand', level: 2 })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Schlüssel sind verdeckt, lassen sich aber aufdecken
     const verdeckt = await page.locator('input[type="password"]').count()
@@ -114,10 +118,14 @@ test.describe('Einstellungen im Büro', () => {
     await page.waitForURL(/\/office$/, { timeout: 30_000 })
 
     await page.goto('/office/einstellungen?teil=integrationen')
-    await expect(page.locator('h2')).toContainText('Integrationen', { timeout: 30_000 })
+    await expect(page.getByRole('heading', { name: 'Integrationen', level: 2 })).toBeVisible({
+      timeout: 30_000,
+    })
 
     await page.locator('.buero-zeile-knopf', { hasText: 'Postfächer' }).first().click()
-    await expect(page.locator('h2')).toContainText('Postfächer', { timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: 'Postfächer', level: 2 })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // „Hinzufügen" führt gleich in die Eingabe — wer tippen will, will tippen
     await page.getByRole('button', { name: 'Hinzufügen' }).click()
@@ -186,14 +194,26 @@ test.describe('Einstellungen im Büro', () => {
     await seite.waitForURL(/\/office$/, { timeout: 30_000 })
 
     await seite.goto('/office/einstellungen')
-    for (const teil of ['Dieses Gerät', 'Mein Konto', 'Benutzer', 'Betrieb', 'Integrationen']) {
+    for (const teil of ['Benutzer', 'Betrieb', 'Mail-Vorlagen', 'Integrationen']) {
       await expect(seite.getByRole('link', { name: teil }), teil).toBeVisible({ timeout: 20_000 })
     }
 
     // Und sie führen auch irgendwohin. Seit die Rollen mit auf dem Blatt
     // stehen, gibt es dort mehrere Überschriften — gemeint ist die erste.
     await seite.getByRole('link', { name: 'Benutzer' }).click()
-    await expect(seite.locator('h2').first()).toContainText('Benutzer', { timeout: 20_000 })
+    await expect(seite.locator('.buero-inhalt h2').first()).toContainText('Benutzer', {
+      timeout: 20_000,
+    })
+
+    /*
+     * Was nur den einen Menschen angeht, steht seit 09/2026 unter „Mein
+     * Konto" — auch das muss am Telefon erreichbar sein, denn dorthin führt
+     * kein Fuß einer Seitenleiste, sondern das Blatt „Sonstiges".
+     */
+    await seite.goto('/office/konto')
+    for (const teil of ['Zugang', 'Dieses Gerät']) {
+      await expect(seite.getByRole('link', { name: teil }), teil).toBeVisible({ timeout: 20_000 })
+    }
 
     await telefon.close()
   })

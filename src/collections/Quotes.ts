@@ -19,6 +19,8 @@ import { ablageFeld, absenderAbschrift, absenderFeld } from '../lib/absender'
  */
 export const Quotes: CollectionConfig = {
   slug: 'quotes',
+  // Änderungshistorie — warum, steht in `collections/Expenses.ts`
+  versions: { drafts: false },
   // Weggeworfenes bleibt liegen, bis es jemand von Hand endgültig löscht — siehe lib/wegwerfen.ts
   trash: true,
   labels: {

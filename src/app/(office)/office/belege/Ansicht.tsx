@@ -7,6 +7,7 @@ import React, { useMemo } from 'react'
 import { useBestand } from '../../../../lib/buero/bestand'
 import { datum, euro } from '../../../../lib/format'
 import { AUSGABEN_KATEGORIEN } from '../../../../lib/listen'
+import { neuesteZuerst } from '../../../../lib/buero/sortierung'
 
 /**
  * Belege — gerechnet aus dem Bestand im Gerät.
@@ -25,6 +26,7 @@ type Beleg = {
   supplierName?: string | null
   invoiceNumber?: string | null
   invoiceDate?: string | null
+  createdAt?: string | null
   category?: string | null
   grossAmount?: number | null
   paid?: boolean | null
@@ -52,8 +54,21 @@ export function BelegeAnsicht() {
     if (filter === 'offen') liste = liste.filter((b) => !b.paid)
     if (jahr) liste = liste.filter((b) => (b.invoiceDate ?? '').startsWith(jahr))
 
-    // Neueste zuerst; Belege ohne Datum ans Ende
-    return [...liste].sort((a, b) => (b.invoiceDate ?? '').localeCompare(a.invoiceDate ?? ''))
+    /*
+     * Neueste zuerst; Belege ohne Datum ans Ende.
+     *
+     * Der Anlegezeitpunkt als zweiter Schlüssel, weil `invoiceDate` nur den
+     * Tag kennt: Ohne ihn stünden mehrere Belege desselben Tages in der
+     * Reihenfolge, in der sie zufällig im Gerät liegen (siehe
+     * `lib/buero/sortierung.ts`). Die Nummer taugt hier nicht — die stammt
+     * vom Lieferanten und zählt nichts hoch.
+     */
+    return [...liste].sort(
+      neuesteZuerst<Beleg>(
+        (b) => b.invoiceDate ?? '',
+        (b) => b.createdAt ?? '',
+      ),
+    )
   }, [alle, filter, jahr])
 
   const summe = useMemo(

@@ -9,6 +9,7 @@ import { absenden } from '../../../../lib/buero/warteschlange'
 import { datum, euro } from '../../../../lib/format'
 import { RECHNUNG_STATUS, RECHNUNG_STUFEN, statusKarte, textKarte, balkenKlasse } from '../../../../lib/listen'
 import { istOffenerPosten, tageSeit } from '../../../../lib/zahlungsstand'
+import { neuesteZuerst, zuerstWenn } from '../../../../lib/buero/sortierung'
 
 /** Rechnungen — gerechnet aus dem Bestand im Gerät. */
 
@@ -40,18 +41,32 @@ export function RechnungenAnsicht() {
   const alle = useBestand<Rechnung>('rechnungen')
 
   /*
-   * Sortiert nach Rechnungsdatum — und Entwürfe zählen nach ihrem Anlegedatum.
+   * Sortiert nach der Rechnungsnummer, nicht nach dem Datum.
    *
-   * Ein Entwurf hat noch kein Rechnungsdatum; er hat ja auch noch keine
-   * Nummer. Verglichen wurde bisher trotzdem nur `issueDate`, und ein leerer
-   * Wert sortiert hinter jeden ausgefüllten: Der frisch vorbereitete Entwurf
-   * landete unter allen Rechnungen des Jahres. Ausgerechnet das eine Blatt,
-   * das noch Arbeit ist, stand am weitesten unten.
+   * **Warum nicht nach Datum.** `issueDate` kennt nur den Tag. Alle
+   * Rechnungen eines Tages waren damit gleich, und bei Gleichstand behält
+   * `Array.sort` die Reihenfolge aus dem Gerät — die kommt vom Abgleich und
+   * ist Zufall. Am 11.09.2026 stand da: 0008, 0009, 0010, dann 0007, 0006,
+   * 0005. Einmal aufsteigend, einmal absteigend, in derselben Liste.
+   *
+   * **Warum die Nummer das Richtige ist.** Sie wird beim Festschreiben
+   * vergeben und zählt lückenlos hoch — sie *ist* die Reihenfolge, in der
+   * gestellt wurde, und sie lässt sich nachträglich nicht verschieben. Das
+   * Rechnungsdatum kann man von Hand setzen; sortierte man danach, sprängen
+   * die Zeilen nach einer Korrektur durcheinander.
+   *
+   * **Entwürfe stehen oben.** Sie haben keine Nummer, nach der man sie
+   * einordnen könnte — und sie sind das, woran noch zu arbeiten ist.
+   * Untereinander nach Anlegezeitpunkt, neueste zuerst.
    */
   const sortiert = useMemo(
     () =>
-      [...alle].sort((a, b) =>
-        (b.issueDate ?? b.createdAt ?? '').localeCompare(a.issueDate ?? a.createdAt ?? ''),
+      [...alle].sort(
+        neuesteZuerst<Rechnung>(
+          (r) => zuerstWenn(!r.invoiceNumber),
+          (r) => r.invoiceNumber ?? '',
+          (r) => r.createdAt ?? '',
+        ),
       ),
     [alle],
   )

@@ -48,6 +48,34 @@ export type Bestellzeile = {
   bestelltAm?: string | null
 }
 
+/**
+ * Eine Lieferantenbestellung, so viel wie hier gebraucht wird.
+ *
+ * Ohne Payload-Typen, damit diese Datei im Gerät und im Test ohne Datenbank
+ * rechnet — dieselbe Regel wie beim Rest der Datei.
+ */
+export type Lieferantenbestellung = {
+  id: number | string
+  orderNumber?: string | null
+  status?: string | null
+  supplier?: unknown
+  supplierName?: string | null
+  requestedAt?: string | null
+  orderedAt?: string | null
+  expectedAt?: string | null
+  lines?:
+    | {
+        item?: unknown
+        quantity?: number | null
+        deliveredQuantity?: number | null
+        price?: number | null
+      }[]
+    | null
+}
+
+/** Stände, in denen eine Bestellung noch etwas erwarten lässt. */
+export const OFFENE_STAENDE = ['angefragt', 'bestellt', 'teilgeliefert'] as const
+
 export type Lieferantenblock = {
   /** Kennung des Geschäftspartners, `null` für „kein Lieferant hinterlegt" */
   lieferant: number | string | null
@@ -104,6 +132,34 @@ function zeile(posten: Lagerposten): Bestellzeile {
   }
 }
 
+/**
+ * Wie viel von einem Posten noch aussteht.
+ *
+ * **Das ist der Kern der Reparatur.** Vorher stand am Posten nur ein Datum
+ * `reorderedAt`, und jeder Zugang löschte es — auch eine Teillieferung. Der
+ * Posten lag danach weiter unter dem Mindestbestand, stand am nächsten Tag
+ * wieder in der Liste und wäre ein zweites Mal bestellt worden.
+ *
+ * Jetzt wird gerechnet: bestellt minus geliefert, über alle offenen
+ * Bestellungen. Kommt die Hälfte, steht die andere Hälfte weiter als
+ * unterwegs — und erst wenn nichts mehr aussteht, taucht der Posten wieder
+ * zum Bestellen auf.
+ */
+export function offeneMenge(
+  bestellungen: Lieferantenbestellung[],
+  postenId: number | string,
+): number {
+  let offen = 0
+  for (const b of bestellungen) {
+    if (!OFFENE_STAENDE.includes((b.status ?? '') as (typeof OFFENE_STAENDE)[number])) continue
+    for (const z of b.lines ?? []) {
+      if (String(lieferantenId(z.item)) !== String(postenId)) continue
+      offen += Math.max((z.quantity ?? 0) - (z.deliveredQuantity ?? 0), 0)
+    }
+  }
+  return runden(offen)
+}
+
 export type Lieferantenname = { id: number | string; name?: string | null; email?: string | null }
 
 /**
@@ -116,10 +172,20 @@ export type Lieferantenname = { id: number | string; name?: string | null; email
 export function nachLieferanten(
   posten: Lagerposten[],
   lieferanten: Lieferantenname[] = [],
+  bestellungen: Lieferantenbestellung[] = [],
 ): Lieferantenblock[] {
   const bloecke = new Map<string, Lieferantenblock>()
 
-  for (const p of posten.filter(istKnapp)) {
+  /*
+   * Was schon unterwegs ist, steht nicht noch einmal zum Bestellen da —
+   * und zwar mengengenau: Wer 10 bestellt und 4 bekommen hat, dem fehlen
+   * vielleicht trotzdem noch welche, aber sie sind eben schon bestellt.
+   */
+  const knapp = posten
+    .filter(istKnapp)
+    .filter((p) => offeneMenge(bestellungen, p.id) < bestellmenge(p))
+
+  for (const p of knapp) {
     const id = lieferantenId(p.supplier)
     const schluessel = id === null ? '' : String(id)
     const partner = lieferanten.find((l) => String(l.id) === schluessel)

@@ -5,7 +5,6 @@ import React from 'react'
 import { AbgleichLeiste } from '../../components/office/AbgleichLeiste'
 import { Abgleichpunkt } from '../../components/office/Abgleichpunkt'
 import { AdminVerweis } from '../../components/office/AdminVerweis'
-import { Abmelden } from '../../components/office/Abmelden'
 import { BestandAnbieter } from '../../components/office/BestandAnbieter'
 import { BueroNavigation } from '../../components/office/BueroNavigation'
 import { Haptik } from '../../components/office/Haptik'
@@ -82,17 +81,38 @@ export default function BueroLayout({ children }: { children: React.ReactNode })
                 der Seite daneben passt — der schrumpft mit. */}
             <Meldungsglocke />
             <Abgleichpunkt />
-            {/* Beide nur am Rechner: Am Handy stehen sie im Blatt „Sonstiges" */}
+            {/*
+              * „Website-Verwaltung" bleibt hier; „Abmelden" nicht mehr.
+              *
+              * Die Kopfleiste sagt, **wo** man ist — nicht, **wer** man ist.
+              * Das eigene Konto, die Einstellungen und der Weg hinaus stehen
+              * jetzt am Fuß der Seitenleiste beieinander (siehe
+              * `BueroNavigation`). Am Handy war „Abmelden" ohnehin nie hier,
+              * sondern im Blatt „Sonstiges".
+              */}
             <AdminVerweis />
-            <span className="buero-nur-breit">
-              <Abmelden />
-            </span>
           </div>
         </header>
-        <BueroNavigation />
-        {/* Steht zwischen Navigation und Inhalt: gesehen wird er, im Weg ist er nicht */}
-        <NeuerungenBanner />
-        <main className="buero-inhalt">{children}</main>
+        {/*
+          * Navigation und Inhalt nebeneinander — am Rechner.
+          *
+          * Die Navigation stand bis hierher als Leiste über dem Inhalt. Das
+          * kostete zu jedem Ziel zwei Klicks: einmal den Bereich aufklappen,
+          * einmal den Punkt. Als Seitenleiste steht alles gleichzeitig da,
+          * und es ist ein Klick.
+          *
+          * Am Handy ändert sich nichts: Dort zeichnet `BueroNavigation` die
+          * Leiste am unteren Rand, die liegt `fixed` und kümmert sich nicht
+          * um diese Reihe.
+          */}
+        <div className="buero-rumpf">
+          <BueroNavigation />
+          <div className="buero-spalte">
+            {/* Steht zwischen Navigation und Inhalt: gesehen wird er, im Weg ist er nicht */}
+            <NeuerungenBanner />
+            <main className="buero-inhalt">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   )
